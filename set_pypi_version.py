@@ -7,6 +7,7 @@
 
 
 import os
+import re
 from pathlib import Path
 
 import requests
@@ -44,9 +45,13 @@ def get_pypi_latest():
     response = requests.get("https://pypi.org/pypi/power-grid-model-ds/json")
     if response.status_code == 404:
         return 0, 0, 0
-    data = response.json()
-    version = str(data["info"]["version"])
-    return (int(x) for x in version.split("."))
+    version = str(response.json()["info"]["version"])
+
+    version_pattern = re.compile(r"^\d+\.\d+\.\d+")
+    match = version_pattern.match(version)
+    if not match:
+        raise ValueError(f"Invalid version format: {version}")
+    return (int(x) for x in match.group(0).split("."))
 
 
 def get_new_version(major, minor, latest_major, latest_minor, latest_patch):
