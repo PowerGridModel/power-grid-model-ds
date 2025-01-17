@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
+#
+# SPDX-License-Identifier: MPL-2.0
+
+
+name: Check Code Quality
+
+on:
+  push:
+    branches:
+      - main
+  # run pipeline on pull request
+  pull_request:
+  # run pipeline on merge queue
+  merge_group:
+  # run pipeline from another workflow
+  workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-code-quality
+  cancel-in-progress: true
+
+jobs:
+  check-code-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Upgrade pip
+        run: pip install --upgrade pip
+
+      - name: Install dependencies
+        run: pip install -e .[dev]
+      
+      - name: Run pre-commit on all files
+        run: pre-commit run --all-files
