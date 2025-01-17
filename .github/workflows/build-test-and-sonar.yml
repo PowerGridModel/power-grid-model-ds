@@ -68,7 +68,6 @@ jobs:
           path: wheelhouse/
 
   sonar-cloud:
-    if: false #skip until open source
     permissions:
       contents: write
     runs-on: ubuntu-latest
