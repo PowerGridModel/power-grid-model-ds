@@ -28,8 +28,23 @@ Some highlighted features:
 ```
 pip install power-grid-model-ds
 ```
+## License
+
+This project is licensed under the Mozilla Public License, version 2.0 - see [LICENSE](https://github.com/PowerGridModel/power-grid-model-ds/blob/main/LICENSE) for details.
+
+## Licenses third-party libraries
+
+This project includes third-party libraries, 
+which are licensed under their own respective Open-Source licenses.
+SPDX-License-Identifier headers are used to show which license is applicable. 
+The concerning license files can be found in the [LICENSES](https://github.com/PowerGridModel/power-grid-model-ds/tree/main/LICENSES) directory.
 
 ## Contributing
 
 Please read [CODE_OF_CONDUCT](https://github.com/PowerGridModel/.github/blob/main/CODE_OF_CONDUCT.md) and [CONTRIBUTING](https://github.com/PowerGridModel/.github/blob/main/CONTRIBUTING.md) for details on the process 
 for submitting pull requests to us.
+
+## Contact
+
+Please read [SUPPORT](https://github.com/PowerGridModel/.github/blob/main/SUPPORT.md) for how to connect and get into contact with the Power Grid Model project.
+
