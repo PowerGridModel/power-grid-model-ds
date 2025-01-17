@@ -39,7 +39,7 @@ dev = [
   "ruff>=0.3.5",
   "isort>=5.13.2",
   "mypy>=1.9.0",
-  "pre-commit>=4"
+  "pre-commit>=4",
 
 ]
 docs = [
@@ -76,12 +76,31 @@ extension-pkg-allow-list = ["rustworkx"]
 max-parents = 15
 max-line-length = 120
 
+[tool.ruff]
+output-format = "github"
+line-length = 120
+show-fixes = true
 
-[tool.ruff.lint.per-file-ignores]
-"docs/*" = [
-  "E402", # Module level import not at top of file
-  "F811", # Redefinition of unused '...' from line ...
+[tool.ruff.lint]
+select = [
+  # pycodestyle
+  "E",
+  # Pyflakes
+  "F",
+  # # pyupgrade
+  # "UP",
+  # # flake8-bugbear
+  # "B",
+  # # flake8-simplify
+  # "SIM",
+  # isort
+  "I",
+  # Numpy 2.0 downstream : https://numpy.org/devdocs/numpy_2_0_migration_guide.html
+  "NPY201",
 ]
+# Allow fix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
 
 [tool.mypy]
 disable_error_code = ["assignment", "import-untyped"]
