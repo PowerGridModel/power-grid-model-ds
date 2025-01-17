@@ -5,7 +5,6 @@
 """Grid tests"""
 
 import dataclasses
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -294,8 +293,8 @@ def test_from_txt_file_with_branch_ids(tmp_path):
     np.testing.assert_array_equal([95, 91, 92, 93, 94, 96, 97, 98], grid.branches.id)
 
 
-def test_from_txt_file_conflicting_ids():
-    txt_file = Path("/tmp/tmp_grid")
+def test_from_txt_file_conflicting_ids(tmp_path):
+    txt_file = tmp_path / "tmp_grid"
     txt_file.write_text("S1 2\n1 3", encoding="utf-8")
 
     with pytest.raises(ValueError):
