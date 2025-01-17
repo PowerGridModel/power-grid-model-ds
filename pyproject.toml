@@ -104,3 +104,7 @@ unfixable = []
 
 [tool.mypy]
 disable_error_code = ["assignment", "import-untyped"]
+
+[tool.coverage.run]
+relative_files = true
+branch = true

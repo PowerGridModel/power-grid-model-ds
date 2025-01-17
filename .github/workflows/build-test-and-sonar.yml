@@ -1,0 +1,173 @@
+# SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
+#
+# SPDX-License-Identifier: MPL-2.0
+
+
+name: Build, Test, Sonar and Publish
+
+on:
+  push:
+    branches:
+      - main
+      - feature/github_actions
+  # run pipeline on pull request
+  pull_request:
+  # run pipeline on merge queue
+  merge_group:
+  # run pipeline from another workflow
+  workflow_call:
+    inputs:
+      create_release:
+        type: boolean
+        description: Create a (pre-)release when CI passes
+        default: false
+        required: false
+  # run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      create_release:
+        type: boolean
+        description: Create a (pre-)release when CI passes
+        default: false
+        required: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-main
+  cancel-in-progress: true
+
+jobs:
+
+  build-python:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build
+        run: |
+          pip install requests build
+          python set_pypi_version.py
+          python -m build --outdir wheelhouse .
+
+      - name: Save version
+        id: version
+        run: echo "version=$(cat PYPI_VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Store built wheel file
+        uses: actions/upload-artifact@v4
+        with:
+          name: power-grid-model-ds
+          path: wheelhouse/
+
+  sonar-cloud:
+    if: false #skip until open source
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install in develop mode
+        run: |
+          pip install -e .[dev]
+
+      - name: Test and Coverage
+        run: |
+          coverage run -m pytest 
+          coverage xml 
+          coverage report --fail-under=80
+
+      - name: SonarCloud Scan
+        if: ${{ (github.event_name == 'push') || (github.event.pull_request.head.repo.owner.login == 'PowerGridModel') }}
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  tests:
+    needs: build-python
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.10", "3.11", "3.12", "3.13"]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Load built wheel file
+        uses: actions/download-artifact@v4
+        with:
+          name: power-grid-model-ds
+          path: wheelhouse/
+
+      - name: Install built wheel file
+        run: pip install power-grid-model-ds[dev]==${{ needs.build-python.outputs.version }} --find-links=wheelhouse
+
+      - name: Unit test and coverage
+        run: pytest --verbose
+
+  publish:
+    needs:
+      - build-python
+      - tests
+      - sonar-cloud
+    permissions:
+      contents: write
+    env:
+      TWINE_USERNAME: ${{ secrets.PYPI_USER }}
+      TWINE_PASSWORD: ${{ secrets.PYPI_PASS }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Load built wheel file
+        uses: actions/download-artifact@v4
+        with:
+          name: power-grid-model-ds
+          path: wheelhouse/
+
+      # - name: Upload wheels
+      #   if: (github.event_name == 'push') || ((github.event_name == 'workflow_dispatch') && (github.event.inputs.create_release == 'true'))
+      #   run: |
+      #     pip install twine
+      #     echo "Publish to PyPI..."
+      #     twine upload --verbose wheelhouse/*
+
+      # - name: Release
+      #   if: (github.event_name == 'push') || ((github.event_name == 'workflow_dispatch') && (github.event.inputs.create_release == 'true'))
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     files: |
+      #       ./wheelhouse/*
+      #     tag_name: v${{ needs.build-python.outputs.version }}
+      #     prerelease: ${{github.ref != 'refs/heads/main'}}
+      #     generate_release_notes: true
+      #     target_commitish: ${{ github.sha }}
