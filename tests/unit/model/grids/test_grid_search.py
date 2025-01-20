@@ -13,7 +13,7 @@ from power_grid_model_ds._core.model.enums.nodes import NodeType
 
 def test_grid_get_nearest_substation_node(basic_grid):
     substation_node = basic_grid.get_nearest_substation_node(node_id=103)
-    assert NodeType.SUBSTATION_NODE == NodeType(substation_node.node_type)
+    assert NodeType.SUBSTATION_NODE == NodeType(int(substation_node.node_type))
 
 
 def test_grid_get_nearest_substation_node_no_substation(basic_grid):
