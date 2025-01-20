@@ -49,11 +49,6 @@ dist/
 # direnv config
 .envrc
 
-# docs
-docs/build/
-docs/make.bat
-docs/Makefile
-
 # Generated files
 *.egg-info
 PYPI_VERSION
