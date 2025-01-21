@@ -42,7 +42,7 @@ dev = [
   "pre-commit>=4",
 
 ]
-docs = [
+doc = [
   "sphinx",
   "myst-nb",
   "sphinx_rtd_theme",

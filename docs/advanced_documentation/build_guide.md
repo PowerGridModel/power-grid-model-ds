@@ -37,7 +37,7 @@ pytest
 
 To build the documentation locally execute the following commands
 ```
-pip install -e .[docs]
+pip install -e .[doc]
 
 # build the docs
 cd docs
