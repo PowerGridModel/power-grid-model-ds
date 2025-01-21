@@ -21,7 +21,7 @@ Some highlighted features:
 - An interface to model network mutations which is useful in
   simulation use-cases.
 
-See the [power-grid-model-ds documentation](https://power-grid-model-ds.readthedocs.io/en/latest/) for more information.
+See the [power-grid-model-ds documentation](https://power-grid-model-ds.readthedocs.io/en/stable/) for more information.
 
 ## Installation
 
