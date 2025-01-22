@@ -26,15 +26,6 @@ You can directly install the package from PyPI.
 pip install power-grid-model-ds
 ```
 
-## Install from Conda
-
-If you are using `conda`, you can directly install the package from `conda-forge` channel.
-
-```
-conda install -c conda-forge power-grid-model-ds
-```
-
-
 ```{toctree}
 :caption: "User Manual"
 :maxdepth: 2
