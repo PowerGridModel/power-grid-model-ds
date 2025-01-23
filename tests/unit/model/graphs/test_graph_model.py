@@ -27,6 +27,16 @@ def test_graph_initialize(graph):
     assert 1 == graph.nr_branches
 
 
+def test_graph_has_branch(graph):
+    graph.add_node(1)
+    graph.add_node(2)
+    graph.add_branch(1, 2)
+
+    assert graph.has_branch(1, 2)
+    assert graph.has_branch(2, 1)  # reversed should work too
+    assert not graph.has_branch(1, 3)
+
+
 def test_graph_delete_branch(graph):
     """Test whether a branch is deleted correctly"""
     graph.add_node(1)
