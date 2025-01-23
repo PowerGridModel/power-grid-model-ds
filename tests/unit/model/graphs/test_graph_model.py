@@ -4,6 +4,8 @@
 
 """Grid tests"""
 
+from collections import Counter
+
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
@@ -338,3 +340,26 @@ class TestGetConnected:
         connected_nodes = graph.get_connected(node_id=1, nodes_to_ignore=[2, 4])
 
         assert {5} == set(connected_nodes)
+
+
+def test_tmp_remove_nodes(graph_with_2_routes) -> None:
+    graph = graph_with_2_routes
+
+    assert graph.nr_branches == 4
+
+    # add parallel branches to test whether they are restored correctly
+    graph.add_branch(1, 5)
+    graph.add_branch(5, 1)
+
+    assert graph.nr_nodes == 5
+    assert graph.nr_branches == 6
+    counter_before: Counter[frozenset] = Counter(graph.all_branches)
+
+    with graph.tmp_remove_nodes([1, 2]):
+        assert graph.nr_nodes == 3
+        assert graph.all_branches == [{4, 5}]
+
+    assert graph.nr_nodes == 5
+    assert graph.nr_branches == 6
+    counter_after: Counter[frozenset] = Counter(graph.all_branches)
+    assert counter_before == counter_after
