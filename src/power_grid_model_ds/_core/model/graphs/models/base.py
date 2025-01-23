@@ -36,6 +36,13 @@ class BaseGraphModel(ABC):
     def nr_branches(self):
         """Returns the number of branches in the graph"""
 
+    @property
+    @abstractmethod
+    def all_branches(self) -> list[frozenset[int]]:
+        """Returns all branches in the graph as a list of node pairs (frozensets).
+        Warning: Depending on graph engine, performance could be slow for large graphs
+        """
+
     @abstractmethod
     def external_to_internal(self, ext_node_id: int) -> int:
         """Convert external node id to internal node id (internal)
