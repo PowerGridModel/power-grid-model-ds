@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
+from typing import Generator
 
 import numpy as np
 from numpy._typing import NDArray
@@ -164,6 +166,31 @@ class BaseGraphModel(ABC):
             branches = _get_branch3_branches(branch3)
             self.delete_branch_array(branches, raise_on_fail=raise_on_fail)
 
+    @contextmanager
+    def tmp_remove_nodes(self, nodes: list[int]) -> Generator:
+        """Context manager that temporarily removes nodes and their branches from the graph.
+        Example:
+            >>> with graph.tmp_remove_nodes([1, 2, 3]):
+            >>>    assert not graph.has_node(1)
+            >>> assert graph.has_node(1)
+        In practice, this is useful when you want to e.g. calculate the shortest path between two nodes without
+        considering certain nodes.
+        """
+        edge_list = []
+        for node in nodes:
+            internal_node = self.external_to_internal(node)
+            node_edges = [
+                (self.internal_to_external(source), self.internal_to_external(target))
+                for source, target in self._in_edges(internal_node)
+            ]
+            edge_list += node_edges
+            self._delete_node(internal_node)
+        yield edge_list
+        for node in nodes:
+            self.add_node(node)
+        for source, target in edge_list:
+            self.add_branch(source, target)
+
     def get_shortest_path(self, ext_start_node_id: int, ext_end_node_id: int) -> tuple[list[int], int]:
         """Calculate the shortest path between two nodes
 
@@ -269,6 +296,13 @@ class BaseGraphModel(ABC):
         if self.active_only:
             return branch.is_active.item()
         return True
+
+    @abstractmethod
+    def _in_edges(self, internal_node: int) -> list[tuple[int, int]]:
+        """Return all edges a node occurs in.
+
+        Return a list of tuples with the source and target node id. These are internal node ids.
+        """
 
     @abstractmethod
     def _get_connected(self, node_id: int, nodes_to_ignore: list[int], inclusive: bool = False) -> list[int]: ...
