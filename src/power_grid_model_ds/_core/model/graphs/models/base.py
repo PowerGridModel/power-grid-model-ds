@@ -235,7 +235,25 @@ class BaseGraphModel(ABC):
             nodes_to_ignore=self._externals_to_internals(nodes_to_ignore),
             inclusive=inclusive,
         )
+
         return self._internals_to_externals(nodes)
+
+    def get_downstream_nodes(self, node_id: int, stop_node_ids: list[int], inclusive: bool = False) -> list[int]:
+        """Find all nodes connected to the node_id
+        args:
+            node_id: node id to start the search from
+            stop_node_ids: list of node ids to stop the search at
+            inclusive: whether to include the given node id in the result
+        returns:
+            list of node ids sorted by distance, downstream of to the node id
+        """
+        downstream_nodes = self._get_downstream_nodes(
+            node_id=self.external_to_internal(node_id),
+            stop_node_ids=self._externals_to_internals(stop_node_ids),
+            inclusive=inclusive,
+        )
+
+        return self._internals_to_externals(downstream_nodes)
 
     def find_fundamental_cycles(self) -> list[list[int]]:
         """Find all fundamental cycles in the graph.
@@ -272,6 +290,9 @@ class BaseGraphModel(ABC):
 
     @abstractmethod
     def _get_connected(self, node_id: int, nodes_to_ignore: list[int], inclusive: bool = False) -> list[int]: ...
+
+    @abstractmethod
+    def _get_downstream_nodes(self, node_id: int, stop_node_ids: list[int], inclusive: bool = False) -> list[int]: ...
 
     @abstractmethod
     def _has_branch(self, from_node_id, to_node_id) -> bool: ...

@@ -99,6 +99,15 @@ class RustworkxGraphModel(BaseGraphModel):
 
         return connected_nodes
 
+    def _get_downstream_nodes(self, node_id: int, stop_node_ids: list[int], inclusive: bool = False) -> list[int]:
+        visitor = _NodeVisitor(stop_node_ids)
+        rx.bfs_search(self._graph, [node_id], visitor)
+        connected_nodes = visitor.nodes
+        path_to_substation, _ = self._get_shortest_path(node_id, visitor.discovered_nodes_to_ignore[0])
+        if inclusive:
+            _ = path_to_substation.pop(0)
+        return [node for node in connected_nodes if node not in path_to_substation]
+
     def _find_fundamental_cycles(self) -> list[list[int]]:
         """Find all fundamental cycles in the graph using Rustworkx.
 
@@ -112,8 +121,10 @@ class _NodeVisitor(BFSVisitor):
     def __init__(self, nodes_to_ignore: list[int]):
         self.nodes_to_ignore = nodes_to_ignore
         self.nodes: list[int] = []
+        self.discovered_nodes_to_ignore: list[int] = []
 
     def discover_vertex(self, v):
         if v in self.nodes_to_ignore:
+            self.discovered_nodes_to_ignore.append(v)
             raise PruneSearch
         self.nodes.append(v)

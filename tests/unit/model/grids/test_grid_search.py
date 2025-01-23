@@ -30,6 +30,9 @@ def test_get_downstream_nodes(basic_grid):
     downstream_nodes = basic_grid.get_downstream_nodes(node_id=102)
     assert {103, 106} == set(downstream_nodes)
 
+    downstream_nodes = basic_grid.get_downstream_nodes(node_id=102, inclusive=True)
+    assert {102, 103, 106} == set(downstream_nodes)
+
 
 def test_get_downstream_nodes_from_substation_node(basic_grid):
     """Test that get_downstream_nodes raises the expected error when
