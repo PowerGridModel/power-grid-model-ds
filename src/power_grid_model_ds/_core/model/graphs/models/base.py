@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from abc import ABC, abstractmethod
+from typing import Generator
 
 import numpy as np
 from numpy._typing import NDArray
@@ -35,11 +36,12 @@ class BaseGraphModel(ABC):
         """Returns the number of branches in the graph"""
 
     @property
-    @abstractmethod
-    def all_branches(self) -> list[frozenset[int]]:
-        """Returns all branches in the graph as a list of node pairs (frozensets).
-        Warning: Depending on graph engine, performance could be slow for large graphs
-        """
+    def all_branches(self) -> Generator[tuple[int, int], None, None]:
+        """Returns all branches in the graph."""
+        return (
+            (self.internal_to_external(source), self.internal_to_external(target))
+            for source, target in self._all_branches()
+        )
 
     @abstractmethod
     def external_to_internal(self, ext_node_id: int) -> int:
@@ -313,6 +315,9 @@ class BaseGraphModel(ABC):
 
     @abstractmethod
     def _find_fundamental_cycles(self) -> list[list[int]]: ...
+
+    @abstractmethod
+    def _all_branches(self) -> Generator[tuple[int, int], None, None]: ...
 
 
 def _get_branch3_branches(branch3: Branch3Array) -> BranchArray:

@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import logging
+from typing import Generator
 
 import rustworkx as rx
 from rustworkx import NoEdgeBetweenNodes
@@ -31,15 +32,6 @@ class RustworkxGraphModel(BaseGraphModel):
     @property
     def nr_branches(self):
         return self._graph.num_edges()
-
-    @property
-    def all_branches(self) -> list[frozenset[int]]:
-        internal_branches = ((source, target) for source, target in self._graph.edge_list())
-        external_branches = [
-            frozenset([self.internal_to_external(source), self.internal_to_external(target)])
-            for source, target in internal_branches
-        ]
-        return external_branches
 
     @property
     def external_ids(self) -> list[int]:
@@ -115,6 +107,9 @@ class RustworkxGraphModel(BaseGraphModel):
             list[list[int]]: A list of cycles, each cycle is a list of node IDs.
         """
         return find_fundamental_cycles_rustworkx(self._graph)
+
+    def _all_branches(self) -> Generator[tuple[int, int], None, None]:
+        return ((source, target) for source, target in self._graph.edge_list())
 
 
 class _NodeVisitor(BFSVisitor):
