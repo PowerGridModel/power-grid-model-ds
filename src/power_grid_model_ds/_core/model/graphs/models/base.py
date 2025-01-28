@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 from typing import Generator
 
 import numpy as np
@@ -192,7 +193,8 @@ class BaseGraphModel(ABC):
             ]
             edge_list += node_edges
             self._delete_node(internal_node)
-        yield edge_list
+        yield
+
         for node in nodes:
             self.add_node(node)
         for source, target in edge_list:
