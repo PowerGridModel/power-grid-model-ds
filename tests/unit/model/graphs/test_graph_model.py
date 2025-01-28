@@ -353,13 +353,17 @@ def test_tmp_remove_nodes(graph_with_2_routes) -> None:
 
     assert graph.nr_nodes == 5
     assert graph.nr_branches == 6
-    counter_before: Counter[frozenset] = Counter(graph.all_branches)
+
+    before_sets = [frozenset(branch) for branch in graph.all_branches]
+    counter_before = Counter(before_sets)
 
     with graph.tmp_remove_nodes([1, 2]):
         assert graph.nr_nodes == 3
-        assert graph.all_branches == [{4, 5}]
+        assert list(graph.all_branches) == [(5, 4)]
 
     assert graph.nr_nodes == 5
     assert graph.nr_branches == 6
-    counter_after: Counter[frozenset] = Counter(graph.all_branches)
+
+    after_sets = [frozenset(branch) for branch in graph.all_branches]
+    counter_after = Counter(after_sets)
     assert counter_before == counter_after

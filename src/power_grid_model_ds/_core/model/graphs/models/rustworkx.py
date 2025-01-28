@@ -34,15 +34,6 @@ class RustworkxGraphModel(BaseGraphModel):
         return self._graph.num_edges()
 
     @property
-    def all_branches(self) -> list[frozenset[int]]:
-        internal_branches = ((source, target) for source, target in self._graph.edge_list())
-        external_branches = [
-            frozenset([self.internal_to_external(source), self.internal_to_external(target)])
-            for source, target in internal_branches
-        ]
-        return external_branches
-
-    @property
     def external_ids(self) -> list[int]:
         return list(self._external_to_internal.keys())
 
