@@ -44,7 +44,7 @@ def test_graph_all_branches(graph):
     graph.add_node(2)
     graph.add_branch(1, 2)
 
-    assert [{1, 2}] == graph.all_branches
+    assert [(1, 2)] == list(graph.all_branches)
 
 
 def test_graph_all_branches_parallel(graph):
@@ -54,7 +54,7 @@ def test_graph_all_branches_parallel(graph):
     graph.add_branch(1, 2)
     graph.add_branch(2, 1)
 
-    assert [{1, 2}, {1, 2}, {1, 2}] == graph.all_branches
+    assert [(1, 2), (1, 2), (2, 1)] == list(graph.all_branches)
 
 
 def test_graph_delete_branch(graph):
