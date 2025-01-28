@@ -73,10 +73,10 @@ class BaseGraphModel(ABC):
 
         return self._has_node(node_id=internal_node_id)
 
-    def in_edges(self, node_id: int) -> Generator[tuple[int, int], None, None]:
-        """Return all edges a node occurs in."""
+    def in_branches(self, node_id: int) -> Generator[tuple[int, int], None, None]:
+        """Return all branches that have the node as an endpoint."""
         int_node_id = self.external_to_internal(node_id)
-        internal_edges = self._in_edges(int_node_id=int_node_id)
+        internal_edges = self._in_branches(int_node_id=int_node_id)
         return (
             (self.internal_to_external(source), self.internal_to_external(target)) for source, target in internal_edges
         )
@@ -194,9 +194,9 @@ class BaseGraphModel(ABC):
         """
         edge_list = []
         for node in nodes:
-            internal_node = self.external_to_internal(node)
-            edge_list += list(self.in_edges(node))
-            self._delete_node(internal_node)
+            edge_list += list(self.in_branches(node))
+            self.delete_node(node)
+
         yield
 
         for node in nodes:
@@ -311,7 +311,7 @@ class BaseGraphModel(ABC):
         return True
 
     @abstractmethod
-    def _in_edges(self, int_node_id: int) -> Generator[tuple[int, int], None, None]:
+    def _in_branches(self, int_node_id: int) -> Generator[tuple[int, int], None, None]:
         """Return all edges a node occurs in.
         Return a list of tuples with the source and target node id.
         These are internal node ids.

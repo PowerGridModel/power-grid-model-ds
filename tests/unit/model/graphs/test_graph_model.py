@@ -57,15 +57,15 @@ def test_graph_all_branches_parallel(graph):
     assert [(1, 2), (1, 2), (2, 1)] == list(graph.all_branches)
 
 
-def test_graph_in_edges(graph):
+def test_graph_in_branches(graph):
     graph.add_node(1)
     graph.add_node(2)
     graph.add_branch(1, 2)
     graph.add_branch(1, 2)
     graph.add_branch(2, 1)
 
-    assert [(2, 1), (2, 1), (2, 1)] == list(graph.in_edges(1))
-    assert [(1, 2), (1, 2), (1, 2)] == list(graph.in_edges(2))
+    assert [(2, 1), (2, 1), (2, 1)] == list(graph.in_branches(1))
+    assert [(1, 2), (1, 2), (1, 2)] == list(graph.in_branches(2))
 
 
 def test_graph_delete_branch(graph):
