@@ -311,11 +311,7 @@ class BaseGraphModel(ABC):
         return True
 
     @abstractmethod
-    def _in_branches(self, int_node_id: int) -> Generator[tuple[int, int], None, None]:
-        """Return all edges a node occurs in.
-        Return a list of tuples with the source and target node id.
-        These are internal node ids.
-        """
+    def _in_branches(self, int_node_id: int) -> Generator[tuple[int, int], None, None]: ...
 
     @abstractmethod
     def _get_connected(self, node_id: int, nodes_to_ignore: list[int], inclusive: bool = False) -> list[int]: ...
