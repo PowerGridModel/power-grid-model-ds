@@ -73,6 +73,14 @@ class BaseGraphModel(ABC):
 
         return self._has_node(node_id=internal_node_id)
 
+    def in_edges(self, node_id: int) -> Generator[tuple[int, int], None, None]:
+        """Return all edges a node occurs in."""
+        int_node_id = self.external_to_internal(node_id)
+        internal_edges = self._in_edges(int_node_id=int_node_id)
+        return (
+            (self.internal_to_external(source), self.internal_to_external(target)) for source, target in internal_edges
+        )
+
     def add_node(self, ext_node_id: int, raise_on_fail: bool = True) -> None:
         """Add a node to the graph."""
         if self.has_node(ext_node_id):
@@ -187,11 +195,7 @@ class BaseGraphModel(ABC):
         edge_list = []
         for node in nodes:
             internal_node = self.external_to_internal(node)
-            node_edges = [
-                (self.internal_to_external(source), self.internal_to_external(target))
-                for source, target in self._in_edges(internal_node)
-            ]
-            edge_list += node_edges
+            edge_list += list(self.in_edges(node))
             self._delete_node(internal_node)
         yield
 
@@ -307,10 +311,10 @@ class BaseGraphModel(ABC):
         return True
 
     @abstractmethod
-    def _in_edges(self, internal_node: int) -> list[tuple[int, int]]:
+    def _in_edges(self, int_node_id: int) -> Generator[tuple[int, int], None, None]:
         """Return all edges a node occurs in.
-
-        Return a list of tuples with the source and target node id. These are internal node ids.
+        Return a list of tuples with the source and target node id.
+        These are internal node ids.
         """
 
     @abstractmethod
