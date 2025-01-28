@@ -6,18 +6,18 @@ NUMPY_DTYPE = (
     "dtype = [('id', '<i8'), ('test_int', '<i8'), ('test_float', '<f8'), ('test_str', '<U50'), ('test_bool', '?')]; "
 )
 
-SETUP_CODES = {
-    "structured": "import numpy as np;" + NUMPY_DTYPE + "input_array = np.zeros({array_size}, dtype=dtype)",
-    "rec": "import numpy as np;" + NUMPY_DTYPE + "input_array = np.recarray(({array_size},),dtype=dtype)",
-    "fancy": "from tests.conftest import FancyTestArray; input_array=FancyTestArray.zeros({array_size});"
-    + "import numpy as np;input_array.id = np.arange({array_size})",
+ARRAY_SETUP_CODES = {
+    "structured": "import numpy as np;" + NUMPY_DTYPE + "input_array = np.zeros({size}, dtype=dtype)",
+    "rec": "import numpy as np;" + NUMPY_DTYPE + "input_array = np.recarray(({size},),dtype=dtype)",
+    "fancy": "from tests.conftest import FancyTestArray; input_array=FancyTestArray.zeros({size});"
+    + "import numpy as np;input_array.id = np.arange({size})",
 }
 
 GRAPH_SETUP_CODES = {
-    "rustworkx": "from power_grid_model_ds.model.grids.base import Grid;"
-    + "from power_grid_model_ds.data_source.generator.grid_generators import RadialGridGenerator;"
-    + "from power_grid_model_ds.model.graphs.models import RustworkxGraphModel;"
-    + "grid=RadialGridGenerator(nr_nodes={graph_size}, grid_class=Grid, graph_model=RustworkxGraphModel).run()",
+    "rustworkx": "from power_grid_model_ds import Grid;"
+    + "from power_grid_model_ds.generators import RadialGridGenerator;"
+    + "from power_grid_model_ds.graph_models import RustworkxGraphModel;"
+    + "grid=RadialGridGenerator(nr_nodes={size}, grid_class=Grid, graph_model=RustworkxGraphModel).run()",
 }
 
 SINGLE_REPEATS = 1000
