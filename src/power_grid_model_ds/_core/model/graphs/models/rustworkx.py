@@ -6,7 +6,7 @@ import logging
 
 import rustworkx as rx
 from rustworkx import NoEdgeBetweenNodes
-from rustworkx.visit import BFSVisitor, PruneSearch
+from rustworkx.visit import BFSVisitor, PruneSearch, StopSearch
 
 from power_grid_model_ds._core.model.graphs.errors import MissingBranchError, MissingNodeError, NoPathBetweenNodes
 from power_grid_model_ds._core.model.graphs.models._rustworkx_search import find_fundamental_cycles_rustworkx
@@ -99,14 +99,12 @@ class RustworkxGraphModel(BaseGraphModel):
 
         return connected_nodes
 
-    def _get_downstream_nodes(self, node_id: int, stop_node_ids: list[int], inclusive: bool = False) -> list[int]:
-        visitor = _NodeVisitor(stop_node_ids)
+    def _find_connected(self, node_id: int, candidate_node_ids: list[int]) -> int:
+        visitor = _NodeFinder(candidate_nodes=candidate_node_ids)
         rx.bfs_search(self._graph, [node_id], visitor)
-        connected_nodes = visitor.nodes
-        path_to_substation, _ = self._get_shortest_path(node_id, visitor.discovered_nodes_to_ignore[0])
-        if inclusive:
-            _ = path_to_substation.pop(0)
-        return [node for node in connected_nodes if node not in path_to_substation]
+        if visitor.found_node is None:
+            raise MissingNodeError(f"node {node_id} is not connected to any of the candidate nodes")
+        return visitor.found_node
 
     def _find_fundamental_cycles(self) -> list[list[int]]:
         """Find all fundamental cycles in the graph using Rustworkx.
@@ -121,10 +119,21 @@ class _NodeVisitor(BFSVisitor):
     def __init__(self, nodes_to_ignore: list[int]):
         self.nodes_to_ignore = nodes_to_ignore
         self.nodes: list[int] = []
-        self.discovered_nodes_to_ignore: list[int] = []
 
     def discover_vertex(self, v):
         if v in self.nodes_to_ignore:
-            self.discovered_nodes_to_ignore.append(v)
             raise PruneSearch
         self.nodes.append(v)
+
+
+class _NodeFinder(BFSVisitor):
+    """Visitor that stops the search when a candidate node is found"""
+
+    def __init__(self, candidate_nodes: list[int]):
+        self.candidate_nodes = candidate_nodes
+        self.found_node: int | None = None
+
+    def discover_vertex(self, v):
+        if v in self.candidate_nodes:
+            self.found_node = v
+            raise StopSearch

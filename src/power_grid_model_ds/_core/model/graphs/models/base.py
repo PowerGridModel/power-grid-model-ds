@@ -238,6 +238,23 @@ class BaseGraphModel(ABC):
 
         return self._internals_to_externals(nodes)
 
+    def find_connected(self, node_id: int, candidate_node_ids: list[int]) -> int:
+        """Find a connection between a node and a list of candidate nodes.
+
+        Note:
+            If multiple candidate nodes are connected to the node, the first one found is returned.
+            There is no guarantee that the same candidate node will be returned each time.
+
+        Raises:
+            MissingNodeError: if no connected node is found
+            ValueError: if the node_id is in candidate_node_ids
+        """
+        internal_node_id = self.external_to_internal(node_id)
+        internal_candidates = self._externals_to_internals(candidate_node_ids)
+        if internal_node_id in internal_candidates:
+            raise ValueError("node_id cannot be in candidate_node_ids")
+        return self.internal_to_external(self._find_connected(internal_node_id, internal_candidates))
+
     def get_downstream_nodes(self, node_id: int, stop_node_ids: list[int], inclusive: bool = False) -> list[int]:
         """Find all nodes connected to the node_id
         args:
@@ -247,13 +264,11 @@ class BaseGraphModel(ABC):
         returns:
             list of node ids sorted by distance, downstream of to the node id
         """
-        downstream_nodes = self._get_downstream_nodes(
-            node_id=self.external_to_internal(node_id),
-            stop_node_ids=self._externals_to_internals(stop_node_ids),
-            inclusive=inclusive,
-        )
+        connected_node = self.find_connected(node_id, stop_node_ids)
+        path, _ = self.get_shortest_path(node_id, connected_node)
+        _, upstream_node, *_ = path  # path is at least 2 elements long or find_connected would have raised an error
 
-        return self._internals_to_externals(downstream_nodes)
+        return self.get_connected(node_id, [upstream_node], inclusive)
 
     def find_fundamental_cycles(self) -> list[list[int]]:
         """Find all fundamental cycles in the graph.
@@ -292,7 +307,7 @@ class BaseGraphModel(ABC):
     def _get_connected(self, node_id: int, nodes_to_ignore: list[int], inclusive: bool = False) -> list[int]: ...
 
     @abstractmethod
-    def _get_downstream_nodes(self, node_id: int, stop_node_ids: list[int], inclusive: bool = False) -> list[int]: ...
+    def _find_connected(self, node_id: int, candidate_node_ids: list[int]) -> int: ...
 
     @abstractmethod
     def _has_branch(self, from_node_id, to_node_id) -> bool: ...
