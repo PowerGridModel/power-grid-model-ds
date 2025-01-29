@@ -5,6 +5,7 @@
 import numpy as np
 import pytest
 
+from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.enums.nodes import NodeType
 
@@ -25,10 +26,19 @@ def test_grid_get_nearest_substation_node_no_substation(basic_grid):
         basic_grid.get_nearest_substation_node(node_id=103)
 
 
-def test_get_downstream_nodes(basic_grid):
+def test_get_downstream_nodes(basic_grid: Grid):
     """Test that get_downstream_nodes returns the expected nodes."""
+    # Move the open line to be able to test sorting of nodes by distance correctly
+    basic_grid.make_active(basic_grid.line.get(203))
+    basic_grid.make_inactive(basic_grid.link.get(601))
     downstream_nodes = basic_grid.get_downstream_nodes(node_id=102)
-    assert {103, 106} == set(downstream_nodes)
+    assert downstream_nodes[-1] == 104  # Furthest away
+    assert {103, 104, 106} == set(downstream_nodes)
+
+    downstream_nodes = basic_grid.get_downstream_nodes(node_id=102, inclusive=True)
+    assert downstream_nodes[0] == 102
+    assert downstream_nodes[-1] == 104
+    assert {102, 103, 104, 106} == set(downstream_nodes)
 
 
 def test_get_downstream_nodes_from_substation_node(basic_grid):
