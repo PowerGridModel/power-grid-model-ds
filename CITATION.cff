@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 cff-version: 1.2.0
-message: "If you are using Power Grid Model in your research work, please consider citing our library as below."
+message: "If you are using Power Grid Model DS in your research work, please consider citing our library as below."
 
 title: "PowerGridModel/power-grid-model-ds"
 url: "https://github.com/PowerGridModel/power-grid-model-ds"
