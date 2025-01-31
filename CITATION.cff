@@ -31,9 +31,10 @@ contact:
 
 references:
   - title: "PowerGridModel/power-grid-model"
-    url: "https://github.com/PowerGridModel/power-grid-model"
+    repository-code: "https://github.com/PowerGridModel/power-grid-model"
     doi: "10.5281/zenodo.8054429"
     license: "MPL-2.0"
+    type: software-code
     authors:
       - family-names: "Xiang"
         given-names: "Yu"
