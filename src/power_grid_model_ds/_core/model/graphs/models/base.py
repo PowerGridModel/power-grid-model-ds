@@ -72,7 +72,6 @@ class BaseGraphModel(ABC):
 
         self._add_node(ext_node_id)
 
-
     def delete_node(self, ext_node_id: int, raise_on_fail: bool = True) -> None:
         """Remove a node from the graph.
 
@@ -94,9 +93,10 @@ class BaseGraphModel(ABC):
 
     def add_node_array(self, node_array: NodeArray, raise_on_fail: bool = True) -> None:
         """Add all nodes in the node array to the graph."""
-        ext_node_ids = node_array.id.tolist()
-        if existing_ids := set(ext_node_ids).intersection(set(self.external_ids)):
-            raise GraphError(f"{len(existing_ids)} external node ids already exist!")
+        ext_node_ids = node_array["id"].tolist()
+        if raise_on_fail:
+            if existing_ids := set(ext_node_ids).intersection(set(self.external_ids)):
+                raise GraphError(f"{len(existing_ids)} external node ids already exist!")
         self._add_nodes(ext_node_ids)
 
     def delete_node_array(self, node_array: NodeArray, raise_on_fail: bool = True) -> None:
@@ -150,8 +150,8 @@ class BaseGraphModel(ABC):
             if not branch_array.size:
                 return
 
-        from_node_ids = self._externals_to_internals(branch_array.from_node.tolist())
-        to_node_ids = self._externals_to_internals(branch_array.to_node.tolist())
+        from_node_ids = self._externals_to_internals(branch_array["from_node"].tolist())
+        to_node_ids = self._externals_to_internals(branch_array["to_node"].tolist())
         self._add_branches(from_node_ids, to_node_ids)
 
     def add_branch3_array(self, branch3_array: Branch3Array) -> None:
