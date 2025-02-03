@@ -211,7 +211,7 @@ class Grid(FancyArrayContainer):
             branch (BranchArray): The branch to add
         """
         self._append(array=branch)
-        self.graphs.add_branch(branch=branch)
+        self.graphs.add_branch_array(branch_array=branch)
 
         logging.debug(f"added branch {branch.id} from {branch.from_node} to {branch.to_node}")
 
@@ -243,7 +243,7 @@ class Grid(FancyArrayContainer):
             node (NodeArray): The node to add
         """
         self._append(array=node)
-        self.graphs.add_node(node=node)
+        self.graphs.add_node_array(node_array=node)
         logging.debug(f"added rail {node.id}")
 
     def delete_node(self, node: NodeArray) -> None:
