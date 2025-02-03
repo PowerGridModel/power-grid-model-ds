@@ -7,7 +7,6 @@ from tests.performance._helpers import do_graph_test
 # pylint: disable=missing-function-docstring
 
 GRAPH_SIZES = [100, 500, 1000, 5000]
-GRAPH_SIZES = [100, 500, 1000]
 
 
 def perftest_initialize():

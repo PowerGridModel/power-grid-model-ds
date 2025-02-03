@@ -14,9 +14,9 @@ SETUP_CODES = {
 }
 
 GRAPH_SETUP_CODES = {
-    "rustworkx": "from power_grid_model_ds.model.grids.base import Grid;"
-    + "from power_grid_model_ds.data_source.generator.grid_generators import RadialGridGenerator;"
-    + "from power_grid_model_ds.model.graphs.models import RustworkxGraphModel;"
+    "rustworkx": "from power_grid_model_ds import Grid;"
+    + "from power_grid_model_ds.generators import RadialGridGenerator;"
+    + "from power_grid_model_ds.graph_models import RustworkxGraphModel;"
     + "grid=RadialGridGenerator(nr_nodes={graph_size}, grid_class=Grid, graph_model=RustworkxGraphModel).run()",
 }
 
