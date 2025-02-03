@@ -55,18 +55,32 @@ class GraphContainer:
             complete_graph=graph_model(active_only=False),
         )
 
-    def add_branch(self, branch: BranchArray) -> None:
-        """Add a branch to all graphs"""
-        for field in self.graph_attributes:
+    def add_node_array(self, node_array: NodeArray) -> None:
+        """Add a node to all graphs"""
+        for field in dataclasses.fields(self):
             graph = getattr(self, field.name)
-            graph.add_branch_array(branch_array=branch)
+            graph.add_node_array(node_array=node_array, raise_on_fail=False)
             setattr(self, field.name, graph)
 
-    def add_branch3(self, branch: Branch3Array) -> None:
+    def add_branch_array(self, branch_array: BranchArray) -> None:
         """Add a branch to all graphs"""
         for field in self.graph_attributes:
             graph = getattr(self, field.name)
-            graph.add_branch3_array(branch3_array=branch)
+            graph.add_branch_array(branch_array=branch_array)
+            setattr(self, field.name, graph)
+
+    def add_branch3_array(self, branch3_array: Branch3Array) -> None:
+        """Add a branch to all graphs"""
+        for field in self.graph_attributes:
+            graph = getattr(self, field.name)
+            graph.add_branch3_array(branch3_array=branch3_array)
+            setattr(self, field.name, graph)
+
+    def delete_node(self, node: NodeArray) -> None:
+        """Remove a node from all graphs"""
+        for field in dataclasses.fields(self):
+            graph = getattr(self, field.name)
+            graph.delete_node_array(node_array=node)
             setattr(self, field.name, graph)
 
     def delete_branch(self, branch: BranchArray) -> None:
@@ -81,20 +95,6 @@ class GraphContainer:
         for field in self.graph_attributes:
             graph = getattr(self, field.name)
             graph.delete_branch3_array(branch3_array=branch)
-            setattr(self, field.name, graph)
-
-    def add_node(self, node: NodeArray) -> None:
-        """Add a node to all graphs"""
-        for field in dataclasses.fields(self):
-            graph = getattr(self, field.name)
-            graph.add_node_array(node_array=node, raise_on_fail=False)
-            setattr(self, field.name, graph)
-
-    def delete_node(self, node: NodeArray) -> None:
-        """Remove a node from all graphs"""
-        for field in dataclasses.fields(self):
-            graph = getattr(self, field.name)
-            graph.delete_node_array(node_array=node)
             setattr(self, field.name, graph)
 
     def make_active(self, branch: BranchArray) -> None:
@@ -150,11 +150,10 @@ class GraphContainer:
                 raise RecordDoesNotExist(f"Found invalid .to_node values in {array.__class__.__name__}")
 
     def _append(self, array: FancyArray) -> None:
+        if isinstance(array, NodeArray):
+            self.add_node_array(array)
         if isinstance(array, BranchArray):
-            self.add_branch(array)
+            self.add_branch_array(array)
         if isinstance(array, Branch3Array):
             for record in array:
-                self.add_branch3(record)
-        if isinstance(array, NodeArray):
-            for record in array:
-                self.add_node(record)
+                self.add_branch3_array(record)

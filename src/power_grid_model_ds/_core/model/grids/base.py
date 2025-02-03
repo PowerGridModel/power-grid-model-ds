@@ -200,9 +200,9 @@ class Grid(FancyArrayContainer):
             check_max_id (bool, optional): Whether to check if the array id is the maximum id. Defaults to True.
         """
         self._append(array, check_max_id=check_max_id)  # noqa
-        for row in array:
-            # pylint: disable=protected-access
-            self.graphs._append(row)
+
+        # pylint: disable=protected-access
+        self.graphs._append(array)
 
     def add_branch(self, branch: BranchArray) -> None:
         """Add a branch to the grid
