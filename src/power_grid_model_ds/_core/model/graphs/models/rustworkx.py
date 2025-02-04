@@ -99,7 +99,7 @@ class RustworkxGraphModel(BaseGraphModel):
 
         return connected_nodes
 
-    def _find_connected(self, node_id: int, candidate_node_ids: list[int]) -> int:
+    def _find_first_connected(self, node_id: int, candidate_node_ids: list[int]) -> int:
         visitor = _NodeFinder(candidate_nodes=candidate_node_ids)
         rx.bfs_search(self._graph, [node_id], visitor)
         if visitor.found_node is None:

@@ -356,7 +356,7 @@ class Grid(FancyArrayContainer):
             raise NotImplementedError("get_downstream_nodes is not implemented for substation nodes!")
 
         return self.graphs.active_graph.get_downstream_nodes(
-            node_id=node_id, stop_node_ids=list(substation_nodes.id), inclusive=inclusive
+            node_id=node_id, start_node_ids=list(substation_nodes.id), inclusive=inclusive
         )
 
     def cache(self, cache_dir: Path, cache_name: str, compress: bool = True):
