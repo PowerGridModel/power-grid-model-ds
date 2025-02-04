@@ -158,9 +158,9 @@ class BaseGraphModel(ABC):
             if self._branch_is_relevant(branch):
                 self.delete_branch(branch.from_node.item(), branch.to_node.item(), raise_on_fail=raise_on_fail)
 
-    def delete_branch3_array(self, branch_array: Branch3Array, raise_on_fail: bool = True) -> None:
+    def delete_branch3_array(self, branch3_array: Branch3Array, raise_on_fail: bool = True) -> None:
         """Delete all branch3s in the branch3 array from the graph."""
-        for branch3 in branch_array:
+        for branch3 in branch3_array:
             branches = _get_branch3_branches(branch3)
             self.delete_branch_array(branches, raise_on_fail=raise_on_fail)
 
