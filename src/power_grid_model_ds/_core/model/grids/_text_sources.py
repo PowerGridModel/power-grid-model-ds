@@ -5,6 +5,7 @@
 """Create a grid from text a text file"""
 
 import logging
+import re
 from typing import TYPE_CHECKING
 
 from power_grid_model_ds._core.model.enums.nodes import NodeType
@@ -34,9 +35,12 @@ class TextSource:
     def __init__(self, grid_class: type["Grid"]):
         self.grid = grid_class.empty()
 
-    def load_from_txt(self, txt_lines: list[str]) -> "Grid":
+    def load_from_txt(self, *args: str) -> "Grid":
         """Load a grid from text"""
-        txt_nodes, txt_branches = self.read_txt(txt_lines)
+
+        text_lines = [line for arg in args for line in arg.strip().split("\n")]
+
+        txt_nodes, txt_branches = self.read_txt(text_lines)
         self.add_nodes(txt_nodes)
         self.add_branches(txt_branches)
         self.grid.set_feeder_ids()
@@ -50,11 +54,14 @@ class TextSource:
         for text_line in txt_lines:
             if not text_line.strip() or text_line.startswith("#"):
                 continue  # skip empty lines and comments
-            try:
-                from_node_str, to_node_str, *comments = text_line.strip().split(" ")
-            except ValueError as err:
-                raise ValueError(f"Text line '{text_line}' is invalid. Skipping...") from err
-            comments = comments[0].split(",") if comments else []
+
+            pattern = re.compile(r"^\s*(\S+)\s+(\S+)(?:\s+(\S+))?\s*$")
+            match = pattern.match(text_line)
+            if not match:
+                raise ValueError(f"Text line '{text_line}' is invalid. Skipping...")
+
+            from_node_str, to_node_str, comment = match.groups()
+            comments = comment.split(",") if comment else []
 
             txt_nodes |= {from_node_str, to_node_str}
             txt_branches[(from_node_str, to_node_str)] = comments

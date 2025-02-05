@@ -331,7 +331,6 @@ class Grid(FancyArrayContainer):
 
     def get_downstream_nodes(self, node_id: int, inclusive: bool = False):
         """Get the downstream nodes from a node.
-        Assuming each node has a single feeding substation and the grid is radial
 
         Example:
             given this graph: [1] - [2] - [3] - [4], with 1 being a substation node
@@ -350,14 +349,15 @@ class Grid(FancyArrayContainer):
         Returns:
             list[int]: The downstream nodes.
         """
-        substation_nodes = self.node.filter(node_type=NodeType.SUBSTATION_NODE.value)
+        substation_node_id = self.get_nearest_substation_node(node_id).id.item()
 
-        if node_id in substation_nodes.id:
+        if node_id == substation_node_id:
             raise NotImplementedError("get_downstream_nodes is not implemented for substation nodes!")
 
-        return self.graphs.active_graph.get_downstream_nodes(
-            node_id=node_id, start_node_ids=list(substation_nodes.id), inclusive=inclusive
-        )
+        path_to_substation, _ = self.graphs.active_graph.get_shortest_path(node_id, substation_node_id)
+        upstream_node = path_to_substation[1]
+
+        return self.graphs.active_graph.get_connected(node_id, nodes_to_ignore=[upstream_node], inclusive=inclusive)
 
     def cache(self, cache_dir: Path, cache_name: str, compress: bool = True):
         """Cache Grid to a folder
@@ -409,15 +409,19 @@ class Grid(FancyArrayContainer):
         return grid
 
     @classmethod
-    def from_txt(cls, txt_lines: list[str]):
+    def from_txt(cls, *args: str):
         """Build a grid from a list of strings
 
         See the documentation for the expected format of the txt_lines
 
-        Example:
-            >>> Grid.from_txt(["1 2", "2 3", "3 4 transformer", "4 5", "S1 6"])
+        Args:
+            *args (str): The lines of the grid
+
+        Examples:
+            >>> Grid.from_txt("1 2", "2 3", "3 4 transformer", "4 5", "S1 6")
+            alternative: Grid.from_txt("1 2\n2 3\n3 4 transformer\n4 5\nS1 6")
         """
-        return TextSource(grid_class=cls).load_from_txt(txt_lines)
+        return TextSource(grid_class=cls).load_from_txt(*args)
 
     @classmethod
     # pylint: disable=arguments-differ
@@ -429,7 +433,7 @@ class Grid(FancyArrayContainer):
         """
         with open(txt_file_path, "r", encoding="utf-8") as f:
             txt_lines = f.readlines()
-        return TextSource(grid_class=cls).load_from_txt(txt_lines)
+        return TextSource(grid_class=cls).load_from_txt(*txt_lines)
 
     def set_feeder_ids(self):
         """Sets feeder and substation id properties in the grids arrays"""
