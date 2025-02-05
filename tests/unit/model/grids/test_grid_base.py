@@ -335,14 +335,13 @@ class TestFromTxt:
 
     def test_from_txt_with_unordered_branch_ids(self):
         txt_lines = [
-            "3 6 14, transformer",
-            "S1 2 10",
-            "S1 3 11, open",
-            "2 7 12",
-            "3 5 13",
-            "5 7 15",
-            "7 8 16",
-            "8 9 17",
+            "5 6 16",
+            "3 4 17",
+            "3 7 18",
+            "S1 2 12",
+            "S1 10 13",
+            "10 11 14",
+            "2 5 15",
         ]
         grid = Grid.from_txt(txt_lines)
         assert 9 == grid.node.size
