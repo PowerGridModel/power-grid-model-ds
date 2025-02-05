@@ -327,7 +327,7 @@ class TestFromTxt:
 
     def test_from_txt_with_invalid_line(self):
         with pytest.raises(ValueError):
-            Grid.from_txt("S1 2 arg3 arg4")
+            Grid.from_txt("S1")
 
     def test_from_txt_with_unordered_node_ids(self):
         grid = Grid.from_txt("S1 2", "S1 10", "10 11", "2 5", "5 6", "3 4", "3 7")
