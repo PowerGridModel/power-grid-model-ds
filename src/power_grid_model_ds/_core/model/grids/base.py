@@ -409,6 +409,21 @@ class Grid(FancyArrayContainer):
         return grid
 
     @classmethod
+    def from_txt(cls, *args: str):
+        """Build a grid from a list of strings
+
+        See the documentation for the expected format of the txt_lines
+
+        Args:
+            *args (str): The lines of the grid
+
+        Examples:
+            >>> Grid.from_txt("1 2", "2 3", "3 4 transformer", "4 5", "S1 6")
+            alternative: Grid.from_txt("1 2\n2 3\n3 4 transformer\n4 5\nS1 6")
+        """
+        return TextSource(grid_class=cls).load_from_txt(*args)
+
+    @classmethod
     # pylint: disable=arguments-differ
     def from_txt_file(cls, txt_file_path: Path):
         """Load grid from txt file
@@ -416,8 +431,9 @@ class Grid(FancyArrayContainer):
         Args:
             txt_file_path (Path): The path to the txt file
         """
-        text_source = TextSource(grid_class=cls)
-        return text_source.load_grid_from_path(txt_file_path)
+        with open(txt_file_path, "r", encoding="utf-8") as f:
+            txt_lines = f.readlines()
+        return TextSource(grid_class=cls).load_from_txt(*txt_lines)
 
     def set_feeder_ids(self):
         """Sets feeder and substation id properties in the grids arrays"""

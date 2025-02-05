@@ -5,7 +5,6 @@
 """Create a grid from text a text file"""
 
 import logging
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from power_grid_model_ds._core.model.enums.nodes import NodeType
@@ -35,29 +34,28 @@ class TextSource:
     def __init__(self, grid_class: type["Grid"]):
         self.grid = grid_class.empty()
 
-    def load_grid_from_path(self, path: Path):
-        """Load assets from text file & sort them by id so that
-        they are ready to be appended to the grid"""
+    def load_from_txt(self, *args: str) -> "Grid":
+        """Load a grid from text"""
 
-        txt_nodes, txt_branches = self.read_txt(path)
+        text_lines = [line for arg in args for line in arg.strip().split("\n")]
+
+        txt_nodes, txt_branches = self.read_txt(text_lines)
         self.add_nodes(txt_nodes)
         self.add_branches(txt_branches)
         self.grid.set_feeder_ids()
         return self.grid
 
     @staticmethod
-    def read_txt(path: Path) -> tuple[set, dict]:
+    def read_txt(txt_lines: list[str]) -> tuple[set, dict]:
         """Extract assets from text"""
-        with open(path, "r", encoding="utf-8") as f:
-            txt_rows = f.readlines()
 
         txt_nodes = set()
         txt_branches = {}
-        for text_line in txt_rows:
+        for text_line in txt_lines:
             if not text_line.strip() or text_line.startswith("#"):
                 continue  # skip empty lines and comments
             try:
-                from_node_str, to_node_str, *comments = text_line.strip().split(" ")
+                from_node_str, to_node_str, *comments = text_line.strip().split()
             except ValueError as err:
                 raise ValueError(f"Text line '{text_line}' is invalid. Skipping...") from err
             comments = comments[0].split(",") if comments else []
@@ -116,4 +114,4 @@ class TextSource:
             new_branch.to_status = 0
         else:
             new_branch.to_status = 1
-        self.grid.append(new_branch)
+        self.grid.append(new_branch, check_max_id=False)

@@ -266,52 +266,6 @@ def test_grid_make_inactive_to_side(basic_grid):
     assert 0 == target_line_after.to_status
 
 
-def test_from_txt_file(tmp_path):
-    """Test that Grid can be created from txt file"""
-    txt_file = tmp_path / "tmp_grid"
-    txt_file.write_text("S1 2\nS1 3 open\n2 7\n3 5\n3 6 transformer\n5 7\n7 8\n8 9", encoding="utf-8")
-    grid = Grid.from_txt_file(txt_file)
-    txt_file.unlink()
-
-    assert 8 == grid.node.size
-    assert 1 == grid.branches.filter(to_status=0).size
-    assert 1 == grid.transformer.size
-    np.testing.assert_array_equal([14, 10, 11, 12, 13, 15, 16, 17], grid.branches.id)
-
-
-def test_from_txt_file_with_branch_ids(tmp_path):
-    txt_file = tmp_path / "tmp_grid"
-    txt_file.write_text(
-        "S1 2 91\nS1 3 92,open\n2 7 93\n3 5 94\n3 6 transformer,95\n5 7 96\n7 8 97\n8 9 98", encoding="utf-8"
-    )
-    grid = Grid.from_txt_file(txt_file)
-    txt_file.unlink()
-
-    assert 8 == grid.node.size
-    assert 1 == grid.branches.filter(to_status=0).size
-    assert 1 == grid.transformer.size
-    np.testing.assert_array_equal([95, 91, 92, 93, 94, 96, 97, 98], grid.branches.id)
-
-
-def test_from_txt_file_conflicting_ids(tmp_path):
-    txt_file = tmp_path / "tmp_grid"
-    txt_file.write_text("S1 2\n1 3", encoding="utf-8")
-
-    with pytest.raises(ValueError):
-        Grid.from_txt_file(txt_file)
-
-    txt_file.unlink()
-
-
-def test_from_txt_file_with_unordered_node_ids(tmp_path):
-    txt_file = tmp_path / "tmp_grid"
-    txt_file.write_text("S1 2\nS1 10\n10 11\n2 5\n5 6\n3 4\n3 7", encoding="utf-8")
-    grid = Grid.from_txt_file(txt_file)
-    txt_file.unlink()
-
-    assert 9 == grid.node.size
-
-
 def test_grid_as_str(basic_grid):
     grid = basic_grid
 
@@ -319,3 +273,77 @@ def test_grid_as_str(basic_grid):
 
     assert "102 106 301,transformer" in grid_as_string
     assert "103 104 203,open" in grid_as_string
+
+
+class TestFromTxt:
+    def test_from_txt_lines(self):
+        grid = Grid.from_txt(
+            "S1 2",
+            "S1 3 open",
+            "2 7",
+            "3 5",
+            "3 6 transformer",
+            "5 7",
+            "7 8",
+            "8 9",
+        )
+        assert 8 == grid.node.size
+        assert 1 == grid.branches.filter(to_status=0).size
+        assert 1 == grid.transformer.size
+        np.testing.assert_array_equal([14, 10, 11, 12, 13, 15, 16, 17], grid.branches.id)
+
+    def test_from_txt_string(self):
+        txt_string = "S1 2\nS1 3 open\n2 7\n3 5\n3 6 transformer\n5 7\n7 8\n8 9"
+        assert Grid.from_txt(txt_string)
+
+    def test_from_txt_string_with_spaces(self):
+        txt_string = "S1 2     \nS1 3   open\n2    7\n3 5\n   3 6 transformer\n5 7\n7   8\n8 9"
+        assert Grid.from_txt(txt_string)
+
+    def test_from_docstring(self):
+        assert Grid.from_txt("""
+        S1 2
+        S1 3 open
+        2 7
+        3 5
+        3 6 transformer
+        5 7
+        7 8
+        8 9
+        """)
+
+    def test_from_txt_with_branch_ids(self):
+        grid = Grid.from_txt(
+            "S1 2 91", "S1 3 92,open", "2 7 93", "3 5 94", "3 6 transformer,95", "5 7 96", "7 8 97", "8 9 98"
+        )
+        assert 8 == grid.node.size
+        assert 1 == grid.branches.filter(to_status=0).size
+        assert 1 == grid.transformer.size
+        np.testing.assert_array_equal([95, 91, 92, 93, 94, 96, 97, 98], grid.branches.id)
+
+    def test_from_txt_with_conflicting_ids(self):
+        with pytest.raises(ValueError):
+            Grid.from_txt("S1 2", "1 3")
+
+    def test_from_txt_with_invalid_line(self):
+        with pytest.raises(ValueError):
+            Grid.from_txt("S1")
+
+    def test_from_txt_with_unordered_node_ids(self):
+        grid = Grid.from_txt("S1 2", "S1 10", "10 11", "2 5", "5 6", "3 4", "3 7")
+        assert 9 == grid.node.size
+
+    def test_from_txt_with_unordered_branch_ids(self):
+        grid = Grid.from_txt("5 6 16", "3 4 17", "3 7 18", "S1 2 12", "S1 10 13", "10 11 14", "2 5 15")
+        assert 9 == grid.node.size
+
+    def test_from_txt_file(self, tmp_path):
+        txt_file = tmp_path / "tmp_grid"
+        txt_file.write_text("S1 2\nS1 3 open\n2 7\n3 5\n3 6 transformer\n5 7\n7 8\n8 9", encoding="utf-8")
+        grid = Grid.from_txt_file(txt_file)
+        txt_file.unlink()
+
+        assert 8 == grid.node.size
+        assert 1 == grid.branches.filter(to_status=0).size
+        assert 1 == grid.transformer.size
+        np.testing.assert_array_equal([14, 10, 11, 12, 13, 15, 16, 17], grid.branches.id)

@@ -55,3 +55,6 @@ PYPI_VERSION
 build/
 wheelhouse/
 _build/
+
+# Jupyter Notebook
+.ipynb_checkpoints
