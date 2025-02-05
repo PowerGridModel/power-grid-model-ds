@@ -409,13 +409,17 @@ class Grid(FancyArrayContainer):
         return grid
 
     @classmethod
-    def from_txt(cls, txt_lines: list[str]):
+    def from_txt(cls, txt_lines: list[str] | str):
         """Build a grid from a list of strings
 
         See the documentation for the expected format of the txt_lines
 
-        Example:
+        Args:
+            txt_lines (list[str] | str): The lines of the txt
+
+        Examples:
             >>> Grid.from_txt(["1 2", "2 3", "3 4 transformer", "4 5", "S1 6"])
+            alternative: Grid.from_txt("1 2\n2 3\n3 4 transformer\n4 5\nS1 6")
         """
         return TextSource(grid_class=cls).load_from_txt(txt_lines)
 

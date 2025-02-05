@@ -55,7 +55,7 @@ class TextSource:
             if not text_line.strip() or text_line.startswith("#"):
                 continue  # skip empty lines and comments
 
-            pattern = re.compile(r'^\s*(\S+)\s+(\S+)(?:\s+(\S+))?\s*$')
+            pattern = re.compile(r"^\s*(\S+)\s+(\S+)(?:\s+(\S+))?\s*$")
             match = pattern.match(text_line)
             if not match:
                 raise ValueError(f"Text line '{text_line}' is invalid. Skipping...")
@@ -66,7 +66,6 @@ class TextSource:
             txt_nodes |= {from_node_str, to_node_str}
             txt_branches[(from_node_str, to_node_str)] = comments
         return txt_nodes, txt_branches
-
 
     def add_nodes(self, nodes: set[str]):
         """Add nodes to the grid"""
