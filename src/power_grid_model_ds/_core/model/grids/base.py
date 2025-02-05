@@ -331,6 +331,7 @@ class Grid(FancyArrayContainer):
 
     def get_downstream_nodes(self, node_id: int, inclusive: bool = False):
         """Get the downstream nodes from a node.
+        Assuming each node has a single feeding substation and the grid is radial
 
         Example:
             given this graph: [1] - [2] - [3] - [4], with 1 being a substation node
@@ -349,15 +350,14 @@ class Grid(FancyArrayContainer):
         Returns:
             list[int]: The downstream nodes.
         """
-        substation_node_id = self.get_nearest_substation_node(node_id).id.item()
+        substation_nodes = self.node.filter(node_type=NodeType.SUBSTATION_NODE.value)
 
-        if node_id == substation_node_id:
+        if node_id in substation_nodes.id:
             raise NotImplementedError("get_downstream_nodes is not implemented for substation nodes!")
 
-        path_to_substation, _ = self.graphs.active_graph.get_shortest_path(node_id, substation_node_id)
-        upstream_node = path_to_substation[1]
-
-        return self.graphs.active_graph.get_connected(node_id, nodes_to_ignore=[upstream_node], inclusive=inclusive)
+        return self.graphs.active_graph.get_downstream_nodes(
+            node_id=node_id, start_node_ids=list(substation_nodes.id), inclusive=inclusive
+        )
 
     def cache(self, cache_dir: Path, cache_name: str, compress: bool = True):
         """Cache Grid to a folder

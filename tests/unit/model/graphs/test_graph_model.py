@@ -1,6 +1,11 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
+
+"""Grid tests"""
+
+from collections import Counter
+
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
@@ -10,7 +15,7 @@ from power_grid_model_ds.errors import MissingBranchError, MissingNodeError, NoP
 # pylint: disable=missing-function-docstring,missing-class-docstring
 
 
-class TestGraphModifications:
+class TestBasicGraphFunctions:
     def test_graph_add_node_and_branch(self, graph):
         graph.add_node(1)
         graph.add_node(2)
@@ -22,6 +27,15 @@ class TestGraphModifications:
         # the graph has the correct size
         assert 2 == graph.nr_nodes
         assert 1 == graph.nr_branches
+
+    def test_add_invalid_branch(self, graph):
+        graph.add_node(1)
+        graph.add_node(2)
+        graph.add_branch(1, 2)
+        assert graph.has_branch(1, 2)
+
+        with pytest.raises(MissingNodeError):
+            graph.add_branch(1, 3)
 
     def test_has_node(self, graph):
         graph.add_node(1)
@@ -37,14 +51,21 @@ class TestGraphModifications:
         assert graph.has_branch(2, 1)  # reversed should work too
         assert not graph.has_branch(1, 3)
 
-    def test_add_invalid_branch(self, graph):
+    def test_graph_all_branches(self, graph):
         graph.add_node(1)
         graph.add_node(2)
         graph.add_branch(1, 2)
-        assert graph.has_branch(1, 2)
 
-        with pytest.raises(MissingNodeError):
-            graph.add_branch(1, 3)
+        assert [(1, 2)] == list(graph.all_branches)
+
+    def test_graph_all_branches_parallel(self, graph):
+        graph.add_node(1)
+        graph.add_node(2)
+        graph.add_branch(1, 2)
+        graph.add_branch(1, 2)
+        graph.add_branch(2, 1)
+
+        assert [(1, 2), (1, 2), (2, 1)] == list(graph.all_branches)
 
     def test_delete_invalid_node_without_error(self, graph):
         graph.delete_node(3, raise_on_fail=False)
@@ -103,6 +124,62 @@ class TestGraphModifications:
 
         assert graph._has_node(internal_id_0)
         assert graph._has_node(internal_id_2)
+
+    def test_graph_in_branches(self, graph):
+        graph.add_node(1)
+        graph.add_node(2)
+        graph.add_branch(1, 2)
+        graph.add_branch(1, 2)
+        graph.add_branch(2, 1)
+
+        assert [(2, 1), (2, 1), (2, 1)] == list(graph.in_branches(1))
+        assert [(1, 2), (1, 2), (1, 2)] == list(graph.in_branches(2))
+
+
+def test_tmp_remove_nodes(graph_with_2_routes) -> None:
+    graph = graph_with_2_routes
+
+    assert graph.nr_branches == 4
+
+    # add parallel branches to test whether they are restored correctly
+    graph.add_branch(1, 5)
+    graph.add_branch(5, 1)
+
+    assert graph.nr_nodes == 5
+    assert graph.nr_branches == 6
+
+    before_sets = [frozenset(branch) for branch in graph.all_branches]
+    counter_before = Counter(before_sets)
+
+    with graph.tmp_remove_nodes([1, 2]):
+        assert graph.nr_nodes == 3
+        assert list(graph.all_branches) == [(5, 4)]
+
+    assert graph.nr_nodes == 5
+    assert graph.nr_branches == 6
+
+    after_sets = [frozenset(branch) for branch in graph.all_branches]
+    counter_after = Counter(after_sets)
+    assert counter_before == counter_after
+
+
+def test_get_components(graph_with_2_routes):
+    graph = graph_with_2_routes
+    graph.add_node(99)
+    graph.add_branch(1, 99)
+    substation_nodes = np.array([1])
+
+    components = graph.get_components(substation_nodes=substation_nodes)
+
+    assert len(components) == 3
+    assert set(components[0]) == {2, 3}
+    assert set(components[1]) == {4, 5}
+    assert set(components[2]) == {99}
+
+
+def test_from_arrays(basic_grid):
+    new_graph = basic_grid.graphs.complete_graph.__class__.from_arrays(basic_grid)
+    assert_array_equal(new_graph.external_ids, basic_grid.node.id)
 
 
 class TestPathMethods:
@@ -248,20 +325,18 @@ class TestGetConnected:
         assert {5} == set(connected_nodes)
 
 
-def test_get_components(graph_with_2_routes):
-    graph = graph_with_2_routes
-    graph.add_node(99)
-    graph.add_branch(1, 99)
-    substation_nodes = np.array([1])
+class TestFindFirstConnected:
+    def test_find_first_connected(self, graph_with_2_routes):
+        graph = graph_with_2_routes
+        assert 2 == graph.find_first_connected(1, candidate_node_ids=[2, 3, 4])
 
-    components = graph.get_components(substation_nodes=substation_nodes)
+    def test_find_first_connected_same_node(self, graph_with_2_routes):
+        graph = graph_with_2_routes
+        with pytest.raises(ValueError):
+            graph.find_first_connected(1, candidate_node_ids=[1, 3, 5])
 
-    assert len(components) == 3
-    assert set(components[0]) == {2, 3}
-    assert set(components[1]) == {4, 5}
-    assert set(components[2]) == {99}
-
-
-def test_from_arrays(basic_grid):
-    new_graph = basic_grid.graphs.complete_graph.__class__.from_arrays(basic_grid)
-    assert_array_equal(new_graph.external_ids, basic_grid.node.id)
+    def test_find_first_connected_no_match(self, graph_with_2_routes):
+        graph = graph_with_2_routes
+        graph.add_node(99)
+        with pytest.raises(MissingNodeError):
+            graph.find_first_connected(1, candidate_node_ids=[99])
