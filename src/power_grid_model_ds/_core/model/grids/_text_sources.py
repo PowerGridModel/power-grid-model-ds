@@ -35,12 +35,12 @@ class TextSource:
     def __init__(self, grid_class: type["Grid"]):
         self.grid = grid_class.empty()
 
-    def load_from_txt(self, txt_lines: list[str] | str) -> "Grid":
+    def load_from_txt(self, *args: str) -> "Grid":
         """Load a grid from text"""
-        if isinstance(txt_lines, str):
-            txt_lines = txt_lines.split("\n")
 
-        txt_nodes, txt_branches = self.read_txt(txt_lines)
+        text_lines = [line for arg in args for line in arg.strip().split("\n")]
+
+        txt_nodes, txt_branches = self.read_txt(text_lines)
         self.add_nodes(txt_nodes)
         self.add_branches(txt_branches)
         self.grid.set_feeder_ids()

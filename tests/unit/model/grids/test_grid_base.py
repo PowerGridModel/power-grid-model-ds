@@ -277,7 +277,7 @@ def test_grid_as_str(basic_grid):
 
 class TestFromTxt:
     def test_from_txt_lines(self):
-        txt_lines = [
+        grid = Grid.from_txt(
             "S1 2",
             "S1 3 open",
             "2 7",
@@ -286,8 +286,7 @@ class TestFromTxt:
             "5 7",
             "7 8",
             "8 9",
-        ]
-        grid = Grid.from_txt(txt_lines)
+        )
         assert 8 == grid.node.size
         assert 1 == grid.branches.filter(to_status=0).size
         assert 1 == grid.transformer.size
@@ -302,7 +301,7 @@ class TestFromTxt:
         assert Grid.from_txt(txt_string)
 
     def test_from_docstring(self):
-        txt_string = """
+        assert Grid.from_txt("""
         S1 2
         S1 3 open
         2 7
@@ -311,22 +310,12 @@ class TestFromTxt:
         5 7
         7 8
         8 9
-        """
-        assert Grid.from_txt(txt_string)
+        """)
 
     def test_from_txt_with_branch_ids(self):
-        txt_lines = [
-            "S1 2 91",
-            "S1 3 92,open",
-            "2 7 93",
-            "3 5 94",
-            "3 6 transformer,95",
-            "5 7 96",
-            "7 8 97",
-            "8 9 98",
-        ]
-
-        grid = Grid.from_txt(txt_lines)
+        grid = Grid.from_txt(
+            "S1 2 91", "S1 3 92,open", "2 7 93", "3 5 94", "3 6 transformer,95", "5 7 96", "7 8 97", "8 9 98"
+        )
         assert 8 == grid.node.size
         assert 1 == grid.branches.filter(to_status=0).size
         assert 1 == grid.transformer.size
@@ -334,27 +323,18 @@ class TestFromTxt:
 
     def test_from_txt_with_conflicting_ids(self):
         with pytest.raises(ValueError):
-            Grid.from_txt(["S1 2", "1 3"])
+            Grid.from_txt("S1 2", "1 3")
 
     def test_from_txt_with_invalid_line(self):
         with pytest.raises(ValueError):
-            Grid.from_txt(["S1 2 arg3 arg4"])
+            Grid.from_txt("S1 2 arg3 arg4")
 
     def test_from_txt_with_unordered_node_ids(self):
-        grid = Grid.from_txt(["S1 2", "S1 10", "10 11", "2 5", "5 6", "3 4", "3 7"])
+        grid = Grid.from_txt("S1 2", "S1 10", "10 11", "2 5", "5 6", "3 4", "3 7")
         assert 9 == grid.node.size
 
     def test_from_txt_with_unordered_branch_ids(self):
-        txt_lines = [
-            "5 6 16",
-            "3 4 17",
-            "3 7 18",
-            "S1 2 12",
-            "S1 10 13",
-            "10 11 14",
-            "2 5 15",
-        ]
-        grid = Grid.from_txt(txt_lines)
+        grid = Grid.from_txt("5 6 16", "3 4 17", "3 7 18", "S1 2 12", "S1 10 13", "10 11 14", "2 5 15")
         assert 9 == grid.node.size
 
     def test_from_txt_file(self, tmp_path):
