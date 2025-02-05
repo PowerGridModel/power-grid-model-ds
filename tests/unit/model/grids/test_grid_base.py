@@ -301,6 +301,19 @@ class TestFromTxt:
         txt_string = "S1 2     \nS1 3   open\n2    7\n3 5\n   3 6 transformer\n5 7\n7   8\n8 9"
         assert Grid.from_txt(txt_string)
 
+    def test_from_docstring(self):
+        txt_string = """
+        S1 2
+        S1 3 open
+        2 7
+        3 5
+        3 6 transformer
+        5 7
+        7 8
+        8 9
+        """
+        assert Grid.from_txt(txt_string)
+
     def test_from_txt_with_branch_ids(self):
         txt_lines = [
             "S1 2 91",
