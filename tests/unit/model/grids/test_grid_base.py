@@ -276,7 +276,7 @@ def test_grid_as_str(basic_grid):
 
 
 class TestFromTxt:
-    def test_from_txt(self):
+    def test_from_txt_lines(self):
         txt_lines = [
             "S1 2",
             "S1 3 open",
@@ -329,6 +329,20 @@ class TestFromTxt:
             "5 6",
             "3 4",
             "3 7",
+        ]
+        grid = Grid.from_txt(txt_lines)
+        assert 9 == grid.node.size
+
+    def test_from_txt_with_unordered_branch_ids(self):
+        txt_lines = [
+            "3 6 14, transformer",
+            "S1 2 10",
+            "S1 3 11, open",
+            "2 7 12",
+            "3 5 13",
+            "5 7 15",
+            "7 8 16",
+            "8 9 17",
         ]
         grid = Grid.from_txt(txt_lines)
         assert 9 == grid.node.size
