@@ -26,7 +26,6 @@ def test_grid_get_nearest_substation_node_no_substation(basic_grid):
 
 
 class TestGetDownstreamNodes:
-
     def test_get_downstream_nodes(self):
         grid = Grid.from_txt(["S1 11", "S1 2", "2 3", "3 5", "5 6", "2 4", "4 99", "99 100"])
         downstream_nodes = grid.get_downstream_nodes(node_id=3)
