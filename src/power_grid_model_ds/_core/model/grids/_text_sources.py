@@ -110,4 +110,4 @@ class TextSource:
             new_branch.to_status = 0
         else:
             new_branch.to_status = 1
-        self.grid.append(new_branch)
+        self.grid.append(new_branch, check_max_id=False)
