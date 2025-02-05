@@ -272,7 +272,9 @@ class BaseGraphModel(ABC):
         """
         connected_node = self.find_first_connected(node_id, start_node_ids)
         path, _ = self.get_shortest_path(node_id, connected_node)
-        _, upstream_node, *_ = path  # path is at least 2 elements long or find_first_connected would have raised an error
+        _, upstream_node, *_ = (
+            path  # path is at least 2 elements long or find_first_connected would have raised an error
+        )
 
         return self.get_connected(node_id, [upstream_node], inclusive)
 
