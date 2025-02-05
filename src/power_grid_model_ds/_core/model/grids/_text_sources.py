@@ -5,7 +5,6 @@
 """Create a grid from text a text file"""
 
 import logging
-import re
 from typing import TYPE_CHECKING
 
 from power_grid_model_ds._core.model.enums.nodes import NodeType
@@ -49,19 +48,17 @@ class TextSource:
     @staticmethod
     def read_txt(txt_lines: list[str]) -> tuple[set, dict]:
         """Extract assets from text"""
+
         txt_nodes = set()
         txt_branches = {}
         for text_line in txt_lines:
             if not text_line.strip() or text_line.startswith("#"):
                 continue  # skip empty lines and comments
-
-            pattern = re.compile(r"^\s*(\S+)\s+(\S+)(?:\s+(\S+))?\s*$")
-            match = pattern.match(text_line)
-            if not match:
-                raise ValueError(f"Text line '{text_line}' is invalid. Skipping...")
-
-            from_node_str, to_node_str, comment = match.groups()
-            comments = comment.split(",") if comment else []
+            try:
+                from_node_str, to_node_str, *comments = text_line.strip().split()
+            except ValueError as err:
+                raise ValueError(f"Text line '{text_line}' is invalid. Skipping...") from err
+            comments = comments[0].split(",") if comments else []
 
             txt_nodes |= {from_node_str, to_node_str}
             txt_branches[(from_node_str, to_node_str)] = comments
