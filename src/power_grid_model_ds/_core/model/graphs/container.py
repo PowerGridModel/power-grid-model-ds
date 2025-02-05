@@ -6,7 +6,6 @@
 
 import dataclasses
 from dataclasses import dataclass
-from pathlib import PosixPath
 from typing import Generator
 
 import numpy as np
@@ -118,15 +117,6 @@ class GraphContainer:
             if graph.active_only:
                 graph.delete_branch(from_ext_node_id=from_node, to_ext_node_id=to_node)
             setattr(self, field.name, graph)
-
-    def cache(self, cache_dir: PosixPath, compress: bool) -> PosixPath:
-        """Cache the container into a folder with .pkl and graph files"""
-        cache_dir.mkdir(parents=True, exist_ok=True)
-
-        for field in self.graph_attributes:
-            graph = getattr(self, field.name)
-            graph.cache(cache_dir=cache_dir, graph_name=field.name, compress=compress)
-        return cache_dir
 
     @classmethod
     def from_arrays(cls, arrays: MinimalGridArrays) -> "GraphContainer":
