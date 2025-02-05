@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
+from typing import Generator
 
 import numpy as np
 from numpy._typing import NDArray
@@ -34,6 +36,14 @@ class BaseGraphModel(ABC):
     def nr_branches(self):
         """Returns the number of branches in the graph"""
 
+    @property
+    def all_branches(self) -> Generator[tuple[int, int], None, None]:
+        """Returns all branches in the graph."""
+        return (
+            (self.internal_to_external(source), self.internal_to_external(target))
+            for source, target in self._all_branches()
+        )
+
     @abstractmethod
     def external_to_internal(self, ext_node_id: int) -> int:
         """Convert external node id to internal node id (internal)
@@ -62,6 +72,14 @@ class BaseGraphModel(ABC):
             return False
 
         return self._has_node(node_id=internal_node_id)
+
+    def in_branches(self, node_id: int) -> Generator[tuple[int, int], None, None]:
+        """Return all branches that have the node as an endpoint."""
+        int_node_id = self.external_to_internal(node_id)
+        internal_edges = self._in_branches(int_node_id=int_node_id)
+        return (
+            (self.internal_to_external(source), self.internal_to_external(target)) for source, target in internal_edges
+        )
 
     def add_node(self, ext_node_id: int, raise_on_fail: bool = True) -> None:
         """Add a node to the graph."""
@@ -163,6 +181,28 @@ class BaseGraphModel(ABC):
         for branch3 in branch3_array:
             branches = _get_branch3_branches(branch3)
             self.delete_branch_array(branches, raise_on_fail=raise_on_fail)
+
+    @contextmanager
+    def tmp_remove_nodes(self, nodes: list[int]) -> Generator:
+        """Context manager that temporarily removes nodes and their branches from the graph.
+        Example:
+            >>> with graph.tmp_remove_nodes([1, 2, 3]):
+            >>>    assert not graph.has_node(1)
+            >>> assert graph.has_node(1)
+        In practice, this is useful when you want to e.g. calculate the shortest path between two nodes without
+        considering certain nodes.
+        """
+        edge_list = []
+        for node in nodes:
+            edge_list += list(self.in_branches(node))
+            self.delete_node(node)
+
+        yield
+
+        for node in nodes:
+            self.add_node(node)
+        for source, target in edge_list:
+            self.add_branch(source, target)
 
     def get_shortest_path(self, ext_start_node_id: int, ext_end_node_id: int) -> tuple[list[int], int]:
         """Calculate the shortest path between two nodes
@@ -312,6 +352,9 @@ class BaseGraphModel(ABC):
         return True
 
     @abstractmethod
+    def _in_branches(self, int_node_id: int) -> Generator[tuple[int, int], None, None]: ...
+
+    @abstractmethod
     def _get_connected(self, node_id: int, nodes_to_ignore: list[int], inclusive: bool = False) -> list[int]: ...
 
     @abstractmethod
@@ -350,6 +393,9 @@ class BaseGraphModel(ABC):
 
     @abstractmethod
     def _find_fundamental_cycles(self) -> list[list[int]]: ...
+
+    @abstractmethod
+    def _all_branches(self) -> Generator[tuple[int, int], None, None]: ...
 
 
 def _get_branch3_branches(branch3: Branch3Array) -> BranchArray:
