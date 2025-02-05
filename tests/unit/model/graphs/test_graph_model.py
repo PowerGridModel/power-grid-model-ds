@@ -320,3 +320,20 @@ class TestGetConnected:
         connected_nodes = graph.get_connected(node_id=1, nodes_to_ignore=[2, 4])
 
         assert {5} == set(connected_nodes)
+
+
+class TestFindFirstConnected:
+    def test_find_first_connected(self, graph_with_2_routes):
+        graph = graph_with_2_routes
+        assert 2 == graph.find_first_connected(1, candidate_node_ids=[2, 3, 4])
+
+    def test_find_first_connected_same_node(self, graph_with_2_routes):
+        graph = graph_with_2_routes
+        with pytest.raises(ValueError):
+            graph.find_first_connected(1, candidate_node_ids=[1, 3, 5])
+
+    def test_find_first_connected_no_match(self, graph_with_2_routes):
+        graph = graph_with_2_routes
+        graph.add_node(99)
+        with pytest.raises(MissingNodeError):
+            graph.find_first_connected(1, candidate_node_ids=[99])
