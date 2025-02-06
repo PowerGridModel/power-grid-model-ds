@@ -23,7 +23,7 @@ SPDX-License-Identifier: MPL-2.0
 
 [![Nightly build](https://github.com/PowerGridModel/power-grid-model-ds/actions/workflows/nightly.yml/badge.svg)](https://github.com/PowerGridModel/power-grid-model-ds/actions/workflows/nightly.yml)
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8054429.svg)](https://zenodo.org/record/8054429)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14825565.svg)](https://zenodo.org/record/14825565)
 
 [![](https://github.com/PowerGridModel/.github/blob/main/artwork/svg/color.svg)](#)
 
@@ -72,12 +72,12 @@ for submitting pull requests to us.
 
 If you are using Power Grid Model DS in your research work, please consider citing our library using the following references.
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8054429.svg)](https://zenodo.org/record/8054429)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14825565.svg)](https://zenodo.org/record/14825565)
 
 ```bibtex
 @software{Schouten_PowerGridModel_power-grid-model-ds,
   author = {Schouten, Jaap and Baaijen, Thijs and Koppen, Vincent and van der Voort, Sven and {Contributors to the LF Energy project Power Grid Model}},
-  doi = {10.5281/zenodo.8054429},
+  doi = {10.5281/zenodo.14825565},
   license = {MPL-2.0},
   title = {{PowerGridModel/power-grid-model-ds}},
   url = {https://github.com/PowerGridModel/power-grid-model-ds}

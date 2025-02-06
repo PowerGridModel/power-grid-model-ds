@@ -7,7 +7,7 @@ message: "If you are using Power Grid Model DS in your research work, please con
 
 title: "PowerGridModel/power-grid-model-ds"
 url: "https://github.com/PowerGridModel/power-grid-model-ds"
-doi: "10.5281/zenodo.8054429"
+doi: "10.5281/zenodo.14825565"
 license: "MPL-2.0"
 authors:
   - family-names: "Schouten"
