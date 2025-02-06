@@ -18,7 +18,6 @@ def test_grid_get_nearest_substation_node(basic_grid):
 
 
 def test_grid_get_nearest_substation_node_no_substation(basic_grid):
-    """Test that an error is raised when there is no substation connected to the node"""
     substation_node = basic_grid.node.get(node_type=NodeType.SUBSTATION_NODE.value)
     basic_grid.delete_node(substation_node)
 
@@ -26,49 +25,35 @@ def test_grid_get_nearest_substation_node_no_substation(basic_grid):
         basic_grid.get_nearest_substation_node(node_id=103)
 
 
-def test_get_downstream_nodes(basic_grid: Grid):
-    """Test that get_downstream_nodes returns the expected nodes."""
-    # Move the open line to be able to test sorting of nodes by distance correctly
-    basic_grid.make_active(basic_grid.line.get(203))
-    basic_grid.make_inactive(basic_grid.link.get(601))
-    downstream_nodes = basic_grid.get_downstream_nodes(node_id=102)
-    assert downstream_nodes[-1] == 104  # Furthest away
-    assert {103, 104, 106} == set(downstream_nodes)
+class TestGetDownstreamNodes:
+    def test_get_downstream_nodes(self):
+        grid = Grid.from_txt("S1 11", "S1 2", "2 3", "3 5", "5 6", "2 4", "4 99", "99 100")
+        downstream_nodes = grid.get_downstream_nodes(node_id=3)
+        assert [5, 6] == downstream_nodes
 
-    downstream_nodes = basic_grid.get_downstream_nodes(node_id=102, inclusive=True)
-    assert downstream_nodes[0] == 102
-    assert downstream_nodes[-1] == 104
-    assert {102, 103, 104, 106} == set(downstream_nodes)
+    def test_get_downstream_nodes_from_substation_node(self):
+        grid = Grid.from_txt("S1 11", "S1 2", "2 3", "3 5", "5 6", "2 4", "4 99", "99 100")
+        with pytest.raises(NotImplementedError):
+            grid.get_downstream_nodes(node_id=1)
 
 
-def test_get_downstream_nodes_from_substation_node(basic_grid):
-    """Test that get_downstream_nodes raises the expected error when
-    the input node is a substation_node."""
-    substation_node = basic_grid.node.get(node_type=NodeType.SUBSTATION_NODE.value).record
+class TestGetBranchesInPath:
+    def test_get_branches_in_path(self, basic_grid):
+        branches = basic_grid.get_branches_in_path([106, 102, 101])
+        np.testing.assert_array_equal(branches.id, [301, 201])
 
-    with pytest.raises(NotImplementedError):
-        basic_grid.get_downstream_nodes(node_id=substation_node.id)
+    def test_get_branches_in_path_inactive(self, basic_grid):
+        branches = basic_grid.get_branches_in_path([101, 102, 103, 104, 105])
+        # branch 203 is the normally open point should not be in the result
+        np.testing.assert_array_equal(branches.id, [201, 202, 204, 601])
 
+    def test_get_branches_in_path_one_node(self, basic_grid):
+        branches = basic_grid.get_branches_in_path([106])
+        assert 0 == branches.size
 
-def test_get_branches_in_path(basic_grid):
-    branches = basic_grid.get_branches_in_path([106, 102, 101])
-    np.testing.assert_array_equal(branches.id, [301, 201])
-
-
-def test_get_branches_in_path_inactive(basic_grid):
-    branches = basic_grid.get_branches_in_path([101, 102, 103, 104, 105])
-    # branch 203 is the normally open point should not be in the result
-    np.testing.assert_array_equal(branches.id, [201, 202, 204, 601])
-
-
-def test_get_branches_in_path_one_node(basic_grid):
-    branches = basic_grid.get_branches_in_path([106])
-    assert 0 == branches.size
-
-
-def test_get_branches_in_path_empty_path(basic_grid):
-    branches = basic_grid.get_branches_in_path([])
-    assert 0 == branches.size
+    def test_get_branches_in_path_empty_path(self, basic_grid):
+        branches = basic_grid.get_branches_in_path([])
+        assert 0 == branches.size
 
 
 def test_component_three_winding_transformer(grid_with_3wt):
