@@ -41,6 +41,17 @@ class ChildArray(DefaultedFancyTestArray):
     test_float4: NDArray[np.float64]
 
 
+class SizedDTypesArray(FancyArray):
+    test_float16: NDArray[np.float16]
+    test_float32: NDArray[np.float32]
+    test_float64: NDArray[np.float64]
+
+    test_int8: NDArray[np.int8]
+    test_int16: NDArray[np.int16]
+    test_int32: NDArray[np.int32]
+    test_int64: NDArray[np.int64]
+
+
 def test_build_without_array_definition():
     with pytest.raises(ArrayDefinitionError):
         FancyArray()
@@ -164,6 +175,19 @@ def test_empty():
     assert_array_equal([EMPTY_ID, EMPTY_ID, EMPTY_ID], array.id)
     min_int64 = np.iinfo(np.int64).min
     assert_array_equal([min_int64] * 3, array.test_int)
+
+
+def test_empty_with_sized_dtypes():
+    array = SizedDTypesArray.empty(1)
+
+    assert_array_equal([np.iinfo(np.int8).min], array.test_int8)
+    assert_array_equal([np.iinfo(np.int16).min], array.test_int16)
+    assert_array_equal([np.iinfo(np.int32).min], array.test_int32)
+    assert_array_equal([np.iinfo(np.int64).min], array.test_int64)
+
+    assert_array_equal([np.nan], array.test_float16)
+    assert_array_equal([np.nan], array.test_float32)
+    assert_array_equal([np.nan], array.test_float64)
 
 
 def test_empty_with_defaults():
