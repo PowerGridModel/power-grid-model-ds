@@ -5,6 +5,8 @@
 Examples
 ======================
 
+These example explain the PGM-DS interface and how to use it.
+
 .. toctree::
    :maxdepth: 1
    :caption: Contents:
