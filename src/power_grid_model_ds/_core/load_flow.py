@@ -4,12 +4,13 @@
 
 """Load flow functions and classes"""
 
-from typing import Dict, Optional
+from typing import Dict, Optional, Type
 
 import numpy as np
 from numpy.typing import NDArray
 from power_grid_model import CalculationMethod, PowerGridModel, initialize_array
 
+from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.grids.base import Grid
 
 PGM_ARRAYS = [
@@ -43,11 +44,11 @@ class PowerGridModelInterface:
 
     def __init__(
         self,
-        grid: Grid,
+        grid: Optional[Grid] = None,
         input_data: Optional[Dict] = None,
         system_frequency: float = 50.0,
     ):
-        self.grid = grid
+        self.grid = grid or Grid.empty()
         self.system_frequency = system_frequency
 
         self.input_data = input_data or {}
@@ -62,6 +63,21 @@ class PowerGridModelInterface:
             pgm_array = self._create_power_grid_array(array_name=array_name)
             self.input_data[array_name] = pgm_array
         return self.input_data
+
+    def create_grid_from_input_data(
+        self,
+        array_mapping: Dict[str, Type[FancyArray]],
+    ) -> Grid:
+        """
+        Create Grid object from PowerGridModel input data.
+        Note that for some arrays, not all fields are available in the PowerGridModel input data. 
+        In this case, the default values are used.
+        """
+        for pgm_name, pgm_ds_array_class in array_mapping.items():
+            if pgm_name in self.input_data:
+                pgm_ds_array = pgm_ds_array_class(self.input_data[pgm_name])
+                self.grid.append(pgm_ds_array)
+        return self.grid
 
     def calculate_power_flow(
         self,

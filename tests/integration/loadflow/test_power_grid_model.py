@@ -453,3 +453,93 @@ def test_batch_run():
 
     # Results have been calculated for all 10 scenarios
     assert 10 == len(output["line"])
+
+
+def test_create_grid_from_input_data():
+    grid_generator = RadialGridGenerator(grid_class=Grid, nr_nodes=5, nr_sources=1, nr_nops=0)
+    grid = grid_generator.run(seed=0)
+
+    core_interface = PowerGridModelInterface(grid=grid)
+
+    input_data = core_interface.create_input_from_grid()
+
+    array_mapping = {
+        "node": NodeArray,
+        "line": LineArray,
+        "sym_load": SymLoadArray,
+        "source": SourceArray,
+        "transformer": TransformerArray,
+    }
+
+    core_interface = PowerGridModelInterface(input_data=input_data)
+    output = core_interface.create_grid_from_input_data(
+        array_mapping=array_mapping,
+    )
+
+    assert isinstance(output, Grid)
+    assert len(output.node) == len(grid.node)
+    # NOTE: The grid object is not equal to the output object for some default values.
+    assert np.array_equal(grid.node[["id", "u_rated"]], output.node[["id", "u_rated"]])
+    assert np.array_equal(
+        grid.line[["id", "from_node", "to_node", "from_status", "to_status", "r1", "x1", "c1", "tan1", "i_n"]],
+        output.line[["id", "from_node", "to_node", "from_status", "to_status", "r1", "x1", "c1", "tan1", "i_n"]],
+    )
+    assert np.array_equal(
+        grid.sym_load[["id", "node", "status", "type", "p_specified", "q_specified"]],
+        output.sym_load[["id", "node", "status", "type", "p_specified", "q_specified"]],
+    )
+    assert np.array_equal(
+        grid.source[["id", "node", "status", "u_ref"]], output.source[["id", "node", "status", "u_ref"]]
+    )
+    assert np.array_equal(
+        grid.transformer[
+            [
+                "id",
+                "from_node",
+                "to_node",
+                "from_status",
+                "to_status",
+                "u1",
+                "u2",
+                "sn",
+                "uk",
+                "pk",
+                "i0",
+                "p0",
+                "winding_from",
+                "winding_to",
+                "clock",
+                "tap_side",
+                "tap_pos",
+                "tap_min",
+                "tap_max",
+                "tap_nom",
+                "tap_size",
+            ]
+        ],
+        output.transformer[
+            [
+                "id",
+                "from_node",
+                "to_node",
+                "from_status",
+                "to_status",
+                "u1",
+                "u2",
+                "sn",
+                "uk",
+                "pk",
+                "i0",
+                "p0",
+                "winding_from",
+                "winding_to",
+                "clock",
+                "tap_side",
+                "tap_pos",
+                "tap_min",
+                "tap_max",
+                "tap_nom",
+                "tap_size",
+            ]
+        ],
+    )
