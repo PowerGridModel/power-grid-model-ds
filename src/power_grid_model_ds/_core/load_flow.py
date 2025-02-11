@@ -72,6 +72,8 @@ class PowerGridModelInterface:
         Create Grid object from PowerGridModel input data.
         Note that for some arrays, not all fields are available in the PowerGridModel input data. 
         In this case, the default values are used.
+
+        Returns a Grid object with the arrays filled with the PowerGridModel input data.
         """
         for pgm_name, pgm_ds_array_class in array_mapping.items():
             if pgm_name in self.input_data:
