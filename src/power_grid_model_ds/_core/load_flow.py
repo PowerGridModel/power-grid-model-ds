@@ -4,13 +4,12 @@
 
 """Load flow functions and classes"""
 
-from typing import Dict, Optional, Type
+from typing import Dict, Optional
 
 import numpy as np
 from numpy.typing import NDArray
 from power_grid_model import CalculationMethod, PowerGridModel, initialize_array
 
-from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.grids.base import Grid
 
 PGM_ARRAYS = [
@@ -66,19 +65,19 @@ class PowerGridModelInterface:
 
     def create_grid_from_input_data(
         self,
-        array_mapping: Dict[str, Type[FancyArray]],
     ) -> Grid:
         """
         Create Grid object from PowerGridModel input.
-        Note that for some arrays, not all fields are available in the PowerGridModel input. 
+        Note that for some arrays, not all fields are available in the PowerGridModel input.
         In this case, the default values are used.
 
         Returns a Grid object with the arrays filled with the PowerGridModel input.
         """
-        for pgm_name, pgm_ds_array_class in array_mapping.items():
+        for pgm_name in PGM_ARRAYS:
             if pgm_name in self.input_data:
+                pgm_ds_array_class = getattr(self.grid, pgm_name).__class__
                 pgm_ds_array = pgm_ds_array_class(self.input_data[pgm_name])
-                self.grid.append(pgm_ds_array)
+                self.grid.append(pgm_ds_array, check_max_id=False)
         return self.grid
 
     def calculate_power_flow(

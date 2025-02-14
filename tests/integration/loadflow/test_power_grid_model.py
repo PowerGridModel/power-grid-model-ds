@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+from dataclasses import dataclass
 import numpy as np
 import pytest
 from numpy.typing import NDArray
@@ -21,6 +22,7 @@ from power_grid_model_ds._core.model.arrays import (
 )
 from power_grid_model_ds._core.model.arrays.pgm_arrays import TransformerTapRegulatorArray
 from power_grid_model_ds._core.model.grids.base import Grid
+from tests.unit.model.grids.test_custom_grid import CustomGrid
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
 
@@ -455,91 +457,123 @@ def test_batch_run():
     assert 10 == len(output["line"])
 
 
-def test_create_grid_from_input_data():
-    grid_generator = RadialGridGenerator(grid_class=Grid, nr_nodes=5, nr_sources=1, nr_nops=0)
-    grid = grid_generator.run(seed=0)
-
-    core_interface = PowerGridModelInterface(grid=grid)
-
-    input_data = core_interface.create_input_from_grid()
-
-    array_mapping = {
-        "node": NodeArray,
-        "line": LineArray,
-        "sym_load": SymLoadArray,
-        "source": SourceArray,
-        "transformer": TransformerArray,
-    }
-
-    core_interface = PowerGridModelInterface(input_data=input_data)
-    output = core_interface.create_grid_from_input_data(
-        array_mapping=array_mapping,
-    )
+def test_create_grid_from_input_data(input_data_pgm):
+    core_interface = PowerGridModelInterface(input_data=input_data_pgm)
+    output = core_interface.create_grid_from_input_data()
 
     assert isinstance(output, Grid)
-    assert len(output.node) == len(grid.node)
-    # NOTE: The grid object is not equal to the output object for some default values.
-    assert np.array_equal(grid.node[["id", "u_rated"]], output.node[["id", "u_rated"]])
+    assert type(output.node) is NodeArray
     assert np.array_equal(
-        grid.line[["id", "from_node", "to_node", "from_status", "to_status", "r1", "x1", "c1", "tan1", "i_n"]],
-        output.line[["id", "from_node", "to_node", "from_status", "to_status", "r1", "x1", "c1", "tan1", "i_n"]],
-    )
-    assert np.array_equal(
-        grid.sym_load[["id", "node", "status", "type", "p_specified", "q_specified"]],
-        output.sym_load[["id", "node", "status", "type", "p_specified", "q_specified"]],
-    )
-    assert np.array_equal(
-        grid.source[["id", "node", "status", "u_ref"]], output.source[["id", "node", "status", "u_ref"]]
-    )
-    assert np.array_equal(
-        grid.transformer[
+        output.node.data,
+        np.array(
             [
-                "id",
-                "from_node",
-                "to_node",
-                "from_status",
-                "to_status",
-                "u1",
-                "u2",
-                "sn",
-                "uk",
-                "pk",
-                "i0",
-                "p0",
-                "winding_from",
-                "winding_to",
-                "clock",
-                "tap_side",
-                "tap_pos",
-                "tap_min",
-                "tap_max",
-                "tap_nom",
-                "tap_size",
-            ]
-        ],
-        output.transformer[
-            [
-                "id",
-                "from_node",
-                "to_node",
-                "from_status",
-                "to_status",
-                "u1",
-                "u2",
-                "sn",
-                "uk",
-                "pk",
-                "i0",
-                "p0",
-                "winding_from",
-                "winding_to",
-                "clock",
-                "tap_side",
-                "tap_pos",
-                "tap_min",
-                "tap_max",
-                "tap_nom",
-                "tap_size",
-            ]
-        ],
+                (1, 10500.0, 0, -2147483648, -2147483648),
+                (2, 10500.0, 0, -2147483648, -2147483648),
+                (7, 10500.0, 0, -2147483648, -2147483648),
+            ],
+            dtype=[
+                ("id", "<i4"),
+                ("u_rated", "<f8"),
+                ("node_type", "i1"),
+                ("feeder_branch_id", "<i4"),
+                ("feeder_node_id", "<i4"),
+            ],
+        ),
     )
+
+    assert type(output.line) is LineArray
+    assert np.array_equal(
+        output.line.data,
+        np.array(
+            [
+                (9, 7, 2, 1, 1, -2147483648, -2147483648, False, 0.00396133, 4.53865336e-05, 0.0, 0.0, 303.91942029),
+                (10, 7, 1, 1, 1, -2147483648, -2147483648, False, 0.32598809, 1.34716591e-02, 0.0, 0.0, 210.06857453),
+            ],
+            dtype=[
+                ("id", "<i4"),
+                ("from_node", "<i4"),
+                ("to_node", "<i4"),
+                ("from_status", "i1"),
+                ("to_status", "i1"),
+                ("feeder_branch_id", "<i4"),
+                ("feeder_node_id", "<i4"),
+                ("is_feeder", "?"),
+                ("r1", "<f8"),
+                ("x1", "<f8"),
+                ("c1", "<f8"),
+                ("tan1", "<f8"),
+                ("i_n", "<f8"),
+            ],
+        ),
+    )
+
+    assert type(output.sym_load) is SymLoadArray
+    assert np.array_equal(
+        output.sym_load.data,
+        np.array(
+            [(5, 1, 1, 0, -287484.0, 40640.0), (6, 2, 1, 0, 26558.0, 28148.0)],
+            dtype=[
+                ("id", "<i4"),
+                ("node", "<i4"),
+                ("status", "i1"),
+                ("type", "i1"),
+                ("p_specified", "<f8"),
+                ("q_specified", "<f8"),
+            ],
+        ),
+    )
+
+    assert type(output.source) is SourceArray
+    assert np.array_equal(
+        output.source.data,
+        np.array([(8, 7, 1, 1.0)], dtype=[("id", "<i4"), ("node", "<i4"), ("status", "i1"), ("u_ref", "<f8")]),
+    )
+
+class CustomNodeArrayDefault(NodeArray):
+    extra_field: NDArray[np.int64]
+
+    _defaults = {"extra_field": 0}
+
+@dataclass
+class CustomGridDefault(Grid):
+    node: CustomNodeArrayDefault
+
+
+def test_create_extended_grid_with_default_from_input_data(input_data_pgm):
+    grid = CustomGridDefault.empty()
+
+    core_interface = PowerGridModelInterface(grid=grid, input_data=input_data_pgm)
+
+    output = core_interface.create_grid_from_input_data()
+
+    assert isinstance(grid, CustomGridDefault)
+    assert isinstance(grid.node, CustomNodeArrayDefault)
+    assert np.array_equal(
+        output.node.data,
+        np.array(
+            [
+                (1, 10500.0, 0, -2147483648, -2147483648, 0),
+                (2, 10500.0, 0, -2147483648, -2147483648, 0),
+                (7, 10500.0, 0, -2147483648, -2147483648, 0),
+            ],
+            dtype=[
+                ("id", "<i4"),
+                ("u_rated", "<f8"),
+                ("node_type", "i1"),
+                ("feeder_branch_id", "<i4"),
+                ("feeder_node_id", "<i4"),
+                ("extra_field", "<i8"),
+            ],
+        ),
+    )
+
+
+def test_create_extended_grid_without_default_from_input_data(input_data_pgm):
+    grid = CustomGrid.empty()
+
+    core_interface = PowerGridModelInterface(grid=grid, input_data=input_data_pgm)
+
+    with pytest.raises(ValueError, match="Missing required columns: {'extra_field'}"):
+        core_interface.create_grid_from_input_data()
+
+
