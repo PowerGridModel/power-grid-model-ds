@@ -73,7 +73,6 @@ def grid_with_3wt(grid):
     yield build_basic_grid_with_three_winding(grid)
 
 
-# TODO: Smaller example?
 @pytest.fixture
 def input_data_pgm():
     return {
