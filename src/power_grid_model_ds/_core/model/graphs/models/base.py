@@ -258,7 +258,7 @@ class BaseGraphModel(ABC):
         """Build from arrays"""
         new_graph = cls(active_only=active_only)
 
-        new_graph.add_node_array(node_array=arrays.node)
+        new_graph.add_node_array(node_array=arrays.node, raise_on_fail=False)
         new_graph.add_branch_array(arrays.branches)
         new_graph.add_branch3_array(arrays.three_winding_transformer)
 
