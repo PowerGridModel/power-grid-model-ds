@@ -63,13 +63,14 @@ class PowerGridModelInterface:
             self.input_data[array_name] = pgm_array
         return self.input_data
 
-    def create_grid_from_input_data(
-        self,
-    ) -> Grid:
+    def create_grid_from_input_data(self, check_ids: bool = True) -> Grid:
         """
         Create Grid object from PowerGridModel input.
         Note that for some arrays, not all fields are available in the PowerGridModel input.
         In this case, the default values are used.
+
+        Args:
+            check_ids: if True, check if the ids are unique
 
         Returns a Grid object with the arrays filled with the PowerGridModel input.
         """
@@ -78,6 +79,8 @@ class PowerGridModelInterface:
                 pgm_ds_array_class = getattr(self.grid, pgm_name).__class__
                 pgm_ds_array = pgm_ds_array_class(self.input_data[pgm_name])
                 self.grid.append(pgm_ds_array, check_max_id=False)
+        if check_ids:
+            self.grid.check_ids()
         return self.grid
 
     def calculate_power_flow(
