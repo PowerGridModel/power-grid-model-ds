@@ -52,6 +52,12 @@ class RustworkxGraphModel(BaseGraphModel):
         self._external_to_internal[ext_node_id] = graph_node_id
         self._internal_to_external[graph_node_id] = ext_node_id
 
+    def _add_nodes(self, ext_node_ids: list[int]) -> None:
+        graph_node_ids = self._graph.add_nodes_from(ext_node_ids)
+        for ext_node_id, graph_node_id in zip(ext_node_ids, graph_node_ids):
+            self._external_to_internal[ext_node_id] = graph_node_id
+            self._internal_to_external[graph_node_id] = ext_node_id
+
     def _delete_node(self, node_id: int):
         self._graph.remove_node(node_id)
         external_node_id = self._internal_to_external.pop(node_id)
@@ -65,6 +71,10 @@ class RustworkxGraphModel(BaseGraphModel):
 
     def _add_branch(self, from_node_id: int, to_node_id: int):
         self._graph.add_edge(from_node_id, to_node_id, None)
+
+    def _add_branches(self, from_node_ids: list[int], to_node_ids: list[int]):
+        edge_list = [(from_node_id, to_node_id, None) for from_node_id, to_node_id in zip(from_node_ids, to_node_ids)]
+        self._graph.add_edges_from(edge_list)
 
     def _delete_branch(self, from_node_id: int, to_node_id: int) -> None:
         try:
