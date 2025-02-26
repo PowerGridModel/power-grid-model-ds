@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 """This file contains the Grid protocol defining the minimal arrays contained in a grid"""
 
+from abc import abstractmethod
 from typing import Protocol
 
 from power_grid_model_ds._core.model.arrays import (
@@ -18,5 +19,13 @@ class MinimalGridArrays(Protocol):
 
     node: NodeArray
     three_winding_transformer: ThreeWindingTransformerArray
-    branches: BranchArray
-    branch_arrays: list[BranchArray]
+
+    @property
+    @abstractmethod
+    def branches(self) -> BranchArray:
+        """Converts all branch arrays into a single BranchArray."""
+
+    @property
+    @abstractmethod
+    def branch_arrays(self) -> list[BranchArray]:
+        """Returns all branch arrays"""

@@ -35,11 +35,11 @@ def test_branch_node_ids():
     assert_array_equal(branches.node_ids, [0, 1, 1, 2])
 
 
-def test_filter_non_parallel(branches):
+def test_filter_non_parallel(branches: BranchArray):
     filtered_branches = branches.filter_parallel(1, "eq")
     assert_array_equal(filtered_branches.data, branches[2].data)
 
 
-def test_filter_parallel(branches):
+def test_filter_parallel(branches: BranchArray):
     filtered_branches = branches.filter_parallel(1, "neq")
     assert_array_equal(filtered_branches.data, branches[0:2].data)
