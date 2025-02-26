@@ -17,8 +17,8 @@ from power_grid_model_ds._core.model.graphs.errors import (
     NoPathBetweenNodes,
 )
 
-if TYPE_CHECKING:
-    from power_grid_model_ds._core.model.arrays.grid import Grid
+if TYPE_CHECKING:  # pragma: no cover
+    from power_grid_model_ds._core.model.grids.base import Grid
 
 
 # pylint: disable=too-many-public-methods
