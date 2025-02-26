@@ -35,7 +35,6 @@ from power_grid_model_ds._core.model.arrays import (
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
-from power_grid_model_ds._core.model.containers.grid_protocol import MinimalGridArrays
 from power_grid_model_ds._core.model.enums.nodes import NodeType
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
@@ -52,7 +51,7 @@ Self = TypeVar("Self", bound="Grid")
 
 
 @dataclass
-class Grid(FancyArrayContainer, MinimalGridArrays):
+class Grid(FancyArrayContainer):
     """Grid object containing the entire network and interface to interact with it.
 
     Examples:
