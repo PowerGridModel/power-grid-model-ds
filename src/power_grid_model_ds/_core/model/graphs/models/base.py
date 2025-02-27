@@ -2,11 +2,11 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+import warnings
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Generator
 
-import numpy as np
 from numpy._typing import NDArray
 
 from power_grid_model_ds._core.model.arrays.pgm_arrays import Branch3Array, BranchArray, NodeArray
@@ -250,9 +250,23 @@ class BaseGraphModel(ABC):
 
         return [self._internals_to_externals(path) for path in internal_paths]
 
-    def get_components(self, substation_nodes: NDArray[np.int32]) -> list[list[int]]:
+    def get_components(self, substation_nodes: list[int] | None = None) -> list[list[int]]:
         """Returns all separate components when the substation_nodes are removed of the graph as lists"""
-        internal_components = self._get_components(substation_nodes=self._externals_to_internals(substation_nodes))
+        if substation_nodes:
+            warnings.warn(
+                message="""
+get_components: substation_nodes argument is deprecated and will be removed in a future release.
+The functionality is still available with the use of the `tmp_remove_nodes` context manager.
+
+Example:
+>>> with graph.tmp_remove_nodes(substation_nodes):
+>>>    components = graph.get_components()
+""",
+                category=DeprecationWarning,
+                stacklevel=2,
+            )
+        with self.tmp_remove_nodes(substation_nodes or []):
+            internal_components = self._get_components()
         return [self._internals_to_externals(component) for component in internal_components]
 
     def get_connected(
@@ -391,7 +405,7 @@ class BaseGraphModel(ABC):
     def _get_all_paths(self, source, target) -> list[list[int]]: ...
 
     @abstractmethod
-    def _get_components(self, substation_nodes: list[int]) -> list[list[int]]: ...
+    def _get_components(self) -> list[list[int]]: ...
 
     @abstractmethod
     def _find_fundamental_cycles(self) -> list[list[int]]: ...

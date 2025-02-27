@@ -57,9 +57,9 @@ class TestGetBranchesInPath:
 
 
 def test_component_three_winding_transformer(grid_with_3wt):
-    component_list = grid_with_3wt.graphs.active_graph.get_components(
-        grid_with_3wt.node.filter(node_type=NodeType.SUBSTATION_NODE.value).id
-    )
+    substation_nodes = grid_with_3wt.node.filter(node_type=NodeType.SUBSTATION_NODE.value).id
+    with grid_with_3wt.graphs.active_graph.tmp_remove_nodes(substation_nodes):
+        component_list = grid_with_3wt.graphs.active_graph.get_components()
 
     # check the components are as expected
     # use sets to make sure the order of the components is not important
