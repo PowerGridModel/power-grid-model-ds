@@ -94,8 +94,7 @@ class BaseGraphModel(ABC):
     def add_node_array(self, node_array: NodeArray, raise_on_fail: bool = True) -> None:
         """Add all nodes in the node array to the graph."""
         if raise_on_fail and any(self.has_node(x) for x in node_array["id"]):
-            existing_ids = [x for x in node_array["id"] if self.has_node(x)]
-            raise GraphError(f"{len(existing_ids)} external node ids already exist!")
+            raise GraphError("At least one node id already exists in the Graph.")
         self._add_nodes(node_array["id"].tolist())
 
     def delete_node_array(self, node_array: NodeArray, raise_on_fail: bool = True) -> None:
