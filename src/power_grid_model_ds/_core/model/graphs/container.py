@@ -175,5 +175,4 @@ class GraphContainer:
         if isinstance(array, BranchArray):
             self.add_branch_array(array)
         if isinstance(array, Branch3Array):
-            for record in array:
-                self.add_branch3_array(record)
+            self.add_branch3_array(array)
