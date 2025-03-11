@@ -113,8 +113,9 @@ class BaseGraphModel(ABC):
 
     def add_node_array(self, node_array: NodeArray, raise_on_fail: bool = True) -> None:
         """Add all nodes in the node array to the graph."""
-        for node in node_array:
-            self.add_node(ext_node_id=node.id.item(), raise_on_fail=raise_on_fail)
+        if raise_on_fail and any(self.has_node(x) for x in node_array["id"]):
+            raise GraphError("At least one node id already exists in the Graph.")
+        self._add_nodes(node_array["id"].tolist())
 
     def delete_node_array(self, node_array: NodeArray, raise_on_fail: bool = True) -> None:
         """Delete all nodes in node_array from the graph"""
@@ -162,9 +163,14 @@ class BaseGraphModel(ABC):
 
     def add_branch_array(self, branch_array: BranchArray) -> None:
         """Add all branches in the branch array to the graph."""
-        for branch in branch_array:
-            if self._branch_is_relevant(branch):
-                self.add_branch(branch.from_node.item(), branch.to_node.item())
+        if self.active_only:
+            branch_array = branch_array[branch_array.is_active]
+            if not branch_array.size:
+                return
+
+        from_node_ids = self._externals_to_internals(branch_array["from_node"].tolist())
+        to_node_ids = self._externals_to_internals(branch_array["to_node"].tolist())
+        self._add_branches(from_node_ids, to_node_ids)
 
     def add_branch3_array(self, branch3_array: Branch3Array) -> None:
         """Add all branch3s in the branch3 array to the graph."""
@@ -333,7 +339,7 @@ class BaseGraphModel(ABC):
         """Build from arrays"""
         new_graph = cls(active_only=active_only)
 
-        new_graph.add_node_array(node_array=arrays.node)
+        new_graph.add_node_array(node_array=arrays.node, raise_on_fail=False)
         new_graph.add_branch_array(arrays.branches)
         new_graph.add_branch3_array(arrays.three_winding_transformer)
 
@@ -372,10 +378,16 @@ class BaseGraphModel(ABC):
     def _add_node(self, ext_node_id: int) -> None: ...
 
     @abstractmethod
+    def _add_nodes(self, ext_node_ids: list[int]) -> None: ...
+
+    @abstractmethod
     def _delete_node(self, node_id: int): ...
 
     @abstractmethod
-    def _add_branch(self, from_node_id, to_node_id) -> None: ...
+    def _add_branch(self, from_node_id: int, to_node_id: int) -> None: ...
+
+    @abstractmethod
+    def _add_branches(self, from_node_ids: list[int], to_node_ids: list[int]) -> None: ...
 
     @abstractmethod
     def _delete_branch(self, from_node_id, to_node_id) -> None:

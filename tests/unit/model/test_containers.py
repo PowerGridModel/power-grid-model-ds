@@ -156,15 +156,17 @@ def test_id_counter():
 
 
 def test_branches(grid: Grid):
-    node = NodeArray.zeros(10, empty_id=False)
-    grid.append(node)
-    grid.append(LineArray.zeros(10))
-    grid.append(TransformerArray.zeros(10))
-    grid.append(LinkArray.zeros(10))
-    branches = grid.branches
+    nodes = NodeArray.zeros(10)
+    grid.append(nodes)
+
+    for branch_class in (LineArray, TransformerArray, LinkArray):
+        branches = branch_class.zeros(10)
+        branches.from_node = nodes.id
+        branches.to_node = list(reversed(nodes.id.tolist()))
+        grid.append(branches)
 
     expected_ids = np.concatenate((grid.line.id, grid.transformer.id, grid.link.id))
-    assert set(expected_ids) == set(branches.id)
+    assert set(expected_ids) == set(grid.branches.id)
 
 
 def test_delete_node_without_additional_properties(basic_grid: Grid):
