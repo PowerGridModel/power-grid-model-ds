@@ -6,9 +6,11 @@ from copy import deepcopy
 
 import pytest
 
+from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
+
 
 @pytest.fixture(name="graph_with_5_nodes")
-def fixture_graph_with_5_nodes(graph):
+def fixture_graph_with_5_nodes(graph: BaseGraphModel):
     """Return a graph with 2 routes"""
     graph = deepcopy(graph)
     for node_id in range(1, 6):
@@ -17,7 +19,7 @@ def fixture_graph_with_5_nodes(graph):
 
 
 @pytest.fixture
-def graph_with_2_routes(graph_with_5_nodes):
+def graph_with_2_routes(graph_with_5_nodes: BaseGraphModel):
     """Return a graph with 2 routes"""
     graph_with_5_nodes.add_branch(1, 2)  # Route 1
     graph_with_5_nodes.add_branch(2, 3)  # Route 1

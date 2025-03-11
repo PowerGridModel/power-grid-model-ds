@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+from dataclasses import dataclass
+
 import numpy as np
 import pytest
 from numpy.typing import NDArray
@@ -21,6 +23,7 @@ from power_grid_model_ds._core.model.arrays import (
 )
 from power_grid_model_ds._core.model.arrays.pgm_arrays import TransformerTapRegulatorArray
 from power_grid_model_ds._core.model.grids.base import Grid
+from tests.unit.model.grids.test_custom_grid import CustomGrid
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
 
@@ -57,7 +60,7 @@ def test_load_flow_on_random():
     assert all(output["line"]["i_from"] > 0)
 
 
-def test_load_flow(grid):
+def test_load_flow(grid: Grid):
     """Tests the load flow on a test grid with 2 nodes"""
     nodes = NodeArray.zeros(2)
     nodes.id = [0, 1]
@@ -102,7 +105,7 @@ def test_load_flow(grid):
     assert all(output["line"]["i_from"] > 0)
 
 
-def test_load_flow_with_transformer(grid):
+def test_load_flow_with_transformer(grid: Grid):
     """Tests the load flow on a test grid with 3 nodes and a trafo"""
     nodes = NodeArray.zeros(3)
     nodes.id = [0, 1, 2]
@@ -175,7 +178,7 @@ def test_load_flow_with_transformer(grid):
 
 # pylint: disable=too-many-statements
 # pylint: disable=duplicate-code
-def test_load_flow_with_three_winding_transformer(grid):
+def test_load_flow_with_three_winding_transformer(grid: Grid):
     """Tests the load flow on a test grid with 3 nodes and a three winding trafo"""
     nodes = NodeArray.zeros(3)
     nodes.id = [0, 1, 2]
@@ -246,7 +249,7 @@ def test_load_flow_with_three_winding_transformer(grid):
     assert all(output["three_winding_transformer"]["loading"] > 0)
 
 
-def test_load_flow_with_link(grid):
+def test_load_flow_with_link(grid: Grid):
     """Tests the load flow on a test grid with 2 nodes and a link"""
     nodes = NodeArray.zeros(2)
     nodes.id = [0, 1]
@@ -290,7 +293,7 @@ def test_load_flow_with_link(grid):
     assert all(output["link"]["i_from"] > 0)
 
 
-def test_automatic_tap_regulator(grid):
+def test_automatic_tap_regulator(grid: Grid):
     """Test automatic tap regulator
 
     Network:
@@ -453,3 +456,152 @@ def test_batch_run():
 
     # Results have been calculated for all 10 scenarios
     assert 10 == len(output["line"])
+
+
+class CustomNodeArrayDefault(NodeArray):
+    extra_field: NDArray[np.int64]
+
+    _defaults = {"extra_field": 0}
+
+
+@dataclass
+class CustomGridDefault(Grid):
+    node: CustomNodeArrayDefault
+
+
+class TestCreateGridFromInputData:
+    def test_create_grid_from_input_data(self, input_data_pgm):
+        core_interface = PowerGridModelInterface(input_data=input_data_pgm)
+        output = core_interface.create_grid_from_input_data()
+
+        assert isinstance(output, Grid)
+        assert isinstance(output.node, NodeArray)
+        assert np.array_equal(
+            output.node.data,
+            np.array(
+                [
+                    (1, 10500.0, 0, -2147483648, -2147483648),
+                    (2, 10500.0, 0, -2147483648, -2147483648),
+                    (7, 10500.0, 0, -2147483648, -2147483648),
+                ],
+                dtype=[
+                    ("id", "<i4"),
+                    ("u_rated", "<f8"),
+                    ("node_type", "i1"),
+                    ("feeder_branch_id", "<i4"),
+                    ("feeder_node_id", "<i4"),
+                ],
+            ),
+        )
+
+        assert isinstance(output.line, LineArray)
+        assert np.array_equal(
+            output.line.data,
+            np.array(
+                [
+                    (
+                        9,
+                        7,
+                        2,
+                        1,
+                        1,
+                        -2147483648,
+                        -2147483648,
+                        False,
+                        0.00396133,
+                        4.53865336e-05,
+                        0.0,
+                        0.0,
+                        303.91942029,
+                    ),
+                    (
+                        10,
+                        7,
+                        1,
+                        1,
+                        1,
+                        -2147483648,
+                        -2147483648,
+                        False,
+                        0.32598809,
+                        1.34716591e-02,
+                        0.0,
+                        0.0,
+                        210.06857453,
+                    ),
+                ],
+                dtype=[
+                    ("id", "<i4"),
+                    ("from_node", "<i4"),
+                    ("to_node", "<i4"),
+                    ("from_status", "i1"),
+                    ("to_status", "i1"),
+                    ("feeder_branch_id", "<i4"),
+                    ("feeder_node_id", "<i4"),
+                    ("is_feeder", "?"),
+                    ("r1", "<f8"),
+                    ("x1", "<f8"),
+                    ("c1", "<f8"),
+                    ("tan1", "<f8"),
+                    ("i_n", "<f8"),
+                ],
+            ),
+        )
+
+        assert isinstance(output.sym_load, SymLoadArray)
+        assert np.array_equal(
+            output.sym_load.data,
+            np.array(
+                [(5, 1, 1, 0, -287484.0, 40640.0), (6, 2, 1, 0, 26558.0, 28148.0)],
+                dtype=[
+                    ("id", "<i4"),
+                    ("node", "<i4"),
+                    ("status", "i1"),
+                    ("type", "i1"),
+                    ("p_specified", "<f8"),
+                    ("q_specified", "<f8"),
+                ],
+            ),
+        )
+
+        assert isinstance(output.source, SourceArray)
+        assert np.array_equal(
+            output.source.data,
+            np.array([(8, 7, 1, 1.0)], dtype=[("id", "<i4"), ("node", "<i4"), ("status", "i1"), ("u_ref", "<f8")]),
+        )
+
+    def test_create_extended_grid_with_default_from_input_data(self, input_data_pgm):
+        grid = CustomGridDefault.empty()
+
+        core_interface = PowerGridModelInterface(grid=grid, input_data=input_data_pgm)
+
+        output = core_interface.create_grid_from_input_data()
+
+        assert isinstance(grid, CustomGridDefault)
+        assert isinstance(grid.node, CustomNodeArrayDefault)
+        assert np.array_equal(
+            output.node.data,
+            np.array(
+                [
+                    (1, 10500.0, 0, -2147483648, -2147483648, 0),
+                    (2, 10500.0, 0, -2147483648, -2147483648, 0),
+                    (7, 10500.0, 0, -2147483648, -2147483648, 0),
+                ],
+                dtype=[
+                    ("id", "<i4"),
+                    ("u_rated", "<f8"),
+                    ("node_type", "i1"),
+                    ("feeder_branch_id", "<i4"),
+                    ("feeder_node_id", "<i4"),
+                    ("extra_field", "<i8"),
+                ],
+            ),
+        )
+
+    def test_create_extended_grid_without_default_from_input_data(self, input_data_pgm):
+        grid = CustomGrid.empty()
+
+        core_interface = PowerGridModelInterface(grid=grid, input_data=input_data_pgm)
+
+        with pytest.raises(ValueError, match="Missing required columns: {'extra_field'}"):
+            core_interface.create_grid_from_input_data()

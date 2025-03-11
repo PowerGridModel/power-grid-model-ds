@@ -41,6 +41,17 @@ class ChildArray(DefaultedFancyTestArray):
     test_float4: NDArray[np.float64]
 
 
+class SizedDTypesArray(FancyArray):
+    test_float16: NDArray[np.float16]
+    test_float32: NDArray[np.float32]
+    test_float64: NDArray[np.float64]
+
+    test_int8: NDArray[np.int8]
+    test_int16: NDArray[np.int16]
+    test_int32: NDArray[np.int32]
+    test_int64: NDArray[np.int64]
+
+
 def test_build_without_array_definition():
     with pytest.raises(ArrayDefinitionError):
         FancyArray()
@@ -90,7 +101,7 @@ def test_build_from_kwargs_with_different_input_lengths():
         )
 
 
-def test_build_from_args(fancy_test_array):
+def test_build_from_args(fancy_test_array: FancyTestArray):
     array = FancyTestArray(
         (1, 3, 4.0, "a", True),
         (2, 0, 4.0, "c", False),
@@ -104,12 +115,12 @@ def test_build_from_invalid_args():
         FancyTestArray(1)
 
 
-def test_build_from_numpy_array(fancy_test_array):
+def test_build_from_numpy_array(fancy_test_array: FancyTestArray):
     array = FancyTestArray(fancy_test_array.data)
     assert fp.array_equal(array, fancy_test_array)
 
 
-def test_build_from_numpy_array_with_data_kwarg(fancy_test_array):
+def test_build_from_numpy_array_with_data_kwarg(fancy_test_array: FancyTestArray):
     array = FancyTestArray(data=fancy_test_array.data)
     assert fp.array_equal(array, fancy_test_array)
 
@@ -166,6 +177,19 @@ def test_empty():
     assert_array_equal([min_int64] * 3, array.test_int)
 
 
+def test_empty_with_sized_dtypes():
+    array = SizedDTypesArray.empty(1)
+
+    assert_array_equal([np.iinfo(np.int8).min], array.test_int8)
+    assert_array_equal([np.iinfo(np.int16).min], array.test_int16)
+    assert_array_equal([np.iinfo(np.int32).min], array.test_int32)
+    assert_array_equal([np.iinfo(np.int64).min], array.test_int64)
+
+    assert_array_equal([np.nan], array.test_float16)
+    assert_array_equal([np.nan], array.test_float32)
+    assert_array_equal([np.nan], array.test_float64)
+
+
 def test_empty_with_defaults():
     array = DefaultedFancyTestArray.empty(3)
     assert 3 == array.size
@@ -175,26 +199,26 @@ def test_empty_with_defaults():
     assert_array_equal(["DEFAULT", "DEFAULT", "DEFAULT"], array.test_str)
 
 
-def test_from_structured_subarray_with_defaults(fancy_test_array):
+def test_from_structured_subarray_with_defaults(fancy_test_array: FancyTestArray):
     array = ExtendedFancyTestArray(fancy_test_array.data)
     assert 3 == array.size
     assert all(np.isnan(array.test_float2))
     assert_array_equal([42.0, 42.0, 42.0], array.test_float3)
 
 
-def test_from_structured_subarray_no_defaults(fancy_test_array):
+def test_from_structured_subarray_no_defaults(fancy_test_array: FancyTestArray):
     with pytest.raises(ValueError):
         ExtendedFancyTestArrayNoDefaults(fancy_test_array.data)
 
 
-def test_from_sub_ndarray_with_defaults(fancy_test_array):
+def test_from_sub_ndarray_with_defaults(fancy_test_array: FancyTestArray):
     # defaults are not supported when working with unstructured arrays
     sub_ndarray = np.array(fancy_test_array.tolist())
     with pytest.raises(ValueError):
         ExtendedFancyTestArray(sub_ndarray)
 
 
-def test_from_sub_ndarray_no_defaults(fancy_test_array):
+def test_from_sub_ndarray_no_defaults(fancy_test_array: FancyTestArray):
     sub_ndarray = np.array(fancy_test_array.tolist())
     with pytest.raises(ValueError):
         ExtendedFancyTestArrayNoDefaults(sub_ndarray)

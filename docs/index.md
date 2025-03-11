@@ -31,6 +31,7 @@ pip install power-grid-model-ds
 :maxdepth: 2
 
 quick_start
+demos/index
 model_structure
 model_interface
 examples/index

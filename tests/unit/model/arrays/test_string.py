@@ -7,7 +7,7 @@ from tests.fixtures.arrays import FancyTestArray, LongColumnNameFancyTestArray
 # pylint: disable=missing-function-docstring
 
 
-def test_str_small_array(fancy_test_array):
+def test_str_small_array(fancy_test_array: FancyTestArray):
     array_str = str(fancy_test_array)
 
     rows = array_str.split("\n")
@@ -70,6 +70,6 @@ def test_str_long_values_autosize():
     assert "| 112233445566778899" in array_str
 
 
-def test_str_in_loop(fancy_test_array):
+def test_str_in_loop(fancy_test_array: FancyTestArray):
     for row in fancy_test_array:
         assert str(row)

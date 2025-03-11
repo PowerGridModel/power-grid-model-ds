@@ -7,17 +7,18 @@
 import dataclasses
 import warnings
 from dataclasses import dataclass
-from pathlib import PosixPath
-from typing import Generator
+from typing import TYPE_CHECKING, Generator
 
 import numpy as np
 
 from power_grid_model_ds._core.model.arrays import Branch3Array, BranchArray, NodeArray
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
-from power_grid_model_ds._core.model.containers.grid_protocol import MinimalGridArrays
 from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
+
+if TYPE_CHECKING:  # pragma: no cover
+    from power_grid_model_ds._core.model.grids.base import Grid
 
 
 @dataclass
@@ -139,17 +140,8 @@ class GraphContainer:
             if graph.active_only:
                 graph.delete_branch(from_ext_node_id=from_node, to_ext_node_id=to_node)
 
-    def cache(self, cache_dir: PosixPath, compress: bool) -> PosixPath:
-        """Cache the container into a folder with .pkl and graph files"""
-        cache_dir.mkdir(parents=True, exist_ok=True)
-
-        for field in self.graph_attributes:
-            graph = getattr(self, field.name)
-            graph.cache(cache_dir=cache_dir, graph_name=field.name, compress=compress)
-        return cache_dir
-
     @classmethod
-    def from_arrays(cls, arrays: MinimalGridArrays) -> "GraphContainer":
+    def from_arrays(cls, arrays: "Grid") -> "GraphContainer":
         """Build from arrays"""
         cls._validate_branches(arrays=arrays)
 
@@ -162,7 +154,7 @@ class GraphContainer:
         return new_container
 
     @staticmethod
-    def _validate_branches(arrays: MinimalGridArrays):
+    def _validate_branches(arrays: "Grid") -> None:
         for array in arrays.branch_arrays:
             if any(~np.isin(array.from_node, arrays.node.id)):
                 raise RecordDoesNotExist(f"Found invalid .from_node values in {array.__class__.__name__}")

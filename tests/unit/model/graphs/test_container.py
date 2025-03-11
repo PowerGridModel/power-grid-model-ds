@@ -7,11 +7,12 @@ import pytest
 from power_grid_model_ds._core.model.arrays import NodeArray, ThreeWindingTransformerArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
+from power_grid_model_ds._core.model.grids.base import Grid
 
 # pylint: disable=missing-function-docstring
 
 
-def test_from_arrays(basic_grid):
+def test_from_arrays(basic_grid: Grid):
     graphs = GraphContainer.from_arrays(basic_grid)
 
     assert isinstance(graphs, GraphContainer)
@@ -25,7 +26,62 @@ def test_from_arrays(basic_grid):
     assert set(basic_grid.node.id) == set(graphs.complete_graph.external_ids)
 
 
-def test_from_arrays_active_three_winding(basic_grid):
+@pytest.fixture
+def graph_container_with_5_nodes():
+    graph_container = GraphContainer.empty()
+    for node_id in range(1, 6):
+        node = NodeArray.empty(1)
+        node.id = node_id
+        graph_container.add_node(node)
+    return graph_container
+
+
+@pytest.fixture
+def three_winding_transformers():
+    three_winding_transformers = ThreeWindingTransformerArray.empty(2)
+    three_winding_transformers.id = [301, 302]
+    three_winding_transformers.node_1 = [1, 1]
+    three_winding_transformers.node_2 = [2, 4]
+    three_winding_transformers.node_3 = [3, 5]
+    three_winding_transformers.status_1 = [1, 1]
+    three_winding_transformers.status_2 = [1, 1]
+    three_winding_transformers.status_3 = [0, 1]
+
+    return three_winding_transformers
+
+
+def test_add_branch3(
+    graph_container_with_5_nodes: GraphContainer, three_winding_transformers: ThreeWindingTransformerArray
+):
+    graph_container_with_5_nodes.add_branch3(three_winding_transformers)
+    for from_node, to_node in [(1, 2), (1, 4), (1, 5), (4, 5)]:
+        assert graph_container_with_5_nodes.active_graph.has_branch(from_node, to_node)
+        assert graph_container_with_5_nodes.complete_graph.has_branch(from_node, to_node)
+
+    for from_node, to_node in [(1, 3), (2, 3)]:
+        assert not graph_container_with_5_nodes.active_graph.has_branch(from_node, to_node)
+        assert graph_container_with_5_nodes.complete_graph.has_branch(from_node, to_node)
+
+
+def test_delete_branch3(
+    graph_container_with_5_nodes: GraphContainer, three_winding_transformers: ThreeWindingTransformerArray
+):
+    graph_container_with_5_nodes.add_branch3(three_winding_transformers)
+    graph_container_with_5_nodes.delete_branch3(three_winding_transformers[0])
+
+    assert not graph_container_with_5_nodes.active_graph.has_branch(1, 2)
+    assert not graph_container_with_5_nodes.complete_graph.has_branch(1, 2)
+    for from_node, to_node in [(1, 4), (1, 5), (4, 5)]:
+        assert graph_container_with_5_nodes.active_graph.has_branch(from_node, to_node)
+        assert graph_container_with_5_nodes.complete_graph.has_branch(from_node, to_node)
+    graph_container_with_5_nodes.delete_branch3(three_winding_transformers[1])
+
+    for from_node, to_node in [(1, 2), (1, 4), (1, 5), (4, 5)]:
+        assert not graph_container_with_5_nodes.active_graph.has_branch(from_node, to_node)
+        assert not graph_container_with_5_nodes.complete_graph.has_branch(from_node, to_node)
+
+
+def test_from_arrays_active_three_winding(basic_grid: Grid):
     nodes = NodeArray.zeros(3)
     nodes.id = [1000, 1001, 1002]
     basic_grid.append(nodes)
@@ -47,7 +103,7 @@ def test_from_arrays_active_three_winding(basic_grid):
     assert basic_grid.graphs.active_graph.nr_branches == 5 + 3
 
 
-def test_from_arrays_partially_active_three_winding(basic_grid):
+def test_from_arrays_partially_active_three_winding(basic_grid: Grid):
     nodes = NodeArray.zeros(3)
     nodes.id = [1000, 1001, 1002]
     basic_grid.append(nodes)
@@ -76,7 +132,7 @@ def test_from_arrays_partially_active_three_winding(basic_grid):
     assert not basic_grid.graphs.active_graph.has_branch(1001, 1002)
 
 
-def test_from_arrays_invalid_arrays(basic_grid):
+def test_from_arrays_invalid_arrays(basic_grid: Grid):
     basic_grid.node = basic_grid.node.exclude(id=106)
 
     with pytest.raises(RecordDoesNotExist):

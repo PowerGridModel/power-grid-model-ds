@@ -16,7 +16,7 @@ def empty(dtype: type):
         return ""
     if np.issubdtype(dtype, np.dtype("bool")):
         return False
-    if np.issubdtype(dtype, np.float64):
+    if np.issubdtype(dtype, np.floating):
         return np.nan
     try:
         return np.iinfo(dtype).min

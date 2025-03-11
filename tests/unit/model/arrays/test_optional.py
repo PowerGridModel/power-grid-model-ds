@@ -5,9 +5,11 @@
 import sys
 import unittest
 
+from tests.fixtures.arrays import FancyTestArray
+
 
 @unittest.skipUnless("pandas" in sys.modules, "pandas is not installed")
-def test_as_df(fancy_test_array):
+def test_as_df(fancy_test_array: FancyTestArray):
     """Test that .as_df() can convert an array to a pandas DataFrame."""
     data_frame = fancy_test_array.as_df()
     # pylint: disable=import-outside-toplevel, import-error
