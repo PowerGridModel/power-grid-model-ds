@@ -93,11 +93,10 @@ class BaseGraphModel(ABC):
 
     def add_node_array(self, node_array: NodeArray, raise_on_fail: bool = True) -> None:
         """Add all nodes in the node array to the graph."""
-        ext_node_ids = node_array["id"].tolist()
-        if raise_on_fail:
-            if existing_ids := set(ext_node_ids).intersection(set(self.external_ids)):
-                raise GraphError(f"{len(existing_ids)} external node ids already exist!")
-        self._add_nodes(ext_node_ids)
+        if raise_on_fail and any(self.has_node(x) for x in node_array["id"]):
+            existing_ids = [x for x in node_array["id"] if self.has_node(x)]
+            raise GraphError(f"{len(existing_ids)} external node ids already exist!")
+        self._add_nodes(node_array["id"].tolist())
 
     def delete_node_array(self, node_array: NodeArray, raise_on_fail: bool = True) -> None:
         """Delete all nodes in node_array from the graph"""
