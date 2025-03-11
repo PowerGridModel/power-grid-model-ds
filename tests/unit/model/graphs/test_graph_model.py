@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
 
+from power_grid_model_ds._core.model.graphs.errors import GraphError
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds.errors import MissingBranchError, MissingNodeError, NoPathBetweenNodes
@@ -29,6 +30,11 @@ class TestBasicGraphFunctions:
         # the graph has the correct size
         assert 2 == graph.nr_nodes
         assert 1 == graph.nr_branches
+
+    def test_add_node_already_there(self, graph: BaseGraphModel):
+        graph.add_node(1)
+        with pytest.raises(GraphError):
+            graph.add_node(1)
 
     def test_add_invalid_branch(self, graph: BaseGraphModel):
         graph.add_node(1)
