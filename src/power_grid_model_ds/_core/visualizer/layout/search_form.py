@@ -1,47 +1,50 @@
 import dash_bootstrap_components as dbc
-from dash import dcc, html
+from dash import html
 
-_FORM_ELEMENT_STYLE = {
-    "display": "block",
-    "width": "200px",
-    # "margin": "0 20px 20px 20px",
-    "verticalAlign": "middle",
-    "justifyContent": "center",
-}
+# Create your form components
+group_input = dbc.Select(
+    id="search-form-group-input",
+    options=[
+        {"label": "node", "value": "node"},
+        {"label": "line", "value": "line"},
+        {"label": "link", "value": "link"},
+        {"label": "transformer", "value": "transformer"},
+        {"label": "branch", "value": "branch"},
+    ],
+    value="node",  # Default value
+    style={"width": "150px", "display": "inline-block"}
+)
 
+column_input = dbc.Select(
+    id="search-form-column-input",
+    options=[{"label": "id", "value": "id"}],
+    value="id",  # Default value
+    style={"width": "150px", "display": "inline-block"}
+)
 
+value_input = dbc.Input(
+    id="search-form-value-input",
+    placeholder="Enter value",
+    type="text",
+    style={"width": "150px", "display": "inline-block"}
+)
+
+# Arrange as a sentence
 SEARCH_FORM_HTML = html.Div(
     [
-        html.Div(
-            dcc.RadioItems(["node", "line", "link", "transformer", "branch"], "node", id="search-form-group-input"),
-            style=_FORM_ELEMENT_STYLE,
-        ),
-        html.Div(dcc.Dropdown(["id"], "id", id="search-form-column-input"), style=_FORM_ELEMENT_STYLE),
-        html.Div(
-            dcc.Input(placeholder="Enter value to mark", id="search-form-value-input"),
-            style=_FORM_ELEMENT_STYLE,
-        ),
-    ]
-)
-
-SEARCH_FORM_TOGGLE = html.Div(
-    dbc.Button(
-        "Search",
-        id="collapse-button",
-        className="mb-3",
-        color="primary",
-        n_clicks=0,
-    ),
-    style={"margin": "20px"},
-)
-
-HEADER_HTML = html.Div(
-    [
-        SEARCH_FORM_TOGGLE,
-        dbc.Collapse(
-            SEARCH_FORM_HTML,
-            id="collapse",
-            is_open=False,
-        ),
-    ]
+        html.Span("Search ", className="mr-2", style={"margin-right": "8px"}),
+        group_input,
+        html.Span(" with ", className="mx-2", style={"margin": "0 8px"}),
+        column_input,
+        html.Span(" == ", className="mx-2", style={"margin": "0 8px"}),
+        value_input,
+    ],
+style={
+        "display": "flex",
+        "align-items": "center",
+        "justify-content": "center",  # Centers items horizontally
+        "padding": "10px",
+        "margin": "0 auto",  # Centers the container itself
+        "width": "100%"  # Ensures the container takes full width
+    }
 )

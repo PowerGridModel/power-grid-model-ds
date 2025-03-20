@@ -7,7 +7,7 @@ from power_grid_model_ds._core.visualizer.callbacks import (  # noqa: F401  # py
     search_form,
 )
 from power_grid_model_ds._core.visualizer.layout.cytoscape import LayoutOptions, get_cytoscape_html
-from power_grid_model_ds._core.visualizer.layout.search_form import HEADER_HTML
+from power_grid_model_ds._core.visualizer.layout.search_form import SEARCH_FORM_HTML
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
 from power_grid_model_ds._core.visualizer.parsers import parse_branches, parse_node_array
 from power_grid_model_ds.arrays import NodeArray
@@ -43,7 +43,7 @@ def visualize(grid: Grid, layout: LayoutOptions = "", debug: bool = False):
     app.layout = html.Div(
         [
             columns_store,
-            HEADER_HTML,
+            SEARCH_FORM_HTML,
             cytoscape_html,
             SELECTION_OUTPUT_HTML,
         ]

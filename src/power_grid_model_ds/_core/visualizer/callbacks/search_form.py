@@ -1,5 +1,6 @@
 from dash import Input, Output, State, callback
 
+from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
 
 
@@ -15,15 +16,21 @@ def search_element(group, column, value):
         return DEFAULT_STYLESHEET
 
     # Determine if we're working with a node or an edge type
-    is_node = group == "node"
-    style_property = "background-color" if is_node else "line-color"
+    if group == "node":
+        style = {
+            "background-color": CYTO_COLORS["highlighted"],
+            "text-background-color": CYTO_COLORS["highlighted"],
+        }
+    else:
+        style = {"line-color": CYTO_COLORS["highlighted"]}
 
     # Create selectors that match both the group type and the specific value
     new_style = {
         "selector": f'[{column} = {str(value)}], [{column} = "{value}"]',
-        "style": {style_property: "red"},
+        "style": style,
     }
     return DEFAULT_STYLESHEET + [new_style]
+
 
 
 @callback(
@@ -42,15 +49,3 @@ def update_column_options(selected_group, store_data):
     default_value = columns[0] if columns else "id"
 
     return columns, default_value
-
-
-@callback(
-    Output("collapse", "is_open"),
-    [Input("collapse-button", "n_clicks")],
-    [State("collapse", "is_open")],
-)
-def toggle_collapse(n, is_open):
-    """Toggle the collapse button."""
-    if n:
-        return not is_open
-    return is_open
