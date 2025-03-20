@@ -3,8 +3,8 @@ from typing import Any, Literal
 import dash_cytoscape as cyto
 from dash import html
 
-from pgm_visualizer._core.layout.colors import BACKGROUND_COLOR
-from pgm_visualizer._core.layout.cytoscape_styling import DEFAULT_STYLESHEET
+from power_grid_model_ds._core.visualizer.layout.colors import BACKGROUND_COLOR
+from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
 
 LayoutOptions = Literal["", "random", "circle", "concentric", "grid", "cose", "breadthfirst", "preset"]
 

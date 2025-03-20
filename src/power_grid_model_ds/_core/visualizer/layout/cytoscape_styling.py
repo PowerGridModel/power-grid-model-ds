@@ -1,6 +1,6 @@
 """Contains selectors for the Cytoscape stylesheet."""
 
-from pgm_visualizer._core.layout.colors import CYTO_COLORS
+from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
 
 _BRANCH_STYLE = {
     "selector": "edge",

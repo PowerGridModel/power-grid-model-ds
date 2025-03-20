@@ -2,7 +2,7 @@ from typing import Any
 
 from dash import Input, Output, callback, dash_table, dcc
 
-from pgm_visualizer._core.layout.selection_output import SELECTION_OUTPUT_HEADER_STYLE, SELECTION_OUTPUT_HTML
+from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HEADER_STYLE, SELECTION_OUTPUT_HTML
 
 
 @callback(

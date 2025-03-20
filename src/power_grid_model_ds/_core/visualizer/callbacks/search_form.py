@@ -1,6 +1,6 @@
 from dash import Input, Output, State, callback
 
-from pgm_visualizer._core.layout.cytoscape_styling import DEFAULT_STYLESHEET
+from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
 
 
 @callback(

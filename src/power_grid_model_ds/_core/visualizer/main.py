@@ -3,11 +3,11 @@ from dash import Dash, dcc, html
 from power_grid_model_ds import Grid
 from power_grid_model_ds.arrays import NodeArray
 
-from pgm_visualizer._core.callbacks import element_selection, search_form  # noqa: F401  # pylint: disable=unused-import
-from pgm_visualizer._core.layout.cytoscape import LayoutOptions, get_cytoscape_html
-from pgm_visualizer._core.layout.search_form import HEADER_HTML
-from pgm_visualizer._core.layout.selection_output import SELECTION_OUTPUT_HTML
-from pgm_visualizer._core.parsers import parse_branches, parse_node_array
+from power_grid_model_ds._core.visualizer.callbacks import element_selection, search_form  # noqa: F401  # pylint: disable=unused-import
+from power_grid_model_ds._core.visualizer.layout.cytoscape import LayoutOptions, get_cytoscape_html
+from power_grid_model_ds._core.visualizer.layout.search_form import HEADER_HTML
+from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
+from power_grid_model_ds._core.visualizer.parsers import parse_branches, parse_node_array
 
 
 def visualize(grid: Grid, layout: LayoutOptions = "", debug: bool = False):
