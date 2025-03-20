@@ -1,13 +1,16 @@
 import dash_bootstrap_components as dbc
 from dash import Dash, dcc, html
-from power_grid_model_ds import Grid
-from power_grid_model_ds.arrays import NodeArray
 
-from power_grid_model_ds._core.visualizer.callbacks import element_selection, search_form  # noqa: F401  # pylint: disable=unused-import
+from power_grid_model_ds import Grid
+from power_grid_model_ds._core.visualizer.callbacks import (  # noqa: F401  # pylint: disable=unused-import
+    element_selection,
+    search_form,
+)
 from power_grid_model_ds._core.visualizer.layout.cytoscape import LayoutOptions, get_cytoscape_html
 from power_grid_model_ds._core.visualizer.layout.search_form import HEADER_HTML
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
 from power_grid_model_ds._core.visualizer.parsers import parse_branches, parse_node_array
+from power_grid_model_ds.arrays import NodeArray
 
 
 def visualize(grid: Grid, layout: LayoutOptions = "", debug: bool = False):
