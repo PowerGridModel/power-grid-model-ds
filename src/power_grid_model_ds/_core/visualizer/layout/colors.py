@@ -9,4 +9,5 @@ CYTO_COLORS = {
     "selected_transformer": "#0349a3",
     "substation_node": "purple",
     "open_branch": "#c9c9c9",
+    "highlighted": "#a10000",
 }
