@@ -26,7 +26,11 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Physics",
 ]
 requires-python = ">=3.11,<3.14"
-dependencies = ["power-grid-model>=1.7", "rustworkx>= 0.15.1", "numpy>=1.21"]
+dependencies = [
+    "power-grid-model>=1.7",
+    "rustworkx>= 0.15.1",
+    "numpy>=1.21",
+]
 dynamic = ["version"]
 
 [project.optional-dependencies]
@@ -49,6 +53,12 @@ doc = [
   "readthedocs-sphinx-search",
   "sphinx-hoverxref",
   "numpydoc",
+]
+
+visualizer = [
+  "dash>=3.0.0",
+  "dash-bootstrap-components>=2.0.0",
+  "dash-cytoscape>=1.0.2",
 ]
 
 [project.urls]
@@ -108,3 +118,9 @@ disable_error_code = ["assignment", "import-untyped"]
 [tool.coverage.run]
 relative_files = true
 branch = true
+
+[dependency-groups]
+visualizer = [
+    "dash-cytoscape>=1.0.2",
+]
+
