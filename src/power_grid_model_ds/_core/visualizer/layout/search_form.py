@@ -29,6 +29,19 @@ value_input = dbc.Input(
     style={"width": "150px", "display": "inline-block"}
 )
 
+operator_input = dbc.Select(
+    id="search-form-operator-input",
+    options=[
+        {"label": "=", "value": "="},
+        {"label": "<", "value": "<"},
+        {"label": ">", "value": ">"},
+        {"label": "!=", "value": "!="},
+    ],
+    value="=",  # Default value
+    style={"width": "60px", "display": "inline-block", "margin": "0 8px"}
+)
+
+
 # Arrange as a sentence
 SEARCH_FORM_HTML = html.Div(
     [
@@ -36,7 +49,7 @@ SEARCH_FORM_HTML = html.Div(
         group_input,
         html.Span(" with ", className="mx-2", style={"margin": "0 8px"}),
         column_input,
-        html.Span(" == ", className="mx-2", style={"margin": "0 8px"}),
+        operator_input,
         value_input,
     ],
 style={

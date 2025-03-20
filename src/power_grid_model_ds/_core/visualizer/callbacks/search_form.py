@@ -8,9 +8,10 @@ from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAUL
     Output("cytoscape-graph", "stylesheet"),
     Input("search-form-group-input", "value"),
     Input("search-form-column-input", "value"),
+    Input("search-form-operator-input", "value"),
     Input("search-form-value-input", "value"),
 )
-def search_element(group, column, value):
+def search_element(group, column, operator, value):
     """Color the specified element red based on the input values."""
     if not group or not column or not value:
         return DEFAULT_STYLESHEET
@@ -22,11 +23,15 @@ def search_element(group, column, value):
             "text-background-color": CYTO_COLORS["highlighted"],
         }
     else:
-        style = {"line-color": CYTO_COLORS["highlighted"]}
+        style = {"line-color": CYTO_COLORS["highlighted"], "target-arrow-color": CYTO_COLORS["highlighted"]}
 
-    # Create selectors that match both the group type and the specific value
+    if column == "id":
+        selector = f'[{column} {operator} "{value}"]'
+    else:
+        selector = f'[{column} {operator} {value}]'
+
     new_style = {
-        "selector": f'[{column} = {str(value)}], [{column} = "{value}"]',
+        "selector": selector,
         "style": style,
     }
     return DEFAULT_STYLESHEET + [new_style]
