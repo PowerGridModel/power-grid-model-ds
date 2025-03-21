@@ -1,7 +1,7 @@
 import dash_bootstrap_components as dbc
 from dash import html
 
-_SPAN_TEXT_STYLE = {"margin": "8px", "font-weight": "bold"}
+SPAN_TEXT_STYLE = {"color": "white", "margin-right": "8px", "font-weight": "bold", "text-shadow": "0 0 5px #000"}
 _INPUT_STYLE = {"width": "150px", "display": "inline-block"}
 # Create your form components
 GROUP_INPUT = dbc.Select(
@@ -47,9 +47,9 @@ OPERATOR_INPUT = dbc.Select(
 # Arrange as a sentence
 SEARCH_FORM_HTML = html.Div(
     [
-        html.Span("Search ", className="mr-2", style=_SPAN_TEXT_STYLE),
+        html.Span("Search ", style=SPAN_TEXT_STYLE),
         GROUP_INPUT,
-        html.Span(" with ", className="mx-2", style=_SPAN_TEXT_STYLE),
+        html.Span(" with ", className="mx-2", style=SPAN_TEXT_STYLE),
         COLUMN_INPUT,
         OPERATOR_INPUT,
         VALUE_INPUT,

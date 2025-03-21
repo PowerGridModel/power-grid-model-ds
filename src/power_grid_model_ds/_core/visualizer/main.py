@@ -6,8 +6,9 @@ from power_grid_model_ds import Grid
 from power_grid_model_ds._core.visualizer.callbacks import (  # noqa: F401  # pylint: disable=unused-import
     element_selection,
     search_form,
-)
-from power_grid_model_ds._core.visualizer.layout.cytoscape import LayoutOptions, get_cytoscape_html
+    layout_dropdown,
+    element_scaling)
+from power_grid_model_ds._core.visualizer.layout.cytoscape_html import get_cytoscape_html
 from power_grid_model_ds._core.visualizer.layout.header import HEADER_HTML
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
 from power_grid_model_ds._core.visualizer.parsers import parse_branches, parse_node_array
@@ -17,7 +18,7 @@ GOOGLE_FONTS = "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&d
 MDBOOTSTRAP = "https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/8.2.0/mdb.min.css"
 
 
-def visualize(grid: Grid, layout: LayoutOptions = "", debug: bool = False):
+def visualize(grid: Grid, debug: bool = False):
     """Visualize the Grid.
 
     grid: Grid
@@ -39,7 +40,7 @@ def visualize(grid: Grid, layout: LayoutOptions = "", debug: bool = False):
             - "cose": A layout that uses the CompoundSpring Embedder algorithm (force-directed layout)
     """
     columns_store = _get_columns_store(grid)
-    layout = _get_layout(layout, grid.node)
+    layout = _get_layout(grid.node)
     elements = parse_node_array(grid.node) + parse_branches(grid)
     cytoscape_html = get_cytoscape_html(layout, elements)
 
@@ -48,6 +49,7 @@ def visualize(grid: Grid, layout: LayoutOptions = "", debug: bool = False):
         [
             columns_store,
             HEADER_HTML,
+            html.Hr(style={"border-color": "white", "margin": "0"}),
             cytoscape_html,
             SELECTION_OUTPUT_HTML,
         ],
@@ -69,10 +71,8 @@ def _get_columns_store(grid: Grid) -> dcc.Store:
     )
 
 
-def _get_layout(layout: LayoutOptions, nodes: NodeArray) -> LayoutOptions:
+def _get_layout(nodes: NodeArray) -> str:
     """Determine the layout"""
-    if layout:
-        return layout
     if "x" in nodes.columns and "y" in nodes.columns:
         return "preset"
     return "breadthfirst"

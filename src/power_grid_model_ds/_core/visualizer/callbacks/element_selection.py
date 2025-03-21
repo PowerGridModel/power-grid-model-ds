@@ -9,7 +9,7 @@ from power_grid_model_ds._core.visualizer.layout.selection_output import (
 
 
 @callback(
-    Output("search-output", "children"),
+    Output("selection-output", "children"),
     Input("cytoscape-graph", "selectedNodeData"),
     Input("cytoscape-graph", "selectedEdgeData"),
 )
@@ -30,4 +30,4 @@ def _to_data_table(data: dict[str, Any]):
     data_table = dash_table.DataTable(
         data=[data], columns=[{"name": key, "id": key} for key in columns], editable=False
     )
-    return [header, data_table]
+    return data_table

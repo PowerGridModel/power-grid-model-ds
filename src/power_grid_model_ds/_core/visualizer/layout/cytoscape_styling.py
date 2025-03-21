@@ -2,6 +2,9 @@
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
 
+NODE_SIZE = 100
+BRANCH_WIDTH = 10
+
 _BRANCH_STYLE = {
     "selector": "edge",
     "style": {
@@ -9,7 +12,7 @@ _BRANCH_STYLE = {
         "target-arrow-color": CYTO_COLORS["line"],
         "curve-style": "bezier",
         "target-arrow-shape": "triangle",
-        "width": 7,
+        "width": BRANCH_WIDTH,
     },
 }
 _NODE_STYLE = {
@@ -51,8 +54,8 @@ _SUBSTATION_NODE_STYLE = {
         "shape": "diamond",
         "background-color": CYTO_COLORS["substation_node"],
         "text-background-color": CYTO_COLORS["substation_node"],
-        "width": 100,
-        "height": 100,
+        "width": NODE_SIZE * 1.2,
+        "height": NODE_SIZE * 1.2,
         "color": "white",
     },
 }

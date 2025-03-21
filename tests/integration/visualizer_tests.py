@@ -37,9 +37,9 @@ def visualize_grid():
 
 
 def visualize_topo_grid():
-    visualize(grid=get_topo_grid(), debug=True)
+    visualize(grid=get_topo_grid(), debug=True, )
 
 
 if __name__ == "__main__":
-    # visualize_grid()
-    visualize_topo_grid()
+    visualize_grid()
+    # visualize_topo_grid()
