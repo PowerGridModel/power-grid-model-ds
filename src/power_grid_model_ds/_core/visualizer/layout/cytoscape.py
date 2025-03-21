@@ -9,7 +9,7 @@ from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAUL
 LayoutOptions = Literal["", "random", "circle", "concentric", "grid", "cose", "breadthfirst", "preset"]
 
 _CYTO_INNER_STYLE = {"width": "100%", "height": "100%", "background-color": BACKGROUND_COLOR}
-_CYTO_OUTER_STYLE = {"height": "80vh", "border": "thin lightgrey solid", "margin": "0 5px 0 5px"}
+_CYTO_OUTER_STYLE = {"height": "75vh"}
 
 
 def get_cytoscape_html(layout: LayoutOptions, elements: list[dict[str, Any]]) -> html.Div:

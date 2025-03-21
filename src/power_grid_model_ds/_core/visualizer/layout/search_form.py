@@ -1,8 +1,10 @@
 import dash_bootstrap_components as dbc
 from dash import html
 
+_SPAN_TEXT_STYLE = {"margin": "8px", "font-weight": "bold"}
+_INPUT_STYLE = {"width": "150px", "display": "inline-block"}
 # Create your form components
-group_input = dbc.Select(
+GROUP_INPUT = dbc.Select(
     id="search-form-group-input",
     options=[
         {"label": "node", "value": "node"},
@@ -12,24 +14,24 @@ group_input = dbc.Select(
         {"label": "branch", "value": "branch"},
     ],
     value="node",  # Default value
-    style={"width": "150px", "display": "inline-block"}
+    style=_INPUT_STYLE
 )
 
-column_input = dbc.Select(
+COLUMN_INPUT = dbc.Select(
     id="search-form-column-input",
     options=[{"label": "id", "value": "id"}],
     value="id",  # Default value
-    style={"width": "150px", "display": "inline-block"}
+    style=_INPUT_STYLE
 )
 
-value_input = dbc.Input(
+VALUE_INPUT = dbc.Input(
     id="search-form-value-input",
     placeholder="Enter value",
     type="text",
-    style={"width": "150px", "display": "inline-block"}
+    style=_INPUT_STYLE
 )
 
-operator_input = dbc.Select(
+OPERATOR_INPUT = dbc.Select(
     id="search-form-operator-input",
     options=[
         {"label": "=", "value": "="},
@@ -45,12 +47,12 @@ operator_input = dbc.Select(
 # Arrange as a sentence
 SEARCH_FORM_HTML = html.Div(
     [
-        html.Span("Search ", className="mr-2", style={"margin-right": "8px"}),
-        group_input,
-        html.Span(" with ", className="mx-2", style={"margin": "0 8px"}),
-        column_input,
-        operator_input,
-        value_input,
+        html.Span("Search ", className="mr-2", style=_SPAN_TEXT_STYLE),
+        GROUP_INPUT,
+        html.Span(" with ", className="mx-2", style=_SPAN_TEXT_STYLE),
+        COLUMN_INPUT,
+        OPERATOR_INPUT,
+        VALUE_INPUT,
     ],
 style={
         "display": "flex",
@@ -61,3 +63,4 @@ style={
         "width": "100%"  # Ensures the container takes full width
     }
 )
+

@@ -1,5 +1,6 @@
 import dash_bootstrap_components as dbc
 from dash import Dash, dcc, html
+from dash_bootstrap_components.icons import FONT_AWESOME
 
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.visualizer.callbacks import (  # noqa: F401  # pylint: disable=unused-import
@@ -7,10 +8,13 @@ from power_grid_model_ds._core.visualizer.callbacks import (  # noqa: F401  # py
     search_form,
 )
 from power_grid_model_ds._core.visualizer.layout.cytoscape import LayoutOptions, get_cytoscape_html
-from power_grid_model_ds._core.visualizer.layout.search_form import SEARCH_FORM_HTML
+from power_grid_model_ds._core.visualizer.layout.header import HEADER_HTML
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
 from power_grid_model_ds._core.visualizer.parsers import parse_branches, parse_node_array
 from power_grid_model_ds.arrays import NodeArray
+
+GOOGLE_FONTS = "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+MDBOOTSTRAP = "https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/8.2.0/mdb.min.css"
 
 
 def visualize(grid: Grid, layout: LayoutOptions = "", debug: bool = False):
@@ -39,14 +43,15 @@ def visualize(grid: Grid, layout: LayoutOptions = "", debug: bool = False):
     elements = parse_node_array(grid.node) + parse_branches(grid)
     cytoscape_html = get_cytoscape_html(layout, elements)
 
-    app = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+    app = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, MDBOOTSTRAP, FONT_AWESOME, GOOGLE_FONTS])
     app.layout = html.Div(
         [
             columns_store,
-            SEARCH_FORM_HTML,
+            HEADER_HTML,
             cytoscape_html,
             SELECTION_OUTPUT_HTML,
-        ]
+        ],
+
     )
     app.run(debug=debug)
 
