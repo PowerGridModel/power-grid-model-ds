@@ -10,10 +10,6 @@ from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAUL
     prevent_initial_call=True
 )
 def scale_elements(node_scale, edge_scale):
-    for scale_factor in (node_scale, edge_scale):
-        if scale_factor is None or scale_factor <= 0:
-            scale_factor = 1
-
     new_stylesheet = deepcopy(DEFAULT_STYLESHEET)
     edge_style = {
         "selector": "edge",

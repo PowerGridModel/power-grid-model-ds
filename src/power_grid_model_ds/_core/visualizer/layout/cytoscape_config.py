@@ -10,7 +10,7 @@ NODE_SCALE_HTML = [
         type="number",
         value=1,
         min=0.1,
-        step=0.03,
+        step=0.1,
         style={"width": "75px"},
     ),
     html.Span(style={"margin-right": "10px"}),
@@ -24,7 +24,7 @@ EDGE_SCALE_HTML = [
         type="number",
         value=1,
         min=0.1,
-        step=0.03,
+        step=0.1,
         style={"width": "75px"},
     ),
 ]
