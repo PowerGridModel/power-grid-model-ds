@@ -5,6 +5,9 @@
 from power_grid_model_ds._core.load_flow import PowerGridModelInterface
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.grids.base import Grid
-from power_grid_model_ds._core.visualizer.main import visualize
+try:
+    from power_grid_model_ds._core.visualizer.main import visualize
+except ImportError:
+    pass
 
 __all__ = ["Grid", "GraphContainer", "PowerGridModelInterface", "visualize"]
