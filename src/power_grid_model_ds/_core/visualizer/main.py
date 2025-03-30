@@ -2,12 +2,13 @@ import dash_bootstrap_components as dbc
 from dash import Dash, dcc, html
 from dash_bootstrap_components.icons import FONT_AWESOME
 
-from power_grid_model_ds import Grid
+from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.callbacks import (  # noqa: F401  # pylint: disable=unused-import
+    element_scaling,
     element_selection,
-    search_form,
     layout_dropdown,
-    element_scaling)
+    search_form,
+)
 from power_grid_model_ds._core.visualizer.layout.cytoscape_html import get_cytoscape_html
 from power_grid_model_ds._core.visualizer.layout.header import HEADER_HTML
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
@@ -44,7 +45,9 @@ def visualize(grid: Grid, debug: bool = False):
     elements = parse_node_array(grid.node) + parse_branches(grid)
     cytoscape_html = get_cytoscape_html(layout, elements)
 
-    app = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, MDBOOTSTRAP, FONT_AWESOME, GOOGLE_FONTS])
+    app = Dash(
+        external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, MDBOOTSTRAP, FONT_AWESOME, GOOGLE_FONTS]
+    )
     app.layout = html.Div(
         [
             columns_store,
@@ -53,7 +56,6 @@ def visualize(grid: Grid, debug: bool = False):
             cytoscape_html,
             SELECTION_OUTPUT_HTML,
         ],
-
     )
     app.run(debug=debug)
 

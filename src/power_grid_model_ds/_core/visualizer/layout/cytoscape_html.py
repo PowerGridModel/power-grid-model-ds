@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Any
 
 import dash_cytoscape as cyto
 from dash import html

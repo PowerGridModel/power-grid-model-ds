@@ -1,15 +1,18 @@
-from dash import Input, Output, callback
 from copy import deepcopy
-from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET, BRANCH_WIDTH, NODE_SIZE
+
+from dash import Input, Output, callback
+
+from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import BRANCH_WIDTH, DEFAULT_STYLESHEET, NODE_SIZE
 
 
 @callback(
-    Output('cytoscape-graph', 'stylesheet', allow_duplicate=True),
-    Input('node-scale-input', 'value'),
-    Input('edge-scale-input', 'value'),
-    prevent_initial_call=True
+    Output("cytoscape-graph", "stylesheet", allow_duplicate=True),
+    Input("node-scale-input", "value"),
+    Input("edge-scale-input", "value"),
+    prevent_initial_call=True,
 )
 def scale_elements(node_scale, edge_scale):
+    """Callback to scale the elements of the graph."""
     new_stylesheet = deepcopy(DEFAULT_STYLESHEET)
     edge_style = {
         "selector": "edge",

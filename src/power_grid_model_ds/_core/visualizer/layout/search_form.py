@@ -14,22 +14,17 @@ GROUP_INPUT = dbc.Select(
         {"label": "branch", "value": "branch"},
     ],
     value="node",  # Default value
-    style=_INPUT_STYLE
+    style=_INPUT_STYLE,
 )
 
 COLUMN_INPUT = dbc.Select(
     id="search-form-column-input",
     options=[{"label": "id", "value": "id"}],
     value="id",  # Default value
-    style=_INPUT_STYLE
+    style=_INPUT_STYLE,
 )
 
-VALUE_INPUT = dbc.Input(
-    id="search-form-value-input",
-    placeholder="Enter value",
-    type="text",
-    style=_INPUT_STYLE
-)
+VALUE_INPUT = dbc.Input(id="search-form-value-input", placeholder="Enter value", type="text", style=_INPUT_STYLE)
 
 OPERATOR_INPUT = dbc.Select(
     id="search-form-operator-input",
@@ -40,7 +35,7 @@ OPERATOR_INPUT = dbc.Select(
         {"label": "!=", "value": "!="},
     ],
     value="=",  # Default value
-    style={"width": "60px", "display": "inline-block", "margin": "0 8px"}
+    style={"width": "60px", "display": "inline-block", "margin": "0 8px"},
 )
 
 
@@ -54,13 +49,12 @@ SEARCH_FORM_HTML = html.Div(
         OPERATOR_INPUT,
         VALUE_INPUT,
     ],
-style={
+    style={
         "display": "flex",
         "align-items": "center",
         "justify-content": "center",  # Centers items horizontally
         "padding": "10px",
         "margin": "0 auto",  # Centers the container itself
-        "width": "100%"  # Ensures the container takes full width
-    }
+        "width": "100%",  # Ensures the container takes full width
+    },
 )
-

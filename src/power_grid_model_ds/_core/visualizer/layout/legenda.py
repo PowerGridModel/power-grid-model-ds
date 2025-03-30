@@ -1,5 +1,5 @@
-from dash import html
 import dash_bootstrap_components as dbc
+from dash import html
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
 
@@ -29,6 +29,6 @@ LEGENDA_HTML = html.Div(
         "align-items": "center",
         "margin": "0 10px",
         "width": "100%",
-        "text-shadow": "0 0 5px #000"
-    }
+        "text-shadow": "0 0 5px #000",
+    },
 )

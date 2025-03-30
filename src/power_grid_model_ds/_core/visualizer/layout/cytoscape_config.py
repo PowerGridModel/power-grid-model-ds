@@ -1,4 +1,4 @@
-from dash import html, dcc
+from dash import dcc, html
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
 from power_grid_model_ds._core.visualizer.layout.cytoscape_html import LAYOUT_OPTIONS
@@ -14,7 +14,6 @@ NODE_SCALE_HTML = [
         style={"width": "75px"},
     ),
     html.Span(style={"margin-right": "10px"}),
-
 ]
 
 EDGE_SCALE_HTML = [
@@ -37,12 +36,15 @@ SCALE_INPUTS = [
 ]
 
 LAYOUT_DROPDOWN_HTML = [
-    html.Div(dcc.Dropdown(
-        id='dropdown-update-layout',
-        placeholder="Select layout",
-        value="",
-        clearable=False,
-        options=[{'label': name.capitalize(), 'value': name} for name in LAYOUT_OPTIONS],
-        style={"width": "200px"}),
-    style={"margin": "0 20px 0 10px"}
-    )]
+    html.Div(
+        dcc.Dropdown(
+            id="dropdown-update-layout",
+            placeholder="Select layout",
+            value="",
+            clearable=False,
+            options=[{"label": name.capitalize(), "value": name} for name in LAYOUT_OPTIONS],
+            style={"width": "200px"},
+        ),
+        style={"margin": "0 20px 0 10px"},
+    )
+]

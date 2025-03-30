@@ -1,4 +1,4 @@
-from dash import Input, Output, State, callback
+from dash import Input, Output, callback
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
@@ -28,14 +28,13 @@ def search_element(group, column, operator, value):
     if column == "id":
         selector = f'[{column} {operator} "{value}"]'
     else:
-        selector = f'[{column} {operator} {value}]'
+        selector = f"[{column} {operator} {value}]"
 
     new_style = {
         "selector": selector,
         "style": style,
     }
     return DEFAULT_STYLESHEET + [new_style]
-
 
 
 @callback(

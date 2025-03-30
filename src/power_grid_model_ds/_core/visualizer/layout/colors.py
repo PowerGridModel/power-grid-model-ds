@@ -1,4 +1,3 @@
-
 YELLOW = "#facc37"
 CYTO_COLORS = {
     "line": YELLOW,

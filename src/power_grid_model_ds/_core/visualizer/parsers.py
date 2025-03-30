@@ -1,7 +1,7 @@
 from typing import Any, Literal
 
-from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
+from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds.arrays import BranchArray, NodeArray
 
 
