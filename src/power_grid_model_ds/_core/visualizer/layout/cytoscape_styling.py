@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
+#
+# SPDX-License-Identifier: MPL-2.0
+
 """Contains selectors for the Cytoscape stylesheet."""
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS

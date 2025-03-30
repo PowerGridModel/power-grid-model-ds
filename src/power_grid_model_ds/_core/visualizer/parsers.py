@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
+#
+# SPDX-License-Identifier: MPL-2.0
+
 from typing import Any, Literal
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
