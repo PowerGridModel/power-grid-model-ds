@@ -44,15 +44,6 @@ dev = [
   "isort>=5.13.2",
   "mypy>=1.9.0",
   "pre-commit>=4",
-
-]
-doc = [
-  "sphinx",
-  "myst-nb",
-  "sphinx_rtd_theme",
-  "readthedocs-sphinx-search",
-  "sphinx-hoverxref",
-  "numpydoc",
   # Visualization (make sure these stay equalivalent to the 'visualizer' group)
   "dash>=3.0.0",
   "dash-bootstrap-components>=2.0.0",
@@ -64,6 +55,16 @@ visualizer = [
   "dash-bootstrap-components>=2.0.0",
   "dash-cytoscape>=1.0.2",
 ]
+
+doc = [
+  "sphinx",
+  "myst-nb",
+  "sphinx_rtd_theme",
+  "readthedocs-sphinx-search",
+  "sphinx-hoverxref",
+  "numpydoc",
+]
+
 
 [project.urls]
 Home-page = "https://lfenergy.org/projects/power-grid-model/"
