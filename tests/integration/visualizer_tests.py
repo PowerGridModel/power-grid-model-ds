@@ -5,7 +5,7 @@
 from dataclasses import dataclass
 
 from power_grid_model_ds import Grid
-from power_grid_model_ds._core.visualizer.main import visualize
+from power_grid_model_ds._core.visualizer.app import visualize
 from power_grid_model_ds.generators import RadialGridGenerator
 from tests.unit.visualizer.test_parsers import CoordinatedNodeArray
 

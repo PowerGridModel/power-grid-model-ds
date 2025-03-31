@@ -44,23 +44,11 @@ def visualize(grid: Grid, debug: bool = False, port: int = 8050) -> None:
             - "grid": A layout that places the nodes in a grid matrix.
             - "cose": A layout that uses the CompoundSpring Embedder algorithm (force-directed layout)
     """
-    columns_store = _get_columns_store(grid)
-    layout = _get_layout(grid.node)
-    elements = parse_node_array(grid.node) + parse_branches(grid)
-    cytoscape_html = get_cytoscape_html(layout, elements)
 
     app = Dash(
         external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, MDBOOTSTRAP, FONT_AWESOME, GOOGLE_FONTS]
     )
-    app.layout = html.Div(
-        [
-            columns_store,
-            HEADER_HTML,
-            html.Hr(style={"border-color": "white", "margin": "0"}),
-            cytoscape_html,
-            SELECTION_OUTPUT_HTML,
-        ],
-    )
+    app.layout = get_app_layout(grid)
     app.run(debug=debug, port=port)
 
 
@@ -77,8 +65,26 @@ def _get_columns_store(grid: Grid) -> dcc.Store:
     )
 
 
-def _get_layout(nodes: NodeArray) -> str:
-    """Determine the layout"""
+def get_app_layout(grid: Grid) -> html.Div:
+    """Get the app layout."""
+    columns_store = _get_columns_store(grid)
+    graph_layout = _get_graph_layout(grid.node)
+    elements = parse_node_array(grid.node) + parse_branches(grid)
+    cytoscape_html = get_cytoscape_html(graph_layout, elements)
+
+    return html.Div(
+        [
+            columns_store,
+            HEADER_HTML,
+            html.Hr(style={"border-color": "white", "margin": "0"}),
+            cytoscape_html,
+            SELECTION_OUTPUT_HTML,
+        ],
+    )
+
+
+def _get_graph_layout(nodes: NodeArray) -> str:
+    """Determine the graph layout"""
     if "x" in nodes.columns and "y" in nodes.columns:
         return "preset"
     return "breadthfirst"
