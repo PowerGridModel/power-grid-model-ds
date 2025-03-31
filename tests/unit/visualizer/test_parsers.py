@@ -2,9 +2,17 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+
+import numpy as np
+from numpy.typing import NDArray
+
 from power_grid_model_ds._core.model.arrays import LineArray, NodeArray
 from power_grid_model_ds._core.visualizer.parsers import parse_branch_array, parse_node_array
-from tests.integration.visualizer_tests import CoordinatedNodeArray
+
+
+class CoordinatedNodeArray(NodeArray):
+    x: NDArray[np.float64]
+    y: NDArray[np.float64]
 
 
 class TestParseNodeArray:
