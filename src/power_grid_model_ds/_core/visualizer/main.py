@@ -23,7 +23,7 @@ GOOGLE_FONTS = "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&d
 MDBOOTSTRAP = "https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/8.2.0/mdb.min.css"
 
 
-def visualize(grid: Grid, debug: bool = False):
+def visualize(grid: Grid, debug: bool = False, port: int = 8050) -> None:
     """Visualize the Grid.
 
     grid: Grid
@@ -61,7 +61,7 @@ def visualize(grid: Grid, debug: bool = False):
             SELECTION_OUTPUT_HTML,
         ],
     )
-    app.run(debug=debug)
+    app.run(debug=debug, port=port)
 
 
 def _get_columns_store(grid: Grid) -> dcc.Store:
