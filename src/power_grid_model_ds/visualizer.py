@@ -6,6 +6,7 @@ try:
     from power_grid_model_ds._core.visualizer.main import visualize
 except ImportError as error:
     raise ImportError(
-        "Missing dependencies for visualizer: install with 'pip install power-grid-model-ds[visualizer]'") from error
+        "Missing dependencies for visualizer: install with 'pip install power-grid-model-ds[visualizer]'"
+    ) from error
 
 __all__ = ["visualize"]

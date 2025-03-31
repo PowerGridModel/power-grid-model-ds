@@ -7,7 +7,8 @@ from dataclasses import dataclass
 import numpy as np
 from numpy.typing import NDArray
 
-from power_grid_model_ds import Grid, visualize
+from power_grid_model_ds import Grid
+from power_grid_model_ds._core.visualizer.main import visualize
 from power_grid_model_ds.arrays import NodeArray
 from power_grid_model_ds.generators import RadialGridGenerator
 
