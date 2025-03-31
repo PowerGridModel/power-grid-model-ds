@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
+#
+# SPDX-License-Identifier: MPL-2.0
+
 from power_grid_model_ds._core.model.arrays import NodeArray, LineArray
 from power_grid_model_ds._core.visualizer.parsers import parse_node_array, parse_branch_array
 from tests.integration.visualizer_tests import CoordinatedNodeArray
