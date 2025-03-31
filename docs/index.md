@@ -35,6 +35,7 @@ demos/index
 model_structure
 model_interface
 examples/index
+visualizer
 advanced_documentation/index
 ```
 
