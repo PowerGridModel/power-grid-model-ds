@@ -84,7 +84,7 @@ jobs:
 
       - name: Install in develop mode
         run: |
-          pip install -e .[dev]
+          pip install -e .[dev,visualizer]
 
       - name: Test and Coverage
         run: |
