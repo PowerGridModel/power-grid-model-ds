@@ -21,7 +21,7 @@ def parse_node_array(nodes: NodeArray) -> list[dict[str, Any]]:
         cyto_elements["data"]["id"] = str(node.id.item())
         cyto_elements["data"]["group"] = "node"
         if with_coords:
-            cyto_elements["position"] = {"x": node.x.item(), "y": -node.y.item()}
+            cyto_elements["position"] = {"x": node.x.item(), "y": -node.y.item()}  # invert y-axis for visualization
         parsed_nodes.append(cyto_elements)
     return parsed_nodes
 
