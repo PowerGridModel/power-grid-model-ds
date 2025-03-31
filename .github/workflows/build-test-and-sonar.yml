@@ -124,7 +124,7 @@ jobs:
           path: wheelhouse/
 
       - name: Install built wheel file
-        run: pip install power-grid-model-ds[dev]==${{ needs.build-python.outputs.version }} --find-links=wheelhouse
+        run: pip install power-grid-model-ds[dev,visualizer]==${{ needs.build-python.outputs.version }} --find-links=wheelhouse
 
       - name: Unit test and coverage
         run: pytest --verbose
