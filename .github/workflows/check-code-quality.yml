@@ -37,7 +37,7 @@ jobs:
         run: pip install --upgrade pip
 
       - name: Install dependencies
-        run: pip install -e .[dev,visualizer]
+        run: pip install -e .[dev]
       
       - name: Run pre-commit on all files
         run: pre-commit run --all-files
