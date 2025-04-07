@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-"""Load flow functions and classes"""
+"""Power flow functions and classes"""
 
 from typing import Dict, Optional
 
