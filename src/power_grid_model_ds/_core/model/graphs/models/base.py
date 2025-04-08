@@ -245,9 +245,6 @@ class BaseGraphModel(ABC):
             target=self.external_to_internal(ext_end_node_id),
         )
 
-        if internal_paths == []:
-            raise NoPathBetweenNodes(f"No path between nodes {ext_start_node_id} and {ext_end_node_id}")
-
         return [self._internals_to_externals(path) for path in internal_paths]
 
     def get_components(self, substation_nodes: NDArray[np.int32]) -> list[list[int]]:

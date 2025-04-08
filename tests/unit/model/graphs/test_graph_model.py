@@ -225,8 +225,9 @@ class TestPathMethods:
         assert [1, 5, 4, 3] in paths
 
     def test_all_paths_no_path(self, graph_with_5_nodes: BaseGraphModel):
-        with pytest.raises(NoPathBetweenNodes):
-            graph_with_5_nodes.get_all_paths(1, 2)
+        path = graph_with_5_nodes.get_all_paths(1, 2)
+
+        assert path == []
 
 
 class TestFindFundamentalCycles:
