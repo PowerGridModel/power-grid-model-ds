@@ -168,6 +168,19 @@ def test_tmp_remove_nodes(graph_with_2_routes: BaseGraphModel) -> None:
 def test_get_components(graph_with_2_routes: BaseGraphModel):
     graph = graph_with_2_routes
     graph.add_node(99)
+    graph.add_node(100)
+
+    components = graph.get_components()
+
+    assert len(components) == 3
+    assert set(components[0]) == {1, 2, 3, 4, 5}
+    assert set(components[1]) == {99}
+    assert set(components[2]) == {100}
+
+
+def test_get_components_with_substation_nodes(graph_with_2_routes):
+    graph = graph_with_2_routes
+    graph.add_node(99)
     graph.add_branch(1, 99)
     substation_nodes = np.array([1])
 

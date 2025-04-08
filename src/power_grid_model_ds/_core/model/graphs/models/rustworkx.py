@@ -84,11 +84,8 @@ class RustworkxGraphModel(BaseGraphModel):
     def _get_all_paths(self, source: int, target: int) -> list[list[int]]:
         return list(rx.all_simple_paths(self._graph, source, target))
 
-    def _get_components(self, substation_nodes: list[int]) -> list[list[int]]:
-        no_os_graph = self._graph.copy()
-        for os_node in substation_nodes:
-            no_os_graph.remove_node(os_node)
-        components = rx.connected_components(no_os_graph)
+    def _get_components(self) -> list[list[int]]:
+        components = rx.connected_components(self._graph)
         return [list(component) for component in components]
 
     def _get_connected(self, node_id: int, nodes_to_ignore: list[int], inclusive: bool = False) -> list[int]:
