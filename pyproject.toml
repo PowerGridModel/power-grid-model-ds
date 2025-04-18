@@ -51,6 +51,7 @@ dev = [
 ]
 
 visualizer = [
+  # Visualization (make sure these are also updated in the 'dev' group)
   "dash>=3.0.0",
   "dash-bootstrap-components>=2.0.0",
   "dash-cytoscape>=1.0.2",
