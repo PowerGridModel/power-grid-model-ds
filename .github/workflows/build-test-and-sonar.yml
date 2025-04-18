@@ -147,11 +147,11 @@ jobs:
           python-version: "3.11"
 
       - name: Checkout source code
-        if: (github.event_name == 'push')
+#        if: (github.event_name == 'push')
         uses: actions/checkout@v4  # needed by 'Prevent automatic major/minor release'
 
       - name: Prevent automatic major/minor release
-        if: (github.event_name == 'push')
+#        if: (github.event_name == 'push')
         run: |
           echo "Fetching the latest release..."
           tag=$(gh release view --json tagName --jq '.tagName')
@@ -167,27 +167,27 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Load built wheel file
-        uses: actions/download-artifact@v4
-        with:
-          name: power-grid-model-ds
-          path: wheelhouse/
-
-      - name: Upload wheels
-        if: (github.event_name == 'push') || ((github.event_name == 'workflow_dispatch') && (github.event.inputs.create_release == 'true'))
-        run: |
-          pip install twine
-          echo "Publish to PyPI..."
-          twine upload --verbose wheelhouse/*
-
-      - name: Release
-        if: (github.event_name == 'push') || ((github.event_name == 'workflow_dispatch') && (github.event.inputs.create_release == 'true'))
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            ./wheelhouse/*
-          tag_name: v${{ needs.build-python.outputs.version }}
-          prerelease: ${{github.ref != 'refs/heads/main'}}
-          generate_release_notes: true
-          target_commitish: ${{ github.sha }}
+#
+#      - name: Load built wheel file
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: power-grid-model-ds
+#          path: wheelhouse/
+#
+#      - name: Upload wheels
+#        if: (github.event_name == 'push') || ((github.event_name == 'workflow_dispatch') && (github.event.inputs.create_release == 'true'))
+#        run: |
+#          pip install twine
+#          echo "Publish to PyPI..."
+#          twine upload --verbose wheelhouse/*
+#
+#      - name: Release
+#        if: (github.event_name == 'push') || ((github.event_name == 'workflow_dispatch') && (github.event.inputs.create_release == 'true'))
+#        uses: softprops/action-gh-release@v2
+#        with:
+#          files: |
+#            ./wheelhouse/*
+#          tag_name: v${{ needs.build-python.outputs.version }}
+#          prerelease: ${{github.ref != 'refs/heads/main'}}
+#          generate_release_notes: true
+#          target_commitish: ${{ github.sha }}
