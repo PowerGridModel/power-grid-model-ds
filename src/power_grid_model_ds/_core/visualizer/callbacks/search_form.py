@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
+from typing import Any
 
 from dash import Input, Output, callback
 
@@ -15,7 +16,7 @@ from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAUL
     Input("search-form-operator-input", "value"),
     Input("search-form-value-input", "value"),
 )
-def search_element(group, column, operator, value):
+def search_element(group: str, column: str, operator: str, value: str) -> list[dict[str, Any]]:
     """Color the specified element red based on the input values."""
     if not group or not column or not value:
         return DEFAULT_STYLESHEET
