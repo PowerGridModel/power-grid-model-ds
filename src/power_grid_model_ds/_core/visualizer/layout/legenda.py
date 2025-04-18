@@ -7,12 +7,15 @@ from dash import html
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
 
-NODE_ICON_STYLE = {"font-size": "2.5em", "margin": "0 10px", "color": CYTO_COLORS["node"]}
-_SUBSTATION_ICON_STYLE = {"font-size": "2.5em", "margin": "0 10px", "color": CYTO_COLORS["substation_node"]}
-_LINE_ICON_STYLE = {"font-size": "2.5em", "margin": "0 10px", "color": CYTO_COLORS["line"]}
-_LINK_ICON_STYLE = {"font-size": "2.5em", "margin": "0 10px", "color": CYTO_COLORS["link"]}
-_TRANSFORMER_ICON_STYLE = {"font-size": "2.5em", "margin": "0 10px", "color": CYTO_COLORS["transformer"]}
-_OPEN_BRANCH_ICON_STYLE = {"font-size": "2.5em", "margin": "0 10px", "color": CYTO_COLORS["open_branch"]}
+_MARGIN = "0 10px"
+_FONT_SIZE = "2.5em"
+
+NODE_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["node"]}
+_SUBSTATION_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["substation_node"]}
+_LINE_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["line"]}
+_LINK_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["link"]}
+_TRANSFORMER_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["transformer"]}
+_OPEN_BRANCH_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["open_branch"]}
 LEGENDA_HTML = html.Div(
     [
         html.I(className="fas fa-circle", id="node-icon", style=NODE_ICON_STYLE),
@@ -31,7 +34,7 @@ LEGENDA_HTML = html.Div(
     style={
         "display": "flex",
         "align-items": "center",
-        "margin": "0 10px",
+        "margin": _MARGIN,
         "width": "100%",
         "text-shadow": "0 0 5px #000",
     },
