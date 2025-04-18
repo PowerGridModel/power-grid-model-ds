@@ -94,7 +94,7 @@ jobs:
 
       - name: SonarCloud Scan
         if: ${{ (github.event_name == 'push') || (github.event.pull_request.head.repo.owner.login == 'PowerGridModel') }}
-        uses: SonarSource/sonarqube-scan-action@v4
+        uses: SonarSource/sonarqube-scan-action@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -141,6 +141,10 @@ jobs:
       TWINE_PASSWORD: ${{ secrets.PYPI_PASS }}
     runs-on: ubuntu-latest
     steps:
+
+      - name: Checkout source code
+        uses: actions/checkout@v4  # needed by 'Prevent automatic major/minor release'
+
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -151,6 +155,24 @@ jobs:
         with:
           name: power-grid-model-ds
           path: wheelhouse/
+
+      - name: Prevent automatic major/minor release
+        if: (github.event_name == 'push')
+        run: |
+          echo "Fetching the latest release..."
+          tag=$(gh release view --json tagName --jq '.tagName')
+          tag=${tag#v}  # Remove the leading 'v'
+          major_minor=$(echo "$tag" | cut -d. -f1,2)
+          version_file=$(cat VERSION)
+
+          if [ "$major_minor" = "$version_file" ]; then
+            echo "Patch release detected. Proceeding with automatic release."
+          else
+            echo "Cannot automatically release a new major/minor version. Please trigger manually if desired."
+            exit 1
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload wheels
         if: (github.event_name == 'push') || ((github.event_name == 'workflow_dispatch') && (github.event.inputs.create_release == 'true'))

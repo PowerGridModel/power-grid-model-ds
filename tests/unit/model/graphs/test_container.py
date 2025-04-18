@@ -7,7 +7,6 @@ import pytest
 from power_grid_model_ds._core.model.arrays import NodeArray, ThreeWindingTransformerArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
-from power_grid_model_ds._core.model.graphs.errors import GraphError
 from power_grid_model_ds._core.model.grids.base import Grid
 
 # pylint: disable=missing-function-docstring
@@ -122,23 +121,15 @@ def test_from_arrays_partially_active_three_winding(basic_grid: Grid):
     assert basic_grid.graphs.complete_graph.nr_nodes == graphs.complete_graph.nr_nodes
     assert basic_grid.graphs.complete_graph.nr_branches == 6 + 3
 
-    # Implicitly test that the correct branches are added
-    # Current implementation does not have a has_branch method.
-    basic_grid.graphs.complete_graph.delete_branch(1000, 1001)
-    basic_grid.graphs.complete_graph.delete_branch(1000, 1002)
-    basic_grid.graphs.complete_graph.delete_branch(1001, 1002)
+    basic_grid.graphs.active_graph.has_branch(1000, 1002)
+    basic_grid.graphs.active_graph.has_branch(1001, 1002)
 
     assert basic_grid.graphs.active_graph.nr_nodes == graphs.active_graph.nr_nodes
     assert basic_grid.graphs.active_graph.nr_branches == 5 + 1
 
-    # Implicitly test that the correct branches are added
-    # Current implementation does not have a has_branch method.
-    basic_grid.graphs.active_graph.delete_branch(1000, 1001)
-    with pytest.raises(GraphError):
-        basic_grid.graphs.active_graph.delete_branch(1000, 1002)
-
-    with pytest.raises(GraphError):
-        basic_grid.graphs.active_graph.delete_branch(1001, 1002)
+    basic_grid.graphs.active_graph.has_branch(1000, 1001)
+    assert not basic_grid.graphs.active_graph.has_branch(1000, 1002)
+    assert not basic_grid.graphs.active_graph.has_branch(1001, 1002)
 
 
 def test_from_arrays_invalid_arrays(basic_grid: Grid):

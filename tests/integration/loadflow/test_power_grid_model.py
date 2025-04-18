@@ -45,7 +45,7 @@ class ExtendedLineArray(LineArray):
 
 
 def test_load_flow_on_random():
-    """Tests the load flow on a randomly configured grid"""
+    """Tests the power flow on a randomly configured grid"""
     grid_generator = RadialGridGenerator(grid_class=Grid, nr_nodes=5, nr_sources=1, nr_nops=0)
     grid = grid_generator.run(seed=0)
 
@@ -61,7 +61,7 @@ def test_load_flow_on_random():
 
 
 def test_load_flow(grid: Grid):
-    """Tests the load flow on a test grid with 2 nodes"""
+    """Tests the power flow on a test grid with 2 nodes"""
     nodes = NodeArray.zeros(2)
     nodes.id = [0, 1]
     nodes.u_rated = [10_500] * 2
@@ -106,7 +106,7 @@ def test_load_flow(grid: Grid):
 
 
 def test_load_flow_with_transformer(grid: Grid):
-    """Tests the load flow on a test grid with 3 nodes and a trafo"""
+    """Tests the power flow on a test grid with 3 nodes and a trafo"""
     nodes = NodeArray.zeros(3)
     nodes.id = [0, 1, 2]
     nodes.u_rated = [10_500] * 2 + [3_000]
@@ -179,7 +179,7 @@ def test_load_flow_with_transformer(grid: Grid):
 # pylint: disable=too-many-statements
 # pylint: disable=duplicate-code
 def test_load_flow_with_three_winding_transformer(grid: Grid):
-    """Tests the load flow on a test grid with 3 nodes and a three winding trafo"""
+    """Tests the power flow on a test grid with 3 nodes and a three winding trafo"""
     nodes = NodeArray.zeros(3)
     nodes.id = [0, 1, 2]
     nodes.u_rated = [150_000, 20_000, 10_000]
@@ -250,7 +250,7 @@ def test_load_flow_with_three_winding_transformer(grid: Grid):
 
 
 def test_load_flow_with_link(grid: Grid):
-    """Tests the load flow on a test grid with 2 nodes and a link"""
+    """Tests the power flow on a test grid with 2 nodes and a link"""
     nodes = NodeArray.zeros(2)
     nodes.id = [0, 1]
     nodes.u_rated = [10_500] * 2
@@ -393,7 +393,7 @@ def test_automatic_tap_regulator(grid: Grid):
 
 
 def test_update_grid():
-    """Tests the load flow on a randomly configured grid and update grid with results"""
+    """Tests the power flow on a randomly configured grid and update grid with results"""
     grid_generator = RadialGridGenerator(grid_class=Grid, nr_nodes=5, nr_sources=1, nr_nops=0)
     grid = grid_generator.run(seed=0)
 

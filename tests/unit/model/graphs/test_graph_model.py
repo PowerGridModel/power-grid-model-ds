@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
 
+from power_grid_model_ds._core.model.graphs.errors import GraphError
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds.errors import MissingBranchError, MissingNodeError, NoPathBetweenNodes
@@ -29,6 +30,11 @@ class TestBasicGraphFunctions:
         # the graph has the correct size
         assert 2 == graph.nr_nodes
         assert 1 == graph.nr_branches
+
+    def test_add_node_already_there(self, graph: BaseGraphModel):
+        graph.add_node(1)
+        with pytest.raises(GraphError):
+            graph.add_node(1)
 
     def test_add_invalid_branch(self, graph: BaseGraphModel):
         graph.add_node(1)
@@ -168,6 +174,19 @@ def test_tmp_remove_nodes(graph_with_2_routes: BaseGraphModel) -> None:
 def test_get_components(graph_with_2_routes: BaseGraphModel):
     graph = graph_with_2_routes
     graph.add_node(99)
+    graph.add_node(100)
+
+    components = graph.get_components()
+
+    assert len(components) == 3
+    assert set(components[0]) == {1, 2, 3, 4, 5}
+    assert set(components[1]) == {99}
+    assert set(components[2]) == {100}
+
+
+def test_get_components_with_substation_nodes(graph_with_2_routes):
+    graph = graph_with_2_routes
+    graph.add_node(99)
     graph.add_branch(1, 99)
     substation_nodes = np.array([1])
 
@@ -225,8 +244,9 @@ class TestPathMethods:
         assert [1, 5, 4, 3] in paths
 
     def test_all_paths_no_path(self, graph_with_5_nodes: BaseGraphModel):
-        with pytest.raises(NoPathBetweenNodes):
-            graph_with_5_nodes.get_all_paths(1, 2)
+        path = graph_with_5_nodes.get_all_paths(1, 2)
+
+        assert path == []
 
 
 class TestFindFundamentalCycles:
