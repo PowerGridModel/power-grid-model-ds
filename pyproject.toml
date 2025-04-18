@@ -123,16 +123,8 @@ disable_error_code = ["assignment", "import-untyped"]
 [tool.coverage.run]
 relative_files = true
 branch = true
-omit = [
-  "src/power_grid_model_ds/visualizer/*",
-]
+
 [tool.coverage.report]
 exclude_also = [
   'if TYPE_CHECKING:',
 ]
-
-[dependency-groups]
-visualizer = [
-    "dash-cytoscape>=1.0.2",
-]
-
