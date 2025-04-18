@@ -37,5 +37,5 @@ visualize(grid)
 This will start a local web server at http://localhost:8050
 
 #### Disclaimer
-Please note that the visualizer is still a work in progress and may not be fully functional or covered by unit tests.
+Please note that the visualizer is still a work in progress and may not be fully functional or contain bugs.
 We welcome any feedback or suggestions for improvement.
