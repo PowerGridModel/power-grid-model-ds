@@ -146,6 +146,28 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Checkout source code
+        if: (github.event_name == 'push')
+        uses: actions/checkout@v4  # needed by 'Prevent automatic major/minor release'
+
+      - name: Prevent automatic major/minor release
+        if: (github.event_name == 'push')
+        run: |
+          echo "Fetching the latest release..."
+          tag=$(gh release view --json tagName --jq '.tagName')
+          tag=${tag#v}  # Remove the leading 'v'
+          major_minor=$(echo "$tag" | cut -d. -f1,2)
+          version_file=$(cat VERSION)
+
+          if [ "$major_minor" = "$version_file" ]; then
+            echo "The major.minor == VERSION file --> patch release"
+          else
+            echo "Cannot automatically release a new major.minor version. Please trigger manually if desired."
+            exit 1
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Load built wheel file
         uses: actions/download-artifact@v4
         with:
