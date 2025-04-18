@@ -155,7 +155,7 @@ def test_id_counter():
     assert 42 == container.id_counter
 
 
-def test_branches(grid):
+def test_branches(grid: Grid):
     node = NodeArray.zeros(10, empty_id=False)
     grid.append(node)
     grid.append(LineArray.zeros(10))
@@ -167,7 +167,7 @@ def test_branches(grid):
     assert set(expected_ids) == set(branches.id)
 
 
-def test_delete_node_without_additional_properties(basic_grid):
+def test_delete_node_without_additional_properties(basic_grid: Grid):
     assert 106 in basic_grid.node.id
     assert 106 in basic_grid.transformer["to_node"]
 
@@ -181,7 +181,7 @@ def test_delete_node_without_additional_properties(basic_grid):
     assert len(original_grid.transformer) == len(basic_grid.transformer) + 1
 
 
-def test_delete_node_with_source(basic_grid):
+def test_delete_node_with_source(basic_grid: Grid):
     assert 101 in basic_grid.node.id
     assert 101 in basic_grid.source.node
 
@@ -195,7 +195,7 @@ def test_delete_node_with_source(basic_grid):
     assert len(original_grid.source) == len(basic_grid.source) + 1
 
 
-def test_delete_node_with_load(basic_grid):
+def test_delete_node_with_load(basic_grid: Grid):
     assert 102 in basic_grid.node.id
     assert 102 in basic_grid.sym_load.node
 
@@ -210,48 +210,48 @@ def test_delete_node_with_load(basic_grid):
 
 
 class TestGetTypedBranches:
-    def test_get_typed_branches_transformer(self, basic_grid):
+    def test_get_typed_branches_transformer(self, basic_grid: Grid):
         grid = basic_grid
 
         transformer = grid.get_typed_branches([301])
         assert isinstance(transformer, TransformerArray)
 
-    def test_get_typed_branches_line(self, basic_grid):
+    def test_get_typed_branches_line(self, basic_grid: Grid):
         grid = basic_grid
 
         line = grid.get_typed_branches([201])
         assert isinstance(line, LineArray)
 
-    def test_get_typed_branches_link(self, basic_grid):
+    def test_get_typed_branches_link(self, basic_grid: Grid):
         grid = basic_grid
 
         link = grid.get_typed_branches([601])
         assert isinstance(link, LinkArray)
 
-    def test_get_typed_branches_no_record(self, basic_grid):
+    def test_get_typed_branches_no_record(self, basic_grid: Grid):
         grid = basic_grid
 
         with pytest.raises(RecordDoesNotExist):
             grid.get_typed_branches([101])  # 101 is a node
 
-    def test_get_typed_branches_no_input(self, basic_grid):
+    def test_get_typed_branches_no_input(self, basic_grid: Grid):
         grid = basic_grid
 
         with pytest.raises(ValueError):
             grid.get_typed_branches([])  # 101 is a node
 
-    def test_get_typed_branches_array_input(self, basic_grid):
+    def test_get_typed_branches_array_input(self, basic_grid: Grid):
         lines = basic_grid.get_typed_branches(np.array([201, 202]))
         assert 2 == lines.size
         assert isinstance(lines, LineArray)
 
-    def test_get_typed_branches_no_array_input(self, basic_grid):
+    def test_get_typed_branches_no_array_input(self, basic_grid: Grid):
         with pytest.raises(ValueError):
             basic_grid.get_typed_branches(np.array([]))
 
 
 class TestReverseBranches:
-    def test_reverse_line(self, basic_grid):
+    def test_reverse_line(self, basic_grid: Grid):
         line = basic_grid.line.get(from_node=102, to_node=103)
         basic_grid.reverse_branches(line)
 
@@ -264,7 +264,7 @@ class TestReverseBranches:
         assert new_line.to_node == line.from_node
         assert new_line.id == line.id
 
-    def test_reverse_branch(self, basic_grid):
+    def test_reverse_branch(self, basic_grid: Grid):
         branch = basic_grid.branches.get(from_node=101, to_node=102)
         basic_grid.reverse_branches(branch)
 
@@ -277,7 +277,7 @@ class TestReverseBranches:
         assert new_branch.to_node == branch.from_node
         assert new_branch.id == branch.id
 
-    def test_reverse_all_branches(self, basic_grid):
+    def test_reverse_all_branches(self, basic_grid: Grid):
         from_nodes = basic_grid.branches.from_node
         to_nodes = basic_grid.branches.to_node
 
@@ -286,5 +286,5 @@ class TestReverseBranches:
         assert np.all(from_nodes == basic_grid.branches.to_node)
         assert np.all(to_nodes == basic_grid.branches.from_node)
 
-    def test_reverse_no_branches(self, basic_grid):
+    def test_reverse_no_branches(self, basic_grid: Grid):
         basic_grid.reverse_branches(BranchArray())

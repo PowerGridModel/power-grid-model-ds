@@ -101,7 +101,7 @@ def test_build_from_kwargs_with_different_input_lengths():
         )
 
 
-def test_build_from_args(fancy_test_array):
+def test_build_from_args(fancy_test_array: FancyTestArray):
     array = FancyTestArray(
         (1, 3, 4.0, "a", True),
         (2, 0, 4.0, "c", False),
@@ -115,12 +115,12 @@ def test_build_from_invalid_args():
         FancyTestArray(1)
 
 
-def test_build_from_numpy_array(fancy_test_array):
+def test_build_from_numpy_array(fancy_test_array: FancyTestArray):
     array = FancyTestArray(fancy_test_array.data)
     assert fp.array_equal(array, fancy_test_array)
 
 
-def test_build_from_numpy_array_with_data_kwarg(fancy_test_array):
+def test_build_from_numpy_array_with_data_kwarg(fancy_test_array: FancyTestArray):
     array = FancyTestArray(data=fancy_test_array.data)
     assert fp.array_equal(array, fancy_test_array)
 
@@ -199,26 +199,26 @@ def test_empty_with_defaults():
     assert_array_equal(["DEFAULT", "DEFAULT", "DEFAULT"], array.test_str)
 
 
-def test_from_structured_subarray_with_defaults(fancy_test_array):
+def test_from_structured_subarray_with_defaults(fancy_test_array: FancyTestArray):
     array = ExtendedFancyTestArray(fancy_test_array.data)
     assert 3 == array.size
     assert all(np.isnan(array.test_float2))
     assert_array_equal([42.0, 42.0, 42.0], array.test_float3)
 
 
-def test_from_structured_subarray_no_defaults(fancy_test_array):
+def test_from_structured_subarray_no_defaults(fancy_test_array: FancyTestArray):
     with pytest.raises(ValueError):
         ExtendedFancyTestArrayNoDefaults(fancy_test_array.data)
 
 
-def test_from_sub_ndarray_with_defaults(fancy_test_array):
+def test_from_sub_ndarray_with_defaults(fancy_test_array: FancyTestArray):
     # defaults are not supported when working with unstructured arrays
     sub_ndarray = np.array(fancy_test_array.tolist())
     with pytest.raises(ValueError):
         ExtendedFancyTestArray(sub_ndarray)
 
 
-def test_from_sub_ndarray_no_defaults(fancy_test_array):
+def test_from_sub_ndarray_no_defaults(fancy_test_array: FancyTestArray):
     sub_ndarray = np.array(fancy_test_array.tolist())
     with pytest.raises(ValueError):
         ExtendedFancyTestArrayNoDefaults(sub_ndarray)

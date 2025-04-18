@@ -4,19 +4,21 @@
 
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from typing import Generator
+from typing import TYPE_CHECKING, Generator
 
 import numpy as np
 from numpy._typing import NDArray
 
 from power_grid_model_ds._core.model.arrays.pgm_arrays import Branch3Array, BranchArray, NodeArray
-from power_grid_model_ds._core.model.containers.grid_protocol import MinimalGridArrays
 from power_grid_model_ds._core.model.graphs.errors import (
     GraphError,
     MissingBranchError,
     MissingNodeError,
     NoPathBetweenNodes,
 )
+
+if TYPE_CHECKING:  # pragma: no cover
+    from power_grid_model_ds._core.model.grids.base import Grid
 
 
 # pylint: disable=too-many-public-methods
@@ -327,7 +329,7 @@ class BaseGraphModel(ABC):
         return [self._internals_to_externals(nodes) for nodes in internal_cycles]
 
     @classmethod
-    def from_arrays(cls, arrays: MinimalGridArrays, active_only=False) -> "BaseGraphModel":
+    def from_arrays(cls, arrays: "Grid", active_only=False) -> "BaseGraphModel":
         """Build from arrays"""
         new_graph = cls(active_only=active_only)
 

@@ -14,6 +14,7 @@ from power_grid_model_ds._core.data_source.generator.arrays.source import Source
 from power_grid_model_ds._core.data_source.generator.grid_generators import RadialGridGenerator
 from power_grid_model_ds._core.load_flow import PowerGridModelInterface
 from power_grid_model_ds._core.model.arrays import LineArray, NodeArray, SourceArray, SymLoadArray
+from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.grids.base import Grid
 
 
@@ -37,14 +38,14 @@ def test_generate_random_grid():
     assert len(grid.line) == grid.graphs.complete_graph.nr_branches
 
 
-def test_graph_generate_random_grid_with_different_graph_engines(graph):
+def test_graph_generate_random_grid_with_different_graph_engines(graph: BaseGraphModel):
     """Generate a random grid with correct structure"""
     grid_generator = RadialGridGenerator(grid_class=Grid, graph_model=graph.__class__)
     grid = grid_generator.run(seed=0)
     assert isinstance(grid.graphs.active_graph, graph.__class__)
 
 
-def test_generate_random_nodes(grid):
+def test_generate_random_nodes(grid: Grid):
     """Generate random nodes"""
     node_generator = NodeGenerator(grid, seed=0)
     nodes, loads_low, loads_high = node_generator.run(amount=2)
@@ -64,7 +65,7 @@ def test_generate_random_nodes(grid):
     assert all(np.isin(loads_low.node, nodes.id))
 
 
-def test_generate_random_sources(grid):
+def test_generate_random_sources(grid: Grid):
     """Generate random sources"""
     source_generator = SourceGenerator(grid=grid, seed=0)
     nodes, sources = source_generator.run(amount=1)
@@ -81,7 +82,7 @@ def test_generate_random_sources(grid):
     assert all(np.isin(sources.node, nodes.id))
 
 
-def test_generate_random_lines(grid):
+def test_generate_random_lines(grid: Grid):
     """Generate random lines"""
     nodes = NodeArray.zeros(4)
     nodes.id = [0, 1, 2, 3]
@@ -112,7 +113,7 @@ def test_generate_random_lines(grid):
     assert all(np.isin(lines.to_node, nodes.id))
 
 
-def test_create_routes(grid):
+def test_create_routes(grid: Grid):
     """Generate new routes"""
     nodes = NodeArray.zeros(4)
     nodes.id = [0, 1, 2, 3]
@@ -146,7 +147,7 @@ def test_create_routes(grid):
     assert all(np.isin(line_generator.line_array.to_node, nodes.id))
 
 
-def test_determine_number_of_routes(grid):
+def test_determine_number_of_routes(grid: Grid):
     """Number of routes"""
     line_generator = LineGenerator(grid=grid, seed=0)
 
@@ -168,7 +169,7 @@ def test_determine_number_of_routes(grid):
     assert 3 == number_of_routes
 
 
-def test_connect_nodes(grid):
+def test_connect_nodes(grid: Grid):
     """Connect nodes"""
     nodes = NodeArray.zeros(4)
     nodes.id = [0, 1, 2, 3]
@@ -205,7 +206,7 @@ def test_connect_nodes(grid):
     assert 2 == len(line_generator.line_array)
 
 
-def test_create_nops(grid):
+def test_create_nops(grid: Grid):
     """Create normally open points"""
     nodes = NodeArray.zeros(4)
     nodes.id = [0, 1, 2, 3]

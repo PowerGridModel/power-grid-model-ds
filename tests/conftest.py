@@ -64,12 +64,12 @@ def fancy_test_array():
 
 
 @pytest.fixture
-def basic_grid(grid):
+def basic_grid(grid: Grid):
     yield build_basic_grid(grid)
 
 
 @pytest.fixture
-def grid_with_3wt(grid):
+def grid_with_3wt(grid: Grid):
     yield build_basic_grid_with_three_winding(grid)
 
 

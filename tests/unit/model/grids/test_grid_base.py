@@ -5,6 +5,7 @@
 """Grid tests"""
 
 import dataclasses
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -23,7 +24,7 @@ from tests.fixtures.grid_classes import ExtendedGrid
 # pylint: disable=missing-function-docstring,missing-class-docstring
 
 
-def test_initialize_empty_grid(grid):
+def test_initialize_empty_grid(grid: Grid):
     assert isinstance(grid, Grid)
     fields = dataclasses.asdict(grid).keys()
     assert {
@@ -49,7 +50,7 @@ def test_initialize_empty_extended_grid():
     assert isinstance(grid, ExtendedGrid)
 
 
-def test_grid_build(basic_grid):
+def test_grid_build(basic_grid: Grid):
     grid = basic_grid
 
     # The grid consists of 6 nodes
@@ -81,7 +82,7 @@ def test_grid_build(basic_grid):
     assert len(grid.line) + len(grid.transformer) + len(grid.link) == grid.graphs.complete_graph.nr_branches
 
 
-def test_grid_add_node(basic_grid):
+def test_grid_add_node(basic_grid: Grid):
     grid = basic_grid
 
     new_node = NodeArray.zeros(1)
@@ -93,7 +94,7 @@ def test_grid_add_node(basic_grid):
     assert EMPTY_ID not in grid.graphs.complete_graph.external_ids
 
 
-def test_grid_delete_node(basic_grid):
+def test_grid_delete_node(basic_grid: Grid):
     grid = basic_grid
 
     target_node = grid.node.get(101)
@@ -104,7 +105,7 @@ def test_grid_delete_node(basic_grid):
 
 
 # pylint: disable=no-member
-def test_grid_add_line(basic_grid):
+def test_grid_add_line(basic_grid: Grid):
     grid = basic_grid
 
     line = LineArray.zeros(1)
@@ -120,7 +121,7 @@ def test_grid_add_line(basic_grid):
     assert grid.graphs.complete_graph.has_branch(102, 105)
 
 
-def test_grid_delete_line(basic_grid):
+def test_grid_delete_line(basic_grid: Grid):
     grid = basic_grid
 
     line = grid.line.get(201)
@@ -135,7 +136,7 @@ def test_grid_delete_line(basic_grid):
     assert not grid.graphs.complete_graph.has_branch(line.from_node.item(), line.to_node.item())
 
 
-def test_grid_delete_inactive_line(basic_grid):
+def test_grid_delete_inactive_line(basic_grid: Grid):
     grid = basic_grid
 
     inactive_mask = grid.line.from_status == 0
@@ -151,7 +152,7 @@ def test_grid_delete_inactive_line(basic_grid):
     assert not grid.graphs.complete_graph.has_branch(target_line.from_node.item(), target_line.to_node.item())
 
 
-def test_grid_delete_transformer_with_regulator(basic_grid):
+def test_grid_delete_transformer_with_regulator(basic_grid: Grid):
     grid = basic_grid
     transformer_regulator = TransformerTapRegulatorArray.zeros(1)
     transformer_regulator.regulated_object = 301
@@ -166,7 +167,7 @@ def test_grid_delete_transformer_with_regulator(basic_grid):
     assert transformer.id not in grid.transformer.id
 
 
-def test_grid_add_link(basic_grid):
+def test_grid_add_link(basic_grid: Grid):
     grid = basic_grid
 
     new_link_array = LinkArray.zeros(1)
@@ -181,7 +182,7 @@ def test_grid_add_link(basic_grid):
     assert grid.graphs.complete_graph.has_branch(105, 103)
 
 
-def test_grid_add_tranformer(basic_grid):
+def test_grid_add_tranformer(basic_grid: Grid):
     grid = basic_grid
 
     new_transformer_array = TransformerArray.zeros(1)
@@ -196,7 +197,7 @@ def test_grid_add_tranformer(basic_grid):
     assert grid.graphs.complete_graph.has_branch(105, 103)
 
 
-def test_grid_delete_tranformer(basic_grid):
+def test_grid_delete_tranformer(basic_grid: Grid):
     grid = basic_grid
 
     transformer = grid.transformer.get(301)
@@ -210,7 +211,7 @@ def test_grid_delete_tranformer(basic_grid):
     assert not grid.graphs.complete_graph.has_branch(transformer.from_node.item(), transformer.to_node.item())
 
 
-def test_grid_activate_branch(basic_grid):
+def test_grid_activate_branch(basic_grid: Grid):
     grid = basic_grid
 
     line = grid.line.get(203)
@@ -227,7 +228,7 @@ def test_grid_activate_branch(basic_grid):
     assert target_line_after.to_status == 1
 
 
-def test_grid_inactivate_branch(basic_grid):
+def test_grid_inactivate_branch(basic_grid: Grid):
     grid = basic_grid
 
     target_line = grid.line.get(202)
@@ -242,7 +243,7 @@ def test_grid_inactivate_branch(basic_grid):
     assert not graph.has_branch(target_line.from_node.item(), target_line.to_node.item())
 
 
-def test_grid_make_inactive_from_side(basic_grid):
+def test_grid_make_inactive_from_side(basic_grid: Grid):
     grid = basic_grid
 
     target_line = grid.line.get(202)
@@ -254,7 +255,7 @@ def test_grid_make_inactive_from_side(basic_grid):
     assert 0 == target_line_after.from_status
 
 
-def test_grid_make_inactive_to_side(basic_grid):
+def test_grid_make_inactive_to_side(basic_grid: Grid):
     grid = basic_grid
 
     target_line = grid.line.get(202)
@@ -266,7 +267,7 @@ def test_grid_make_inactive_to_side(basic_grid):
     assert 0 == target_line_after.to_status
 
 
-def test_grid_as_str(basic_grid):
+def test_grid_as_str(basic_grid: Grid):
     grid = basic_grid
 
     grid_as_string = str(grid)
@@ -337,7 +338,7 @@ class TestFromTxt:
         grid = Grid.from_txt("5 6 16", "3 4 17", "3 7 18", "S1 2 12", "S1 10 13", "10 11 14", "2 5 15")
         assert 9 == grid.node.size
 
-    def test_from_txt_file(self, tmp_path):
+    def test_from_txt_file(self, tmp_path: Path):
         txt_file = tmp_path / "tmp_grid"
         txt_file.write_text("S1 2\nS1 3 open\n2 7\n3 5\n3 6 transformer\n5 7\n7 8\n8 9", encoding="utf-8")
         grid = Grid.from_txt_file(txt_file)

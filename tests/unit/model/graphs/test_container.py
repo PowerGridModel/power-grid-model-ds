@@ -8,11 +8,12 @@ from power_grid_model_ds._core.model.arrays import NodeArray, ThreeWindingTransf
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.graphs.errors import GraphError
+from power_grid_model_ds._core.model.grids.base import Grid
 
 # pylint: disable=missing-function-docstring
 
 
-def test_from_arrays(basic_grid):
+def test_from_arrays(basic_grid: Grid):
     graphs = GraphContainer.from_arrays(basic_grid)
 
     assert isinstance(graphs, GraphContainer)
@@ -50,7 +51,9 @@ def three_winding_transformers():
     return three_winding_transformers
 
 
-def test_add_branch3(graph_container_with_5_nodes, three_winding_transformers):
+def test_add_branch3(
+    graph_container_with_5_nodes: GraphContainer, three_winding_transformers: ThreeWindingTransformerArray
+):
     graph_container_with_5_nodes.add_branch3(three_winding_transformers)
     for from_node, to_node in [(1, 2), (1, 4), (1, 5), (4, 5)]:
         assert graph_container_with_5_nodes.active_graph.has_branch(from_node, to_node)
@@ -61,7 +64,9 @@ def test_add_branch3(graph_container_with_5_nodes, three_winding_transformers):
         assert graph_container_with_5_nodes.complete_graph.has_branch(from_node, to_node)
 
 
-def test_delete_branch3(graph_container_with_5_nodes, three_winding_transformers):
+def test_delete_branch3(
+    graph_container_with_5_nodes: GraphContainer, three_winding_transformers: ThreeWindingTransformerArray
+):
     graph_container_with_5_nodes.add_branch3(three_winding_transformers)
     graph_container_with_5_nodes.delete_branch3(three_winding_transformers[0])
 
@@ -77,7 +82,7 @@ def test_delete_branch3(graph_container_with_5_nodes, three_winding_transformers
         assert not graph_container_with_5_nodes.complete_graph.has_branch(from_node, to_node)
 
 
-def test_from_arrays_active_three_winding(basic_grid):
+def test_from_arrays_active_three_winding(basic_grid: Grid):
     nodes = NodeArray.zeros(3)
     nodes.id = [1000, 1001, 1002]
     basic_grid.append(nodes)
@@ -99,7 +104,7 @@ def test_from_arrays_active_three_winding(basic_grid):
     assert basic_grid.graphs.active_graph.nr_branches == 5 + 3
 
 
-def test_from_arrays_partially_active_three_winding(basic_grid):
+def test_from_arrays_partially_active_three_winding(basic_grid: Grid):
     nodes = NodeArray.zeros(3)
     nodes.id = [1000, 1001, 1002]
     basic_grid.append(nodes)
@@ -136,7 +141,7 @@ def test_from_arrays_partially_active_three_winding(basic_grid):
         basic_grid.graphs.active_graph.delete_branch(1001, 1002)
 
 
-def test_from_arrays_invalid_arrays(basic_grid):
+def test_from_arrays_invalid_arrays(basic_grid: Grid):
     basic_grid.node = basic_grid.node.exclude(id=106)
 
     with pytest.raises(RecordDoesNotExist):

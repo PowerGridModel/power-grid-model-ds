@@ -45,7 +45,7 @@ class ExtendedLineArray(LineArray):
 
 
 def test_load_flow_on_random():
-    """Tests the load flow on a randomly configured grid"""
+    """Tests the power flow on a randomly configured grid"""
     grid_generator = RadialGridGenerator(grid_class=Grid, nr_nodes=5, nr_sources=1, nr_nops=0)
     grid = grid_generator.run(seed=0)
 
@@ -60,8 +60,8 @@ def test_load_flow_on_random():
     assert all(output["line"]["i_from"] > 0)
 
 
-def test_load_flow(grid):
-    """Tests the load flow on a test grid with 2 nodes"""
+def test_load_flow(grid: Grid):
+    """Tests the power flow on a test grid with 2 nodes"""
     nodes = NodeArray.zeros(2)
     nodes.id = [0, 1]
     nodes.u_rated = [10_500] * 2
@@ -105,8 +105,8 @@ def test_load_flow(grid):
     assert all(output["line"]["i_from"] > 0)
 
 
-def test_load_flow_with_transformer(grid):
-    """Tests the load flow on a test grid with 3 nodes and a trafo"""
+def test_load_flow_with_transformer(grid: Grid):
+    """Tests the power flow on a test grid with 3 nodes and a trafo"""
     nodes = NodeArray.zeros(3)
     nodes.id = [0, 1, 2]
     nodes.u_rated = [10_500] * 2 + [3_000]
@@ -178,8 +178,8 @@ def test_load_flow_with_transformer(grid):
 
 # pylint: disable=too-many-statements
 # pylint: disable=duplicate-code
-def test_load_flow_with_three_winding_transformer(grid):
-    """Tests the load flow on a test grid with 3 nodes and a three winding trafo"""
+def test_load_flow_with_three_winding_transformer(grid: Grid):
+    """Tests the power flow on a test grid with 3 nodes and a three winding trafo"""
     nodes = NodeArray.zeros(3)
     nodes.id = [0, 1, 2]
     nodes.u_rated = [150_000, 20_000, 10_000]
@@ -249,8 +249,8 @@ def test_load_flow_with_three_winding_transformer(grid):
     assert all(output["three_winding_transformer"]["loading"] > 0)
 
 
-def test_load_flow_with_link(grid):
-    """Tests the load flow on a test grid with 2 nodes and a link"""
+def test_load_flow_with_link(grid: Grid):
+    """Tests the power flow on a test grid with 2 nodes and a link"""
     nodes = NodeArray.zeros(2)
     nodes.id = [0, 1]
     nodes.u_rated = [10_500] * 2
@@ -293,7 +293,7 @@ def test_load_flow_with_link(grid):
     assert all(output["link"]["i_from"] > 0)
 
 
-def test_automatic_tap_regulator(grid):
+def test_automatic_tap_regulator(grid: Grid):
     """Test automatic tap regulator
 
     Network:
@@ -393,7 +393,7 @@ def test_automatic_tap_regulator(grid):
 
 
 def test_update_grid():
-    """Tests the load flow on a randomly configured grid and update grid with results"""
+    """Tests the power flow on a randomly configured grid and update grid with results"""
     grid_generator = RadialGridGenerator(grid_class=Grid, nr_nodes=5, nr_sources=1, nr_nops=0)
     grid = grid_generator.run(seed=0)
 

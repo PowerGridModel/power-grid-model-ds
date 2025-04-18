@@ -6,16 +6,18 @@
 
 import dataclasses
 from dataclasses import dataclass
-from typing import Generator
+from typing import TYPE_CHECKING, Generator
 
 import numpy as np
 
 from power_grid_model_ds._core.model.arrays import Branch3Array, BranchArray, NodeArray
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
-from power_grid_model_ds._core.model.containers.grid_protocol import MinimalGridArrays
 from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
+
+if TYPE_CHECKING:  # pragma: no cover
+    from power_grid_model_ds._core.model.grids.base import Grid
 
 
 @dataclass
@@ -119,7 +121,7 @@ class GraphContainer:
             setattr(self, field.name, graph)
 
     @classmethod
-    def from_arrays(cls, arrays: MinimalGridArrays) -> "GraphContainer":
+    def from_arrays(cls, arrays: "Grid") -> "GraphContainer":
         """Build from arrays"""
         cls._validate_branches(arrays=arrays)
 
@@ -132,7 +134,7 @@ class GraphContainer:
         return new_container
 
     @staticmethod
-    def _validate_branches(arrays: MinimalGridArrays):
+    def _validate_branches(arrays: "Grid") -> None:
         for array in arrays.branch_arrays:
             if any(~np.isin(array.from_node, arrays.node.id)):
                 raise RecordDoesNotExist(f"Found invalid .from_node values in {array.__class__.__name__}")
