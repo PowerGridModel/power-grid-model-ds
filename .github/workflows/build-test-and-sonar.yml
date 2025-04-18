@@ -160,7 +160,7 @@ jobs:
           version_file=$(cat VERSION)
 
           if [ "$major_minor" = "$version_file" ]; then
-            echo "The major.minor == VERSION file --> patch release"
+            echo "Patch release detected. Proceeding with automatic release."
           else
             echo "Cannot automatically release a new major.minor version. Please trigger manually if desired."
             exit 1
