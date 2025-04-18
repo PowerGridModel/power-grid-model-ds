@@ -16,7 +16,7 @@ from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExis
 from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 
-if TYPE_CHECKING:  # pragma: no cover
+if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import Grid
 
 
