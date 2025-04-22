@@ -41,6 +41,9 @@ Some highlighted features:
   can be used to analyze the network.
 - An interface to model network mutations which is useful in
   simulation use-cases.
+- Visualization for easy exploration and debugging.
+
+<img width="40%" alt="Grid Visualisation" src="docs/_static/grid-force-directed.png" />
 
 See the [power-grid-model-ds documentation](https://power-grid-model-ds.readthedocs.io/en/stable/) for more information.
 

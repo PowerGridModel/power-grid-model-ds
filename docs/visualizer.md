@@ -16,7 +16,7 @@ SPDX-License-Identifier: MPL-2.0
 
 With Coordinates    | Hierarchical | Force-Directed
 :------------------:|:------------:|:-------------:
-<img width="250" alt="Coordinates" src="https://github.com/user-attachments/assets/6f991cb1-08b4-4c4b-8adc-eed36f58db40" /> | <img width="250" alt="Hierarchical" src="https://github.com/user-attachments/assets/0cf5684d-fb7c-4920-92b8-1e49bc827a92" />      |   <img width="250" alt="Force-Directed" src="https://github.com/user-attachments/assets/f0167ded-ceb4-4a31-a91e-e029dd6d7f13" />
+<img width="250" alt="Coordinates" src="_static/grid-with-coordinates.png" /> | <img width="250" alt="Hierarchical" src="_static/grid-hierarchical.png" />      |   <img width="250" alt="Force-Directed" src="_static/grid-force-directed.png" />
 
 ----- 
 ## Quickstart
