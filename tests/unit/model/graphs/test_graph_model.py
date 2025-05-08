@@ -171,6 +171,14 @@ def test_tmp_remove_nodes(graph_with_2_routes: BaseGraphModel) -> None:
     assert counter_before == counter_after
 
 
+def test_tmp_remove_nodes_array_input(graph_with_2_routes: BaseGraphModel) -> None:
+    with graph_with_2_routes.tmp_remove_nodes(np.array([1, 2])):  # type: ignore[arg-type]
+        pass
+
+    # check that the external ids are still all integers instead of e.g. np.int
+    assert all([isinstance(e_id, int) for e_id in graph_with_2_routes.external_ids])
+
+
 def test_get_components(graph_with_2_routes: BaseGraphModel):
     graph = graph_with_2_routes
     graph.add_node(99)
