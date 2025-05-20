@@ -95,7 +95,7 @@ class PowerGridModelInterface:
 
         Returns output of the power flow calculation (also stored in self.output_data)
         """
-        self.model = self.model or self._setup_model()
+        self.model = self.model or self.setup_model()
 
         self.output_data = self.model.calculate_power_flow(
             calculation_method=calculation_method, update_data=update_data, **kwargs
@@ -134,7 +134,7 @@ class PowerGridModelInterface:
 
 
         """
-        self.model = self.model or self._setup_model()
+        self.model = self.model or self.setup_model()
         self.model.update(update_data=update_data)
 
     def update_grid(self) -> None:
@@ -154,7 +154,8 @@ class PowerGridModelInterface:
     def _match_dtypes(first_dtype: np.dtype, second_dtype: np.dtype):
         return list(set(first_dtype.names).intersection(set(second_dtype.names)))  # type: ignore[arg-type]
 
-    def _setup_model(self):
+    def setup_model(self):
+        """Setup the PowerGridModel with the input data."""
         self.input_data = self.input_data or self.create_input_from_grid()
         self.model = PowerGridModel(self.input_data, system_frequency=self.system_frequency)
         return self.model
