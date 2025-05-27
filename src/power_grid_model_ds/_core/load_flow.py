@@ -59,7 +59,8 @@ class PowerGridModelInterface:
     def input_data(self) -> Dict[str, NDArray]:
         """Get the input data for the PowerGridModel."""
         warnings.warn(
-            "Input data has been made private and will be removed as public properety in a future version.",
+            "Input data has been made private and will be removed as public properety in a future version. "
+            "Do not use it directly.",
             DeprecationWarning,
             stacklevel=2,
         )
