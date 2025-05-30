@@ -38,8 +38,7 @@ jobs:
     permissions:
       contents: write
     with:
-      create_release: "true"
-      # ${{ (github.event_name == 'workflow_dispatch' && inputs.create_release) || (github.event_name == 'push') }}
+      create_release: ${{ (github.event_name == 'workflow_dispatch' && inputs.create_release) || (github.event_name == 'push') || (github.event_name == 'pull_request') }}
       # TODO(mgovers): revert back to original
 
   check-code-quality:
