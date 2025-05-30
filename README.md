@@ -9,9 +9,7 @@ SPDX-License-Identifier: MPL-2.0
 [![Downloads](https://static.pepy.tech/badge/power-grid-model-ds)](https://pepy.tech/project/power-grid-model-ds)
 [![Downloads](https://static.pepy.tech/badge/power-grid-model-ds/month)](https://pepy.tech/project/power-grid-model-ds)
 
-[![Build and Test Python](https://github.com/PowerGridModel/power-grid-model-ds/actions/workflows/build-test-and-sonar.yml/badge.svg)](https://github.com/PowerGridModel/power-grid-model-ds/actions/workflows/build-test-and-sonar.yml)
-[![Check Code Quality](https://github.com/PowerGridModel/power-grid-model-ds/actions/workflows/check-code-quality.yml/badge.svg)](https://github.com/PowerGridModel/power-grid-model-ds/actions/workflows/check-code-quality.yml)
-[![REUSE Compliance Check](https://github.com/PowerGridModel/power-grid-model-ds/actions/workflows/reuse-compliance.yml/badge.svg)](https://github.com/PowerGridModel/power-grid-model-ds/actions/workflows/reuse-compliance.yml)
+[![CI Build](https://github.com/PowerGridModel/power-grid-model-ds/actions/workflows/ci.yml/badge.svg)](https://github.com/PowerGridModel/power-grid-model-ds/actions/workflows/ci.yml)
 [![docs](https://readthedocs.org/projects/power-grid-model-ds/badge/)](https://power-grid-model-ds.readthedocs.io/en/stable/)
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=PowerGridModel_power-grid-model-ds&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=PowerGridModel_power-grid-model-ds)
@@ -25,7 +23,7 @@ SPDX-License-Identifier: MPL-2.0
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14825565.svg)](https://zenodo.org/record/14825565)
 
-[![](https://github.com/PowerGridModel/.github/blob/main/artwork/svg/color.svg)](#)
+[![Power Grid Model logo](https://github.com/PowerGridModel/.github/blob/main/artwork/svg/color.svg)](#)
 
 # Power Grid Model Data Science (DS)
 
