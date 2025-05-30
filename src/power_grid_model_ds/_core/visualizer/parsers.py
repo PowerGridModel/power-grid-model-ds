@@ -45,6 +45,7 @@ def parse_branch3_array(branches: Branch3Array, group: Literal["transformer"]) -
             cyto_elements = {"data": _array_to_dict(branch_, columns)}
             cyto_elements["data"].update(
                 {
+                    # IDs need to be unique, so we combine the branch ID with the from and to nodes
                     "id": str(branch.id.item()) + f"_{branch_.from_node.item()}_{branch_.to_node.item()}",
                     "source": str(branch_.from_node.item()),
                     "target": str(branch_.to_node.item()),
