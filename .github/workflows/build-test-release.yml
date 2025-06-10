@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
-name: Build and Test
+name: Build, Test and Release
 
 on:
   # run pipeline from another workflow
