@@ -14,6 +14,9 @@ on:
         description: Create a (pre-)release when CI passes
         default: false
         required: false
+      outputs:
+        tag: ${{ jobs.github-release.outputs.tag }}
+
   # run this workflow manually from the Actions tab
   workflow_dispatch:
     inputs:
@@ -26,9 +29,6 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-main
   cancel-in-progress: true
-
-outputs:
-  tag: ${{ jobs.github-release.outputs.tag }}
 
 jobs:
   build-python:
