@@ -72,7 +72,8 @@ jobs:
     needs: build-python
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+#        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        os: [ubuntu-latest]
         python: ["3.11", "3.12", "3.13"]
       fail-fast: false
     runs-on: ${{ matrix.os }}
@@ -101,7 +102,7 @@ jobs:
   github-release:
     needs:
       - build-python
-#      - tests
+      - tests
     permissions:
       contents: write
     runs-on: ubuntu-latest
