@@ -14,10 +14,10 @@ on:
         description: Create a (pre-)release when CI passes
         default: false
         required: false
-      outputs:
-        tag:
-          description: "The created release tag"
-          value: ${{ jobs.github-release.outputs.tag }}
+    outputs:
+      tag:
+        description: "The created release tag"
+        value: ${{ jobs.github-release.outputs.tag }}
 
   # run this workflow manually from the Actions tab
   workflow_dispatch:
