@@ -20,7 +20,7 @@ def get_filter_mask(
     """Returns a mask that matches the input parameters."""
     parsed_kwargs = _parse(args, kwargs)
 
-    if invalid_kwargs := set(parsed_kwargs.keys()) - set(array.dtype.names):
+    if invalid_kwargs := set(parsed_kwargs.keys()) - set(array.dtype.names or ()):
         raise ValueError(f"Invalid kwargs: {invalid_kwargs}")
 
     filter_mask = _initialize_filter_mask(mode_, array.size)
