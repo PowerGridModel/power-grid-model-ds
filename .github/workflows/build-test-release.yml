@@ -15,7 +15,9 @@ on:
         default: false
         required: false
       outputs:
-        tag: ${{ jobs.github-release.outputs.tag }}
+        tag:
+          description: "The created release tag"
+          value: ${{ jobs.github-release.outputs.tag }}
 
   # run this workflow manually from the Actions tab
   workflow_dispatch:
