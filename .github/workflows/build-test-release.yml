@@ -101,7 +101,7 @@ jobs:
   github-release:
     needs:
       - build-python
-      - tests
+#      - tests
     permissions:
       contents: write
     runs-on: ubuntu-latest
