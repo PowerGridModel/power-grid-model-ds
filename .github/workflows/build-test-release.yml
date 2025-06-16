@@ -27,8 +27,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-main
   cancel-in-progress: true
 
-jobs:
+outputs:
+  tag: ${{ jobs.github-release.outputs.tag }}
 
+jobs:
   build-python:
     runs-on: ubuntu-latest
     outputs:
@@ -101,6 +103,8 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
       - name: Setup Python 3.13
         uses: actions/setup-python@v5
