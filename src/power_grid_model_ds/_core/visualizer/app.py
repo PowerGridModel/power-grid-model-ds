@@ -60,6 +60,7 @@ def _get_columns_store(grid: Grid) -> dcc.Store:
             "line": grid.line.columns,
             "link": grid.link.columns,
             "transformer": grid.transformer.columns,
+            "three_winding_transformer": grid.three_winding_transformer.columns,
             "branch": grid.branches.columns,
         },
     )

@@ -6,7 +6,8 @@ import numpy as np
 from numpy.typing import NDArray
 
 from power_grid_model_ds._core.model.arrays import LineArray, NodeArray
-from power_grid_model_ds._core.visualizer.parsers import parse_branch_array, parse_node_array
+from power_grid_model_ds._core.model.arrays.pgm_arrays import Branch3Array
+from power_grid_model_ds._core.visualizer.parsers import parse_branch3_array, parse_branch_array, parse_node_array
 
 
 class CoordinatedNodeArray(NodeArray):
@@ -64,3 +65,28 @@ class TestParseBranches:
         assert parsed[0]["data"]["source"] == "1"
         assert parsed[0]["data"]["target"] == "4"
         assert parsed[0]["data"]["group"] == "line"
+
+    def test_parse_branch3_array(self):
+        branch3 = Branch3Array.zeros(1)
+        branch3["id"] = [200]
+        branch3["node_1"] = [1]
+        branch3["node_2"] = [2]
+        branch3["node_3"] = [3]
+        branch3["status_1"] = [1]
+        branch3["status_2"] = [1]
+        branch3["status_3"] = [1]
+
+        parsed = parse_branch3_array(branch3, "transformer")
+        assert len(parsed) == 3
+        assert parsed[0]["data"]["id"] == "200_1_2"
+        assert parsed[0]["data"]["source"] == "1"
+        assert parsed[0]["data"]["target"] == "2"
+        assert parsed[0]["data"]["group"] == "transformer"
+        assert parsed[1]["data"]["id"] == "200_1_3"
+        assert parsed[1]["data"]["source"] == "1"
+        assert parsed[1]["data"]["target"] == "3"
+        assert parsed[1]["data"]["group"] == "transformer"
+        assert parsed[2]["data"]["id"] == "200_2_3"
+        assert parsed[2]["data"]["source"] == "2"
+        assert parsed[2]["data"]["target"] == "3"
+        assert parsed[2]["data"]["group"] == "transformer"
