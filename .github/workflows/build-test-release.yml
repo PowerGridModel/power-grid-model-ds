@@ -14,13 +14,16 @@ on:
         description: Create a (pre-)release when CI passes
         default: false
         required: false
+    outputs:
+      tag:
+        description: "The created release tag"
+        value: ${{ jobs.github-release.outputs.tag }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-main
   cancel-in-progress: true
 
 jobs:
-
   build-python:
     runs-on: ubuntu-latest
     outputs:
@@ -60,7 +63,7 @@ jobs:
     needs: build-python
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
         python: ["3.11", "3.12", "3.13"]
       fail-fast: false
     runs-on: ${{ matrix.os }}
@@ -93,6 +96,8 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
       - name: Setup Python 3.13
         uses: actions/setup-python@v5
