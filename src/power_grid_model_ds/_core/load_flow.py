@@ -4,6 +4,7 @@
 
 """Power flow functions and classes"""
 
+import warnings
 from typing import Dict, Optional
 
 import numpy as np
@@ -50,9 +51,20 @@ class PowerGridModelInterface:
         self.grid = grid or Grid.empty()
         self.system_frequency = system_frequency
 
-        self.input_data = input_data or {}
+        self._input_data = input_data or {}
         self.output_data: dict[str, NDArray] = {}
         self.model: Optional[PowerGridModel] = None
+
+    @property
+    def input_data(self) -> Dict[str, NDArray]:
+        """Get the input data for the PowerGridModel."""
+        warnings.warn(
+            "Input data has been made private and will be removed as public properety in a future version. "
+            "Do not use it directly.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self._input_data
 
     def create_input_from_grid(self):
         """
@@ -60,8 +72,8 @@ class PowerGridModelInterface:
         """
         for array_name in PGM_ARRAYS:
             pgm_array = self._create_power_grid_array(array_name=array_name)
-            self.input_data[array_name] = pgm_array
-        return self.input_data
+            self._input_data[array_name] = pgm_array
+        return self._input_data
 
     def create_grid_from_input_data(self, check_ids: bool = True) -> Grid:
         """
@@ -75,9 +87,9 @@ class PowerGridModelInterface:
         Returns a Grid object with the arrays filled with the PowerGridModel input.
         """
         for pgm_name in PGM_ARRAYS:
-            if pgm_name in self.input_data:
+            if pgm_name in self._input_data:
                 pgm_ds_array_class = getattr(self.grid, pgm_name).__class__
-                pgm_ds_array = pgm_ds_array_class(self.input_data[pgm_name])
+                pgm_ds_array = pgm_ds_array_class(self._input_data[pgm_name])
                 self.grid.append(pgm_ds_array, check_max_id=False)
         if check_ids:
             self.grid.check_ids()
@@ -155,6 +167,6 @@ class PowerGridModelInterface:
         return list(set(first_dtype.names).intersection(set(second_dtype.names)))  # type: ignore[arg-type]
 
     def _setup_model(self):
-        self.input_data = self.input_data or self.create_input_from_grid()
-        self.model = PowerGridModel(self.input_data, system_frequency=self.system_frequency)
+        self._input_data = self._input_data or self.create_input_from_grid()
+        self.model = PowerGridModel(self._input_data, system_frequency=self.system_frequency)
         return self.model
