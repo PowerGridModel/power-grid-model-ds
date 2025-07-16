@@ -36,6 +36,15 @@ class DifferentFancyTestArray(FancyArray):
     test_bool2: NDArray[np.bool_]
 
 
+class ExtendedFancyTestArray(FancyTestArray):
+    """Test array with some extended attributes"""
+
+    test_int2: NDArray[np.int64]
+    test_float2: NDArray[np.float64]
+    test_str2: NDArray[np.str_]
+    test_bool2: NDArray[np.bool_]
+
+
 class LongColumnNameFancyTestArray(FancyArray):
     """Test array with a very long column name"""
 

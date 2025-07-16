@@ -14,7 +14,7 @@ from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.pgm_arrays import TransformerArray
 from power_grid_model_ds._core.model.constants import EMPTY_ID, empty
 from tests.conftest import FancyTestArray
-from tests.fixtures.arrays import FancyTestArray3
+from tests.fixtures.arrays import ExtendedFancyTestArray, FancyTestArray3
 
 # pylint: disable=missing-function-docstring
 
@@ -289,3 +289,10 @@ def test_overflow_value():
     with pytest.raises(OverflowError):
         transformer.tap_min = -167
     assert transformer.tap_min == -128
+
+
+def test_from_extended_array():
+    extended_array = ExtendedFancyTestArray.zeros(2)
+    array = FancyTestArray.from_extended(extended_array)
+    assert not isinstance(array, ExtendedFancyTestArray)
+    assert_array_equal(array.data, extended_array[array.columns])
