@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING, Union
 
 import numpy as np
 
+from power_grid_model_ds._core.utils.misc import array_equal_with_nan
+
 if TYPE_CHECKING:
     from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 
@@ -49,18 +51,4 @@ def array_equal(array1: "FancyArray", array2: "FancyArray", equal_nan: bool = Tr
 
 
 def _array_equal_with_nan(array1: "FancyArray", array2: "FancyArray") -> bool:
-    # np.array_equal does not work with NaN values in structured arrays, so we need to compare column by column.
-    # related issue: https://github.com/numpy/numpy/issues/21539
-
-    if array1.columns != array2.columns:
-        return False
-
-    for column in array1.columns:
-        column_dtype = array1.dtype[column]
-        if np.issubdtype(column_dtype, np.str_):
-            if not np.array_equal(array1[column], array2[column]):
-                return False
-            continue
-        if not np.array_equal(array1[column], array2[column], equal_nan=True):
-            return False
-    return True
+    return array_equal_with_nan(array1.data, array2.data)
