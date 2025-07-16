@@ -440,6 +440,23 @@ class Grid(FancyArrayContainer):
         set_is_feeder(grid=self)
         set_feeder_ids(grid=self)
 
+    @classmethod
+    def from_extended(cls, extended: "Grid", load_graphs: bool = True) -> "Grid":
+        """Create a grid from an extended Grid object."""
+        new_grid = cls.empty()
+
+        for field in dataclasses.fields(cls):
+            if issubclass(field.type, FancyArray):
+                extended_array = getattr(extended, field.name)
+                new_array = field.type.from_extended(extended_array)
+                setattr(new_grid, field.name, new_array)
+
+        new_grid._id_counter = new_grid.max_id
+
+        if load_graphs:
+            new_grid.graphs = GraphContainer.from_arrays(new_grid)
+        return new_grid
+
 
 def _add_branch_array(branch: BranchArray | Branch3Array, grid: Grid):
     """Add a branch array to the grid"""
