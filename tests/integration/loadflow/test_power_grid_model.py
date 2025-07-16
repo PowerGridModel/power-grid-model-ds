@@ -23,6 +23,7 @@ from power_grid_model_ds._core.model.arrays import (
 )
 from power_grid_model_ds._core.model.arrays.pgm_arrays import TransformerTapRegulatorArray
 from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds._core.utils.misc import array_equal_with_nan
 from tests.unit.model.grids.test_custom_grid import CustomGrid
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
@@ -605,3 +606,12 @@ class TestCreateGridFromInputData:
 
         with pytest.raises(ValueError, match="Missing required columns: {'extra_field'}"):
             core_interface.create_grid_from_input_data()
+
+
+def test_convert_from_and_to_pgm_data(input_data_pgm):
+    grid = Grid.from_pgm_data(input_data_pgm)
+    pgm = PowerGridModelInterface(grid=grid)
+    pgm.create_input_from_grid()
+
+    for array_name in pgm.input_data.keys():
+        assert array_equal_with_nan(pgm.input_data[array_name], input_data_pgm[array_name])
