@@ -5,6 +5,7 @@
 import numpy as np
 from numpy._typing import NDArray
 
+from power_grid_model_ds._core.model.arrays import LineArray, NodeArray
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.dtypes.sensors import NDArray3
 
@@ -36,15 +37,6 @@ class DifferentFancyTestArray(FancyArray):
     test_bool2: NDArray[np.bool_]
 
 
-class ExtendedFancyTestArray(FancyTestArray):
-    """Test array with some extended attributes"""
-
-    test_int2: NDArray[np.int64]
-    test_float2: NDArray[np.float64]
-    test_str2: NDArray[np.str_]
-    test_bool2: NDArray[np.bool_]
-
-
 class LongColumnNameFancyTestArray(FancyArray):
     """Test array with a very long column name"""
 
@@ -66,3 +58,19 @@ class FancyTestArray3(FancyArray):
 
     test_float1: NDArray3[np.float64]
     test_float2: NDArray3[np.float64]
+
+
+class ExtendedNodeArray(NodeArray):
+    """Extends the node array with an output value"""
+
+    _defaults = {"u": 0}
+
+    u: NDArray[np.float64]
+
+
+class ExtendedLineArray(LineArray):
+    """Extends the line array with an output value"""
+
+    _defaults = {"i_from": 0}
+
+    i_from: NDArray[np.float64]
