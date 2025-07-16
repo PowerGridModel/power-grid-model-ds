@@ -348,3 +348,10 @@ class TestFromTxt:
         assert 1 == grid.branches.filter(to_status=0).size
         assert 1 == grid.transformer.size
         np.testing.assert_array_equal([14, 10, 11, 12, 13, 15, 16, 17], grid.branches.id)
+
+
+def test_from_pgm_input_data(input_data_pgm):
+    grid = Grid.from_pgm_data(input_data_pgm)
+    assert grid.node.size == 3
+    assert grid.line.size == 2
+    grid.check_ids()

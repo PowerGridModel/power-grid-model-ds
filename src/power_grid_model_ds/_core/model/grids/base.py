@@ -440,6 +440,25 @@ class Grid(FancyArrayContainer):
         set_is_feeder(grid=self)
         set_feeder_ids(grid=self)
 
+    @classmethod
+    def from_pgm_data(cls, pgm_data: dict[str, npt.NDArray], load_graphs: bool = True) -> "Grid":
+        """Initialize the grid from PowerGridModel input data.
+
+        Args:
+            pgm_data (dict[str, npt.NDArray]): The PowerGridModel input data.
+        """
+        new_grid = cls.empty()
+        for array_name, array_data in pgm_data.items():
+            pgm_array_class = getattr(new_grid, array_name).__class__
+            pgm_array = pgm_array_class(array_data)
+            setattr(new_grid, array_name, pgm_array)
+
+        new_grid._id_counter = new_grid.max_id
+
+        if load_graphs:
+            new_grid.graphs = GraphContainer.from_arrays(new_grid)
+        return new_grid
+
 
 def _add_branch_array(branch: BranchArray | Branch3Array, grid: Grid):
     """Add a branch array to the grid"""
