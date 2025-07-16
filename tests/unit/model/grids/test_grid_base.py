@@ -57,6 +57,10 @@ def test_from_extended_grid():
     grid = Grid.from_extended(extended_grid)
     assert not isinstance(grid, ExtendedGrid)
     assert_array_equal(grid.line.data, extended_grid.line.data[grid.line.columns])
+    assert grid.node.size
+    assert grid.branches.size
+    assert grid.graphs.active_graph.nr_nodes == len(grid.node)
+    assert grid.graphs.complete_graph.nr_nodes == len(grid.branches)
 
 
 def test_grid_build(basic_grid: Grid):

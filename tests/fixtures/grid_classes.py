@@ -12,6 +12,6 @@ from tests.fixtures.arrays import ExtendedLineArray, ExtendedNodeArray
 class ExtendedGrid(Grid):
     """ExtendedGrid class for testing purposes."""
 
-    extra_value: int = 123
     node: ExtendedNodeArray
     line: ExtendedLineArray
+    extra_value: int = 123
