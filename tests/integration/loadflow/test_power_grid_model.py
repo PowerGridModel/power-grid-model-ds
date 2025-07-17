@@ -176,6 +176,18 @@ class PowerGridModelInterfaceMethods:
         # Results have been calculated for all 10 scenarios
         assert 10 == len(output["line"])
 
+    def test_setup_model(self):
+        """Test whether a pgm model can be setup with a custom grid"""
+        grid_generator = RadialGridGenerator(grid_class=CustomGrid, nr_nodes=5, nr_sources=1, nr_nops=0)
+        grid = grid_generator.run(seed=0)
+
+        core_interface = PowerGridModelInterface(grid=grid)
+        assert core_interface.model is None
+        assert core_interface.input_data is None
+        core_interface.setup_model()
+        assert core_interface.model
+        assert core_interface.input_data
+
 
 class TestCreateGridFromInputData:
     def test_create_grid_from_input_data(self, input_data_pgm):
