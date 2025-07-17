@@ -208,7 +208,7 @@ class BaseGraphModel(ABC):
         yield
 
         for node in nodes:
-            self.add_node(node)
+            self.add_node(int(node))  # convert to int to avoid type issues when input is e.g. a numpy array
         for source, target in edge_list:
             self.add_branch(source, target)
 

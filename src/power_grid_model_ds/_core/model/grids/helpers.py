@@ -46,7 +46,7 @@ def set_feeder_ids(grid: "Grid"):
     """
     _reset_feeder_ids(grid)
     feeder_node_ids = grid.node.filter(node_type=NodeType.SUBSTATION_NODE)["id"]
-    with grid.graphs.active_graph.tmp_remove_nodes(feeder_node_ids):
+    with grid.graphs.active_graph.tmp_remove_nodes(feeder_node_ids.tolist()):
         components = grid.graphs.active_graph.get_components()
     for component_node_ids in components:
         component_branches = _get_active_component_branches(grid, component_node_ids)
