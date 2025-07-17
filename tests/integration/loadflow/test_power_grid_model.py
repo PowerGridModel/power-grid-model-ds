@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from dataclasses import dataclass
 
 import numpy as np
 import pytest
@@ -19,14 +18,17 @@ from power_grid_model_ds._core.model.arrays import (
 )
 from power_grid_model_ds._core.model.grids.base import Grid
 from tests.fixtures.arrays import ExtendedLineArray, ExtendedNodeArray
+from tests.fixtures.grid_classes import ExtendedGrid
 from tests.unit.model.grids.test_custom_grid import CustomGrid
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
 
-def test_load_flow_on_random():
-    """Tests the power flow on a randomly configured grid"""
-    grid_generator = RadialGridGenerator(grid_class=Grid, nr_nodes=5, nr_sources=1, nr_nops=0)
-    grid = grid_generator.run(seed=0)
+
+class TestCalculatePowerFlow:
+    def test_load_flow_on_random_grid(self):
+        """Tests the power flow on a randomly configured grid"""
+        grid_generator = RadialGridGenerator(grid_class=Grid, nr_nodes=5, nr_sources=1, nr_nops=0)
+        grid = grid_generator.run(seed=0)
 
         core_interface = PowerGridModelInterface(grid=grid)
         core_interface.create_input_from_grid()
@@ -183,11 +185,6 @@ class CustomNodeArrayDefault(NodeArray):
     _defaults = {"extra_field": 0}
 
 
-@dataclass
-class CustomGridDefault(Grid):
-    node: CustomNodeArrayDefault
-
-
 class TestCreateGridFromInputData:
     def test_create_grid_from_input_data(self, input_data_pgm):
         core_interface = PowerGridModelInterface(input_data=input_data_pgm)
@@ -290,14 +287,14 @@ class TestCreateGridFromInputData:
         )
 
     def test_create_extended_grid_with_default_from_input_data(self, input_data_pgm):
-        grid = CustomGridDefault.empty()
+        grid = ExtendedGrid.empty()
 
         core_interface = PowerGridModelInterface(grid=grid, input_data=input_data_pgm)
 
         output = core_interface.create_grid_from_input_data()
 
-        assert isinstance(grid, CustomGridDefault)
-        assert isinstance(grid.node, CustomNodeArrayDefault)
+        assert isinstance(grid, ExtendedGrid)
+        assert isinstance(grid.node, ExtendedNodeArray)
         assert np.array_equal(
             output.node.data,
             np.array(
@@ -312,7 +309,7 @@ class TestCreateGridFromInputData:
                     ("node_type", "i1"),
                     ("feeder_branch_id", "<i4"),
                     ("feeder_node_id", "<i4"),
-                    ("extra_field", "<i8"),
+                    ("u", "<f8"),
                 ],
             ),
         )
