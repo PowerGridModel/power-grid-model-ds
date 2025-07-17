@@ -32,7 +32,7 @@ def graph_container_with_5_nodes():
     for node_id in range(1, 6):
         node = NodeArray.empty(1)
         node.id = node_id
-        graph_container.add_node(node)
+        graph_container.add_node_array(node)
     return graph_container
 
 
@@ -53,7 +53,7 @@ def three_winding_transformers():
 def test_add_branch3(
     graph_container_with_5_nodes: GraphContainer, three_winding_transformers: ThreeWindingTransformerArray
 ):
-    graph_container_with_5_nodes.add_branch3(three_winding_transformers)
+    graph_container_with_5_nodes.add_branch3_array(three_winding_transformers)
     for from_node, to_node in [(1, 2), (1, 4), (1, 5), (4, 5)]:
         assert graph_container_with_5_nodes.active_graph.has_branch(from_node, to_node)
         assert graph_container_with_5_nodes.complete_graph.has_branch(from_node, to_node)
@@ -66,7 +66,7 @@ def test_add_branch3(
 def test_delete_branch3(
     graph_container_with_5_nodes: GraphContainer, three_winding_transformers: ThreeWindingTransformerArray
 ):
-    graph_container_with_5_nodes.add_branch3(three_winding_transformers)
+    graph_container_with_5_nodes.add_branch3_array(three_winding_transformers)
     graph_container_with_5_nodes.delete_branch3(three_winding_transformers[0])
 
     assert not graph_container_with_5_nodes.active_graph.has_branch(1, 2)
