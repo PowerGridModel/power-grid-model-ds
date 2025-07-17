@@ -323,3 +323,11 @@ class FancyArray(ABC):
         if pandas is None:
             raise ImportError("pandas is not installed")
         return pandas.DataFrame(self._data)
+
+    @classmethod
+    def from_extended(cls: Type[Self], extended: Self) -> Self:
+        """Create an instance from an extended array."""
+        if not isinstance(extended, cls):
+            raise TypeError(f"Extended array must be of type {cls.__name__}, got {type(extended).__name__}")
+        dtype = cls.get_dtype()
+        return cls(data=np.array(extended[list(dtype.names)], dtype=dtype))

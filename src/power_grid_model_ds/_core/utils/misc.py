@@ -39,3 +39,24 @@ def get_inherited_attrs(cls: Type, *private_attributes):
             retrieved_attributes[private_attr] = attr_dict
 
     return retrieved_attributes
+
+
+def array_equal_with_nan(array1: np.ndarray, array2: np.ndarray) -> bool:
+    """Compare two structured arrays for equality, treating NaN values as equal.
+
+    np.array_equal does not work with NaN values in structured arrays, so we need to compare column by column.
+    related issue: https://github.com/numpy/numpy/issues/21539
+    """
+    if array1.dtype.names != array2.dtype.names:
+        return False
+
+    columns: Sequence[str] = array1.dtype.names
+    for column in columns:
+        column_dtype = array1.dtype[column]
+        if np.issubdtype(column_dtype, np.str_):
+            if not np.array_equal(array1[column], array2[column]):
+                return False
+            continue
+        if not np.array_equal(array1[column], array2[column], equal_nan=True):
+            return False
+    return True
