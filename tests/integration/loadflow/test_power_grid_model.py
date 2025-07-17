@@ -5,7 +5,6 @@
 
 import numpy as np
 import pytest
-from numpy.typing import NDArray
 from power_grid_model import TapChangingStrategy, initialize_array
 
 from power_grid_model_ds._core.data_source.generator.grid_generators import RadialGridGenerator
@@ -40,7 +39,7 @@ class TestCalculatePowerFlow:
         # all lines have a current
         assert all(output["line"]["i_from"] > 0)
 
-    def test_load_flow(self, simple_loadflow_grid: Grid):
+    def test_simple_grid(self, simple_loadflow_grid: Grid):
         """Tests the power flow on a test grid with 2 nodes"""
         core_interface = PowerGridModelInterface(grid=simple_loadflow_grid)
         core_interface.create_input_from_grid()
@@ -52,7 +51,7 @@ class TestCalculatePowerFlow:
         # all lines have a current
         assert all(output["line"]["i_from"] > 0)
 
-    def test_load_flow_with_transformer(self, loadflow_grid_with_transformer: Grid):
+    def test_grid_with_transformer(self, loadflow_grid_with_transformer: Grid):
         """Tests the power flow on a test grid with 3 nodes and a trafo"""
         core_interface = PowerGridModelInterface(grid=loadflow_grid_with_transformer)
         core_interface.create_input_from_grid()
@@ -68,7 +67,7 @@ class TestCalculatePowerFlow:
 
     # pylint: disable=too-many-statements
     # pylint: disable=duplicate-code
-    def test_load_flow_with_three_winding_transformer(self, grid_with_three_winding_transformer: Grid):
+    def test_grid_with_three_winding_transformer(self, grid_with_three_winding_transformer: Grid):
         """Tests the power flow on a test grid with 3 nodes and a three winding trafo"""
 
         core_interface = PowerGridModelInterface(grid=grid_with_three_winding_transformer)
@@ -83,7 +82,7 @@ class TestCalculatePowerFlow:
         # transformer has loading
         assert all(output["three_winding_transformer"]["loading"] > 0)
 
-    def test_load_flow_with_link(self, grid_with_link: Grid):
+    def test_grid_with_link(self, grid_with_link: Grid):
         """Tests the power flow on a test grid with 2 nodes and a link"""
         core_interface = PowerGridModelInterface(grid=grid_with_link)
         core_interface.create_input_from_grid()
@@ -96,7 +95,7 @@ class TestCalculatePowerFlow:
         # all lines have a current
         assert all(output["link"]["i_from"] > 0)
 
-    def test_automatic_tap_regulator(self, grid_with_tap_regulator: Grid):
+    def test_grid_with_automatic_tap_regulator(self, grid_with_tap_regulator: Grid):
         core_interface = PowerGridModelInterface(grid=grid_with_tap_regulator)
         core_interface.create_input_from_grid()
         output = core_interface.calculate_power_flow()
@@ -113,76 +112,69 @@ class TestCalculatePowerFlow:
         assert output["transformer_tap_regulator"]["tap_pos"][0] > 0
 
 
-def test_update_grid():
-    """Tests the power flow on a randomly configured grid and update grid with results"""
-    grid_generator = RadialGridGenerator(grid_class=Grid, nr_nodes=5, nr_sources=1, nr_nops=0)
-    grid = grid_generator.run(seed=0)
+class PowerGridModelInterfaceMethods:
+    def test_update_grid(self):
+        """Tests the power flow on a randomly configured grid and update grid with results"""
+        grid_generator = RadialGridGenerator(grid_class=Grid, nr_nodes=5, nr_sources=1, nr_nops=0)
+        grid = grid_generator.run(seed=0)
 
-    grid.node = ExtendedNodeArray(grid.node.data)
-    grid.line = ExtendedLineArray(grid.line.data)
+        grid.node = ExtendedNodeArray(grid.node.data)
+        grid.line = ExtendedLineArray(grid.line.data)
 
-    core_interface = PowerGridModelInterface(grid=grid)
-    core_interface.create_input_from_grid()
-    core_interface.calculate_power_flow()
-    core_interface.update_grid()
+        core_interface = PowerGridModelInterface(grid=grid)
+        core_interface.create_input_from_grid()
+        core_interface.calculate_power_flow()
+        core_interface.update_grid()
 
-    # voltage should be in neighbourhood of 10500
-    assert grid.node.u[0] == pytest.approx(10_500, 0.1)
-    assert grid.node.u[1] == pytest.approx(10_500, 0.1)
-    # all lines have a current
-    assert all(grid.line.i_from > 0)
+        # voltage should be in neighbourhood of 10500
+        assert grid.node.u[0] == pytest.approx(10_500, 0.1)
+        assert grid.node.u[1] == pytest.approx(10_500, 0.1)
+        # all lines have a current
+        assert all(grid.line.i_from > 0)
 
+    def test_update_model(self):
+        """Test whether a pgm model can be updated and returns different results"""
+        grid_generator = RadialGridGenerator(grid_class=Grid, nr_nodes=5, nr_sources=1, nr_nops=0)
+        grid = grid_generator.run(seed=0)
 
-def test_update_model():
-    """Test whether a pgm model can be updated and returns different results"""
-    grid_generator = RadialGridGenerator(grid_class=Grid, nr_nodes=5, nr_sources=1, nr_nops=0)
-    grid = grid_generator.run(seed=0)
+        core_interface = PowerGridModelInterface(grid=grid)
+        output_1 = core_interface.calculate_power_flow()
 
-    core_interface = PowerGridModelInterface(grid=grid)
-    output_1 = core_interface.calculate_power_flow()
+        update_sym_load = initialize_array("update", "sym_load", 2)
+        update_sym_load["id"] = [12, 14]  # same ID
+        update_sym_load["p_specified"] = [30e6, 15e6]  # change active power
 
-    update_sym_load = initialize_array("update", "sym_load", 2)
-    update_sym_load["id"] = [12, 14]  # same ID
-    update_sym_load["p_specified"] = [30e6, 15e6]  # change active power
+        update_line = initialize_array("update", "line", 1)
+        update_line["id"] = [18]  # change line ID 3
+        update_line["from_status"] = [0]  # switch off at from side
+        # leave to-side swichint status the same, no need to specify
 
-    update_line = initialize_array("update", "line", 1)
-    update_line["id"] = [18]  # change line ID 3
-    update_line["from_status"] = [0]  # switch off at from side
-    # leave to-side swichint status the same, no need to specify
+        update_data = {"sym_load": update_sym_load, "line": update_line}
 
-    update_data = {"sym_load": update_sym_load, "line": update_line}
+        core_interface.update_model(update_data)
+        output_2 = core_interface.calculate_power_flow()
+        # all results should be different
+        assert not any(np.isclose(output_1["line"]["i_from"], output_2["line"]["i_from"]))
+        assert not any(np.isclose(output_1["node"]["u"], output_2["node"]["u"]))
 
-    core_interface.update_model(update_data)
-    output_2 = core_interface.calculate_power_flow()
-    # all results should be different
-    assert not any(np.isclose(output_1["line"]["i_from"], output_2["line"]["i_from"]))
-    assert not any(np.isclose(output_1["node"]["u"], output_2["node"]["u"]))
+    def test_batch_run(self):
+        """Test whether a pgm model can be used in batch mode"""
+        grid_generator = RadialGridGenerator(grid_class=Grid, nr_nodes=5, nr_sources=1, nr_nops=0)
+        grid = grid_generator.run(seed=0)
 
+        core_interface = PowerGridModelInterface(grid=grid)
 
-def test_batch_run():
-    """Test whether a pgm model can be used in batch mode"""
-    grid_generator = RadialGridGenerator(grid_class=Grid, nr_nodes=5, nr_sources=1, nr_nops=0)
-    grid = grid_generator.run(seed=0)
+        update_sym_load = initialize_array("update", "sym_load", (10, len(grid.sym_load)))
+        update_sym_load["id"] = [grid.sym_load.id.tolist()]
+        update_sym_load["p_specified"] = [grid.sym_load.p_specified.tolist()] * np.linspace(0, 1, 10).reshape(-1, 1)
+        update_sym_load["q_specified"] = [grid.sym_load.q_specified.tolist()] * np.linspace(0, 1, 10).reshape(-1, 1)
+        update_data = {
+            "sym_load": update_sym_load,
+        }
+        output = core_interface.calculate_power_flow(update_data=update_data)
 
-    core_interface = PowerGridModelInterface(grid=grid)
-
-    update_sym_load = initialize_array("update", "sym_load", (10, len(grid.sym_load)))
-    update_sym_load["id"] = [grid.sym_load.id.tolist()]
-    update_sym_load["p_specified"] = [grid.sym_load.p_specified.tolist()] * np.linspace(0, 1, 10).reshape(-1, 1)
-    update_sym_load["q_specified"] = [grid.sym_load.q_specified.tolist()] * np.linspace(0, 1, 10).reshape(-1, 1)
-    update_data = {
-        "sym_load": update_sym_load,
-    }
-    output = core_interface.calculate_power_flow(update_data=update_data)
-
-    # Results have been calculated for all 10 scenarios
-    assert 10 == len(output["line"])
-
-
-class CustomNodeArrayDefault(NodeArray):
-    extra_field: NDArray[np.int64]
-
-    _defaults = {"extra_field": 0}
+        # Results have been calculated for all 10 scenarios
+        assert 10 == len(output["line"])
 
 
 class TestCreateGridFromInputData:
