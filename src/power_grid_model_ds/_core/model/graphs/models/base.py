@@ -255,7 +255,8 @@ class BaseGraphModel(ABC):
     def get_components(self) -> list[list[int]]:
         """Returns all separate components when the substation_nodes are removed of the graph as lists
 
-        If you want to get the components of the graph without certain nodes, use the `tmp_remove_nodes` context manager.
+        If you want to get the components of the graph without certain nodes,
+        use the `tmp_remove_nodes` context manager.
 
         Example:
         >>> with graph.tmp_remove_nodes(substation_nodes):

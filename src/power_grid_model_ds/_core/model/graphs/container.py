@@ -5,7 +5,6 @@
 """Stores the GraphContainer class"""
 
 import dataclasses
-import warnings
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Generator
 
@@ -74,15 +73,6 @@ class GraphContainer:
         for field in self.graph_attributes:
             graph = getattr(self, field.name)
             graph.add_branch3_array(branch3_array=branch3_array)
-
-    def add_branch3(self, branch: Branch3Array) -> None:
-        """Add a branch to all graphs"""
-        warnings.warn(
-            "add_branch3 is deprecated and will be removed in a future release, use add_branch3_array instead",
-            category=DeprecationWarning,
-            stacklevel=2,
-        )
-        self.add_branch3_array(branch3_array=branch)
 
     def delete_node(self, node: NodeArray) -> None:
         """Remove a node from all graphs"""
