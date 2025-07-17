@@ -13,6 +13,7 @@ from power_grid_model_ds._core import fancypy as fp
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.pgm_arrays import LineArray, TransformerArray
 from power_grid_model_ds._core.model.constants import EMPTY_ID, empty
+from power_grid_model_ds._core.utils.misc import array_equal_with_nan
 from tests.conftest import FancyTestArray
 from tests.fixtures.arrays import ExtendedLineArray, FancyTestArray3
 
@@ -292,7 +293,13 @@ def test_overflow_value():
 
 
 def test_from_extended_array():
-    extended_array = ExtendedLineArray.zeros(2)
+    extended_array = ExtendedLineArray.empty(3)
+    extended_array.id = [1, 2, 3]
+    extended_array.from_node = [4, 5, 6]
+    extended_array.to_node = [7, 8, 9]
+    extended_array.from_status = [1, 0, 1]
+    extended_array.from_status = [0, 1, 0]
+
     array = LineArray.from_extended(extended_array)
     assert not isinstance(array, ExtendedLineArray)
-    assert_array_equal(array.data, extended_array[array.columns])
+    array_equal_with_nan(array.data, extended_array[array.columns])
