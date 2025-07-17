@@ -62,6 +62,9 @@ def test_from_extended_grid():
     assert grid.graphs.active_graph.nr_nodes == len(grid.node)
     assert grid.graphs.complete_graph.nr_nodes == len(grid.branches)
 
+    assert extended_grid.id_counter == grid.id_counter
+    assert extended_grid.max_id == grid.max_id
+
 
 def test_grid_build(basic_grid: Grid):
     grid = basic_grid
