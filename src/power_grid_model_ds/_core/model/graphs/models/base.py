@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import warnings
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Generator
@@ -253,23 +252,17 @@ class BaseGraphModel(ABC):
 
         return [self._internals_to_externals(path) for path in internal_paths]
 
-    def get_components(self, substation_nodes: list[int] | None = None) -> list[list[int]]:
-        """Returns all separate components when the substation_nodes are removed of the graph as lists"""
-        if substation_nodes:
-            warnings.warn(
-                message="""
-get_components: substation_nodes argument is deprecated and will be removed in a future release.
-The functionality is still available with the use of the `tmp_remove_nodes` context manager.
+    def get_components(self) -> list[list[int]]:
+        """Returns all separate components when the substation_nodes are removed of the graph as lists
 
-Example:
->>> with graph.tmp_remove_nodes(substation_nodes):
->>>    components = graph.get_components()
-""",
-                category=DeprecationWarning,
-                stacklevel=2,
-            )
-        with self.tmp_remove_nodes(substation_nodes or []):
-            internal_components = self._get_components()
+        If you want to get the components of the graph without certain nodes,
+        use the `tmp_remove_nodes` context manager.
+
+        Example:
+        >>> with graph.tmp_remove_nodes(substation_nodes):
+        >>>    components = graph.get_components()
+        """
+        internal_components = self._get_components()
         return [self._internals_to_externals(component) for component in internal_components]
 
     def get_connected(
