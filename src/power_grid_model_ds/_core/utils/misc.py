@@ -50,7 +50,8 @@ def array_equal_with_nan(array1: np.ndarray, array2: np.ndarray) -> bool:
     if array1.dtype.names != array2.dtype.names:
         return False
 
-    for column in array1.dtype.names:
+    columns: Sequence[str] = array1.dtype.names
+    for column in columns:
         column_dtype = array1.dtype[column]
         if np.issubdtype(column_dtype, np.str_):
             if not np.array_equal(array1[column], array2[column]):

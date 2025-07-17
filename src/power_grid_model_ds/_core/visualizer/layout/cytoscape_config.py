@@ -46,7 +46,7 @@ LAYOUT_DROPDOWN_HTML = [
             placeholder="Select layout",
             value="",
             clearable=False,
-            options=[{"label": name.capitalize(), "value": name} for name in LAYOUT_OPTIONS],
+            options=[{"label": name.capitalize(), "value": name} for name in LAYOUT_OPTIONS],  # type: ignore
             style={"width": "200px"},
         ),
         style={"margin": "0 20px 0 10px"},
