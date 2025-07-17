@@ -5,10 +5,13 @@
 from dataclasses import dataclass
 
 from power_grid_model_ds._core.model.grids.base import Grid
+from tests.fixtures.arrays import ExtendedLineArray, ExtendedNodeArray
 
 
 @dataclass
 class ExtendedGrid(Grid):
-    """Grid with an extra container"""
+    """ExtendedGrid class for testing purposes."""
 
+    node: ExtendedNodeArray
+    line: ExtendedLineArray
     extra_value: int = 123

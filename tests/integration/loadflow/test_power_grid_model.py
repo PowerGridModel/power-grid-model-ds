@@ -23,25 +23,10 @@ from power_grid_model_ds._core.model.arrays import (
 )
 from power_grid_model_ds._core.model.arrays.pgm_arrays import TransformerTapRegulatorArray
 from power_grid_model_ds._core.model.grids.base import Grid
+from tests.fixtures.arrays import ExtendedLineArray, ExtendedNodeArray
 from tests.unit.model.grids.test_custom_grid import CustomGrid
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
-
-
-class ExtendedNodeArray(NodeArray):
-    """Extends the node array with an output value"""
-
-    _defaults = {"u": 0}
-
-    u: NDArray[np.float64]
-
-
-class ExtendedLineArray(LineArray):
-    """Extends the line array with an output value"""
-
-    _defaults = {"i_from": 0}
-
-    i_from: NDArray[np.float64]
 
 
 def test_load_flow_on_random():

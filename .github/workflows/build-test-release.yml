@@ -3,16 +3,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
-name: Build, Test, Sonar and Publish
+name: Build, Test and Release
 
 on:
-  push:
-    branches:
-      - main
-  # run pipeline on pull request
-  pull_request:
-  # run pipeline on merge queue
-  merge_group:
   # run pipeline from another workflow
   workflow_call:
     inputs:
@@ -21,21 +14,16 @@ on:
         description: Create a (pre-)release when CI passes
         default: false
         required: false
-  # run this workflow manually from the Actions tab
-  workflow_dispatch:
-    inputs:
-      create_release:
-        type: boolean
-        description: Create a (pre-)release when CI passes
-        default: false
-        required: true
+    outputs:
+      tag:
+        description: "The created release tag"
+        value: ${{ jobs.github-release.outputs.tag }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-main
   cancel-in-progress: true
 
 jobs:
-
   build-python:
     runs-on: ubuntu-latest
     outputs:
@@ -45,15 +33,20 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Setup Python 3.11
+      - name: Setup Python 3.13
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.13"
+
+      - name: Set PyPI version
+        uses: PowerGridModel/pgm-version-bump@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
         run: |
-          pip install requests build
-          python set_pypi_version.py
+          cat PYPI_VERSION
+          pip install build
           python -m build --outdir wheelhouse .
 
       - name: Save version
@@ -66,44 +59,11 @@ jobs:
           name: power-grid-model-ds
           path: wheelhouse/
 
-  sonar-cloud:
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    steps:
-
-      - name: Checkout source code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-
-      - name: Setup Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install in develop mode
-        run: |
-          pip install -e .[dev]
-
-      - name: Test and Coverage
-        run: |
-          coverage run -m pytest 
-          coverage xml 
-          coverage report --fail-under=80
-
-      - name: SonarCloud Scan
-        if: ${{ (github.event_name == 'push') || (github.event.pull_request.head.repo.owner.login == 'PowerGridModel') }}
-        uses: SonarSource/sonarqube-scan-action@v5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
   tests:
     needs: build-python
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
         python: ["3.11", "3.12", "3.13"]
       fail-fast: false
     runs-on: ${{ matrix.os }}
@@ -129,26 +89,23 @@ jobs:
       - name: Unit test and coverage
         run: pytest --verbose
 
-  publish:
+  github-release:
     needs:
       - build-python
       - tests
-      - sonar-cloud
     permissions:
       contents: write
-    env:
-      TWINE_USERNAME: ${{ secrets.PYPI_USER }}
-      TWINE_PASSWORD: ${{ secrets.PYPI_PASS }}
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
+      - name: Setup Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
 
       - name: Checkout source code
         uses: actions/checkout@v4  # needed by 'Prevent automatic major/minor release'
-
-      - name: Setup Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
 
       - name: Load built wheel file
         uses: actions/download-artifact@v4
@@ -174,20 +131,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload wheels
-        if: (github.event_name == 'push') || ((github.event_name == 'workflow_dispatch') && (github.event.inputs.create_release == 'true'))
-        run: |
-          pip install twine
-          echo "Publish to PyPI..."
-          twine upload --verbose wheelhouse/*
+      - name: Get tag
+        id: tag
+        run: echo "tag=v${{ needs.build-python.outputs.version }}" >> $GITHUB_OUTPUT
+
+      - name: Display tag
+        run: echo "${{ steps.tag.outputs.tag }}"
 
       - name: Release
-        if: (github.event_name == 'push') || ((github.event_name == 'workflow_dispatch') && (github.event.inputs.create_release == 'true'))
+        if: (inputs.create_release)
         uses: softprops/action-gh-release@v2
         with:
           files: |
             ./wheelhouse/*
-          tag_name: v${{ needs.build-python.outputs.version }}
+          tag_name: ${{ steps.tag.outputs.tag }}
           prerelease: ${{github.ref != 'refs/heads/main'}}
           generate_release_notes: true
           target_commitish: ${{ github.sha }}

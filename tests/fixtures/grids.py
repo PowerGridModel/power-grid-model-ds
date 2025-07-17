@@ -8,12 +8,10 @@ from typing import TypeVar
 
 from power_grid_model_ds._core.model.arrays import (
     LineArray,
-    LinkArray,
     NodeArray,
     SourceArray,
     SymLoadArray,
     ThreeWindingTransformerArray,
-    TransformerArray,
 )
 from power_grid_model_ds._core.model.enums.nodes import NodeType
 from power_grid_model_ds._core.model.grids.base import Grid
@@ -44,18 +42,18 @@ def build_basic_grid(grid: T) -> T:
     #                      ***
 
     # Add Substations
-    substation = NodeArray(id=[101], u_rated=[10_500.0], node_type=[NodeType.SUBSTATION_NODE.value])
+    substation = grid.node.__class__(id=[101], u_rated=[10_500.0], node_type=[NodeType.SUBSTATION_NODE.value])
     grid.append(substation, check_max_id=False)
 
     # Add Nodes
-    nodes = NodeArray(
+    nodes = grid.node.__class__(
         id=[102, 103, 104, 105, 106],
         u_rated=[10_500.0] * 4 + [400.0],
     )
     grid.append(nodes, check_max_id=False)
 
     # Add Lines
-    lines = LineArray(
+    lines = grid.line.__class__(
         id=[201, 202, 203, 204],
         from_status=[1, 1, 0, 1],
         to_status=[1, 1, 0, 1],
@@ -70,7 +68,7 @@ def build_basic_grid(grid: T) -> T:
     grid.append(lines, check_max_id=False)
 
     # Add a transformer
-    transformer = TransformerArray.empty(1)
+    transformer = grid.transformer.__class__.empty(1)
     transformer.id = 301
     transformer.from_status = 1
     transformer.to_status = 1
@@ -80,7 +78,7 @@ def build_basic_grid(grid: T) -> T:
     grid.append(transformer, check_max_id=False)
 
     # Add a link
-    link = LinkArray.empty(1)
+    link = grid.link.__class__.empty(1)
     link.id = 601
     link.from_status = 1
     link.to_status = 1
@@ -90,7 +88,7 @@ def build_basic_grid(grid: T) -> T:
     grid.append(link, check_max_id=False)
 
     # Loads
-    loads = SymLoadArray(
+    loads = grid.sym_load.__class__(
         id=[401, 402, 403, 404],
         node=[102, 103, 104, 105],
         type=[1] * 4,
@@ -101,7 +99,7 @@ def build_basic_grid(grid: T) -> T:
     grid.append(loads, check_max_id=False)
 
     # Add Source
-    source = SourceArray(id=[501], node=[101], status=[1], u_ref=[0.0])
+    source = grid.source.__class__(id=[501], node=[101], status=[1], u_ref=[0.0])
     grid.append(source, check_max_id=False)
     grid.check_ids()
 

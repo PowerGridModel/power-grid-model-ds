@@ -12,7 +12,7 @@ def re_order(array: np.ndarray, new_order: ArrayLike, column: str = "id") -> np.
     """Re-order an id-array by the id column so that it follows a new_order.
     Expects the new_order input to contain the same values as self.id
     """
-    if column not in array.dtype.names:
+    if column not in (array.dtype.names or ()):
         raise ValueError(f"Cannot re-order array: column {column} does not exist.")
     if not np.array_equal(np.sort(array[column]), np.sort(new_order)):
         raise ValueError(f"Cannot re-order array: mismatch between new_order and values in '{column}'-column.")
@@ -50,7 +50,7 @@ def update_by_id(array: np.ndarray, ids: ArrayLike, allow_missing: bool, **kwarg
 
 def check_ids(array: np.ndarray, return_duplicates: bool = False) -> NDArray | None:
     """Check for duplicate ids within the array"""
-    if "id" not in array.dtype.names:
+    if "id" not in (array.dtype.names or ()):
         raise AttributeError("Array has no 'id' column.")
 
     unique, counts = np.unique(array["id"], return_counts=True)

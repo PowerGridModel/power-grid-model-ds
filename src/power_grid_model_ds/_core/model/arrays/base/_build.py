@@ -25,13 +25,13 @@ def build_array(*args: tuple[Any], dtype: np.dtype, defaults: dict[str, np.gener
         return array
 
     if isinstance(parsed_input, np.ndarray) and parsed_input.dtype.names:
-        _check_missing_columns(array.dtype.names, defaults, set(parsed_input.dtype.names))
+        _check_missing_columns(array.dtype.names or (), defaults, set(parsed_input.dtype.names))
         return _parse_structured_array(parsed_input, array)
     if isinstance(parsed_input, np.ndarray):
         # Note: defaults are not supported when working with unstructured arrays
         return _parse_array(parsed_input, array.dtype)
 
-    _check_missing_columns(array.dtype.names, defaults, set(parsed_input.keys()))
+    _check_missing_columns(array.dtype.names or (), defaults, set(parsed_input.keys()))
     _fill_with_kwargs(array, parsed_input)
     return array
 
@@ -54,7 +54,7 @@ def _parse_input(*args: Any, dtype: np.dtype, **kwargs):
     return {}, 0
 
 
-def _check_missing_columns(array_columns: tuple, defaults: dict[str, np.generic], provided_columns: set[str]):
+def _check_missing_columns(array_columns: tuple[str, ...], defaults: dict[str, np.generic], provided_columns: set[str]):
     required_columns = set(array_columns) - set(defaults.keys())
     if missing_columns := required_columns - provided_columns:
         raise ValueError(f"Missing required columns: {missing_columns}")
@@ -64,7 +64,8 @@ def _fill_defaults(array: np.ndarray, defaults: dict[str, np.generic]):
     """Fills the defaults into the array."""
     for column, default in defaults.items():
         if default is empty:
-            array[column] = empty(array.dtype[column])  # type: ignore[call-overload]
+            column_type: type = array.dtype[column]
+            array[column] = empty(column_type)  # type: ignore[call-overload]
         else:
             array[column] = default  # type: ignore[call-overload]
 
@@ -87,8 +88,8 @@ def _parse_structured_array(from_array: np.ndarray, to_array: np.ndarray) -> np.
 
 def _determine_column_overlap(from_array: np.ndarray, to_array: np.ndarray) -> tuple[list[str], list[str]]:
     """Returns two lists: columns present in both arrays and the columns that are only present in from_array"""
-    from_columns = set(from_array.dtype.names)
-    to_columns = set(to_array.dtype.names)
+    from_columns = set(from_array.dtype.names or ())
+    to_columns = set(to_array.dtype.names or ())
 
     return list(from_columns & to_columns), list(from_columns - to_columns)
 
