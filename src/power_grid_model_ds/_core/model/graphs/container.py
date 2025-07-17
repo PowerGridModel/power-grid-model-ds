@@ -69,15 +69,6 @@ class GraphContainer:
             graph = getattr(self, field.name)
             graph.add_branch_array(branch_array=branch_array)
 
-    def add_branch(self, branch: BranchArray) -> None:
-        """Add a branch to all graphs"""
-        warnings.warn(
-            "add_branch is deprecated and will be removed in a future release, use add_branch_array instead",
-            category=DeprecationWarning,
-            stacklevel=2,
-        )
-        self.add_branch_array(branch_array=branch)
-
     def add_branch3_array(self, branch3_array: Branch3Array) -> None:
         """Add a branch to all graphs"""
         for field in self.graph_attributes:
