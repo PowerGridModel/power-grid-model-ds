@@ -63,15 +63,6 @@ class GraphContainer:
             graph = getattr(self, field.name)
             graph.add_node_array(node_array=node_array, raise_on_fail=False)
 
-    def add_node(self, node: NodeArray) -> None:
-        """Add a node to all graphs"""
-        warnings.warn(
-            "add_node is deprecated and will be removed in a future release, use add_node_array instead",
-            category=DeprecationWarning,
-            stacklevel=2,
-        )
-        self.add_node_array(node_array=node)
-
     def add_branch_array(self, branch_array: BranchArray) -> None:
         """Add a branch to all graphs"""
         for field in self.graph_attributes:

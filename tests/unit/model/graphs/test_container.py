@@ -32,7 +32,7 @@ def graph_container_with_5_nodes():
     for node_id in range(1, 6):
         node = NodeArray.empty(1)
         node.id = node_id
-        graph_container.add_node(node)
+        graph_container.add_node_array(node)
     return graph_container
 
 
