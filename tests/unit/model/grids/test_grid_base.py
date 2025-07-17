@@ -9,6 +9,7 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from numpy.ma.testutils import assert_array_equal
 
 from power_grid_model_ds._core.model.arrays import (
     LineArray,
@@ -20,6 +21,7 @@ from power_grid_model_ds._core.model.arrays import (
 from power_grid_model_ds._core.model.constants import EMPTY_ID
 from power_grid_model_ds._core.model.grids.base import Grid
 from tests.fixtures.grid_classes import ExtendedGrid
+from tests.fixtures.grids import build_basic_grid
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
 
@@ -48,6 +50,20 @@ def test_initialize_empty_grid(grid: Grid):
 def test_initialize_empty_extended_grid():
     grid = ExtendedGrid.empty()
     assert isinstance(grid, ExtendedGrid)
+
+
+def test_from_extended_grid():
+    extended_grid = build_basic_grid(ExtendedGrid.empty())
+    grid = Grid.from_extended(extended_grid)
+    assert not isinstance(grid, ExtendedGrid)
+    assert_array_equal(grid.line.data, extended_grid.line.data[grid.line.columns])
+    assert grid.node.size
+    assert grid.branches.size
+    assert grid.graphs.active_graph.nr_nodes == len(grid.node)
+    assert grid.graphs.complete_graph.nr_nodes == len(grid.branches)
+
+    assert extended_grid.id_counter == grid.id_counter
+    assert extended_grid.max_id == grid.max_id
 
 
 def test_grid_build(basic_grid: Grid):
