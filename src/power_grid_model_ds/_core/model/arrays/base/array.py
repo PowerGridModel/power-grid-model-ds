@@ -329,7 +329,5 @@ class FancyArray(ABC):
         """Create an instance from an extended array."""
         if not isinstance(extended, cls):
             raise TypeError(f"Extended array must be of type {cls.__name__}, got {type(extended).__name__}")
-        new_array = cls.zeros(len(extended), empty_id=False)
-        for column in cls.get_dtype().names:
-            new_array[column] = extended[column]
-        return new_array
+        dtype = cls.get_dtype()
+        return cls(data=np.array(extended[list(dtype.names)], dtype=dtype))
