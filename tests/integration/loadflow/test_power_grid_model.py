@@ -183,10 +183,10 @@ class PowerGridModelInterfaceMethods:
 
         core_interface = PowerGridModelInterface(grid=grid)
         assert core_interface.model is None
-        assert core_interface.input_data is None
+        assert core_interface._input_data is None
         core_interface.setup_model()
         assert core_interface.model
-        assert core_interface.input_data
+        assert core_interface._input_data
 
 
 class TestCreateGridFromInputData:
