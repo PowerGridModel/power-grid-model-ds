@@ -15,9 +15,6 @@ if TYPE_CHECKING:
 
 T = TypeVar("T", bound="FancyArray")
 
-if TYPE_CHECKING:
-    pass
-
 
 def concatenate(fancy_array: T, *other_arrays: Union[T, np.ndarray]) -> T:
     """Concatenate arrays."""
