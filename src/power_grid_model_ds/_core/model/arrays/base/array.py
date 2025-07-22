@@ -66,7 +66,7 @@ class FancyArray(ABC):
             self._data = data
 
     @property
-    def data(self: Self):
+    def data(self: Self) -> NDArray:
         return self._data
 
     @classmethod

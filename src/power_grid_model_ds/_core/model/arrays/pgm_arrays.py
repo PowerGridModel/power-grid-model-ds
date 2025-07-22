@@ -9,6 +9,7 @@ from typing import Literal
 import numpy as np
 from numpy.typing import NDArray
 
+from power_grid_model_ds._core.fancypy import concatenate
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.dtypes.appliances import Source, SymGen, SymLoad
 from power_grid_model_ds._core.model.dtypes.branches import (
@@ -99,7 +100,26 @@ class TransformerArray(Transformer, BranchArray):
 
 
 class Branch3Array(IdArray, Branch3):
-    pass
+    def as_branches(self) -> BranchArray:
+        """Convert Branch3Array to BranchArray."""
+        branches_1_2 = BranchArray.empty(self.size)
+        branches_1_2.from_node = self.node_1
+        branches_1_2.to_node = self.node_2
+        branches_1_2.from_status = self.status_1
+        branches_1_2.to_status = self.status_2
+
+        branches_1_3 = BranchArray.empty(self.size)
+        branches_1_3.from_node = self.node_1
+        branches_1_3.to_node = self.node_3
+        branches_1_3.from_status = self.status_1
+        branches_1_3.to_status = self.status_3
+
+        branches_2_3 = BranchArray.empty(self.size)
+        branches_2_3.from_node = self.node_2
+        branches_2_3.to_node = self.node_3
+        branches_2_3.from_status = self.status_2
+        branches_2_3.to_status = self.status_3
+        return concatenate(branches_1_2, branches_1_3, branches_2_3)
 
 
 class ThreeWindingTransformerArray(Branch3Array, ThreeWindingTransformer):
