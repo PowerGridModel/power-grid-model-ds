@@ -15,7 +15,6 @@ from power_grid_model_ds._core.model.graphs.errors import (
     MissingNodeError,
     NoPathBetweenNodes,
 )
-from power_grid_model_ds._core.model.utils import _get_branch3_branches
 
 if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import Grid
@@ -175,8 +174,7 @@ class BaseGraphModel(ABC):
     def add_branch3_array(self, branch3_array: Branch3Array) -> None:
         """Add all branch3s in the branch3 array to the graph."""
         for branch3 in branch3_array:
-            branches = _get_branch3_branches(branch3)
-            self.add_branch_array(branches)
+            self.add_branch_array(branch3.as_branches())
 
     def delete_branch_array(self, branch_array: BranchArray, raise_on_fail: bool = True) -> None:
         """Delete all branches in branch_array from the graph."""
@@ -187,8 +185,7 @@ class BaseGraphModel(ABC):
     def delete_branch3_array(self, branch3_array: Branch3Array, raise_on_fail: bool = True) -> None:
         """Delete all branch3s in the branch3 array from the graph."""
         for branch3 in branch3_array:
-            branches = _get_branch3_branches(branch3)
-            self.delete_branch_array(branches, raise_on_fail=raise_on_fail)
+            self.delete_branch_array(branch3.as_branches(), raise_on_fail=raise_on_fail)
 
     @contextmanager
     def tmp_remove_nodes(self, nodes: list[int]) -> Generator:

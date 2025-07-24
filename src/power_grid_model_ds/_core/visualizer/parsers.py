@@ -6,7 +6,6 @@ from typing import Any, Literal
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.grids.base import Grid
-from power_grid_model_ds._core.model.utils import _get_branch3_branches
 from power_grid_model_ds.arrays import Branch3Array, BranchArray, NodeArray
 
 
@@ -41,15 +40,15 @@ def parse_branch3_array(branches: Branch3Array, group: Literal["transformer"]) -
     """Parse the three-winding transformer array."""
     parsed_branches = []
     columns = branches.columns
-    for branch in branches:
-        for branch_ in _get_branch3_branches(branch):
-            cyto_elements = {"data": _array_to_dict(branch_, columns)}
+    for branch3 in branches:
+        for branch1 in branch3.as_branches():
+            cyto_elements = {"data": _array_to_dict(branch1, columns)}
             cyto_elements["data"].update(
                 {
                     # IDs need to be unique, so we combine the branch ID with the from and to nodes
-                    "id": str(branch.id.item()) + f"_{branch_.from_node.item()}_{branch_.to_node.item()}",
-                    "source": str(branch_.from_node.item()),
-                    "target": str(branch_.to_node.item()),
+                    "id": str(branch3.id.item()) + f"_{branch1.from_node.item()}_{branch1.to_node.item()}",
+                    "source": str(branch1.from_node.item()),
+                    "target": str(branch1.to_node.item()),
                     "group": group,
                 }
             )
