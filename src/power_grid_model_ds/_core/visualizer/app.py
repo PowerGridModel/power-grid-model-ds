@@ -8,12 +8,13 @@ from dash_bootstrap_components.icons import FONT_AWESOME
 
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.callbacks import (  # noqa: F401  # pylint: disable=unused-import
-    element_scaling,
+    config,
     element_selection,
-    layout_dropdown,
+    header,
     search_form,
 )
 from power_grid_model_ds._core.visualizer.layout.cytoscape_html import get_cytoscape_html
+from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
 from power_grid_model_ds._core.visualizer.layout.header import HEADER_HTML
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
 from power_grid_model_ds._core.visualizer.parsers import parse_branches, parse_node_array
@@ -76,6 +77,7 @@ def get_app_layout(grid: Grid) -> html.Div:
     return html.Div(
         [
             columns_store,
+            dcc.Store(id="stylesheet-store", data=DEFAULT_STYLESHEET),
             HEADER_HTML,
             html.Hr(style={"border-color": "white", "margin": "0"}),
             cytoscape_html,

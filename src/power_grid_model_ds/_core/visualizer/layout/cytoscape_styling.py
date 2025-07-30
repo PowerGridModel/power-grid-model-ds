@@ -4,7 +4,12 @@
 
 """Contains selectors for the Cytoscape stylesheet."""
 
+from typing import Any
+
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
+
+STYLESHEET = list[dict[str, Any]]
+
 
 NODE_SIZE = 100
 BRANCH_WIDTH = 10

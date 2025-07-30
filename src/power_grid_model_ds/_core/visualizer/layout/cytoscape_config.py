@@ -44,11 +44,11 @@ LAYOUT_DROPDOWN_HTML = [
         dcc.Dropdown(
             id="dropdown-update-layout",
             placeholder="Select layout",
-            value="",
+            value="breadthfirst",
             clearable=False,
             options=[{"label": name.capitalize(), "value": name} for name in LAYOUT_OPTIONS],
             style={"width": "200px"},
         ),
-        style={"margin": "0 20px 0 10px"},
+        style={"margin": "0 20px 0 10px", "color": "black"},
     )
 ]

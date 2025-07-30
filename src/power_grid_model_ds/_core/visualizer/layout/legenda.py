@@ -37,5 +37,6 @@ LEGENDA_HTML = html.Div(
         "margin": _MARGIN,
         "width": "100%",
         "text-shadow": "0 0 5px #000",
+        # "display": "none",
     },
 )

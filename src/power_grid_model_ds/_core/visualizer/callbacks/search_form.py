@@ -1,12 +1,12 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
-from typing import Any
 
-from dash import Input, Output, callback
+from dash import Input, Output, State, callback
+from dash.exceptions import PreventUpdate
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
-from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
+from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import STYLESHEET
 
 
 @callback(
@@ -15,11 +15,12 @@ from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAUL
     Input("search-form-column-input", "value"),
     Input("search-form-operator-input", "value"),
     Input("search-form-value-input", "value"),
+    State("stylesheet-store", "data"),
 )
-def search_element(group: str, column: str, operator: str, value: str) -> list[dict[str, Any]]:
+def search_element(group: str, column: str, operator: str, value: str, stylesheet: STYLESHEET) -> STYLESHEET:
     """Color the specified element red based on the input values."""
     if not group or not column or not value:
-        return DEFAULT_STYLESHEET
+        raise PreventUpdate
 
     # Determine if we're working with a node or an edge type
     if group == "node":
@@ -39,7 +40,8 @@ def search_element(group: str, column: str, operator: str, value: str) -> list[d
         "selector": selector,
         "style": style,
     }
-    return DEFAULT_STYLESHEET + [new_style]
+    updated_stylesheet = stylesheet + [new_style]
+    return updated_stylesheet
 
 
 @callback(
