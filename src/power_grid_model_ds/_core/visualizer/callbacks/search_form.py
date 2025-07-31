@@ -6,7 +6,7 @@ from dash import Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
-from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import STYLESHEET
+from power_grid_model_ds._core.visualizer.typing import STYLESHEET
 
 
 @callback(

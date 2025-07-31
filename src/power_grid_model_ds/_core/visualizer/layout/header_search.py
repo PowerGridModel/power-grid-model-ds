@@ -44,21 +44,15 @@ OPERATOR_INPUT = dbc.Select(
 
 
 # Arrange as a sentence
-SEARCH_FORM_HTML = html.Div(
-    [
-        html.Span("Search ", style=SPAN_TEXT_STYLE),
-        GROUP_INPUT,
-        html.Span(" with ", className="mx-2", style=SPAN_TEXT_STYLE),
-        COLUMN_INPUT,
-        OPERATOR_INPUT,
-        VALUE_INPUT,
-    ],
-    style={
-        "display": "flex",
-        "align-items": "center",
-        "justify-content": "center",  # Centers items horizontally
-        "padding": "10px",
-        "margin": "0 auto",  # Centers the container itself
-        "width": "100%",  # Ensures the container takes full width
-    },
-)
+SEARCH_ELEMENTS = [
+    html.Div(
+        [
+            html.Span("Search ", style=SPAN_TEXT_STYLE),
+            GROUP_INPUT,
+            html.Span(" with ", style=SPAN_TEXT_STYLE),
+            COLUMN_INPUT,
+            OPERATOR_INPUT,
+            VALUE_INPUT,
+        ]
+    )
+]

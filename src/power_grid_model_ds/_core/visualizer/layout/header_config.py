@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+import dash_bootstrap_components as dbc
 from dash import dcc, html
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
@@ -32,23 +33,28 @@ EDGE_SCALE_HTML = [
     ),
 ]
 
-SCALE_INPUTS = [
-    html.Div(
-        NODE_SCALE_HTML + EDGE_SCALE_HTML,
-        style={"margin": "0 20px 0 10px"},
-    ),
-]
+_SCALING_DIV = html.Div(NODE_SCALE_HTML + EDGE_SCALE_HTML, style={"margin": "0 20px 0 10px"})
 
-LAYOUT_DROPDOWN_HTML = [
-    html.Div(
-        dcc.Dropdown(
-            id="dropdown-update-layout",
-            placeholder="Select layout",
-            value="breadthfirst",
-            clearable=False,
-            options=[{"label": name.capitalize(), "value": name} for name in LAYOUT_OPTIONS],
-            style={"width": "200px"},
-        ),
-        style={"margin": "0 20px 0 10px", "color": "black"},
-    )
-]
+
+_LAYOUT_DROPDOWN = html.Div(
+    dcc.Dropdown(
+        id="dropdown-update-layout",
+        placeholder="Select layout",
+        value="breadthfirst",
+        clearable=False,
+        options=[{"label": name.capitalize(), "value": name} for name in LAYOUT_OPTIONS],
+        style={"width": "200px"},
+    ),
+    style={"margin": "0 20px 0 10px", "color": "black"},
+)
+
+
+_ARROWS_CHECKBOX = dbc.Checkbox(
+    id="show-arrows",
+    label="Show arrows",
+    value=True,
+    label_style={"color": "white"},
+    style={"margin-top": "10px"},
+)
+
+CONFIG_ELEMENTS = [_LAYOUT_DROPDOWN, _ARROWS_CHECKBOX, _SCALING_DIV]

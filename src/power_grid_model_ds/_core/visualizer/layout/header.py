@@ -5,23 +5,21 @@
 import dash_bootstrap_components as dbc
 from dash import html
 
-from power_grid_model_ds._core.visualizer.layout.cytoscape_config import LAYOUT_DROPDOWN_HTML, SCALE_INPUTS
-from power_grid_model_ds._core.visualizer.layout.legenda import LEGENDA_HTML
-from power_grid_model_ds._core.visualizer.layout.search_form import SEARCH_FORM_HTML
+from power_grid_model_ds._core.visualizer.layout.header_config import CONFIG_ELEMENTS
+from power_grid_model_ds._core.visualizer.layout.header_legenda import LEGENDA_ELEMENTS, LEGENDA_STYLE
+from power_grid_model_ds._core.visualizer.layout.header_search import SEARCH_ELEMENTS
 
-SHOW_ARROWS_CHECKBOX = dbc.Checkbox(
-    id="show-arrows",
-    label="Show arrows",
-    value=True,
-    className="me-2",
-    label_style={"color": "white"},
-    style={"margin-top": "10px"},
-)
-CONFIG_DIV = html.Div(
-    SCALE_INPUTS + LAYOUT_DROPDOWN_HTML + [SHOW_ARROWS_CHECKBOX],
-    className="d-flex justify-content-end align-items-center",
-)
-SEARCH_DIV = html.Div(SEARCH_FORM_HTML)
+_CONTENT_COLUMN_STYLE = {
+    "display": "flex",
+    "align-items": "center",
+    "width": "100%",
+}
+
+
+CONFIG_DIV = html.Div(CONFIG_ELEMENTS, style=_CONTENT_COLUMN_STYLE | {"justify-content": "space-between"})
+SEARCH_DIV = html.Div(SEARCH_ELEMENTS, style=_CONTENT_COLUMN_STYLE | {"justify-content": "center"})
+LEGENDA_DIV = html.Div(LEGENDA_ELEMENTS, style=_CONTENT_COLUMN_STYLE | LEGENDA_STYLE)
+
 
 HEADER_HTML = dbc.Row(
     [
@@ -40,12 +38,14 @@ HEADER_HTML = dbc.Row(
             },
         ),
         dbc.Col(
-            html.Div([LEGENDA_HTML, SEARCH_DIV, CONFIG_DIV], id="right-col-content", className="text-end"),
+            [LEGENDA_DIV, SEARCH_DIV, CONFIG_DIV],
+            id="right-col-content",
             width=7,
             style={
                 "display": "flex",
                 "align-items": "center",
-                "justify-content": "center",
+                "justify-content": "space-between",
+                # "width": "100%",
             },
         ),
     ],
@@ -55,7 +55,7 @@ HEADER_HTML = dbc.Row(
         "padding": "1rem 0",
         "margin": 0,
         "height": "90px",
+        "width": "100%",
     },
-    className="g-0",
     align="center",
 )
