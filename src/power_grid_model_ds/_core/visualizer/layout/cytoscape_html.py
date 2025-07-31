@@ -10,8 +10,6 @@ from dash import html
 from power_grid_model_ds._core.visualizer.layout.colors import BACKGROUND_COLOR
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
 
-LAYOUT_OPTIONS = ["random", "circle", "concentric", "grid", "cose", "breadthfirst"]
-
 _CYTO_INNER_STYLE = {"width": "100%", "height": "100%", "background-color": BACKGROUND_COLOR}
 _CYTO_OUTER_STYLE = {"height": "80vh"}
 
