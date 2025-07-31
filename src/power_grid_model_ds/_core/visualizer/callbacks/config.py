@@ -62,8 +62,5 @@ def update_arrows(show_arrows, current_stylesheet):
     index = selectors.index("edge")
     edge_style = current_stylesheet[index]["style"]
 
-    if show_arrows:
-        edge_style["target-arrow-shape"] = "triangle"
-    else:
-        edge_style["target-arrow-shape"] = "none"
+    edge_style["target-arrow-shape"] = "triangle" if show_arrows else "none"
     return current_stylesheet
