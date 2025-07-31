@@ -53,7 +53,7 @@ _LAYOUT_DROPDOWN = html.Div(
         placeholder="Select layout",
         value=LayoutOptions.BREADTHFIRST.value,
         clearable=False,
-        options=[{"label": option.name, "value": option.value} for option in LayoutOptions],
+        options=[{"label": option.value, "value": option.value} for option in LayoutOptions],
         style={"width": "200px"},
     ),
     style={"margin": "0 20px 0 10px", "color": "black"},

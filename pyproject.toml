@@ -46,7 +46,7 @@ dev = [
   "pre-commit>=4",
   # Visualization (make sure these stay equalivalent to the 'visualizer' group)
   "dash>=3.0.0",
-  "dash-bootstrap-components>=2.0.0",
+  "dash-bootstrap-components>=2.0.3",
   "dash-cytoscape>=1.0.2",
 ]
 

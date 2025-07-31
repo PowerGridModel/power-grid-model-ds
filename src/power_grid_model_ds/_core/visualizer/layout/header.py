@@ -9,45 +9,44 @@ from power_grid_model_ds._core.visualizer.layout.header_config import CONFIG_ELE
 from power_grid_model_ds._core.visualizer.layout.header_legenda import LEGENDA_ELEMENTS, LEGENDA_STYLE
 from power_grid_model_ds._core.visualizer.layout.header_search import SEARCH_ELEMENTS
 
-_CONTENT_COLUMN_STYLE = {
+_LEFT_COLUMN_HTML = dbc.Col(
+    [
+        dbc.Button("Legend", id="btn-legend", className="me-2 btn-outline-primary"),
+        dbc.Button("Search", id="btn-search", className="me-2 btn-outline-primary"),
+        dbc.Button("Config", id="btn-config", className="me-2 btn-outline-primary"),
+    ],
+    id="header-left-col",
+    width=5,
+    style={
+        "display": "flex",
+        "align-items": "center",
+        "justify-content": "center",
+        "border-right": "1px solid white",
+    },
+)
+
+
+_RIGHT_COLUMN_STYLE = {
     "display": "flex",
     "align-items": "center",
     "width": "100%",
 }
 
 
-CONFIG_DIV = html.Div(CONFIG_ELEMENTS, style=_CONTENT_COLUMN_STYLE | {"justify-content": "space-between"})
-SEARCH_DIV = html.Div(SEARCH_ELEMENTS, style=_CONTENT_COLUMN_STYLE | {"justify-content": "center"})
-LEGENDA_DIV = html.Div(LEGENDA_ELEMENTS, style=_CONTENT_COLUMN_STYLE | LEGENDA_STYLE)
+CONFIG_DIV = html.Div(CONFIG_ELEMENTS, style=_RIGHT_COLUMN_STYLE | {"justify-content": "space-between"})
+SEARCH_DIV = html.Div(SEARCH_ELEMENTS, style=_RIGHT_COLUMN_STYLE | {"justify-content": "center"})
+LEGENDA_DIV = html.Div(LEGENDA_ELEMENTS, style=_RIGHT_COLUMN_STYLE | LEGENDA_STYLE)
 
+_RIGHT_COLUMN_HTML = dbc.Col(
+    [LEGENDA_DIV, SEARCH_DIV, CONFIG_DIV],
+    id="header-right-col",
+    width=7,
+)
 
 HEADER_HTML = dbc.Row(
     [
-        dbc.Col(
-            [
-                dbc.Button("Legend", id="btn-legend", color="primary", className="me-2"),
-                dbc.Button("Search", id="btn-search", color="secondary", className="me-2"),
-                dbc.Button("Config", id="btn-config", color="success", className="me-2"),
-            ],
-            width=5,
-            style={
-                "display": "flex",
-                "align-items": "center",
-                "justify-content": "center",
-                "border-right": "1px solid white",
-            },
-        ),
-        dbc.Col(
-            [LEGENDA_DIV, SEARCH_DIV, CONFIG_DIV],
-            id="right-col-content",
-            width=7,
-            style={
-                "display": "flex",
-                "align-items": "center",
-                "justify-content": "space-between",
-                # "width": "100%",
-            },
-        ),
+        _LEFT_COLUMN_HTML,
+        _RIGHT_COLUMN_HTML,
     ],
     style={
         "background-color": "#343a40",

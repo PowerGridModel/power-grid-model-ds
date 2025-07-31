@@ -9,7 +9,7 @@ from power_grid_model_ds._core.visualizer.layout.header import CONFIG_DIV, LEGEN
 
 
 @callback(
-    Output("right-col-content", "children"),
+    Output("header-right-col", "children"),
     [
         Input("btn-legend", "n_clicks"),
         Input("btn-search", "n_clicks"),
