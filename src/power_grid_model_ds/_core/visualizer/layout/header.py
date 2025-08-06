@@ -9,11 +9,13 @@ from power_grid_model_ds._core.visualizer.layout.header_config import CONFIG_ELE
 from power_grid_model_ds._core.visualizer.layout.header_legenda import LEGENDA_ELEMENTS, LEGENDA_STYLE
 from power_grid_model_ds._core.visualizer.layout.header_search import SEARCH_ELEMENTS
 
+_MENU_BUTTON_STYLE_CLASS = "me-2 btn-outline-primary"
+
 _LEFT_COLUMN_HTML = dbc.Col(
     [
-        dbc.Button("Legend", id="btn-legend", className="me-2 btn-outline-primary"),
-        dbc.Button("Search", id="btn-search", className="me-2 btn-outline-primary"),
-        dbc.Button("Config", id="btn-config", className="me-2 btn-outline-primary"),
+        dbc.Button("Legend", id="btn-legend", className=_MENU_BUTTON_STYLE_CLASS),
+        dbc.Button("Search", id="btn-search", className=_MENU_BUTTON_STYLE_CLASS),
+        dbc.Button("Config", id="btn-config", className=_MENU_BUTTON_STYLE_CLASS),
     ],
     id="header-left-col",
     width=5,
