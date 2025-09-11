@@ -6,7 +6,9 @@ repos:
   - repo: local
     hooks:
       - id: quality-checks
-        name: Run all quality checks
+        name: Running 'poe all --check'
         entry: poe all --check
         language: system
         types: [python]
+        always_run: true
+        pass_filenames: false
