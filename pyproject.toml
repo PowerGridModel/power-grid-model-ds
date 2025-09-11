@@ -36,18 +36,16 @@ dynamic = ["version"]
 [dependency-groups]
 pandas = ["pandas>=2.2.1"]
 dev = [
-  "pylint>=3.1.0",
-  "pytest>=8.1.1",
-  "coverage>=7.4.4",
-  "black>=24.3.0",
-  "ruff>=0.3.5",
-  "isort>=5.13.2",
-  "mypy>=1.9.0",
-  "pre-commit>=4",
+  "pylint",
+  "pytest",
+  "coverage",
+  "ruff",
+  "mypy",
+  "pre-commit",
   # Visualization (make sure these stay equalivalent to the 'visualizer' group)
-  "dash>=3.0.0",
-  "dash-bootstrap-components>=2.0.3",
-  "dash-cytoscape>=1.0.2",
+  "dash",
+  "dash-bootstrap-components",
+  "dash-cytoscape",
 ]
 
 visualizer = [
@@ -123,17 +121,34 @@ disable_error_code = ["assignment", "import-untyped"]
 
 [tool.coverage.run]
 relative_files = true
-branch = true
+source = ["src"]
+command_line = '--module pytest'
 
 [tool.coverage.report]
+fail_under = 90
 exclude_also = [
   'if TYPE_CHECKING:',
 ]
 
+[tool.poe.tasks.all]
+help = "Run all CI calls"
+control.expr = "check"
+args = [{name = "check", type="boolean", help= "Does not correct files, only warns"}]
+  [[tool.poe.tasks.all.switch]]
+  case     = "True"
+  sequence = ["lint --check", "format --check", "lock", "type", "cover", "report"]
+
+  [[tool.poe.tasks.all.switch]]
+  sequence = ["lint", "format", "lock", "type", "cover", "report"]
+
+
 [tool.poe.tasks.lint]
-help = "Lint code (with ruff)"
+help = "Lint code (with ruff & pylint)"
 # --no-fix does override --fix in ruff, if --check is given to poe.
-cmd = 'ruff check --fix --show-fixes ${check:+ --no-fix}'
+sequence = [
+  {cmd='ruff check --fix --show-fixes ${check:+ --no-fix}'},
+  {cmd="pylint src"},
+]
 args=[{name = "check", type="boolean", help= "Does not correct files, only warns"}]
 
 [tool.poe.tasks.format]
@@ -146,9 +161,17 @@ help = "Sort imports (with ruff)"
 cmd = 'ruff check --select I --fix --show-fixes ${check:+ --no-fix}'
 args=[{name = "check", type="boolean", help= "Does not correct files, only warns"}]
 
+[tool.poe.tasks.type]
+help = "Type check code (with mypy)"
+cmd = "mypy src tests"
+
 [tool.poe.tasks.tests]
 help = "Run tests"
 cmd = "pytest"
+
+[tool.poe.tasks.lock]
+help = "Asserts that dependencies are locked"
+cmd = "uv lock --check"
 
 [tool.poe.tasks.cover]
 help = "Run tests (and gather coverage)"
