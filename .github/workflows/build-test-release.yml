@@ -14,6 +14,11 @@ on:
         description: Create a (pre-)release when CI passes
         default: false
         required: false
+      update_dependencies:
+        type: boolean
+        description: Update dependencies to their latest version
+        default: false
+        required: false
     outputs:
       tag:
         description: "The created release tag"
@@ -31,33 +36,41 @@ jobs:
     steps:
 
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Setup Python 3.13
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        if: ${{ always() }}
         with:
-          python-version: "3.13"
+            activate-environment: true
+            enable-cache: true
+    
+      - name: Install dependencies
+        if: ${{ always() }}
+        run: uv sync
+
+      - name: Update dependencies
+        if: ${{ inputs.update_dependencies }}
+        run: uv update
 
       - name: Set PyPI version
         uses: PowerGridModel/pgm-version-bump@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build
-        run: |
-          cat PYPI_VERSION
-          pip install build
-          python -m build --outdir wheelhouse .
-
       - name: Save version
         id: version
         run: echo "version=$(cat PYPI_VERSION)" >> $GITHUB_OUTPUT
 
+      - name: Build
+        run: |
+          uv build
+        
       - name: Store built wheel file
         uses: actions/upload-artifact@v4
         with:
           name: power-grid-model-ds
-          path: wheelhouse/
+          path: dist/
 
   tests:
     needs: build-python
@@ -70,26 +83,33 @@ jobs:
 
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Setup Python ${{ matrix.python }}
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        if: ${{ always() }}
         with:
-          python-version: ${{ matrix.python }}
+          activate-environment: true
+          enable-cache: true
+
+      - name: install poe
+        run: uv tool install poethepoet
 
       - name: Load built wheel file
         uses: actions/download-artifact@v4
         with:
           name: power-grid-model-ds
-          path: wheelhouse/
+          path: dist/
 
       - name: Install built wheel file
-        run: pip install power-grid-model-ds[dev]==${{ needs.build-python.outputs.version }} --find-links=wheelhouse
+        run: uv pip install power-grid-model-ds[dev]==${{ needs.build-python.outputs.version }} --find-links=dist
 
-      - name: Unit test and coverage
-        run: pytest --verbose
+      - name: Run Code Quality Checks & Tests
+        run: poe all --check
+      
 
   github-release:
+    if: ${{ inputs.create_release == 'true' }}
     needs:
       - build-python
       - tests
@@ -99,19 +119,14 @@ jobs:
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
     steps:
-      - name: Setup Python 3.13
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-
       - name: Checkout source code
-        uses: actions/checkout@v4  # needed by 'Prevent automatic major/minor release'
+        uses: actions/checkout@v5
 
       - name: Load built wheel file
         uses: actions/download-artifact@v4
         with:
           name: power-grid-model-ds
-          path: wheelhouse/
+          path: dist/
 
       - name: Prevent automatic major/minor release
         if: (github.event_name == 'push')
@@ -143,7 +158,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ./wheelhouse/*
+            ./dist/*
           tag_name: ${{ steps.tag.outputs.tag }}
           prerelease: ${{github.ref != 'refs/heads/main'}}
           generate_release_notes: true
