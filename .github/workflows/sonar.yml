@@ -40,7 +40,7 @@ jobs:
 
       - name: Install dependencies
         if: ${{ always() }}
-        run: uv sync --dev
+        run: uv sync --frozen --dev
 
       - name: Test and Coverage
         run: |
