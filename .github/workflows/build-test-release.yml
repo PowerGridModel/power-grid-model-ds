@@ -49,10 +49,6 @@ jobs:
         if: ${{ always() }}
         run: uv sync --frozen
 
-      - name: Update dependencies
-        if: ${{ inputs.update_dependencies }}
-        run: uv update
-
       - name: Set PyPI version
         uses: PowerGridModel/pgm-version-bump@main
         with:

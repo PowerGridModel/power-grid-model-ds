@@ -40,11 +40,11 @@ jobs:
 
       - name: Install dependencies
         if: ${{ always() }}
-        run: uv sync --dev
+        run: uv sync --frozen --dev
 
       - name: Update dependencies
         if: ${{ inputs.update_dependencies && always() }}
-        run: uv update
+        run: uv sync --upgrade --dev
 
       - name: lint
         if: ${{ always() }}
