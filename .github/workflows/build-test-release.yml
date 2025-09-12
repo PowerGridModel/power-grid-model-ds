@@ -104,7 +104,7 @@ jobs:
       - name: Install built wheel file
         run: uv pip install power-grid-model-ds[dev]==${{ needs.build-python.outputs.version }} --find-links=dist
 
-      - name: Run Code Quality Checks & Tests
+      - name: Run All Code Quality Checks & Tests
         run: poe all --check
       
 

@@ -35,6 +35,7 @@ jobs:
           enable-cache: true
 
       - name: install poe
+        if: ${{ always() }}
         run: uv tool install poethepoet
 
       - name: Install dependencies
@@ -42,8 +43,28 @@ jobs:
         run: uv sync --dev
 
       - name: Update dependencies
-        if: ${{ inputs.update_dependencies }}
+        if: ${{ inputs.update_dependencies && always() }}
         run: uv update
 
-      - name: Run Code Quality Checks & Tests
-        run: poe all --check
+      - name: lint
+        if: ${{ always() }}
+        run: poe lint --check
+      - name: format
+        if: ${{ always() }}
+        run: poe format --check
+      - name: lock
+        if: ${{ always() }}
+        run: poe lock
+      - name: type
+        if: ${{ always() }}
+        run: poe type
+      - name: cover
+        if: ${{ always() }}
+        run: poe cover
+      - name: report
+        if: ${{ always() }}
+        run: poe report
+
+      - name: Actually stop now if any quality control failed
+        if: ${{ failure() }}
+        run: exit 1
