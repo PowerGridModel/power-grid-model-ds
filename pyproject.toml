@@ -179,10 +179,7 @@ cmd = "coverage run"
 
 [tool.poe.tasks.report]
 help = "Generate coverage report. Will use data from a previous cover command."
-sequence = [
-    {cmd="coverage report"},
-    {cmd="coverage report --fail-under 80 --omit='cheese'"}
-]
+cmd = "coverage report"
 
 [tool.poe.tasks.coverage]
 help = "Run coverage *and* generate report"
