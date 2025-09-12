@@ -33,8 +33,20 @@ dependencies = [
 ]
 dynamic = ["version"]
 
-[dependency-groups]
+[project.optional-dependencies]
+# Published optional dependencies, or "extras".
+
+visualizer = [
+  # Visualization (make sure these are also updated in the 'dev' group)
+  "dash>=3.0.0",
+  "dash-bootstrap-components>=2.0.0",
+  "dash-cytoscape>=1.0.2",
+]
 pandas = ["pandas>=2.2.1"]
+
+[dependency-groups]
+# Local dependencies for development.
+
 dev = [
   "pylint",
   "pytest",
@@ -43,13 +55,6 @@ dev = [
   "mypy",
   "pre-commit",
   # Visualization (make sure these stay equalivalent to the 'visualizer' group)
-  "dash",
-  "dash-bootstrap-components",
-  "dash-cytoscape",
-]
-
-visualizer = [
-  # Visualization (make sure these are also updated in the 'dev' group)
   "dash>=3.0.0",
   "dash-bootstrap-components>=2.0.0",
   "dash-cytoscape>=1.0.2",
@@ -63,7 +68,6 @@ doc = [
   "sphinx-hoverxref",
   "numpydoc",
 ]
-
 
 [project.urls]
 Home-page = "https://lfenergy.org/projects/power-grid-model/"

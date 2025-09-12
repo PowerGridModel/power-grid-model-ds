@@ -1107,6 +1107,16 @@ dependencies = [
     { name = "rustworkx" },
 ]
 
+[package.optional-dependencies]
+pandas = [
+    { name = "pandas" },
+]
+visualizer = [
+    { name = "dash" },
+    { name = "dash-bootstrap-components" },
+    { name = "dash-cytoscape" },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "coverage" },
@@ -1127,28 +1137,25 @@ doc = [
     { name = "sphinx-hoverxref" },
     { name = "sphinx-rtd-theme" },
 ]
-pandas = [
-    { name = "pandas" },
-]
-visualizer = [
-    { name = "dash" },
-    { name = "dash-bootstrap-components" },
-    { name = "dash-cytoscape" },
-]
 
 [package.metadata]
 requires-dist = [
+    { name = "dash", marker = "extra == 'visualizer'", specifier = ">=3.0.0" },
+    { name = "dash-bootstrap-components", marker = "extra == 'visualizer'", specifier = ">=2.0.0" },
+    { name = "dash-cytoscape", marker = "extra == 'visualizer'", specifier = ">=1.0.2" },
     { name = "numpy", specifier = ">=1.21" },
+    { name = "pandas", marker = "extra == 'pandas'", specifier = ">=2.2.1" },
     { name = "power-grid-model", specifier = ">=1.7" },
     { name = "rustworkx", specifier = ">=0.15.1" },
 ]
+provides-extras = ["visualizer", "pandas"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "coverage" },
-    { name = "dash" },
-    { name = "dash-bootstrap-components" },
-    { name = "dash-cytoscape" },
+    { name = "dash", specifier = ">=3.0.0" },
+    { name = "dash-bootstrap-components", specifier = ">=2.0.0" },
+    { name = "dash-cytoscape", specifier = ">=1.0.2" },
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "pylint" },
@@ -1162,12 +1169,6 @@ doc = [
     { name = "sphinx" },
     { name = "sphinx-hoverxref" },
     { name = "sphinx-rtd-theme" },
-]
-pandas = [{ name = "pandas", specifier = ">=2.2.1" }]
-visualizer = [
-    { name = "dash", specifier = ">=3.0.0" },
-    { name = "dash-bootstrap-components", specifier = ">=2.0.0" },
-    { name = "dash-cytoscape", specifier = ">=1.0.2" },
 ]
 
 [[package]]
