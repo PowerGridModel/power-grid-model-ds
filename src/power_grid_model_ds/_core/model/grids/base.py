@@ -451,7 +451,7 @@ class Grid(FancyArrayContainer):
         for field in dataclasses.fields(cls):
             if field.name == "node":
                 continue  # already added
-            if issubclass(field.type, FancyArray):
+            if isinstance(field.type, type) and issubclass(field.type, FancyArray):
                 extended_array = getattr(extended, field.name)
                 new_array = field.type.from_extended(extended_array)
                 new_grid.append(new_array, check_max_id=False)
