@@ -35,6 +35,9 @@ jobs:
           activate-environment: true
           enable-cache: true
 
+      - name: install poe
+        run: uv tool install poethepoet
+
       - name: Install dependencies
         if: ${{ always() }}
         run: uv sync --dev
