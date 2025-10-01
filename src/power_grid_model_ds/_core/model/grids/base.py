@@ -153,7 +153,7 @@ class Grid(FancyArrayContainer):
         return branch_arrays
 
     def get_typed_branches(self, branch_ids: list[int] | npt.NDArray[np.int32]) -> BranchArray:
-        """Find a matching LineArray, LinkArray or TransformerArray for the given branch_ids
+        """Find a matching Branch-subtype array for the given branch_ids
 
         Raises:
             ValueError:
@@ -174,7 +174,7 @@ class Grid(FancyArrayContainer):
         """Reverse the direction of the branches."""
         if not branches.size:
             return
-        if not isinstance(branches, (LineArray, LinkArray, TransformerArray)):
+        if not isinstance(branches, (LineArray, LinkArray, TransformerArray, GenericBranchArray, AsymLineArray)):
             try:
                 branches = self.get_typed_branches(branches.id)
             except ValueError:
