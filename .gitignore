@@ -37,6 +37,7 @@ settings.json
 # overage
 htmlcov
 .coverage
+coverage.xml
 
 # caching
 *.pickle
