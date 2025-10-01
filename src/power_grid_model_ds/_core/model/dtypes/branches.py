@@ -59,7 +59,6 @@ class GenericBranch(Branch):
     sn: NDArray[np.float64]  # rated power
 
     _defaults = {
-        **Branch._defaults,
         "k": 1.0,
         "theta": 0.0,
         "sn": 0.0,
@@ -187,8 +186,6 @@ class AsymLine(Branch):
     i_n: NDArray[np.float64]  # rated current
 
     _defaults = {
-        **Branch._defaults,
-        # neutral / optional values default to empty sentinel so we can detect omission
         "r_na": empty,
         "r_nb": empty,
         "r_nc": empty,
