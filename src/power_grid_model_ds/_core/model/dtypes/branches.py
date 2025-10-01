@@ -154,10 +154,6 @@ class AsymLine(Branch):
     r_ca: NDArray[np.float64]
     r_cb: NDArray[np.float64]
     r_cc: NDArray[np.float64]
-    r_na: NDArray[np.float64]  # optional neutral
-    r_nb: NDArray[np.float64]
-    r_nc: NDArray[np.float64]
-    r_nn: NDArray[np.float64]
 
     # Reactance matrix entries (series)
     x_aa: NDArray[np.float64]
@@ -166,41 +162,9 @@ class AsymLine(Branch):
     x_ca: NDArray[np.float64]
     x_cb: NDArray[np.float64]
     x_cc: NDArray[np.float64]
-    x_na: NDArray[np.float64]
-    x_nb: NDArray[np.float64]
-    x_nc: NDArray[np.float64]
-    x_nn: NDArray[np.float64]
-
-    # Capacitance matrix entries (shunt) optional
-    c_aa: NDArray[np.float64]
-    c_ba: NDArray[np.float64]
-    c_bb: NDArray[np.float64]
-    c_ca: NDArray[np.float64]
-    c_cb: NDArray[np.float64]
-    c_cc: NDArray[np.float64]
 
     # Alternative sequence capacitances
     c0: NDArray[np.float64]
     c1: NDArray[np.float64]
 
     i_n: NDArray[np.float64]  # rated current
-
-    _defaults = {
-        "r_na": empty,
-        "r_nb": empty,
-        "r_nc": empty,
-        "r_nn": empty,
-        "x_na": empty,
-        "x_nb": empty,
-        "x_nc": empty,
-        "x_nn": empty,
-        "c_aa": empty,
-        "c_ba": empty,
-        "c_bb": empty,
-        "c_ca": empty,
-        "c_cb": empty,
-        "c_cc": empty,
-        "c0": empty,
-        "c1": empty,
-        "i_n": empty,
-    }
