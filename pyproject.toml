@@ -29,7 +29,7 @@ requires-python = ">=3.11,<3.14"
 dependencies = [
     "power-grid-model>=1.7",
     "rustworkx>= 0.15.1",
-    "numpy>=1.21",
+    "numpy>=2.0",
 ]
 dynamic = ["version"]
 
