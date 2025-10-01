@@ -17,13 +17,17 @@ import numpy.typing as npt
 
 from power_grid_model_ds._core import fancypy as fp
 from power_grid_model_ds._core.model.arrays import (
+    AsymCurrentSensorArray,
+    AsymLineArray,
     AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
+    GenericBranchArray,
     LineArray,
     LinkArray,
     NodeArray,
     SourceArray,
+    SymCurrentSensorArray,
     SymGenArray,
     SymLoadArray,
     SymPowerSensorArray,
@@ -72,6 +76,8 @@ class Grid(FancyArrayContainer):
     three_winding_transformer: ThreeWindingTransformerArray
     line: LineArray
     link: LinkArray
+    generic_branch: GenericBranchArray
+    asym_line: AsymLineArray
 
     source: SourceArray
     sym_load: SymLoadArray
@@ -84,6 +90,8 @@ class Grid(FancyArrayContainer):
     sym_power_sensor: SymPowerSensorArray
     sym_voltage_sensor: SymVoltageSensorArray
     asym_voltage_sensor: AsymVoltageSensorArray
+    sym_current_sensor: SymCurrentSensorArray
+    asym_current_sensor: AsymCurrentSensorArray
 
     def __str__(self) -> str:
         """String representation of the grid.
@@ -114,8 +122,12 @@ class Grid(FancyArrayContainer):
                 suffix_str = f"{suffix_str},link"
             elif branch.id in self.line.id:
                 pass  # no suffix needed
+            elif branch.id in self.generic_branch.id:
+                suffix_str = f"{suffix_str},generic_branch"
+            elif branch.id in self.asym_line.id:
+                suffix_str = f"{suffix_str},asym_line"
             else:
-                raise ValueError(f"Branch {branch.id} is not a transformer, link or line")
+                raise ValueError(f"Branch {branch.id} is not a transformer, link, line, generic_branch or asym_line")
 
             grid_str += f"{from_node_str} {to_node_str} {suffix_str}\n"
         return grid_str

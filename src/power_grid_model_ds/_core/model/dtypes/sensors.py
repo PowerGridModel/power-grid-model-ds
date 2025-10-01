@@ -61,3 +61,26 @@ class AsymVoltageSensor(GenericVoltageSensor):
     u_sigma: NDArray3[np.float64]  # std of 3 voltages
     u_measured: NDArray3[np.float64]  # measured 3 voltages
     u_angle_measured: NDArray3[np.float64]  # measured 3 phases
+
+
+class GenericCurrentSensor(Sensor):
+    """Base class for current sensor data type"""
+
+    measured_terminal_type: NDArray[np.int32]
+    angle_measurement_type: NDArray[np.int32]
+    i_sigma: NDArray[np.float64]
+    i_angle_sigma: NDArray[np.float64]
+
+
+class SymCurrentSensor(GenericCurrentSensor):
+    """SymCurrentSensor data type"""
+
+    i_measured: NDArray[np.float64]
+    i_angle_measured: NDArray[np.float64]
+
+
+class AsymCurrentSensor(GenericCurrentSensor):
+    """AsymCurrentSensor data type"""
+
+    i_measured: NDArray3[np.float64]
+    i_angle_measured: NDArray3[np.float64]
