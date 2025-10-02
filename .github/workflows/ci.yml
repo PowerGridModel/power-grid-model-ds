@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
-name: CI Build
+name: CI/CD
 
 on:
   push:
@@ -14,7 +14,7 @@ on:
     inputs:
       create_release:
         type: boolean
-        description: Create a release when CI passes
+        description: Create a release (only works on main branch)
         default: false
         required: true
 
