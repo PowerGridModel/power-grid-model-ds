@@ -14,11 +14,6 @@ on:
         description: Create a (pre-)release when CI passes
         default: false
         required: false
-      update_dependencies:
-        type: boolean
-        description: Update dependencies to their latest version
-        default: false
-        required: false
     outputs:
       tag:
         description: "The created release tag"
@@ -102,10 +97,9 @@ jobs:
 
       - name: Run All Code Quality Checks & Tests
         run: poe all --check
-      
 
   github-release:
-    if: ${{ inputs.create_release == 'true' }}
+    if: ${{ github.ref == 'refs/heads/main' && inputs.create_release }}
     needs:
       - build-python
       - tests
@@ -125,7 +119,6 @@ jobs:
           path: dist/
 
       - name: Prevent automatic major/minor release
-        if: (github.event_name == 'push')
         run: |
           echo "Fetching the latest release..."
           tag=$(gh release view --json tagName --jq '.tagName')
@@ -150,12 +143,44 @@ jobs:
         run: echo "${{ steps.tag.outputs.tag }}"
 
       - name: Release
-        if: (inputs.create_release)
         uses: softprops/action-gh-release@v2
         with:
           files: |
             ./dist/*
           tag_name: ${{ steps.tag.outputs.tag }}
-          prerelease: ${{github.ref != 'refs/heads/main'}}
           generate_release_notes: true
           target_commitish: ${{ github.sha }}
+
+  publish:
+    name: Publish to PyPI
+    needs: github-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write  # Required for Trusted Publishing
+    steps:
+      - name: Download assets from latest GitHub release using gh CLI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p assets-to-publish
+          release_tag="${{ needs.build-test-release.outputs.tag }}"
+          gh release download "$release_tag" --repo "$GITHUB_REPOSITORY" --dir assets-to-publish
+
+      - name: List downloaded assets
+        run: ls -la assets-to-publish
+
+      - name: Upload assets to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # To test, use the TestPyPI:
+          # repository-url: https://test.pypi.org/legacy/
+          # You must also create an account and project on TestPyPI,
+          # as well as set the trusted-publisher in the project settings:
+          # https://docs.pypi.org/trusted-publishers/adding-a-publisher/
+          # To publish to the official PyPI repository, just keep
+          # repository-url commented out.
+          packages-dir: assets-to-publish
+          skip-existing: true
+          print-hash: true
+          verbose: true
