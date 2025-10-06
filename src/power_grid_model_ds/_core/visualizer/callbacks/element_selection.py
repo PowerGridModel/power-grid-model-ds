@@ -27,7 +27,7 @@ def display_selected_element(node_data, edge_data):
 
 def _to_data_table(data: dict[str, Any]):
     columns = data.keys()
-    data_table = dash_table.DataTable(
+    data_table = dash_table.DataTable(  # type: ignore[attr-defined]
         data=[data], columns=[{"name": key, "id": key} for key in columns], editable=False
     )
     return data_table

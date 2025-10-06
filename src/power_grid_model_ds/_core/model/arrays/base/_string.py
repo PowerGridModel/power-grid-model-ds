@@ -82,7 +82,7 @@ def _determine_column_widths(array: "FancyArray") -> list[tuple[str, int]]:
 def _center_and_truncate(string: str, width: int) -> str:
     if len(string) <= width:
         return string.center(width)
-    return f"{string[:width - 2]}..".center(width)
+    return f"{string[: width - 2]}..".center(width)
 
 
 def _get_start_and_end_rows(array: "FancyArray", rows: int) -> tuple["FancyArray", Optional["FancyArray"]]:

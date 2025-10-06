@@ -3,19 +3,18 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
-name: CI Build
+name: CI/CD
 
 on:
   push:
     branches:
       - main  # run pipeline on pull request
   pull_request:
-  merge_group:  # run pipeline on merge queue
   workflow_dispatch:  # run this workflow manually from the Actions tab
     inputs:
       create_release:
         type: boolean
-        description: Create a (pre-)release when CI passes
+        description: Create a release (only works on main branch)
         default: false
         required: true
 
@@ -30,62 +29,17 @@ jobs:
       - run: echo "ci started"
 
   build-test-release:
+    if: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
     name: build-test-release
     uses: "./.github/workflows/build-test-release.yml"
     permissions:
       contents: write
+      id-token: write  # Required for Trusted Publishing
     with:
-      create_release: ${{ (github.event_name == 'workflow_dispatch' && inputs.create_release) || (github.event_name == 'push') }}
+      create_release: ${{ inputs.create_release }}
 
   check-code-quality:
     uses: "./.github/workflows/check-code-quality.yml"
 
   reuse-compliance:
     uses: "./.github/workflows/reuse-compliance.yml"
-
-  ci-passed:
-    runs-on: ubuntu-latest
-    needs: [ci-started, build-test-release, check-code-quality, reuse-compliance]
-    if: always()
-
-    steps:
-      # this explicit check is needed cfr. https://github.com/orgs/community/discussions/75568
-      - name: "Check whether all jobs passed"
-        run: echo '${{ toJSON(needs) }}' | jq -e 'to_entries | all(.value.result == "success")'
-      - run: echo "ci passed"
-
-  publish:
-    name: Publish to PyPI
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write  # Required for Trusted Publishing
-    needs: build-test-release
-    if: (github.event_name == 'workflow_dispatch' && inputs.create_release) || github.event_name == 'push'
-
-    steps:
-      - name: Download assets from latest GitHub release using gh CLI
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p assets-to-publish
-          release_tag="${{ needs.build-test-release.outputs.tag }}"
-          gh release download "$release_tag" --repo "$GITHUB_REPOSITORY" --dir assets-to-publish
-
-      - name: List downloaded assets
-        run: ls -la assets-to-publish
-
-      - name: Upload assets to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          # To test, use the TestPyPI:
-          # repository-url: https://test.pypi.org/legacy/
-          # You must also create an account and project on TestPyPI,
-          # as well as set the trusted-publisher in the project settings:
-          # https://docs.pypi.org/trusted-publishers/adding-a-publisher/
-          # To publish to the official PyPI repository, just keep
-          # repository-url commented out.
-          packages-dir: assets-to-publish
-          skip-existing: true
-          print-hash: true
-          verbose: true

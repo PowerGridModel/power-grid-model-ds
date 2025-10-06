@@ -5,14 +5,11 @@
 name: Sonar Cloud
 
 on:
-  # run pipeline on push event of main branch
   push:
     branches:
       - main
-  # run pipeline on pull request
   pull_request:
-  # run pipeline on merge queue
-  merge_group:
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-sonar
@@ -26,24 +23,26 @@ jobs:
     steps:
 
       - name: Checkout source code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+        uses: actions/checkout@v5
 
-      - name: Setup Python 3.11
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        if: ${{ always() }}
         with:
-          python-version: "3.11"
+          activate-environment: true
+          enable-cache: true
 
-      - name: Install in develop mode
-        run: |
-          pip install -e .[dev]
+      - name: install poe
+        run: uv tool install poethepoet
+
+      - name: Install dependencies
+        if: ${{ always() }}
+        run: uv sync --frozen --dev
 
       - name: Test and Coverage
         run: |
-          coverage run -m pytest 
-          coverage xml 
-          coverage report --fail-under=80
+          poe coverage
+          uv run coverage xml 
 
       - name: SonarCloud Scan
         if: ${{ (github.event_name == 'push') || (github.event.pull_request.head.repo.owner.login == 'PowerGridModel') }}
