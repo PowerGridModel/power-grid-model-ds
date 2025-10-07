@@ -75,6 +75,16 @@ _SELECTED_TRANSFORMER_STYLE = {
     },
 }
 
+_LINK_STYLE = {
+    "selector": "edge[group = 'link']",
+    "style": {"line-color": CYTO_COLORS["link"], "target-arrow-color": CYTO_COLORS["link"]},
+}
+
+_SELECTED_LINK_STYLE = {
+    "selector": "edge[group = 'link']:selected, edge[group = 'link']:active",
+    "style": {"line-color": CYTO_COLORS["selected_link"], "target-arrow-color": CYTO_COLORS["selected_link"]},
+}
+
 _OPEN_BRANCH_STYLE = {
     "selector": "edge[from_status = 0], edge[to_status = 0]",
     "style": {
@@ -106,9 +116,11 @@ DEFAULT_STYLESHEET = [
     _SUBSTATION_NODE_STYLE,
     _BRANCH_STYLE,
     _TRANSFORMER_STYLE,
+    _LINK_STYLE,
     _SELECTED_NODE_STYLE,
     _SELECTED_BRANCH_STYLE,
     _SELECTED_TRANSFORMER_STYLE,
+    _SELECTED_LINK_STYLE,
     _OPEN_BRANCH_STYLE,
     _OPEN_FROM_SIDE_BRANCH_STYLE,
     _OPEN_TO_SIDE_BRANCH_STYLE,
