@@ -196,7 +196,7 @@ class FancyArrayContainer:
         empty_fields = {}
 
         empty_fields.update(cls._get_empty_arrays())
-        empty_fields.update({"_id_counter": -1})
+        empty_fields.update({"_id_counter": 0})
         return empty_fields
 
     @classmethod
@@ -212,7 +212,7 @@ class FancyArrayContainer:
             array = self.attach_ids(array)
         elif np.any(array.id == EMPTY_ID):
             raise ValueError(f"Cannot append: array contains empty [{EMPTY_ID}] and non-empty ids.")
-        elif check_max_id:
+        elif check_max_id and self.id_counter > 0:
             # Only check for overlaps when array has prescribed (non-empty) IDs
             # Check if any incoming ID might overlap with existing IDs
             # This prevents overlaps since counter tracks the highest used ID
