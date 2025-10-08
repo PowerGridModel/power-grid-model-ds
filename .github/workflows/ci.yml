@@ -29,7 +29,7 @@ jobs:
       - run: echo "ci started"
 
   build-python:
-    if: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && inputs.create_release }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.create_release }}
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -68,7 +68,7 @@ jobs:
           path: dist/
 
   tests:
-    if: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && inputs.create_release }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.create_release }}
     needs: build-python
     strategy:
       matrix:
@@ -103,7 +103,7 @@ jobs:
         run: poe all --check
 
   github-release:
-    if: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && inputs.create_release }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.create_release }}
     needs:
       - build-python
       - tests
@@ -157,7 +157,7 @@ jobs:
 
   publish:
     name: Publish to PyPI
-    if: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' && inputs.create_release }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.create_release }}
     needs: github-release
     runs-on: ubuntu-latest
     permissions:
