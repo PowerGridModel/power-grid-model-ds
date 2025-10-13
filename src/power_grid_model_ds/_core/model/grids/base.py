@@ -360,7 +360,10 @@ class Grid(FancyArrayContainer):
         )
 
     def cache(self, cache_dir: Path, cache_name: str, compress: bool = True):
-        """Cache Grid to a folder
+        """Cache Grid to a folder using pickle format.
+
+        Note: Consider using save_to_json() or save_to_msgpack() for better
+        interoperability and standardized format.
 
         Args:
             cache_dir (Path): The directory to save the cache to.
