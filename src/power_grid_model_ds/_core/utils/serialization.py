@@ -9,7 +9,7 @@ import json
 import logging
 from ast import literal_eval
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Literal, Optional
 
 import msgpack
 import numpy as np
@@ -211,7 +211,7 @@ def _extract_msgpack_data(data: bytes, **kwargs):
     return input_data, extensions
 
 
-def _get_serialization_path(path: Path, format_type: str = "auto") -> Path:
+def _get_serialization_path(path: Path, format_type: Literal["json", "msgpack", "auto"] = "auto") -> Path:
     """Get the correct path for serialization format.
 
     Args:
@@ -221,19 +221,22 @@ def _get_serialization_path(path: Path, format_type: str = "auto") -> Path:
     Returns:
         Path: Path with correct extension
     """
+    JSON_EXTENSIONS = [".json"]
+    MSGPACK_EXTENSIONS = [".msgpack", ".mp"]
+    
     if format_type == "auto":
-        if path.suffix.lower() in [".json"]:
+        if path.suffix.lower() in JSON_EXTENSIONS:
             format_type = "json"
-        elif path.suffix.lower() in [".msgpack", ".mp"]:
+        elif path.suffix.lower() in MSGPACK_EXTENSIONS
             format_type = "msgpack"
         else:
             # Default to JSON
             format_type = "json"
 
-    if format_type == "json" and path.suffix.lower() != ".json":
-        return path.with_suffix(".json")
-    if format_type == "msgpack" and path.suffix.lower() not in [".msgpack", ".mp"]:
-        return path.with_suffix(".msgpack")
+    if format_type == "json" and path.suffix.lower() != JSON_EXTENSIONS[0]:
+        return path.with_suffix(JSON_EXTENSIONS[0])
+    if format_type == "msgpack" and path.suffix.lower() not in MSGPACK_EXTENSIONS:
+        return path.with_suffix(MSGPACK_EXTENSIONS[0])
 
     return path
 
