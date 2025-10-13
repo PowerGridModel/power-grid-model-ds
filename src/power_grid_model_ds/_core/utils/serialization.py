@@ -221,22 +221,22 @@ def _get_serialization_path(path: Path, format_type: Literal["json", "msgpack", 
     Returns:
         Path: Path with correct extension
     """
-    JSON_EXTENSIONS = [".json"]
-    MSGPACK_EXTENSIONS = [".msgpack", ".mp"]
+    json_extensions = [".json"]
+    msgpack_extensions = [".msgpack", ".mp"]
 
     if format_type == "auto":
-        if path.suffix.lower() in JSON_EXTENSIONS:
+        if path.suffix.lower() in json_extensions:
             format_type = "json"
-        elif path.suffix.lower() in MSGPACK_EXTENSIONS:
+        elif path.suffix.lower() in msgpack_extensions:
             format_type = "msgpack"
         else:
             # Default to JSON
             format_type = "json"
 
-    if format_type == "json" and path.suffix.lower() != JSON_EXTENSIONS[0]:
-        return path.with_suffix(JSON_EXTENSIONS[0])
-    if format_type == "msgpack" and path.suffix.lower() not in MSGPACK_EXTENSIONS:
-        return path.with_suffix(MSGPACK_EXTENSIONS[0])
+    if format_type == "json" and path.suffix.lower() != json_extensions[0]:
+        return path.with_suffix(json_extensions[0])
+    if format_type == "msgpack" and path.suffix.lower() not in msgpack_extensions:
+        return path.with_suffix(msgpack_extensions[0])
 
     return path
 

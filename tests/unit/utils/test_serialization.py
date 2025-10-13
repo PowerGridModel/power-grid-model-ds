@@ -8,6 +8,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Literal
 
 import numpy as np
 import pytest
@@ -283,7 +284,9 @@ class TestUtilityFunctions:
             ("test.xyz", "msgpack", "test.msgpack"),
         ],
     )
-    def test_serialization_path_handling(self, input_path: str, format_type: str, expected: str):
+    def test_serialization_path_handling(
+        self, input_path: str, format_type: Literal["json", "msgpack", "auto"], expected: str
+    ):
         """Test path handling and format detection"""
         result = _get_serialization_path(Path(input_path), format_type)
         assert result == Path(expected)
