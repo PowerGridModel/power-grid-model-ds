@@ -223,11 +223,11 @@ def _get_serialization_path(path: Path, format_type: Literal["json", "msgpack", 
     """
     JSON_EXTENSIONS = [".json"]
     MSGPACK_EXTENSIONS = [".msgpack", ".mp"]
-    
+
     if format_type == "auto":
         if path.suffix.lower() in JSON_EXTENSIONS:
             format_type = "json"
-        elif path.suffix.lower() in MSGPACK_EXTENSIONS
+        elif path.suffix.lower() in MSGPACK_EXTENSIONS:
             format_type = "msgpack"
         else:
             # Default to JSON
