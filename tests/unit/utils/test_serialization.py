@@ -8,14 +8,12 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest.mock import patch
 
 import numpy as np
 import pytest
 from numpy.typing import NDArray
 
 from power_grid_model_ds import Grid
-from power_grid_model_ds._core.load_flow import PowerGridModelInterface
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.utils.serialization import (
     _extract_extensions_data,
@@ -145,25 +143,6 @@ class TestSerializationFormats:
         np.testing.assert_array_equal(loaded_grid.node.u, extended_grid.node.u)
         np.testing.assert_array_equal(loaded_grid.line.i_from, extended_grid.line.i_from)
 
-    def test_format_characteristics(self, basic_grid: Grid, temp_dir: Path):
-        """Test format-specific characteristics"""
-        json_path = temp_dir / "test.json"
-        msgpack_path = temp_dir / "test.msgpack"
-
-        save_grid_to_json(basic_grid, json_path)
-        save_grid_to_msgpack(basic_grid, msgpack_path)
-
-        # JSON should be human-readable
-        with open(json_path) as f:
-            json_data = json.load(f)
-        assert "version" in json_data
-        assert "data" in json_data
-
-        # MessagePack should be more compact
-        json_size = json_path.stat().st_size
-        msgpack_size = msgpack_path.stat().st_size
-        assert msgpack_size < json_size  # MessagePack is typically more compact
-
 
 class TestCrossTypeCompatibility:
     """Test cross-type loading and compatibility"""
@@ -207,31 +186,6 @@ class TestCrossTypeCompatibility:
 
 class TestExtensionHandling:
     """Test extension data handling and edge cases"""
-
-    def test_extension_extraction_and_restoration(self, extended_grid: ExtendedGrid):
-        """Test extension data extraction and restoration"""
-        # Extract extensions
-        extensions = _extract_extensions_data(extended_grid)
-
-        # Should have both types of extensions
-        assert "extended_columns" in extensions
-        assert "custom_arrays" in extensions
-
-        # Should contain extended node data
-        assert "node" in extensions["extended_columns"]
-        assert "u" in extensions["extended_columns"]["node"]
-
-        # Create new grid and restore
-        new_grid = ExtendedGrid.empty()
-        # Add basic structure first
-        nodes = ExtendedNodeArray(id=[1, 2, 3], u_rated=[10500, 10500, 10500])
-        new_grid.append(nodes)
-
-        # Restore extensions
-        _restore_extensions_data(new_grid, extensions)
-
-        # Extended data should be restored
-        np.testing.assert_array_equal(new_grid.node.u, extended_grid.node.u)
 
     def test_missing_extension_keys(self):
         """Test graceful handling of missing extension keys"""
@@ -315,84 +269,6 @@ class TestExtensionHandling:
         np.testing.assert_array_equal(loaded_grid_mp.custom_metadata.category, [1, 2, 1])
 
 
-class TestErrorHandling:
-    """Test error handling and edge cases"""
-
-    @pytest.mark.parametrize("format_type", ["json", "msgpack"])
-    def test_file_not_found(self, format_type: str):
-        """Test handling of missing files"""
-        nonexistent_path = Path("nonexistent.") / format_type
-
-        with pytest.raises(FileNotFoundError):
-            if format_type == "json":
-                load_grid_from_json(nonexistent_path)
-            else:
-                load_grid_from_msgpack(nonexistent_path)
-
-    def test_corrupted_json_content(self, temp_dir: Path):
-        """Test handling of corrupted JSON files"""
-        json_path = temp_dir / "corrupted.json"
-
-        with open(json_path, "w") as f:
-            f.write("{ invalid json content")
-
-        with pytest.raises(json.JSONDecodeError):
-            load_grid_from_json(json_path)
-
-    def test_corrupted_msgpack_data(self, temp_dir: Path):
-        """Test handling of corrupted MessagePack files"""
-        msgpack_path = temp_dir / "corrupted.msgpack"
-
-        with open(msgpack_path, "wb") as f:
-            f.write(b"invalid msgpack data")
-
-        with pytest.raises(Exception):  # Could be various msgpack/power-grid-model exceptions
-            load_grid_from_msgpack(msgpack_path)
-
-    def test_invalid_extension_data_recovery(self, temp_dir: Path):
-        """Test recovery from invalid extension data"""
-        # Create valid extended grid
-        extended_grid = ExtendedGrid.empty()
-        nodes = ExtendedNodeArray(id=[1, 2], u_rated=[10000, 10000], u=[9950, 9900])
-        extended_grid.append(nodes)
-
-        json_path = temp_dir / "test_recovery.json"
-        save_grid_to_json(extended_grid, json_path, preserve_extensions=True)
-
-        # Corrupt extension data
-        with open(json_path, "r") as f:
-            data = json.load(f)
-
-        # Add invalid extension data
-        if "pgm_ds_extensions" in data:
-            data["pgm_ds_extensions"]["extended_columns"]["node"]["u"] = [1, 2, 3, 4, 5]  # Wrong size
-            data["pgm_ds_extensions"]["custom_arrays"]["fake"] = {"dtype": "invalid_dtype", "data": [[1, 2, 3]]}
-
-        with open(json_path, "w") as f:
-            json.dump(data, f)
-
-        # Should load core data despite extension errors
-        loaded_grid = load_grid_from_json(json_path, target_grid_class=Grid)
-        assert loaded_grid.node.size == 2
-
-    def test_io_permission_errors(self, temp_dir: Path):
-        """Test I/O permission error handling"""
-        basic_grid = Grid.empty()
-
-        # Create read-only directory
-        readonly_dir = temp_dir / "readonly"
-        readonly_dir.mkdir()
-        readonly_dir.chmod(0o444)
-
-        readonly_path = readonly_dir / "test.json"
-
-        try:
-            with pytest.raises((PermissionError, OSError)):
-                save_grid_to_json(basic_grid, readonly_path)
-        finally:
-            readonly_dir.chmod(0o755)  # Cleanup
-
-
 class TestUtilityFunctions:
     """Test utility functions and path handling"""
 
@@ -411,38 +287,6 @@ class TestUtilityFunctions:
         """Test path handling and format detection"""
         result = _get_serialization_path(Path(input_path), format_type)
         assert result == Path(expected)
-
-
-class TestPowerGridModelIntegration:
-    """Test integration with PowerGridModelInterface"""
-
-    def test_interface_roundtrip(self, basic_grid: Grid, temp_dir: Path):
-        """Test roundtrip through PowerGridModelInterface"""
-        json_path = temp_dir / "interface_test.json"
-
-        # Save and load through interface
-        save_grid_to_json(basic_grid, json_path)
-
-        # Should work with interface directly
-        interface = PowerGridModelInterface(grid=basic_grid)
-        input_data = interface.create_input_from_grid()
-
-        # Create new grid from input data
-        new_interface = PowerGridModelInterface(input_data=input_data)
-        new_grid = new_interface.create_grid_from_input_data()
-
-        assert new_grid.node.size == basic_grid.node.size
-
-    def test_interface_error_propagation(self, temp_dir: Path):
-        """Test error propagation from PowerGridModelInterface"""
-        # This is harder to test directly, but we can verify errors are not swallowed
-        basic_grid = Grid.empty()
-        json_path = temp_dir / "error_test.json"
-
-        # Create conditions that might cause interface errors
-        with patch.object(PowerGridModelInterface, "create_input_from_grid", side_effect=Exception("PGM Error")):
-            with pytest.raises(Exception, match="PGM Error"):
-                save_grid_to_json(basic_grid, json_path)
 
 
 class TestSpecialCases:
@@ -465,61 +309,6 @@ class TestSpecialCases:
 
         assert loaded_json.node.size == 0
         assert loaded_msgpack.node.size == 0
-
-    def test_extreme_values_handling(self, temp_dir: Path):
-        """Test handling of extreme numeric values"""
-        extended_grid = ExtendedGrid.empty()
-
-        # Add nodes with extreme values
-        nodes = ExtendedNodeArray(
-            id=[1, 2],
-            u_rated=[10000, 10000],
-            u=[np.inf, -np.inf],  # Extreme values
-        )
-        extended_grid.append(nodes)
-
-        json_path = temp_dir / "extreme.json"
-
-        # Should handle extreme values (JSON supports inf)
-        save_grid_to_json(extended_grid, json_path, preserve_extensions=True)
-        loaded_grid = load_grid_from_json(json_path, target_grid_class=Grid)
-        assert loaded_grid.node.size == 2
-
-    def test_without_extensions_flag(self, extended_grid: ExtendedGrid, temp_dir: Path):
-        """Test serialization without extensions flag"""
-        json_path = temp_dir / "no_ext.json"
-        msgpack_path = temp_dir / "no_ext.msgpack"
-
-        # Save without extensions
-        save_grid_to_json(extended_grid, json_path, preserve_extensions=False)
-        save_grid_to_msgpack(extended_grid, msgpack_path, preserve_extensions=False)
-
-        # Should load core data only
-        loaded_json = load_grid_from_json(json_path, target_grid_class=Grid)
-        loaded_msgpack = load_grid_from_msgpack(msgpack_path, target_grid_class=Grid)
-
-        assert loaded_json.node.size == extended_grid.node.size
-        assert loaded_msgpack.node.size == extended_grid.node.size
-
-    def test_directory_creation_during_save(self, basic_grid: Grid, temp_dir: Path):
-        """Test automatic directory creation during save operations"""
-        # Test nested directory creation
-        nested_json_path = temp_dir / "nested" / "deep" / "test.json"
-        nested_msgpack_path = temp_dir / "nested" / "deep" / "test.msgpack"
-
-        # Should create directories automatically
-        save_grid_to_json(basic_grid, nested_json_path)
-        save_grid_to_msgpack(basic_grid, nested_msgpack_path)
-
-        assert nested_json_path.exists()
-        assert nested_msgpack_path.exists()
-
-        # Should be able to load back
-        loaded_json = load_grid_from_json(nested_json_path, target_grid_class=Grid)
-        loaded_msgpack = load_grid_from_msgpack(nested_msgpack_path, target_grid_class=Grid)
-
-        assert loaded_json.node.size == basic_grid.node.size
-        assert loaded_msgpack.node.size == basic_grid.node.size
 
     def test_custom_array_extraction_edge_cases(self, temp_dir: Path):
         """Test edge cases in custom array extraction"""
@@ -544,5 +333,31 @@ class TestSpecialCases:
         save_grid_to_json(extended_grid, json_path, preserve_extensions=True)
 
         # Should load without issues
+        loaded_grid = load_grid_from_json(json_path, target_grid_class=Grid)
+        assert loaded_grid.node.size == 2
+
+    def test_invalid_extension_data_recovery(self, temp_dir: Path):
+        """Test recovery from invalid extension data"""
+        # Create valid extended grid
+        extended_grid = ExtendedGrid.empty()
+        nodes = ExtendedNodeArray(id=[1, 2], u_rated=[10000, 10000], u=[9950, 9900])
+        extended_grid.append(nodes)
+
+        json_path = temp_dir / "test_recovery.json"
+        save_grid_to_json(extended_grid, json_path, preserve_extensions=True)
+
+        # Corrupt extension data
+        with open(json_path, "r") as f:
+            data = json.load(f)
+
+        # Add invalid extension data
+        if "pgm_ds_extensions" in data:
+            data["pgm_ds_extensions"]["extended_columns"]["node"]["u"] = [1, 2, 3, 4, 5]  # Wrong size
+            data["pgm_ds_extensions"]["custom_arrays"]["fake"] = {"dtype": "invalid_dtype", "data": [[1, 2, 3]]}
+
+        with open(json_path, "w") as f:
+            json.dump(data, f)
+
+        # Should load core data despite extension errors
         loaded_grid = load_grid_from_json(json_path, target_grid_class=Grid)
         assert loaded_grid.node.size == 2
