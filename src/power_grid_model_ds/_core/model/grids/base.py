@@ -460,7 +460,7 @@ class Grid(FancyArrayContainer):
 
 
 def _delete_branch_array(branch: BranchArray | Branch3Array, grid: Grid):
-    """Add a branch array to the grid"""
+    """Delete a branch array from the grid"""
     array_field = grid.find_array_field(branch.__class__)
     array_attr = getattr(grid, array_field.name)
     setattr(grid, array_field.name, array_attr.exclude(id=branch.id))
