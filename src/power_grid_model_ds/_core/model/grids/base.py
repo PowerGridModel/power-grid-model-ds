@@ -221,7 +221,7 @@ class Grid(FancyArrayContainer):
         Args:
             branch (BranchArray): The branch to remove
         """
-        _add_branch_array(branch=branch, grid=self)
+        _delete_branch_array(branch=branch, grid=self)
         self.graphs.delete_branch(branch=branch)
         logging.debug(
             f"""deleted branch {branch.id.item()} from {branch.from_node.item()} to {branch.to_node.item()}"""
@@ -233,7 +233,7 @@ class Grid(FancyArrayContainer):
         Args:
             branch (Branch3Array): The branch3 to remove
         """
-        _add_branch_array(branch=branch, grid=self)
+        _delete_branch_array(branch=branch, grid=self)
         self.graphs.delete_branch3(branch=branch)
 
     def add_node(self, node: NodeArray) -> None:
@@ -459,8 +459,8 @@ class Grid(FancyArrayContainer):
         return new_grid
 
 
-def _add_branch_array(branch: BranchArray | Branch3Array, grid: Grid):
-    """Add a branch array to the grid"""
+def _delete_branch_array(branch: BranchArray | Branch3Array, grid: Grid):
+    """Delete a branch array from the grid"""
     array_field = grid.find_array_field(branch.__class__)
     array_attr = getattr(grid, array_field.name)
     setattr(grid, array_field.name, array_attr.exclude(id=branch.id))
