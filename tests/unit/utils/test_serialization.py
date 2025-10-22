@@ -6,7 +6,6 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import numpy as np
 import pytest
@@ -15,11 +14,12 @@ from numpy.typing import NDArray
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.utils.serialization import (
-    load_grid_from_json,
-    save_grid_to_json,
+    _load_grid_from_json,
+    _save_grid_to_json,
 )
 from power_grid_model_ds.arrays import LineArray
 from power_grid_model_ds.arrays import NodeArray as BaseNodeArray
+from power_grid_model_ds.fancypy import array_equal
 
 
 class ExtendedNodeArray(BaseNodeArray):
@@ -47,14 +47,6 @@ class ExtendedGrid(Grid):
 
     value_extension: float = 0.0
     str_extension: str = "default"
-    complex_extension: list = None
-
-
-@pytest.fixture
-def temp_dir():
-    """Temporary directory fixture"""
-    with TemporaryDirectory() as tmp_dir:
-        yield Path(tmp_dir)
 
 
 @pytest.fixture
@@ -89,85 +81,84 @@ def extended_grid():
     return grid
 
 
-class TestSerializationFormats:
+class TestSerializationRoundtrips:
     """Test serialization across different formats and configurations"""
 
-    def test_basic_serialization_roundtrip(self, basic_grid: Grid, temp_dir: Path):
+    def test_basic_serialization_roundtrip(self, basic_grid: Grid, tmp_path: Path):
         """Test basic serialization roundtrip for all formats"""
-        path = temp_dir / "test.json"
-        result_path = save_grid_to_json(basic_grid, path)
+        path = tmp_path / "test.json"
+        result_path = _save_grid_to_json(basic_grid, path)
         assert result_path.exists()
 
         # Load and verify
-        loaded_grid = load_grid_from_json(path, target_grid_class=Grid)
-        assert loaded_grid.node.size == basic_grid.node.size
-        assert loaded_grid.line.size == basic_grid.line.size
+        loaded_grid = _load_grid_from_json(path, target_grid_class=Grid)
+        array_equal(loaded_grid.node, basic_grid.node)
+        array_equal(loaded_grid.line, basic_grid.line)
         assert list(loaded_grid.node.id) == list(basic_grid.node.id)
 
-    def test_extended_serialization_roundtrip(self, extended_grid: ExtendedGrid, temp_dir: Path):
+    def test_extended_serialization_roundtrip(self, extended_grid: ExtendedGrid, tmp_path: Path):
         """Test extended serialization preserving custom data"""
-        path = temp_dir / "extended.json"
+        path = tmp_path / "extended.json"
 
-        save_grid_to_json(extended_grid, path)
-        loaded_grid = load_grid_from_json(path, target_grid_class=ExtendedGrid)
+        _save_grid_to_json(extended_grid, path)
+        loaded_grid = _load_grid_from_json(path, target_grid_class=ExtendedGrid)
 
         # Verify core data
         assert loaded_grid.node.size == extended_grid.node.size
         assert loaded_grid.line.size == extended_grid.line.size
         assert loaded_grid.value_extension == extended_grid.value_extension
         assert loaded_grid.str_extension == extended_grid.str_extension
-        assert loaded_grid.complex_extension is None
 
         # Verify extended data
         np.testing.assert_array_equal(loaded_grid.node.u, extended_grid.node.u)
         np.testing.assert_array_equal(loaded_grid.line.i_from, extended_grid.line.i_from)
 
-    def test_empty_grid_handling(self, temp_dir: Path):
+    def test_empty_grid_handling(self, tmp_path: Path):
         """Test serialization of empty grids"""
         empty_grid = Grid.empty()
 
-        json_path = temp_dir / "empty.json"
+        json_path = tmp_path / "empty.json"
 
         # Should handle empty grids
-        save_grid_to_json(empty_grid, json_path)
+        _save_grid_to_json(empty_grid, json_path)
 
         # Should load back as empty
-        loaded_json = load_grid_from_json(json_path, target_grid_class=Grid)
+        loaded_json = _load_grid_from_json(json_path, target_grid_class=Grid)
         assert loaded_json.node.size == 0
 
 
 class TestCrossTypeCompatibility:
     """Test cross-type loading and compatibility"""
 
-    def test_basic_to_extended_loading(self, basic_grid: Grid, temp_dir: Path):
+    def test_basic_to_extended_loading(self, basic_grid: Grid, tmp_path: Path):
         """Test loading basic grid into extended type"""
-        path = temp_dir / "basic.json"
+        path = tmp_path / "basic.json"
 
         # Save basic grid
-        save_grid_to_json(basic_grid, path)
-        loaded_grid = load_grid_from_json(path, target_grid_class=ExtendedGrid)
+        _save_grid_to_json(basic_grid, path)
+        loaded_grid = _load_grid_from_json(path, target_grid_class=ExtendedGrid)
 
         # Core data should transfer
-        assert loaded_grid.node.size == basic_grid.node.size
-        assert loaded_grid.line.size == basic_grid.line.size
+        array_equal(loaded_grid.node, basic_grid.node)
+        array_equal(loaded_grid.line, basic_grid.line)
 
-    def test_extended_to_basic_loading(self, extended_grid: ExtendedGrid, temp_dir: Path):
+    def test_extended_to_basic_loading(self, extended_grid: ExtendedGrid, tmp_path: Path):
         """Test loading extended grid into basic type"""
-        path = temp_dir / "extended.json"
+        path = tmp_path / "extended.json"
 
         # Save extended grid
-        save_grid_to_json(extended_grid, path)
-        loaded_grid = load_grid_from_json(path, target_grid_class=Grid)
+        _save_grid_to_json(extended_grid, path)
+        loaded_grid = _load_grid_from_json(path, target_grid_class=Grid)
 
         # Core data should transfer
-        assert loaded_grid.node.size == extended_grid.node.size
-        assert loaded_grid.line.size == extended_grid.line.size
+        array_equal(loaded_grid.node, extended_grid.node)
+        array_equal(loaded_grid.line, extended_grid.line)
 
 
 class TestExtensionHandling:
     """Test extension data handling and edge cases"""
 
-    def test_custom_array_serialization_roundtrip(self, temp_dir: Path):
+    def test_custom_array_serialization_roundtrip(self, tmp_path: Path):
         """Test serialization and loading of grids with custom arrays"""
 
         # Create a custom array type that properly extends FancyArray
@@ -197,11 +188,11 @@ class TestExtensionHandling:
         grid.custom_metadata = custom_data
 
         # Test JSON serialization
-        json_path = temp_dir / "custom_array.json"
-        save_grid_to_json(grid, json_path)
+        json_path = tmp_path / "custom_array.json"
+        _save_grid_to_json(grid, json_path)
 
         # Load back and verify
-        loaded_grid = load_grid_from_json(json_path, target_grid_class=GridWithCustomArray)
+        loaded_grid = _load_grid_from_json(json_path, target_grid_class=GridWithCustomArray)
 
         # Verify core data
         assert loaded_grid.node.size == 2

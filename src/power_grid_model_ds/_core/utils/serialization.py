@@ -8,17 +8,25 @@ import dataclasses
 import json
 import logging
 from pathlib import Path
-from typing import Dict, Optional
+from typing import TYPE_CHECKING, Dict, Optional, Type, TypeVar
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
-from power_grid_model_ds._core.model.grids.base import Grid
+
+if TYPE_CHECKING:
+    # Import only for type checking to avoid circular imports at runtime
+    from power_grid_model_ds._core.model.grids.base import Grid
+
+    G = TypeVar("G", bound=Grid)
+else:
+    # Runtime: don't import Grid to avoid circular import; keep unbound TypeVar
+    G = TypeVar("G")
 
 logger = logging.getLogger(__name__)
 
 
-def _restore_grid_values(grid, input_data: Dict) -> None:
+def _restore_grid_values(grid, json_data: Dict) -> None:
     """Restore arrays to the grid."""
-    for attr_name, attr_values in input_data.items():
+    for attr_name, attr_values in json_data.items():
         if not hasattr(grid, attr_name):
             continue
 
@@ -41,7 +49,7 @@ def _restore_grid_values(grid, input_data: Dict) -> None:
             logger.warning(f"Failed to restore '{attr_name}': {e}")
 
 
-def save_grid_to_json(
+def _save_grid_to_json(
     grid,
     path: Path,
     indent: Optional[int] = None,
@@ -64,9 +72,13 @@ def save_grid_to_json(
 
         field_value = getattr(grid, field.name)
         if isinstance(field_value, (int, float, str, bool)):
-            serialized_data[field.name] = field_value
+            serialized_data[field.name] = field.type(field_value)
+            continue
 
-        if not isinstance(field_value, FancyArray) or field_value.size == 0:
+        if not isinstance(field_value, FancyArray):
+            raise NotImplementedError(f"Serialization for field of type '{type(field_value)}' is not implemented.")
+
+        if field_value.size == 0:
             continue
 
         serialized_data[field.name] = {
@@ -80,12 +92,12 @@ def save_grid_to_json(
     return path
 
 
-def load_grid_from_json(path: Path, target_grid_class=None):
+def _load_grid_from_json(path: Path, target_grid_class: Type[G]) -> G:
     """Load a Grid object from JSON format with cross-type loading support.
 
     Args:
         path: The file path to load from
-        target_grid_class: Optional Grid class to load into. If None, uses default Grid.
+        target_grid_class: Grid class to load into.
 
     Returns:
         Grid: The deserialized Grid object of the specified target class
@@ -93,11 +105,7 @@ def load_grid_from_json(path: Path, target_grid_class=None):
     with open(path, "r", encoding="utf-8") as f:
         input_data = json.load(f)
 
-    if target_grid_class is None:
-        target_grid = Grid.empty()
-    else:
-        target_grid = target_grid_class.empty()
-
+    target_grid = target_grid_class.empty()
     _restore_grid_values(target_grid, input_data)
 
     return target_grid
