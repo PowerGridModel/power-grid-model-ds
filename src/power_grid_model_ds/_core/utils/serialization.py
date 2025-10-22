@@ -31,7 +31,9 @@ def _restore_grid_values(grid, json_data: Dict) -> None:
             continue
 
         if not issubclass(getattr(grid, attr_name).__class__, FancyArray):
-            setattr(grid, attr_name, attr_values)
+            expected_type = grid.__dataclass_fields__[attr_name].type
+            cast_value = expected_type(attr_values)
+            setattr(grid, attr_name, cast_value)
             continue
 
         try:
@@ -73,7 +75,7 @@ def _save_grid_to_json(
 
         field_value = getattr(grid, field.name)
         if isinstance(field_value, (int, float, str, bool)):
-            serialized_data[field.name] = field.type(field_value)  # type: ignore
+            serialized_data[field.name] = field_value
             continue
 
         if not isinstance(field_value, FancyArray):
