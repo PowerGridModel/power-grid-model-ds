@@ -219,32 +219,6 @@ class TestSpecialCases:
         loaded_json = load_grid_from_json(json_path, target_grid_class=Grid)
         assert loaded_json.node.size == 0
 
-    # def test_custom_array_extraction_edge_cases(self, temp_dir: Path):
-    #     """Test edge cases in custom array extraction"""
-    #     # Test with grid that has complex custom arrays that might cause extraction issues
-    #     extended_grid = ExtendedGrid.empty()
-
-    #     # Add data that might cause issues during extraction
-    #     nodes = ExtendedNodeArray(
-    #         id=[1, 2],
-    #         u_rated=[10000, 10000],
-    #         u=[float("nan"), float("inf")],  # Edge case values
-    #     )
-    #     extended_grid.append(nodes)
-
-    #     # Should handle edge case values gracefully
-    #     extensions = _extract_extensions_data(extended_grid)
-    #     assert "extended_columns" in extensions
-    #     assert "custom_arrays" in extensions
-
-    #     # Test saving and loading with these edge cases
-    #     json_path = temp_dir / "edge_cases.json"
-    #     save_grid_to_json(extended_grid, json_path, preserve_extensions=True)
-
-    #     # Should load without issues
-    #     loaded_grid = load_grid_from_json(json_path, target_grid_class=Grid)
-    #     assert loaded_grid.node.size == 2
-
     def test_invalid_extension_data_recovery(self, temp_dir: Path):
         """Test recovery from invalid extension data"""
         # Create valid extended grid
