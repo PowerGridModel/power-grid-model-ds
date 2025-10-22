@@ -8,7 +8,7 @@ import dataclasses
 import json
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Optional, Type, TypeVar
+from typing import TYPE_CHECKING, Dict, Type, TypeVar
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 
@@ -52,14 +52,15 @@ def _restore_grid_values(grid, json_data: Dict) -> None:
 def _save_grid_to_json(
     grid,
     path: Path,
-    indent: Optional[int] = None,
+    **kwargs,
 ) -> Path:
     """Save a Grid object to JSON format using power-grid-model serialization with extensions support.
 
     Args:
         grid: The Grid object to serialize
         path: The file path to save to
-        indent: JSON indentation (None for compact, positive int for indentation)
+        **kwargs: Keyword arguments forwarded to json.dump (for example, indent, sort_keys,
+            ensure_ascii, etc.).
     Returns:
         Path: The path where the file was saved
     """
@@ -87,7 +88,7 @@ def _save_grid_to_json(
 
     # Write to file
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(serialized_data, f, indent=indent if indent and indent > 0 else None)
+        json.dump(serialized_data, f, **kwargs)
 
     return path
 

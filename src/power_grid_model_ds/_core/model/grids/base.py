@@ -439,9 +439,16 @@ class Grid(FancyArrayContainer):
             txt_lines = f.readlines()
         return TextSource(grid_class=cls).load_from_txt(*txt_lines)
 
-    def to_json(self, path: Path) -> Path:
-        """Serialize the grid to JSON format."""
-        return _save_grid_to_json(grid=self, path=path)
+    def to_json(self, path: Path, **kwargs) -> Path:
+        """Serialize the grid to JSON format.
+
+        Args:
+            path: Destination file path to write JSON to.
+            **kwargs: Additional keyword arguments forwarded to ``json.dump``
+        Returns:
+            Path: The path where the file was saved.
+        """
+        return _save_grid_to_json(grid=self, path=path, **kwargs)
 
     @classmethod
     def from_json(cls: Type[Self], path: Path) -> Self:
