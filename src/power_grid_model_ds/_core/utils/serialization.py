@@ -16,25 +16,29 @@ from power_grid_model_ds._core.model.grids.base import Grid
 logger = logging.getLogger(__name__)
 
 
-def _restore_grid_arrays(grid, custom_arrays: Dict) -> None:
-    """Restore custom arrays to the grid."""
-    for array_name, array_info in custom_arrays.items():
-        if not hasattr(grid, array_name):
+def _restore_grid_arrays(grid, input_data: Dict) -> None:
+    """Restore arrays to the grid."""
+    for attr_name, attr_values in input_data.items():
+        if not hasattr(grid, attr_name):
+            continue
+
+        if not issubclass(getattr(grid, attr_name).__class__, FancyArray):
+            setattr(grid, attr_name, attr_values)
             continue
 
         try:
-            array_field = grid.find_array_field(getattr(grid, array_name).__class__)
+            array_field = grid.find_array_field(getattr(grid, attr_name).__class__)
             matched_columns = {
-                col: array_info["data"][col] for col in array_field.type().columns if col in array_info["data"]
+                col: attr_values["data"][col] for col in array_field.type().columns if col in attr_values["data"]
             }
             restored_array = array_field.type(**matched_columns)
-            setattr(grid, array_name, restored_array)
+            setattr(grid, attr_name, restored_array)
         except (AttributeError, KeyError, ValueError, TypeError) as e:
             # Handle restoration failures:
             # - KeyError: missing "dtype" or "data" keys
             # - ValueError/TypeError: invalid dtype string or data conversion
             # - AttributeError: grid methods/attributes missing
-            logger.warning(f"Failed to restore custom array '{array_name}': {e}")
+            logger.warning(f"Failed to restore '{attr_name}': {e}")
 
 
 def save_grid_to_json(
@@ -58,13 +62,16 @@ def save_grid_to_json(
         if field.name in ["graphs", "_id_counter"]:
             continue
 
-        array = getattr(grid, field.name)
-        if not isinstance(array, FancyArray) or array.size == 0:
+        field_value = getattr(grid, field.name)
+        if isinstance(field_value, (int, float, str, bool)):
+            serialized_data[field.name] = field_value
+
+        if not isinstance(field_value, FancyArray) or field_value.size == 0:
             continue
 
         array_name = field.name
         serialized_data[array_name] = {
-            "data": {name: array[name].tolist() for name in array.dtype.names},
+            "data": {name: field_value[name].tolist() for name in field_value.dtype.names},
         }
 
     # Write to file

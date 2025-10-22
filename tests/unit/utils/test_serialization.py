@@ -46,8 +46,9 @@ class ExtendedGrid(Grid):
     node: ExtendedNodeArray
     line: ExtendedLineArray
 
-    # value_extension: float = 0.0
-    # dict_extension: dict = dict()
+    value_extension: float = 0.0
+    str_extension: str = "default"
+    complex_extension: list = None
 
 
 @pytest.fixture
@@ -114,6 +115,9 @@ class TestSerializationFormats:
         # Verify core data
         assert loaded_grid.node.size == extended_grid.node.size
         assert loaded_grid.line.size == extended_grid.line.size
+        assert loaded_grid.value_extension == extended_grid.value_extension
+        assert loaded_grid.str_extension == extended_grid.str_extension
+        assert loaded_grid.complex_extension is None
 
         # Verify extended data
         np.testing.assert_array_equal(loaded_grid.node.u, extended_grid.node.u)
