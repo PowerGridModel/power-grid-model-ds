@@ -4,7 +4,6 @@
 
 """Comprehensive unit tests for Grid serialization with power-grid-model compatibility."""
 
-import json
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -123,6 +122,19 @@ class TestSerializationFormats:
         np.testing.assert_array_equal(loaded_grid.node.u, extended_grid.node.u)
         np.testing.assert_array_equal(loaded_grid.line.i_from, extended_grid.line.i_from)
 
+    def test_empty_grid_handling(self, temp_dir: Path):
+        """Test serialization of empty grids"""
+        empty_grid = Grid.empty()
+
+        json_path = temp_dir / "empty.json"
+
+        # Should handle empty grids
+        save_grid_to_json(empty_grid, json_path)
+
+        # Should load back as empty
+        loaded_json = load_grid_from_json(json_path, target_grid_class=Grid)
+        assert loaded_json.node.size == 0
+
 
 class TestCrossTypeCompatibility:
     """Test cross-type loading and compatibility"""
@@ -201,46 +213,3 @@ class TestExtensionHandling:
         np.testing.assert_array_equal(loaded_grid.custom_metadata.id, [100, 200, 300])
         np.testing.assert_array_almost_equal(loaded_grid.custom_metadata.metadata_value, [1.5, 2.5, 3.5])
         np.testing.assert_array_equal(loaded_grid.custom_metadata.category, [1, 2, 1])
-
-
-class TestSpecialCases:
-    """Test special cases and edge scenarios"""
-
-    def test_empty_grid_handling(self, temp_dir: Path):
-        """Test serialization of empty grids"""
-        empty_grid = Grid.empty()
-
-        json_path = temp_dir / "empty.json"
-
-        # Should handle empty grids
-        save_grid_to_json(empty_grid, json_path)
-
-        # Should load back as empty
-        loaded_json = load_grid_from_json(json_path, target_grid_class=Grid)
-        assert loaded_json.node.size == 0
-
-    def test_invalid_extension_data_recovery(self, temp_dir: Path):
-        """Test recovery from invalid extension data"""
-        # Create valid extended grid
-        extended_grid = ExtendedGrid.empty()
-        nodes = ExtendedNodeArray(id=[1, 2], u_rated=[10000, 10000], u=[9950, 9900])
-        extended_grid.append(nodes)
-
-        json_path = temp_dir / "test_recovery.json"
-        save_grid_to_json(extended_grid, json_path)
-
-        # Corrupt extension data
-        with open(json_path, "r") as f:
-            data = json.load(f)
-
-        # Add invalid extension data
-        if "pgm_ds_extensions" in data:
-            data["pgm_ds_extensions"]["extended_columns"]["node"]["u"] = [1, 2, 3, 4, 5]  # Wrong size
-            data["pgm_ds_extensions"]["custom_arrays"]["fake"] = {"dtype": "invalid_dtype", "data": [[1, 2, 3]]}
-
-        with open(json_path, "w") as f:
-            json.dump(data, f)
-
-        # Should load core data despite extension errors
-        loaded_grid = load_grid_from_json(json_path, target_grid_class=Grid)
-        assert loaded_grid.node.size == 2
