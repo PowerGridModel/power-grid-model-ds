@@ -16,12 +16,15 @@ from power_grid_model_ds._core.visualizer.layout.selection_output import (
     Input("cytoscape-graph", "selectedNodeData"),
     Input("cytoscape-graph", "selectedEdgeData"),
 )
-def display_selected_element(node_data, edge_data):
+def display_selected_element(node_data: list[dict[str, Any]], edge_data: list[dict[str, Any]]):
     """Display the tapped edge data."""
     if node_data:
         return _to_data_table(node_data.pop())
     if edge_data:
-        return _to_data_table(edge_data.pop())
+        edge_data_dict = edge_data.pop()
+        del edge_data_dict["source"]  # duplicated by from_node
+        del edge_data_dict["target"]  # duplicated by to_node
+        return _to_data_table(edge_data_dict)
     return SELECTION_OUTPUT_HTML
 
 
