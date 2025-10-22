@@ -16,7 +16,7 @@ from power_grid_model_ds._core.model.grids.base import Grid
 logger = logging.getLogger(__name__)
 
 
-def _restore_grid_arrays(grid, input_data: Dict) -> None:
+def _restore_grid_values(grid, input_data: Dict) -> None:
     """Restore arrays to the grid."""
     for attr_name, attr_values in input_data.items():
         if not hasattr(grid, attr_name):
@@ -99,6 +99,6 @@ def load_grid_from_json(path: Path, target_grid_class=None):
     else:
         target_grid = target_grid_class.empty()
 
-    _restore_grid_arrays(target_grid, input_data)
+    _restore_grid_values(target_grid, input_data)
 
     return target_grid
