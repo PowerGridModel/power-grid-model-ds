@@ -73,7 +73,7 @@ def _save_grid_to_json(
 
         field_value = getattr(grid, field.name)
         if isinstance(field_value, (int, float, str, bool)):
-            serialized_data[field.name] = field.type(field_value)
+            serialized_data[field.name] = field.type(field_value)  # type: ignore
             continue
 
         if not isinstance(field_value, FancyArray):
