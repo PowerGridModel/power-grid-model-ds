@@ -24,6 +24,7 @@ def display_selected_element(node_data: list[dict[str, Any]], edge_data: list[di
         edge_data_dict = edge_data.pop()
         del edge_data_dict["source"]  # duplicated by from_node
         del edge_data_dict["target"]  # duplicated by to_node
+        del edge_data_dict["group"]  # unnecessary information
         return _to_data_table(edge_data_dict)
     return SELECTION_OUTPUT_HTML
 
