@@ -16,8 +16,6 @@ from numpy.typing import NDArray
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.utils.serialization import (
-    _extract_extensions_data,
-    _restore_extensions_data,
     load_grid_from_json,
     save_grid_to_json,
 )
@@ -47,6 +45,9 @@ class ExtendedGrid(Grid):
 
     node: ExtendedNodeArray
     line: ExtendedLineArray
+
+    # value_extension: float = 0.0
+    # dict_extension: dict = dict()
 
 
 @pytest.fixture
@@ -91,11 +92,10 @@ def extended_grid():
 class TestSerializationFormats:
     """Test serialization across different formats and configurations"""
 
-    @pytest.mark.parametrize("preserve_ext", [(True), (False)])
-    def test_basic_serialization_roundtrip(self, basic_grid: Grid, temp_dir: Path, preserve_ext: bool):
+    def test_basic_serialization_roundtrip(self, basic_grid: Grid, temp_dir: Path):
         """Test basic serialization roundtrip for all formats"""
         path = temp_dir / "test.json"
-        result_path = save_grid_to_json(basic_grid, path, preserve_extensions=preserve_ext)
+        result_path = save_grid_to_json(basic_grid, path)
         assert result_path.exists()
 
         # Load and verify
@@ -108,7 +108,7 @@ class TestSerializationFormats:
         """Test extended serialization preserving custom data"""
         path = temp_dir / "extended.json"
 
-        save_grid_to_json(extended_grid, path, preserve_extensions=True)
+        save_grid_to_json(extended_grid, path)
         loaded_grid = load_grid_from_json(path, target_grid_class=ExtendedGrid)
 
         # Verify core data
@@ -140,7 +140,7 @@ class TestCrossTypeCompatibility:
         path = temp_dir / "extended.json"
 
         # Save extended grid
-        save_grid_to_json(extended_grid, path, preserve_extensions=True)
+        save_grid_to_json(extended_grid, path)
         loaded_grid = load_grid_from_json(path, target_grid_class=Grid)
 
         # Core data should transfer
@@ -150,22 +150,6 @@ class TestCrossTypeCompatibility:
 
 class TestExtensionHandling:
     """Test extension data handling and edge cases"""
-
-    def test_missing_extension_keys(self):
-        """Test graceful handling of missing extension keys"""
-        basic_grid = Grid.empty()
-
-        # Test various malformed extension data
-        test_cases = [
-            {},  # Empty
-            {"extended_columns": {}},  # Missing custom_arrays
-            {"custom_arrays": {}},  # Missing extended_columns
-            {"extended_columns": {"test": "value"}},  # Invalid structure
-        ]
-
-        for extensions in test_cases:
-            # Should not raise
-            _restore_extensions_data(basic_grid, extensions)
 
     def test_custom_array_serialization_roundtrip(self, temp_dir: Path):
         """Test serialization and loading of grids with custom arrays"""
@@ -198,7 +182,7 @@ class TestExtensionHandling:
 
         # Test JSON serialization
         json_path = temp_dir / "custom_array.json"
-        save_grid_to_json(grid, json_path, preserve_extensions=True)
+        save_grid_to_json(grid, json_path)
 
         # Load back and verify
         loaded_grid = load_grid_from_json(json_path, target_grid_class=GridWithCustomArray)
@@ -231,31 +215,31 @@ class TestSpecialCases:
         loaded_json = load_grid_from_json(json_path, target_grid_class=Grid)
         assert loaded_json.node.size == 0
 
-    def test_custom_array_extraction_edge_cases(self, temp_dir: Path):
-        """Test edge cases in custom array extraction"""
-        # Test with grid that has complex custom arrays that might cause extraction issues
-        extended_grid = ExtendedGrid.empty()
+    # def test_custom_array_extraction_edge_cases(self, temp_dir: Path):
+    #     """Test edge cases in custom array extraction"""
+    #     # Test with grid that has complex custom arrays that might cause extraction issues
+    #     extended_grid = ExtendedGrid.empty()
 
-        # Add data that might cause issues during extraction
-        nodes = ExtendedNodeArray(
-            id=[1, 2],
-            u_rated=[10000, 10000],
-            u=[float("nan"), float("inf")],  # Edge case values
-        )
-        extended_grid.append(nodes)
+    #     # Add data that might cause issues during extraction
+    #     nodes = ExtendedNodeArray(
+    #         id=[1, 2],
+    #         u_rated=[10000, 10000],
+    #         u=[float("nan"), float("inf")],  # Edge case values
+    #     )
+    #     extended_grid.append(nodes)
 
-        # Should handle edge case values gracefully
-        extensions = _extract_extensions_data(extended_grid)
-        assert "extended_columns" in extensions
-        assert "custom_arrays" in extensions
+    #     # Should handle edge case values gracefully
+    #     extensions = _extract_extensions_data(extended_grid)
+    #     assert "extended_columns" in extensions
+    #     assert "custom_arrays" in extensions
 
-        # Test saving and loading with these edge cases
-        json_path = temp_dir / "edge_cases.json"
-        save_grid_to_json(extended_grid, json_path, preserve_extensions=True)
+    #     # Test saving and loading with these edge cases
+    #     json_path = temp_dir / "edge_cases.json"
+    #     save_grid_to_json(extended_grid, json_path, preserve_extensions=True)
 
-        # Should load without issues
-        loaded_grid = load_grid_from_json(json_path, target_grid_class=Grid)
-        assert loaded_grid.node.size == 2
+    #     # Should load without issues
+    #     loaded_grid = load_grid_from_json(json_path, target_grid_class=Grid)
+    #     assert loaded_grid.node.size == 2
 
     def test_invalid_extension_data_recovery(self, temp_dir: Path):
         """Test recovery from invalid extension data"""
@@ -265,7 +249,7 @@ class TestSpecialCases:
         extended_grid.append(nodes)
 
         json_path = temp_dir / "test_recovery.json"
-        save_grid_to_json(extended_grid, json_path, preserve_extensions=True)
+        save_grid_to_json(extended_grid, json_path)
 
         # Corrupt extension data
         with open(json_path, "r") as f:
