@@ -69,8 +69,7 @@ def save_grid_to_json(
         if not isinstance(field_value, FancyArray) or field_value.size == 0:
             continue
 
-        array_name = field.name
-        serialized_data[array_name] = {
+        serialized_data[field.name] = {
             "data": {name: field_value[name].tolist() for name in field_value.dtype.names},
         }
 
