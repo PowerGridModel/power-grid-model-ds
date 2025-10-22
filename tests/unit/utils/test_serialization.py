@@ -8,7 +8,6 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Literal
 
 import numpy as np
 import pytest
@@ -18,12 +17,9 @@ from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.utils.serialization import (
     _extract_extensions_data,
-    _get_serialization_path,
     _restore_extensions_data,
     load_grid_from_json,
-    load_grid_from_msgpack,
     save_grid_to_json,
-    save_grid_to_msgpack,
 )
 from power_grid_model_ds.arrays import LineArray
 from power_grid_model_ds.arrays import NodeArray as BaseNodeArray
@@ -95,46 +91,25 @@ def extended_grid():
 class TestSerializationFormats:
     """Test serialization across different formats and configurations"""
 
-    @pytest.mark.parametrize(
-        "format_type,preserve_ext", [("json", True), ("json", False), ("msgpack", True), ("msgpack", False)]
-    )
-    def test_basic_serialization_roundtrip(
-        self, basic_grid: Grid, temp_dir: Path, format_type: str, preserve_ext: bool
-    ):
+    @pytest.mark.parametrize("preserve_ext", [(True), (False)])
+    def test_basic_serialization_roundtrip(self, basic_grid: Grid, temp_dir: Path, preserve_ext: bool):
         """Test basic serialization roundtrip for all formats"""
-        ext = "json" if format_type == "json" else "msgpack"
-        path = temp_dir / f"test.{ext}"
-
-        # Save
-        if format_type == "json":
-            result_path = save_grid_to_json(basic_grid, path, preserve_extensions=preserve_ext)
-        else:
-            result_path = save_grid_to_msgpack(basic_grid, path, preserve_extensions=preserve_ext)
-
+        path = temp_dir / "test.json"
+        result_path = save_grid_to_json(basic_grid, path, preserve_extensions=preserve_ext)
         assert result_path.exists()
 
         # Load and verify
-        if format_type == "json":
-            loaded_grid = load_grid_from_json(path, target_grid_class=Grid)
-        else:
-            loaded_grid = load_grid_from_msgpack(path, target_grid_class=Grid)
+        loaded_grid = load_grid_from_json(path, target_grid_class=Grid)
         assert loaded_grid.node.size == basic_grid.node.size
         assert loaded_grid.line.size == basic_grid.line.size
         assert list(loaded_grid.node.id) == list(basic_grid.node.id)
 
-    @pytest.mark.parametrize("format_type", ["json", "msgpack"])
-    def test_extended_serialization_roundtrip(self, extended_grid: ExtendedGrid, temp_dir: Path, format_type: str):
+    def test_extended_serialization_roundtrip(self, extended_grid: ExtendedGrid, temp_dir: Path):
         """Test extended serialization preserving custom data"""
-        ext = "json" if format_type == "json" else "msgpack"
-        path = temp_dir / f"extended.{ext}"
+        path = temp_dir / "extended.json"
 
-        # Save with extensions
-        if format_type == "json":
-            save_grid_to_json(extended_grid, path, preserve_extensions=True)
-            loaded_grid = load_grid_from_json(path, target_grid_class=ExtendedGrid)
-        else:
-            save_grid_to_msgpack(extended_grid, path, preserve_extensions=True)
-            loaded_grid = load_grid_from_msgpack(path, target_grid_class=ExtendedGrid)
+        save_grid_to_json(extended_grid, path, preserve_extensions=True)
+        loaded_grid = load_grid_from_json(path, target_grid_class=ExtendedGrid)
 
         # Verify core data
         assert loaded_grid.node.size == extended_grid.node.size
@@ -148,37 +123,25 @@ class TestSerializationFormats:
 class TestCrossTypeCompatibility:
     """Test cross-type loading and compatibility"""
 
-    @pytest.mark.parametrize("format_type", ["json", "msgpack"])
-    def test_basic_to_extended_loading(self, basic_grid: Grid, temp_dir: Path, format_type: str):
+    def test_basic_to_extended_loading(self, basic_grid: Grid, temp_dir: Path):
         """Test loading basic grid into extended type"""
-        ext = "json" if format_type == "json" else "msgpack"
-        path = temp_dir / f"basic.{ext}"
+        path = temp_dir / "basic.json"
 
         # Save basic grid
-        if format_type == "json":
-            save_grid_to_json(basic_grid, path)
-            loaded_grid = load_grid_from_json(path, target_grid_class=ExtendedGrid)
-        else:
-            save_grid_to_msgpack(basic_grid, path)
-            loaded_grid = load_grid_from_msgpack(path, target_grid_class=ExtendedGrid)
+        save_grid_to_json(basic_grid, path)
+        loaded_grid = load_grid_from_json(path, target_grid_class=ExtendedGrid)
 
         # Core data should transfer
         assert loaded_grid.node.size == basic_grid.node.size
         assert loaded_grid.line.size == basic_grid.line.size
 
-    @pytest.mark.parametrize("format_type", ["json", "msgpack"])
-    def test_extended_to_basic_loading(self, extended_grid: ExtendedGrid, temp_dir: Path, format_type: str):
+    def test_extended_to_basic_loading(self, extended_grid: ExtendedGrid, temp_dir: Path):
         """Test loading extended grid into basic type"""
-        ext = "json" if format_type == "json" else "msgpack"
-        path = temp_dir / f"extended.{ext}"
+        path = temp_dir / "extended.json"
 
         # Save extended grid
-        if format_type == "json":
-            save_grid_to_json(extended_grid, path, preserve_extensions=True)
-            loaded_grid = load_grid_from_json(path, target_grid_class=Grid)
-        else:
-            save_grid_to_msgpack(extended_grid, path, preserve_extensions=True)
-            loaded_grid = load_grid_from_msgpack(path, target_grid_class=Grid)
+        save_grid_to_json(extended_grid, path, preserve_extensions=True)
+        loaded_grid = load_grid_from_json(path, target_grid_class=Grid)
 
         # Core data should transfer
         assert loaded_grid.node.size == extended_grid.node.size
@@ -251,46 +214,6 @@ class TestExtensionHandling:
         np.testing.assert_array_almost_equal(loaded_grid.custom_metadata.metadata_value, [1.5, 2.5, 3.5])
         np.testing.assert_array_equal(loaded_grid.custom_metadata.category, [1, 2, 1])
 
-        # Test MessagePack serialization
-        msgpack_path = temp_dir / "custom_array.msgpack"
-        save_grid_to_msgpack(grid, msgpack_path, preserve_extensions=True)
-
-        # Load back and verify
-        loaded_grid_mp = load_grid_from_msgpack(msgpack_path, target_grid_class=GridWithCustomArray)
-
-        # Verify core data
-        assert loaded_grid_mp.node.size == 2
-        np.testing.assert_array_equal(loaded_grid_mp.node.id, [1, 2])
-
-        # Verify custom array was preserved
-        assert hasattr(loaded_grid_mp, "custom_metadata")
-        assert loaded_grid_mp.custom_metadata.size == 3
-        np.testing.assert_array_equal(loaded_grid_mp.custom_metadata.id, [100, 200, 300])
-        np.testing.assert_array_almost_equal(loaded_grid_mp.custom_metadata.metadata_value, [1.5, 2.5, 3.5])
-        np.testing.assert_array_equal(loaded_grid_mp.custom_metadata.category, [1, 2, 1])
-
-
-class TestUtilityFunctions:
-    """Test utility functions and path handling"""
-
-    @pytest.mark.parametrize(
-        "input_path,format_type,expected",
-        [
-            ("test.json", "auto", "test.json"),
-            ("test.msgpack", "auto", "test.msgpack"),
-            ("test.mp", "auto", "test.mp"),
-            ("test.xyz", "auto", "test.json"),  # Unknown defaults to JSON
-            ("test.xyz", "json", "test.json"),
-            ("test.xyz", "msgpack", "test.msgpack"),
-        ],
-    )
-    def test_serialization_path_handling(
-        self, input_path: str, format_type: Literal["json", "msgpack", "auto"], expected: str
-    ):
-        """Test path handling and format detection"""
-        result = _get_serialization_path(Path(input_path), format_type)
-        assert result == Path(expected)
-
 
 class TestSpecialCases:
     """Test special cases and edge scenarios"""
@@ -300,18 +223,13 @@ class TestSpecialCases:
         empty_grid = Grid.empty()
 
         json_path = temp_dir / "empty.json"
-        msgpack_path = temp_dir / "empty.msgpack"
 
         # Should handle empty grids
         save_grid_to_json(empty_grid, json_path)
-        save_grid_to_msgpack(empty_grid, msgpack_path)
 
         # Should load back as empty
         loaded_json = load_grid_from_json(json_path, target_grid_class=Grid)
-        loaded_msgpack = load_grid_from_msgpack(msgpack_path, target_grid_class=Grid)
-
         assert loaded_json.node.size == 0
-        assert loaded_msgpack.node.size == 0
 
     def test_custom_array_extraction_edge_cases(self, temp_dir: Path):
         """Test edge cases in custom array extraction"""

@@ -9,11 +9,10 @@ import json
 import logging
 from ast import literal_eval
 from pathlib import Path
-from typing import Dict, Literal, Optional
+from typing import Dict, Optional
 
-import msgpack
 import numpy as np
-from power_grid_model.utils import json_deserialize, json_serialize, msgpack_deserialize, msgpack_serialize
+from power_grid_model.utils import json_deserialize, json_serialize
 
 from power_grid_model_ds._core.load_flow import PGM_ARRAYS, PowerGridModelInterface
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
@@ -187,60 +186,6 @@ def _create_grid_from_input_data(input_data: Dict, target_grid_class=None):
     return interface.create_grid_from_input_data()
 
 
-def _extract_msgpack_data(data: bytes, **kwargs):
-    """Extract input data and extensions from MessagePack data."""
-    try:
-        data_dict = msgpack.unpackb(data, raw=False)
-        if isinstance(data_dict, dict) and EXTENSIONS_KEY in data_dict:
-            # Extract extensions and deserialize core data
-            extensions = data_dict.pop(EXTENSIONS_KEY, {})
-            core_data = msgpack.packb(data_dict)
-            input_data = msgpack_deserialize(core_data, **kwargs)
-        else:
-            # No extensions, use power-grid-model directly
-            input_data = msgpack_deserialize(data, **kwargs)
-            extensions = {EXTENDED_COLUMNS_KEY: {}, CUSTOM_ARRAYS_KEY: {}}
-    except (msgpack.exceptions.ExtraData, ValueError, TypeError) as e:
-        # Handle MessagePack parsing failures:
-        # - ExtraData: malformed MessagePack data
-        # - ValueError/TypeError: invalid data structure or type issues
-        logger.warning(f"Failed to extract extensions from MessagePack data: {e}")
-        input_data = msgpack_deserialize(data, **kwargs)
-        extensions = {EXTENDED_COLUMNS_KEY: {}, CUSTOM_ARRAYS_KEY: {}}
-
-    return input_data, extensions
-
-
-def _get_serialization_path(path: Path, format_type: Literal["json", "msgpack", "auto"] = "auto") -> Path:
-    """Get the correct path for serialization format.
-
-    Args:
-        path: Base path
-        format_type: "json", "msgpack", or "auto" to detect from extension
-
-    Returns:
-        Path: Path with correct extension
-    """
-    json_extensions = [".json"]
-    msgpack_extensions = [".msgpack", ".mp"]
-
-    if format_type == "auto":
-        if path.suffix.lower() in json_extensions:
-            format_type = "json"
-        elif path.suffix.lower() in msgpack_extensions:
-            format_type = "msgpack"
-        else:
-            # Default to JSON
-            format_type = "json"
-
-    if format_type == "json" and path.suffix.lower() != json_extensions[0]:
-        return path.with_suffix(json_extensions[0])
-    if format_type == "msgpack" and path.suffix.lower() not in msgpack_extensions:
-        return path.with_suffix(msgpack_extensions[0])
-
-    return path
-
-
 def save_grid_to_json(
     grid,
     path: Path,
@@ -297,68 +242,6 @@ def load_grid_from_json(path: Path, target_grid_class=None):
     # Extract extensions and deserialize core data
     extensions = data.pop(EXTENSIONS_KEY, {EXTENDED_COLUMNS_KEY: {}, CUSTOM_ARRAYS_KEY: {}})
     input_data = json_deserialize(json.dumps(data))
-
-    # Create grid and restore extensions
-    grid = _create_grid_from_input_data(input_data, target_grid_class)
-    _restore_extensions_data(grid, extensions)
-
-    return grid
-
-
-def save_grid_to_msgpack(grid, path: Path, use_compact_list: bool = True, preserve_extensions: bool = True) -> Path:
-    """Save a Grid object to MessagePack format with extensions support.
-
-    Args:
-        grid: The Grid object to serialize
-        path: The file path to save to
-        use_compact_list: Whether to use compact list format
-        preserve_extensions: Whether to save extended columns and custom arrays
-
-    Returns:
-        Path: The path where the file was saved
-    """
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Convert Grid to power-grid-model input format and serialize
-    interface = PowerGridModelInterface(grid=grid)
-    input_data = interface.create_input_from_grid()
-
-    core_data = msgpack_serialize(input_data, use_compact_list=use_compact_list)
-
-    # Add extensions if requested (requires re-serialization for MessagePack)
-    if preserve_extensions:
-        extensions = _extract_extensions_data(grid)
-        if extensions[EXTENDED_COLUMNS_KEY] or extensions[CUSTOM_ARRAYS_KEY]:
-            core_dict = msgpack.unpackb(core_data, raw=False)
-            core_dict[EXTENSIONS_KEY] = extensions
-            serialized_data = msgpack.packb(core_dict)
-        else:
-            serialized_data = core_data
-    else:
-        serialized_data = core_data
-
-    # Write to file
-    with open(path, "wb") as f:
-        f.write(serialized_data)
-
-    return path
-
-
-def load_grid_from_msgpack(path: Path, target_grid_class=None):
-    """Load a Grid object from MessagePack format with cross-type loading support.
-
-    Args:
-        path: The file path to load from
-        target_grid_class: Optional Grid class to load into. If None, uses default Grid.
-
-    Returns:
-        Grid: The deserialized Grid object of the specified target class
-    """
-    with open(path, "rb") as f:
-        data = f.read()
-
-    # Extract extensions and deserialize core data
-    input_data, extensions = _extract_msgpack_data(data)
 
     # Create grid and restore extensions
     grid = _create_grid_from_input_data(input_data, target_grid_class)

@@ -30,7 +30,6 @@ dependencies = [
     "power-grid-model>=1.7",
     "rustworkx>= 0.15.1",
     "numpy>=2.0",
-    "msgpack>=1.1.2",
 ]
 dynamic = ["version"]
 

@@ -7,9 +7,7 @@ from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.utils.serialization import (
     load_grid_from_json,
-    load_grid_from_msgpack,
     save_grid_to_json,
-    save_grid_to_msgpack,
 )
 
 __all__ = [
@@ -17,7 +15,5 @@ __all__ = [
     "GraphContainer",
     "PowerGridModelInterface",
     "save_grid_to_json",
-    "save_grid_to_msgpack",
     "load_grid_from_json",
-    "load_grid_from_msgpack",
 ]
