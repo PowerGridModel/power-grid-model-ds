@@ -11,13 +11,18 @@ from power_grid_model_ds._core.model.constants import empty
 from power_grid_model_ds._core.model.dtypes.id import Id
 
 
-class Branch(Id):
-    """Branch data type"""
+class BasicBranch(Id):
+    """Branch that matches the PGM Branch data type"""
 
     from_node: NDArray[np.int32]  # node id (from-side)
     to_node: NDArray[np.int32]  # node id (to-side)
     from_status: NDArray[np.int8]  # 1 = closed, 0 = open
     to_status: NDArray[np.int8]  # 1 = closed, 0 = open
+
+
+class Branch(BasicBranch):
+    """PGM Branch with additional feeder information"""
+
     feeder_branch_id: NDArray[np.int32]  # branch id of the feeding branch
     feeder_node_id: NDArray[np.int32]  # node id of the feeding node
     is_feeder: NDArray[np.bool_]  # whether or not this branch is from the substation
@@ -29,12 +34,16 @@ class Branch(Id):
     }
 
 
+class BasicLink(BasicBranch):
+    """Basic Link data type"""
+
+
 class Link(Branch):
-    """Link data type"""
+    """Link data type including feeder information"""
 
 
-class Line(Branch):
-    """Line data type"""
+class BasicLine(BasicBranch):
+    """Basic Line data type"""
 
     r1: NDArray[np.float64]  # serial resistance
     x1: NDArray[np.float64]  # serial reactance
@@ -43,8 +52,12 @@ class Line(Branch):
     i_n: NDArray[np.float64]  # rated current
 
 
-class Transformer(Branch):
-    """Transformer data type"""
+class Line(Branch, BasicLine):
+    """Line data type including feeder information"""
+
+
+class BasicTransformer(BasicBranch):
+    """Basic Transformer data type"""
 
     u1: NDArray[np.float64]  # rated voltage (from-side)
     u2: NDArray[np.float64]  # rated voltage (to-side)
@@ -62,6 +75,10 @@ class Transformer(Branch):
     tap_min: NDArray[np.int8]  # position of tap changer at minimum voltage
     tap_max: NDArray[np.int8]  # position of tap changer at maximum voltage
     tap_nom: NDArray[np.int8]  # nominal position of tap changer
+
+
+class Transformer(Branch, BasicTransformer):
+    """Transformer including feeder information"""
 
 
 class Branch3(Id):
