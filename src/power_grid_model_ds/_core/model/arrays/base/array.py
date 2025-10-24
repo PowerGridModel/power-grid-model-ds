@@ -6,7 +6,7 @@ from abc import ABC
 from collections import namedtuple
 from copy import copy
 from functools import lru_cache
-from typing import Any, Iterable, Literal, Type, TypeVar
+from typing import Any, Iterable, Literal, Type, TypeVar, overload
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -152,7 +152,12 @@ class FancyArray(ABC):
         except (AttributeError, ValueError) as error:
             raise AttributeError(f"Cannot set attribute {attr} on {self.__class__.__name__}") from error
 
-    def __getitem__(self: Self, item):
+    @overload
+    def __getitem__(self: Self, item: str | list | tuple) -> NDArray[Any]: ...
+    @overload
+    def __getitem__(self: Self, item: Any) -> Self: ...
+
+    def __getitem__(self, item):
         """Used by for-loops, slicing [0:3], column-access ['id'], row-access [0], multi-column access.
         Note: If a single item is requested, return a named tuple instead of a np.void object.
         """
