@@ -62,7 +62,7 @@ jobs:
           uv build
 
       - name: Store built wheel file
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: power-grid-model-ds
           path: dist/
