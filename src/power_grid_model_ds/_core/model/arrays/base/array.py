@@ -180,8 +180,10 @@ class FancyArray(ABC):
     def __hash__(self: Self):
         return hash(f"{self.__class__} {self}")
 
-    def __eq__(self: Self, other):
-        return self._data.__eq__(other.data)
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        return self.data.__eq__(other.data)
 
     def __copy__(self: Self):
         return self.__class__(data=copy(self._data))
