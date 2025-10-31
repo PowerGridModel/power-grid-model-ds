@@ -153,10 +153,12 @@ class FancyArray(ABC):
             raise AttributeError(f"Cannot set attribute {attr} on {self.__class__.__name__}") from error
 
     @overload
-    def __getitem__(self: Self, item: slice | int | NDArray[np.bool_]) -> Self: ...
+    def __getitem__(
+        self: Self, item: slice | int | NDArray[np.bool_] | list[bool] | NDArray[np.int_] | list[int]
+    ) -> Self: ...
 
     @overload
-    def __getitem__(self, item: str | NDArray[np.str_]) -> NDArray[Any]: ...
+    def __getitem__(self, item: str | NDArray[np.str_] | list[str]) -> NDArray[Any]: ...
 
     def __getitem__(self, item):
         if isinstance(item, slice | int):
@@ -164,13 +166,19 @@ class FancyArray(ABC):
             if new_data.shape == ():
                 new_data = np.array([new_data])
             return self.__class__(data=new_data)
-        if isinstance(item, np.ndarray) and item.dtype == np.bool_:
-            return self.__class__(data=self._data[item])
-        if isinstance(item, np.ndarray) and item.size == 0:
-            return self.__class__(data=self._data[[]])
         if isinstance(item, str):
             return self._data[item]
-        raise NotImplementedError(f"FancyArray[{type(item)}] is not supported. Use FancyArray.data instead.")
+        if (isinstance(item, np.ndarray) and item.size == 0) or (isinstance(item, list | tuple) and len(item) == 0):
+            return self.__class__(data=self._data[[]])
+        if isinstance(item, list | np.ndarray):
+            item_array = np.array(item)
+            if item_array.dtype == np.bool_ or np.issubdtype(item_array.dtype, np.int_):
+                return self.__class__(data=self._data[item_array])
+            if np.issubdtype(item_array.dtype, np.str_):
+                return self._data[item_array.tolist()]
+        raise NotImplementedError(
+            f"FancyArray[{type(item).__name__}] is not supported. Try FancyArray.data[{type(item).__name__}] instead."
+        )
 
     def __setitem__(self: Self, key, value):
         if isinstance(value, FancyArray):
@@ -335,4 +343,4 @@ class FancyArray(ABC):
         if not isinstance(extended, cls):
             raise TypeError(f"Extended array must be of type {cls.__name__}, got {type(extended).__name__}")
         dtype = cls.get_dtype()
-        return cls(data=np.array(extended.data[list(dtype.names)], dtype=dtype))
+        return cls(data=np.array(extended[list(dtype.names)], dtype=dtype))
