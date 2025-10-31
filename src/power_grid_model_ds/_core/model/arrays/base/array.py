@@ -59,14 +59,14 @@ class FancyArray(ABC):
     _defaults: dict[str, Any] = {}
     _str_lengths: dict[str, int] = {}
 
-    def __init__(self: Self, *args, data: NDArray | None = None, **kwargs):
+    def __init__(self, *args, data: NDArray | None = None, **kwargs):
         if data is None:
             self._data = build_array(*args, dtype=self.get_dtype(), defaults=self.get_defaults(), **kwargs)
         else:
             self._data = data
 
     @property
-    def data(self: Self) -> NDArray:
+    def data(self) -> NDArray:
         return self._data
 
     @classmethod
@@ -110,7 +110,7 @@ class FancyArray(ABC):
                 dtype_list.append((name, dtype))
         return np.dtype(dtype_list)
 
-    def __repr__(self: Self) -> str:
+    def __repr__(self) -> str:
         try:
             data = getattr(self, "data")
             if data.size > 3:
@@ -125,7 +125,7 @@ class FancyArray(ABC):
     def __len__(self) -> int:
         return len(self._data)
 
-    def __iter__(self: Self):
+    def __iter__(self):
         for record in self._data:
             yield self.__class__(data=np.array([record]))
 
@@ -177,7 +177,7 @@ class FancyArray(ABC):
             return item.data in self._data
         return False
 
-    def __hash__(self: Self):
+    def __hash__(self):
         return hash(f"{self.__class__} {self}")
 
     def __eq__(self, other):
@@ -185,10 +185,10 @@ class FancyArray(ABC):
             return False
         return self.data.__eq__(other.data)
 
-    def __copy__(self: Self):
+    def __copy__(self):
         return self.__class__(data=copy(self._data))
 
-    def copy(self: Self):
+    def copy(self):
         """Return a copy of this array including its data"""
         return copy(self)
 
@@ -283,7 +283,7 @@ class FancyArray(ABC):
         return self.__class__(data=apply_get(*args, array=self._data, mode_=mode_, **kwargs))
 
     def filter_mask(
-        self: Self,
+        self,
         *args: int | Iterable[int] | np.ndarray,
         mode_: Literal["AND", "OR"] = "AND",
         **kwargs: Any | list[Any] | np.ndarray,
@@ -291,7 +291,7 @@ class FancyArray(ABC):
         return get_filter_mask(*args, array=self._data, mode_=mode_, **kwargs)
 
     def exclude_mask(
-        self: Self,
+        self,
         *args: int | Iterable[int] | np.ndarray,
         mode_: Literal["AND", "OR"] = "AND",
         **kwargs: Any | list[Any] | np.ndarray,
@@ -301,7 +301,7 @@ class FancyArray(ABC):
     def re_order(self: Self, new_order: ArrayLike, column: str = "id") -> Self:
         return self.__class__(data=re_order(self._data, new_order, column=column))
 
-    def update_by_id(self: Self, ids: ArrayLike, allow_missing: bool = False, **kwargs) -> None:
+    def update_by_id(self, ids: ArrayLike, allow_missing: bool = False, **kwargs) -> None:
         try:
             _ = update_by_id(self._data, ids, allow_missing, **kwargs)
         except ValueError as error:
@@ -314,13 +314,13 @@ class FancyArray(ABC):
         except ValueError as error:
             raise ValueError(f"Cannot update {self.__class__.__name__}. {error}") from error
 
-    def check_ids(self: Self, return_duplicates: bool = False) -> NDArray | None:
+    def check_ids(self, return_duplicates: bool = False) -> NDArray | None:
         return check_ids(self._data, return_duplicates=return_duplicates)
 
-    def as_table(self: Self, column_width: int | str = "auto", rows: int = 10) -> str:
+    def as_table(self, column_width: int | str = "auto", rows: int = 10) -> str:
         return convert_array_to_string(self, column_width=column_width, rows=rows)
 
-    def as_df(self: Self):
+    def as_df(self):
         """Convert to pandas DataFrame"""
         if pandas is None:
             raise ImportError("pandas is not installed")
@@ -332,4 +332,4 @@ class FancyArray(ABC):
         if not isinstance(extended, cls):
             raise TypeError(f"Extended array must be of type {cls.__name__}, got {type(extended).__name__}")
         dtype = cls.get_dtype()
-        return cls(data=np.array(extended[list(dtype.names)], dtype=dtype))
+        return cls(data=np.array(extended.data[list(dtype.names)], dtype=dtype))
