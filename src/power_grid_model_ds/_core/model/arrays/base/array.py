@@ -332,4 +332,4 @@ class FancyArray(ABC):
         if not isinstance(extended, cls):
             raise TypeError(f"Extended array must be of type {cls.__name__}, got {type(extended).__name__}")
         dtype = cls.get_dtype()
-        return cls(data=np.array(extended.data[list(dtype.names)], dtype=dtype))
+        return cls(data=np.array(extended[list(dtype.names)], dtype=dtype))
