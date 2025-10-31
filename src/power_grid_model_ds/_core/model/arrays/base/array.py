@@ -6,7 +6,7 @@ from abc import ABC
 from collections import namedtuple
 from copy import copy
 from functools import lru_cache
-from typing import Any, Iterable, Literal, Type, TypeVar
+from typing import Any, Iterable, Literal, Type, TypeVar, overload
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -152,20 +152,25 @@ class FancyArray(ABC):
         except (AttributeError, ValueError) as error:
             raise AttributeError(f"Cannot set attribute {attr} on {self.__class__.__name__}") from error
 
-    def __getitem__(self: Self, item):
-        """Used by for-loops, slicing [0:3], column-access ['id'], row-access [0], multi-column access.
-        Note: If a single item is requested, return a named tuple instead of a np.void object.
-        """
+    @overload
+    def __getitem__(self: Self, item: slice | int | NDArray[np.bool_]) -> Self: ...
 
-        result = self._data.__getitem__(item)
+    @overload
+    def __getitem__(self, item: str | NDArray[np.str_]) -> NDArray[Any]: ...
 
-        if isinstance(item, (list, tuple)) and (len(item) == 0 or np.array(item).dtype.type is np.bool_):
-            return self.__class__(data=result)
-        if isinstance(item, (str, list, tuple)):
-            return result
-        if isinstance(result, np.void):
-            return self.__class__(data=np.array([result]))
-        return self.__class__(data=result)
+    def __getitem__(self, item):
+        if isinstance(item, slice | int):
+            new_data = self._data[item]
+            if new_data.shape == ():
+                new_data = np.array([new_data])
+            return self.__class__(data=new_data)
+        if isinstance(item, np.ndarray) and item.dtype == np.bool_:
+            return self.__class__(data=self._data[item])
+        if isinstance(item, np.ndarray) and item.size == 0:
+            return self.__class__(data=self._data[[]])
+        if isinstance(item, str):
+            return self._data[item]
+        raise NotImplementedError(f"FancyArray[{type(item)}] is not supported. Use FancyArray.data instead.")
 
     def __setitem__(self: Self, key, value):
         if isinstance(value, FancyArray):
@@ -330,4 +335,4 @@ class FancyArray(ABC):
         if not isinstance(extended, cls):
             raise TypeError(f"Extended array must be of type {cls.__name__}, got {type(extended).__name__}")
         dtype = cls.get_dtype()
-        return cls(data=np.array(extended[list(dtype.names)], dtype=dtype))
+        return cls(data=np.array(extended.data[list(dtype.names)], dtype=dtype))

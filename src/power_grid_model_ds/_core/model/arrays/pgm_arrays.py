@@ -71,7 +71,7 @@ class BranchArray(IdArray, Branch):
             - when n_parallel is 1 and mode is 'eq', the function returns branches that are not parallel.
             - when n_parallel is 1 and mode is 'neq', the function returns branches that are parallel.
         """
-        _, index, counts = np.unique(self[["from_node", "to_node"]], return_counts=True, return_index=True)
+        _, index, counts = np.unique(self.data[["from_node", "to_node"]], return_counts=True, return_index=True)
 
         match mode:
             case "eq":
@@ -82,9 +82,9 @@ class BranchArray(IdArray, Branch):
                 raise ValueError(f"mode {mode} not supported")
 
         if mode == "eq" and n_parallel == 1:
-            return self[index][counts_mask]
-        filtered_branches = self[index][counts_mask]
-        return self.filter(from_node=filtered_branches.from_node, to_node=filtered_branches.to_node)
+            return self.__class__(self.data[index][counts_mask])
+        filtered_branches = self.data[index][counts_mask]
+        return self.filter(from_node=filtered_branches["from_node"], to_node=filtered_branches["to_node"])
 
 
 class LinkArray(Link, BranchArray):

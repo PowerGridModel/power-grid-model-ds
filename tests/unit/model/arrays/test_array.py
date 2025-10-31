@@ -65,17 +65,22 @@ def test_getitem_array_one_column(fancy_test_array: FancyTestArray):
 
 def test_getitem_array_multiple_columns(fancy_test_array: FancyTestArray):
     columns = ["id", "test_int", "test_float"]
-    assert fancy_test_array.data[columns].tolist() == fancy_test_array[columns].tolist()
-    assert_array_equal(fancy_test_array[columns].dtype.names, ("id", "test_int", "test_float"))
+    assert_array_equal(fancy_test_array.data[columns].dtype.names, ("id", "test_int", "test_float"))
 
 
-def test_getitem_unique_multiple_columns(fancy_test_array: FancyTestArray):
-    columns = ["id", "test_int", "test_float"]
-    assert np.array_equal(np.unique(fancy_test_array[columns]), fancy_test_array[columns])
+def test_getitem_array_index(fancy_test_array: FancyTestArray):
+    assert fancy_test_array[0].data.tolist() == fancy_test_array.data[0:1].tolist()
+
+
+def test_getitem_array_nested_index(fancy_test_array: FancyTestArray):
+    nested_array = fancy_test_array[0][0][0][0][0][0]
+    assert isinstance(nested_array, FancyArray)
+    assert nested_array.data.shape == (1,)
+    assert nested_array.data.tolist() == fancy_test_array.data[0:1].tolist()
 
 
 def test_getitem_array_slice(fancy_test_array: FancyTestArray):
-    assert fancy_test_array.data[0:2].tolist() == fancy_test_array[0:2].tolist()
+    assert fancy_test_array[0:2].data.tolist() == fancy_test_array.data[0:2].tolist()
 
 
 def test_getitem_with_array_mask(fancy_test_array: FancyTestArray):
@@ -86,19 +91,19 @@ def test_getitem_with_array_mask(fancy_test_array: FancyTestArray):
 
 def test_getitem_with_tuple_mask(fancy_test_array: FancyTestArray):
     mask = (True, False, True)
-    assert isinstance(fancy_test_array[mask], FancyArray)
-    assert np.array_equal(fancy_test_array.data[mask], fancy_test_array[mask].data)
+    with pytest.raises(NotImplementedError):
+        fancy_test_array[mask]  # type: ignore[call-overload]  # noqa
 
 
 def test_getitem_with_list_mask(fancy_test_array: FancyTestArray):
     mask = [True, False, True]
-    assert isinstance(fancy_test_array[mask], FancyArray)
-    assert np.array_equal(fancy_test_array.data[mask], fancy_test_array[mask].data)
+    with pytest.raises(NotImplementedError):
+        fancy_test_array[mask]  # type: ignore[call-overload]  # noqa
 
 
 def test_getitem_with_empty_list_mask():
     array = FancyTestArray()
-    mask = []
+    mask = np.array([], dtype=bool)
     assert isinstance(array[mask], FancyArray)
     assert np.array_equal(array.data[mask], array[mask].data)
 
@@ -233,16 +238,16 @@ def test_unique_return_counts_and_inverse(fancy_test_array: FancyTestArray):
 
 
 def test_sort(fancy_test_array: FancyTestArray):
-    assert_array_equal(fancy_test_array.test_float, [4.0, 4.0, 1.0])
-    fancy_test_array.sort(order="test_float")
-    assert_array_equal(fancy_test_array.test_float, [1.0, 4.0, 4.0])
+    assert_array_equal(fancy_test_array["test_float"], [4.0, 4.0, 1.0])
+    fancy_test_array.data.sort(order="test_float")
+    assert_array_equal(fancy_test_array["test_float"], [1.0, 4.0, 4.0])
 
 
 def test_copy_function(fancy_test_array: FancyTestArray):
     array_copy = copy(fancy_test_array)
-    array_copy.test_int = 123
+    array_copy["test_int"] = 123
     assert not id(fancy_test_array) == id(array_copy)
-    assert not fancy_test_array.test_int[0] == array_copy.test_int[0]
+    assert not fancy_test_array["test_int"][0] == array_copy["test_int"][0]
 
 
 def test_copy_method(fancy_test_array: FancyTestArray):
@@ -302,4 +307,4 @@ def test_from_extended_array():
 
     array = LineArray.from_extended(extended_array)
     assert not isinstance(array, ExtendedLineArray)
-    array_equal_with_nan(array.data, extended_array[array.columns])
+    array_equal_with_nan(array.data, extended_array.data[array.columns])
