@@ -128,10 +128,10 @@ class TestConcatenate:
             fp.concatenate(fancy_test_array, different_array.data)
 
     def test_concatenate_different_fancy_array_same_dtype(self, fancy_test_array: FancyTestArray):
-        sub_array = fancy_test_array.data[["test_str", "test_int"]]
+        sub_array = fancy_test_array[["test_str", "test_int"]]
 
         different_array = FancyNonIdArray.zeros(10)
-        different_sub_array = different_array.data[["test_str", "test_int"]]
+        different_sub_array = different_array[["test_str", "test_int"]]
 
         concatenated = np.concatenate([sub_array, different_sub_array])
         assert concatenated.size == 13
