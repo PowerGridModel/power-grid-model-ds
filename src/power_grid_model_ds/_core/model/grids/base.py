@@ -158,9 +158,9 @@ class Grid(FancyArrayContainer):
             raise ValueError("No branch_ids provided.")
         for branch_array in self.branch_arrays:
             array = branch_array.filter(branch_ids)
-            if 0 < len(array) != len(branch_ids):
+            if array.size > 0 and array.size != len(branch_ids):
                 raise ValueError("Branches are not of the same type.")
-            if len(array):
+            if array.size:
                 return array
         raise RecordDoesNotExist(f"Branches {branch_ids} not found in grid.")
 
