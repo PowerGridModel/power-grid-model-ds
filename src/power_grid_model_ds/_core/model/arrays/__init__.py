@@ -9,6 +9,7 @@ from power_grid_model_ds._core.model.arrays import MyArray
 from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     AsymCurrentSensorArray,
     AsymLineArray,
+    AsymPowerSensorArray,
     AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
@@ -29,6 +30,7 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import (
 )
 
 __all__ = [
+    "AsymPowerSensorArray",
     "AsymVoltageSensorArray",
     "AsymCurrentSensorArray",
     "Branch3Array",
