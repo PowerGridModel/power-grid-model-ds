@@ -65,6 +65,7 @@ def test_getitem_array_one_column(fancy_test_array: FancyTestArray):
 
 def test_getitem_array_multiple_columns(fancy_test_array: FancyTestArray):
     columns = ["id", "test_int", "test_float"]
+    assert fancy_test_array.data[columns].tolist() == fancy_test_array[columns].tolist()
     assert_array_equal(fancy_test_array[columns].dtype.names, ("id", "test_int", "test_float"))
 
 
