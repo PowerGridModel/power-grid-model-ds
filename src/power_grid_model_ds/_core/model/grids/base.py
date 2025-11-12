@@ -95,27 +95,34 @@ class Grid(FancyArrayContainer):
         for transformer3 in self.three_winding_transformer:
             nodes = [transformer3.node_1.item(), transformer3.node_2.item(), transformer3.node_3.item()]
             for combo in itertools.combinations(nodes, 2):
-                grid_str += f"S{combo[0]} S{combo[1]} {transformer3.id.item()},3-transformer\n"
+                grid_str += f"S{combo[0]} S{combo[1]} {transformer3['id'].item()},3-transformer\n"
 
         for branch in self.branches:
-            from_node = self.node.get(id=branch.from_node).record
-            to_node = self.node.get(id=branch.to_node).record
+            from_node = self.node.get(id=branch["from_node"])
+            to_node = self.node.get(id=branch["to_node"])
 
-            from_node_str = f"S{from_node.id}" if from_node.node_type == NodeType.SUBSTATION_NODE else str(from_node.id)
-            to_node_str = f"S{to_node.id}" if to_node.node_type == NodeType.SUBSTATION_NODE else str(to_node.id)
+            # pylint: disable=no-member  # pylint false positive on from_node["id"].item()
+            from_node_str = (
+                f"S{from_node['id']}"
+                if from_node["node_type"] == NodeType.SUBSTATION_NODE
+                else str(from_node["id"].item())
+            )
+            to_node_str = (
+                f"S{to_node['id']}" if to_node["node_type"] == NodeType.SUBSTATION_NODE else str(to_node["id"].item())
+            )
 
-            suffix_str = str(branch.id.item())
-            if branch.from_status.item() == 0 or branch.to_status.item() == 0:
+            suffix_str = str(branch["id"].item())
+            if branch["from_status"].item() == 0 or branch["to_status"].item() == 0:
                 suffix_str = f"{suffix_str},open"
 
-            if branch.id in self.transformer.id:
+            if branch["id"] in self.transformer["id"]:
                 suffix_str = f"{suffix_str},transformer"
-            elif branch.id in self.link.id:
+            elif branch["id"] in self.link["id"]:
                 suffix_str = f"{suffix_str},link"
-            elif branch.id in self.line.id:
+            elif branch["id"] in self.line["id"]:
                 pass  # no suffix needed
             else:
-                raise ValueError(f"Branch {branch.id} is not a transformer, link or line")
+                raise ValueError(f"Branch {branch['id']} is not a transformer, link or line")
 
             grid_str += f"{from_node_str} {to_node_str} {suffix_str}\n"
         return grid_str
@@ -152,9 +159,9 @@ class Grid(FancyArrayContainer):
             raise ValueError("No branch_ids provided.")
         for branch_array in self.branch_arrays:
             array = branch_array.filter(branch_ids)
-            if 0 < array.size != len(branch_ids):
+            if 0 < len(array) != len(branch_ids):
                 raise ValueError("Branches are not of the same type.")
-            if array.size:
+            if len(array):
                 return array
         raise RecordDoesNotExist(f"Branches {branch_ids} not found in grid.")
 
@@ -164,19 +171,19 @@ class Grid(FancyArrayContainer):
             return
         if not isinstance(branches, (LineArray, LinkArray, TransformerArray)):
             try:
-                branches = self.get_typed_branches(branches.id)
+                branches = self.get_typed_branches(branches["id"])
             except ValueError:
                 # If the branches are not of the same type, reverse them per type (though this is slower)
                 for array in self.branch_arrays:
-                    self.reverse_branches(array.filter(branches.id))
+                    self.reverse_branches(array.filter(branches["id"]))
                 return
 
-        from_nodes = branches.from_node
-        to_nodes = branches.to_node
+        from_nodes = branches["from_node"]
+        to_nodes = branches["to_node"]
 
         array_field = self.find_array_field(branches.__class__)
         array = getattr(self, array_field.name)
-        array.update_by_id(branches.id, from_node=to_nodes, to_node=from_nodes)
+        array.update_by_id(branches["id"], from_node=to_nodes, to_node=from_nodes)
 
     @classmethod
     def empty(cls: Type[Self], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> Self:
@@ -213,7 +220,7 @@ class Grid(FancyArrayContainer):
         self._append(array=branch)
         self.graphs.add_branch_array(branch_array=branch)
 
-        logging.debug(f"added branch {branch.id} from {branch.from_node} to {branch.to_node}")
+        logging.debug(f"added branch {branch['id']} from {branch['from_node']} to {branch['to_node']}")
 
     def delete_branch(self, branch: BranchArray) -> None:
         """Remove a branch from the grid
@@ -224,7 +231,7 @@ class Grid(FancyArrayContainer):
         _delete_branch_array(branch=branch, grid=self)
         self.graphs.delete_branch(branch=branch)
         logging.debug(
-            f"""deleted branch {branch.id.item()} from {branch.from_node.item()} to {branch.to_node.item()}"""
+            f"""deleted branch {branch["id"].item()} from {branch["from_node"].item()} to {branch["to_node"].item()}"""
         )
 
     def delete_branch3(self, branch: Branch3Array) -> None:
@@ -244,7 +251,7 @@ class Grid(FancyArrayContainer):
         """
         self._append(array=node)
         self.graphs.add_node_array(node_array=node)
-        logging.debug(f"added rail {node.id}")
+        logging.debug(f"added rail {node['id']}")
 
     def delete_node(self, node: NodeArray) -> None:
         """Remove a node from the grid
@@ -252,17 +259,17 @@ class Grid(FancyArrayContainer):
         Args:
             node (NodeArray): The node to remove
         """
-        self.node = self.node.exclude(id=node.id)
-        self.sym_load = self.sym_load.exclude(node=node.id)
-        self.source = self.source.exclude(node=node.id)
+        self.node = self.node.exclude(id=node["id"])
+        self.sym_load = self.sym_load.exclude(node=node["id"])
+        self.source = self.source.exclude(node=node["id"])
 
         for branch_array in self.branch_arrays:
-            matching_branches = branch_array.filter(from_node=node.id, to_node=node.id, mode_="OR")
+            matching_branches = branch_array.filter(from_node=node["id"], to_node=node["id"], mode_="OR")
             for branch in matching_branches:
                 self.delete_branch(branch)
 
         self.graphs.delete_node(node=node)
-        logging.debug(f"deleted rail {node.id}")
+        logging.debug(f"deleted rail {node['id']}")
 
     def make_active(self, branch: BranchArray) -> None:
         """Make a branch active
@@ -272,13 +279,13 @@ class Grid(FancyArrayContainer):
         """
         array_field = self.find_array_field(branch.__class__)
         array_attr = getattr(self, array_field.name)
-        branch_mask = array_attr.id == branch.id
-        array_attr.from_status[branch_mask] = 1
-        array_attr.to_status[branch_mask] = 1
+        branch_mask = array_attr["id"] == branch["id"]
+        array_attr["from_status"][branch_mask] = 1
+        array_attr["to_status"][branch_mask] = 1
         setattr(self, array_field.name, array_attr)
 
         self.graphs.make_active(branch=branch)
-        logging.debug(f"activated branch {branch.id}")
+        logging.debug(f"activated branch {branch['id']}")
 
     def make_inactive(self, branch: BranchArray, at_to_side: bool = True) -> None:
         """Make a branch inactive. This is done by setting from or to status to 0.
@@ -290,13 +297,13 @@ class Grid(FancyArrayContainer):
         """
         array_field = self.find_array_field(branch.__class__)
         array_attr = getattr(self, array_field.name)
-        branch_mask = array_attr.id == branch.id
+        branch_mask = array_attr["id"] == branch["id"]
         status_side = "to_status" if at_to_side else "from_status"
         array_attr[status_side][branch_mask] = 0
         setattr(self, array_field.name, array_attr)
 
         self.graphs.make_inactive(branch=branch)
-        logging.debug(f"deactivated branch {branch.id}")
+        logging.debug(f"deactivated branch {branch['id']}")
 
     def get_branches_in_path(self, nodes_in_path: list[int]) -> BranchArray:
         """Returns all branches within a path of nodes
@@ -325,7 +332,7 @@ class Grid(FancyArrayContainer):
         substation_nodes = self.node.filter(node_type=NodeType.SUBSTATION_NODE.value)
 
         for node in connected_nodes:
-            if node in substation_nodes.id:
+            if node in substation_nodes["id"]:
                 return substation_nodes.get(node)
         raise RecordDoesNotExist(f"No {NodeType.SUBSTATION_NODE.name} connected to node {node_id}")
 
@@ -352,11 +359,11 @@ class Grid(FancyArrayContainer):
         """
         substation_nodes = self.node.filter(node_type=NodeType.SUBSTATION_NODE.value)
 
-        if node_id in substation_nodes.id:
+        if node_id in substation_nodes["id"]:
             raise NotImplementedError("get_downstream_nodes is not implemented for substation nodes!")
 
         return self.graphs.active_graph.get_downstream_nodes(
-            node_id=node_id, start_node_ids=list(substation_nodes.id), inclusive=inclusive
+            node_id=node_id, start_node_ids=list(substation_nodes["id"]), inclusive=inclusive
         )
 
     def cache(self, cache_dir: Path, cache_name: str, compress: bool = True):
@@ -463,6 +470,6 @@ def _delete_branch_array(branch: BranchArray | Branch3Array, grid: Grid):
     """Delete a branch array from the grid"""
     array_field = grid.find_array_field(branch.__class__)
     array_attr = getattr(grid, array_field.name)
-    setattr(grid, array_field.name, array_attr.exclude(id=branch.id))
+    setattr(grid, array_field.name, array_attr.exclude(id=branch["id"]))
 
-    grid.transformer_tap_regulator = grid.transformer_tap_regulator.exclude(regulated_object=branch.id)
+    grid.transformer_tap_regulator = grid.transformer_tap_regulator.exclude(regulated_object=branch["id"])
