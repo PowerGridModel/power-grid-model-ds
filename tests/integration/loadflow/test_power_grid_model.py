@@ -3,12 +3,14 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
+from enum import StrEnum
+from unittest.mock import patch
+
 import numpy as np
 import pytest
-from power_grid_model import TapChangingStrategy, initialize_array
+from power_grid_model import ComponentType, TapChangingStrategy, initialize_array
 
 from power_grid_model_ds._core.data_source.generator.grid_generators import RadialGridGenerator
-from power_grid_model_ds._core.load_flow import PowerGridModelInterface
 from power_grid_model_ds._core.model.arrays import (
     LineArray,
     NodeArray,
@@ -16,6 +18,7 @@ from power_grid_model_ds._core.model.arrays import (
     SymLoadArray,
 )
 from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds._core.power_grid_model_interface import PowerGridModelInterface
 from tests.fixtures.arrays import ExtendedLineArray, ExtendedNodeArray
 from tests.fixtures.grid_classes import ExtendedGrid
 from tests.unit.model.grids.test_custom_grid import CustomGrid
@@ -112,25 +115,47 @@ class TestCalculatePowerFlow:
         assert output["transformer_tap_regulator"]["tap_pos"][0] > 0
 
 
-class PowerGridModelInterfaceMethods:
+ExtendedComponentType = StrEnum("ExtendedComponentType", {x.name: x.value for x in ComponentType} | {"onzin": "onzin"})
+
+
+class TestPowerGridModelInterfaceMethods:
     def test_update_grid(self):
         """Tests the power flow on a randomly configured grid and update grid with results"""
         grid_generator = RadialGridGenerator(grid_class=Grid, nr_nodes=5, nr_sources=1, nr_nops=0)
         grid = grid_generator.run(seed=0)
-
         grid.node = ExtendedNodeArray(grid.node.data)
         grid.line = ExtendedLineArray(grid.line.data)
 
-        core_interface = PowerGridModelInterface(grid=grid)
-        core_interface.create_input_from_grid()
-        core_interface.calculate_power_flow()
-        core_interface.update_grid()
+        with patch("power_grid_model_ds._core.power_grid_model_interface.ComponentType", ExtendedComponentType):
+            core_interface = PowerGridModelInterface(grid=grid)
+            core_interface.create_input_from_grid()
+            core_interface.calculate_power_flow()
+            core_interface.update_grid()
 
+        grid = core_interface.grid
         # voltage should be in neighbourhood of 10500
         assert grid.node.u[0] == pytest.approx(10_500, 0.1)
         assert grid.node.u[1] == pytest.approx(10_500, 0.1)
         # all lines have a current
         assert all(grid.line.i_from > 0)
+
+    # def test_update_grid_missing_component(self, core_interface_after_loadflow: PowerGridModelInterface):
+    #     """Test that update grid works when a component is missing in the grid."""
+    #     del core_interface_after_loadflow.grid.source
+
+    #     core_interface_after_loadflow.update_grid()
+
+    #     # voltage should be in neighbourhood of 10500
+    #     grid = core_interface_after_loadflow.grid
+    #     assert not all(grid.node.is_empty("u"))
+    #     assert not hasattr(grid, "source")
+
+    def test_input_from_grid_missing_component(self, grid: Grid):
+        # Mimic no source in grid
+        del grid.source
+
+        core_interface = PowerGridModelInterface(grid=grid)
+        assert "source" not in core_interface.create_input_from_grid()
 
     def test_update_model(self):
         """Test whether a pgm model can be updated and returns different results"""
@@ -183,7 +208,7 @@ class PowerGridModelInterfaceMethods:
 
         core_interface = PowerGridModelInterface(grid=grid)
         assert core_interface.model is None
-        assert core_interface._input_data is None
+        assert core_interface._input_data == {}
         core_interface.setup_model()
         assert core_interface.model
         assert core_interface._input_data

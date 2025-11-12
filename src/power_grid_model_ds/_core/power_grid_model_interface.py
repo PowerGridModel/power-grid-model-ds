@@ -9,24 +9,9 @@ from typing import Dict, Optional
 
 import numpy as np
 from numpy.typing import NDArray
-from power_grid_model import CalculationMethod, PowerGridModel, initialize_array
+from power_grid_model import CalculationMethod, ComponentType, PowerGridModel, initialize_array
 
 from power_grid_model_ds._core.model.grids.base import Grid
-
-PGM_ARRAYS = [
-    "node",
-    "line",
-    "link",
-    "transformer",
-    "three_winding_transformer",
-    "sym_load",
-    "sym_gen",
-    "source",
-    "transformer_tap_regulator",
-    "sym_power_sensor",
-    "sym_voltage_sensor",
-    "asym_voltage_sensor",
-]
 
 
 class PGMCoreException(Exception):
@@ -70,7 +55,9 @@ class PowerGridModelInterface:
         """
         Create input for the PowerGridModel
         """
-        for array_name in PGM_ARRAYS:
+        for array_name in ComponentType:
+            if not hasattr(self.grid, array_name):
+                continue
             pgm_array = self._create_power_grid_array(array_name=array_name)
             self._input_data[array_name] = pgm_array
         return self._input_data
@@ -86,8 +73,8 @@ class PowerGridModelInterface:
 
         Returns a Grid object with the arrays filled with the PowerGridModel input.
         """
-        for pgm_name in PGM_ARRAYS:
-            if pgm_name in self._input_data:
+        for pgm_name in ComponentType:
+            if pgm_name in self._input_data and hasattr(self.grid, pgm_name):
                 pgm_ds_array_class = getattr(self.grid, pgm_name).__class__
                 pgm_ds_array = pgm_ds_array_class(self._input_data[pgm_name])
                 self.grid.append(pgm_ds_array, check_max_id=False)
@@ -155,12 +142,13 @@ class PowerGridModelInterface:
         """
         if not self.output_data:
             raise PGMCoreException("Can not update grid without output_data")
-        for array_name in PGM_ARRAYS:
-            if array_name in self.output_data.keys():
-                internal_array = getattr(self.grid, array_name)
-                pgm_output_array = self.output_data[array_name]
-                fields = self._match_dtypes(pgm_output_array.dtype, internal_array.dtype)
-                internal_array[fields] = pgm_output_array[fields]
+        for array_name in self.output_data.keys():
+            if not hasattr(self.grid, array_name):
+                continue
+            internal_array = getattr(self.grid, array_name)
+            pgm_output_array = self.output_data[array_name]
+            fields = self._match_dtypes(pgm_output_array.dtype, internal_array.dtype)
+            internal_array[fields] = pgm_output_array[fields]
 
     @staticmethod
     def _match_dtypes(first_dtype: np.dtype, second_dtype: np.dtype):
