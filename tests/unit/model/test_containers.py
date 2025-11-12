@@ -47,10 +47,10 @@ def test_deepcopy():
 
     copied_container = deepcopy(container)
 
-    assert container.node.id == copied_container.node.id
-    assert container.line.id == copied_container.line.id
-    assert container.transformer.id == copied_container.transformer.id
-    assert container.link.id == copied_container.link.id
+    assert container.node["id"] == copied_container.node["id"]
+    assert container.line["id"] == copied_container.line["id"]
+    assert container.transformer["id"] == copied_container.transformer["id"]
+    assert container.link["id"] == copied_container.link["id"]
 
 
 def test_all_arrays():
@@ -82,9 +82,9 @@ def test_check_ids_4_arrays_3_with_id():
 def test_check_ids_two_arrays_no_conflicts():
     container = _TwoArraysContainer.empty()
     container.array_1 = IdArray.zeros(1)
-    container.array_1.id = 1
+    container.array_1["id"] = 1
     container.array_2 = IdArray.zeros(1)
-    container.array_1.id = 2
+    container.array_1["id"] = 2
 
     assert 2 == len(list(container.all_arrays()))
     container.check_ids()
@@ -93,9 +93,9 @@ def test_check_ids_two_arrays_no_conflicts():
 def test_check_ids_two_arrays_with_conflict():
     container = _TwoArraysContainer.empty()
     container.array_1 = IdArray.zeros(1)
-    container.array_1.id = 1
+    container.array_1["id"] = 1
     container.array_2 = IdArray.zeros(1)
-    container.array_2.id = 1
+    container.array_2["id"] = 1
 
     assert 2 == len(list(container.all_arrays()))
 
@@ -106,9 +106,9 @@ def test_check_ids_two_arrays_with_conflict():
 def test_check_ids_two_arrays_with_conflict_in_same_array():
     container = _TwoArraysContainer.empty()
     container.array_1 = IdArray.zeros(2)
-    container.array_1.id = [1, 1]
+    container.array_1["id"] = [1, 1]
     container.array_2 = IdArray.zeros(1)
-    container.array_2.id = 2
+    container.array_2["id"] = 2
 
     assert 2 == len(list(container.all_arrays()))
 
@@ -125,10 +125,10 @@ def test_search_for_id_no_arrays():
 def test_search_for_id_match_in_two_arrays():
     container = Grid.empty()
     container.node = NodeArray.zeros(1)
-    container.node.id = 42
+    container.node["id"] = 42
 
     container.line = LineArray.zeros(1)
-    container.line.id = 42
+    container.line["id"] = 42
     result = container.search_for_id(42)
 
     expected_result = [container.node[0:1], container.line[0:1]]
@@ -139,10 +139,10 @@ def test_search_for_id_match_in_two_arrays():
 def test_search_for_id_no_match_in_two_arrays():
     container = Grid.empty()
     container.node = NodeArray.zeros(1)
-    container.node.id = 41
+    container.node["id"] = 41
 
     container.line = LineArray.zeros(1)
-    container.line.id = 42
+    container.line["id"] = 42
 
     with pytest.raises(RecordDoesNotExist):
         container.search_for_id(43)
@@ -161,12 +161,12 @@ def test_append_with_overlapping_ids():
 
     # Create first array with IDs [1, 2, 3]
     nodes_1 = NodeArray.zeros(3)
-    nodes_1.id = [1, 2, 3]
+    nodes_1["id"] = [1, 2, 3]
     grid.append(nodes_1)
 
     # Create second array with overlapping IDs [3, 4, 5] (ID 3 overlaps)
     nodes_2 = NodeArray.zeros(3)
-    nodes_2.id = [3, 4, 5]
+    nodes_2["id"] = [3, 4, 5]
 
     # This should raise a ValueError due to overlapping ID 3
     with pytest.raises(ValueError, match="Cannot append: minimum id 3 is not greater than the current id counter 3"):
@@ -179,12 +179,12 @@ def test_append_with_non_overlapping_ids():
 
     # Create first array with IDs [1, 2, 3]
     nodes_1 = NodeArray.zeros(3)
-    nodes_1.id = [1, 2, 3]
+    nodes_1["id"] = [1, 2, 3]
     grid.append(nodes_1)
 
     # Create second array with non-overlapping IDs [4, 5, 6]
     nodes_2 = NodeArray.zeros(3)
-    nodes_2.id = [4, 5, 6]
+    nodes_2["id"] = [4, 5, 6]
 
     # This should work without error
     grid.append(nodes_2)
@@ -192,7 +192,7 @@ def test_append_with_non_overlapping_ids():
     # Verify all nodes are in the grid
     assert grid.node.size == 6
     expected_ids = [1, 2, 3, 4, 5, 6]
-    assert sorted(grid.node.id.tolist()) == expected_ids
+    assert sorted(grid.node["id"].tolist()) == expected_ids
 
 
 def test_branches(grid: Grid):
@@ -201,16 +201,16 @@ def test_branches(grid: Grid):
 
     for branch_class in (LineArray, TransformerArray, LinkArray):
         branches = branch_class.zeros(10)
-        branches.from_node = nodes.id
-        branches.to_node = list(reversed(nodes.id.tolist()))
+        branches["from_node"] = nodes["id"]
+        branches["to_node"] = list(reversed(nodes["id"].tolist()))
         grid.append(branches)
 
-    expected_ids = np.concatenate((grid.line.id, grid.transformer.id, grid.link.id))
-    assert set(expected_ids) == set(grid.branches.id)
+    expected_ids = np.concatenate((grid.line["id"], grid.transformer["id"], grid.link["id"]))
+    assert set(expected_ids) == set(grid.branches["id"])
 
 
 def test_delete_node_without_additional_properties(basic_grid: Grid):
-    assert 106 in basic_grid.node.id
+    assert 106 in basic_grid.node["id"]
     assert 106 in basic_grid.transformer["to_node"]
 
     original_grid = deepcopy(basic_grid)
@@ -218,35 +218,35 @@ def test_delete_node_without_additional_properties(basic_grid: Grid):
     basic_grid.delete_node(node)
 
     assert 106 not in basic_grid.transformer["to_node"]
-    assert 106 not in basic_grid.node.id
+    assert 106 not in basic_grid.node["id"]
     assert len(original_grid.node) == len(basic_grid.node) + 1
     assert len(original_grid.transformer) == len(basic_grid.transformer) + 1
 
 
 def test_delete_node_with_source(basic_grid: Grid):
-    assert 101 in basic_grid.node.id
-    assert 101 in basic_grid.source.node
+    assert 101 in basic_grid.node["id"]
+    assert 101 in basic_grid.source["node"]
 
     original_grid = deepcopy(basic_grid)
     node = basic_grid.node.get(id=101)
     basic_grid.delete_node(node)
 
-    assert 101 not in basic_grid.node.id
-    assert 101 not in basic_grid.source.node
+    assert 101 not in basic_grid.node["id"]
+    assert 101 not in basic_grid.source["node"]
     assert len(original_grid.node) == len(basic_grid.node) + 1
     assert len(original_grid.source) == len(basic_grid.source) + 1
 
 
 def test_delete_node_with_load(basic_grid: Grid):
-    assert 102 in basic_grid.node.id
-    assert 102 in basic_grid.sym_load.node
+    assert 102 in basic_grid.node["id"]
+    assert 102 in basic_grid.sym_load["node"]
 
     original_grid = deepcopy(basic_grid)
     node = basic_grid.node.get(id=102)
     basic_grid.delete_node(node)
 
-    assert 102 not in basic_grid.node.id
-    assert 102 not in basic_grid.sym_load.node
+    assert 102 not in basic_grid.node["id"]
+    assert 102 not in basic_grid.sym_load["node"]
     assert len(original_grid.node) == len(basic_grid.node) + 1
     assert len(original_grid.sym_load) == len(basic_grid.sym_load) + 1
 
@@ -302,9 +302,9 @@ class TestReverseBranches:
 
         new_line = basic_grid.line.get(from_node=103, to_node=102)
 
-        assert new_line.from_node == line.to_node
-        assert new_line.to_node == line.from_node
-        assert new_line.id == line.id
+        assert new_line["from_node"] == line["to_node"]
+        assert new_line["to_node"] == line["from_node"]
+        assert new_line["id"] == line["id"]
 
     def test_reverse_branch(self, basic_grid: Grid):
         branch = basic_grid.branches.get(from_node=101, to_node=102)
@@ -315,18 +315,18 @@ class TestReverseBranches:
 
         new_branch = basic_grid.line.get(from_node=102, to_node=101)
 
-        assert new_branch.from_node == branch.to_node
-        assert new_branch.to_node == branch.from_node
-        assert new_branch.id == branch.id
+        assert new_branch["from_node"] == branch["to_node"]
+        assert new_branch["to_node"] == branch["from_node"]
+        assert new_branch["id"] == branch["id"]
 
     def test_reverse_all_branches(self, basic_grid: Grid):
-        from_nodes = basic_grid.branches.from_node
-        to_nodes = basic_grid.branches.to_node
+        from_nodes = basic_grid.branches["from_node"]
+        to_nodes = basic_grid.branches["to_node"]
 
         basic_grid.reverse_branches(basic_grid.branches)
 
-        assert np.all(from_nodes == basic_grid.branches.to_node)
-        assert np.all(to_nodes == basic_grid.branches.from_node)
+        assert np.all(from_nodes == basic_grid.branches["to_node"])
+        assert np.all(to_nodes == basic_grid.branches["from_node"])
 
     def test_reverse_no_branches(self, basic_grid: Grid):
         basic_grid.reverse_branches(BranchArray())
