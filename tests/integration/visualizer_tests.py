@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.visualizer.app import visualize
@@ -50,6 +51,11 @@ def visualize_grid_with_links():
 
 
 if __name__ == "__main__":
+    r_grid = get_radial_grid()
+    r_grid.serialize(Path("json_path"))
+
+    new_grid = Grid.deserialize(Path("json_path"))
+
     visualize_grid()
     # visualize_coordinated_grid()
     # visualize_grid_with_links()

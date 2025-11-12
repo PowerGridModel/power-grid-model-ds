@@ -8,7 +8,7 @@ import dataclasses
 import json
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Type, TypeVar
+from typing import TYPE_CHECKING, Type, TypeVar
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 
@@ -24,43 +24,13 @@ else:
 logger = logging.getLogger(__name__)
 
 
-def _restore_grid_values(grid, json_data: Dict) -> None:
-    """Restore arrays to the grid."""
-    for attr_name, attr_values in json_data.items():
-        if not hasattr(grid, attr_name):
-            continue
-
-        if not issubclass(getattr(grid, attr_name).__class__, FancyArray):
-            expected_type = grid.__dataclass_fields__[attr_name].type
-            cast_value = expected_type(attr_values)
-            setattr(grid, attr_name, cast_value)
-            continue
-
-        try:
-            array_field = grid.find_array_field(getattr(grid, attr_name).__class__)
-            matched_columns = {
-                col: attr_values["data"][col] for col in array_field.type().columns if col in attr_values["data"]
-            }
-            restored_array = array_field.type(**matched_columns)
-            setattr(grid, attr_name, restored_array)
-        except (AttributeError, KeyError, ValueError, TypeError) as e:
-            # Handle restoration failures:
-            # - KeyError: missing "dtype" or "data" keys
-            # - ValueError/TypeError: invalid dtype string or data conversion
-            # - AttributeError: grid methods/attributes missing
-            logger.warning(f"Failed to restore '{attr_name}': {e}")
-
-
-def _save_grid_to_json(
-    grid,
-    path: Path,
-    **kwargs,
-) -> Path:
+def save_grid_to_json(grid, path: Path, strict: bool = True, **kwargs) -> Path:
     """Save a Grid object to JSON format using power-grid-model serialization with extensions support.
 
     Args:
         grid: The Grid object to serialize
         path: The file path to save to
+        strict: Whether to raise an error if the grid object is not serializable.
         **kwargs: Keyword arguments forwarded to json.dump (for example, indent, sort_keys,
             ensure_ascii, etc.).
     Returns:
@@ -69,24 +39,25 @@ def _save_grid_to_json(
     path.parent.mkdir(parents=True, exist_ok=True)
 
     serialized_data = {}
+
     for field in dataclasses.fields(grid):
         if field.name in ["graphs", "_id_counter"]:
             continue
 
         field_value = getattr(grid, field.name)
-        if isinstance(field_value, (int, float, str, bool)):
-            serialized_data[field.name] = field_value
+
+        if isinstance(field_value, FancyArray):
+            serialized_data[field.name] = {
+                "data": {name: field_value[name].tolist() for name in field_value.dtype.names},
+            }
             continue
 
-        if not isinstance(field_value, FancyArray):
-            raise NotImplementedError(f"Serialization for field of type '{type(field_value)}' is not implemented.")
-
-        if field_value.size == 0:
-            continue
-
-        serialized_data[field.name] = {
-            "data": {name: field_value[name].tolist() for name in field_value.dtype.names},
-        }
+        try:
+            json.dumps(field_value)
+        except TypeError as e:
+            if strict:
+                raise
+            logger.warning(f"Failed to serialize '{field.name}': {e}")
 
     # Write to file
     with open(path, "w", encoding="utf-8") as f:
@@ -95,7 +66,7 @@ def _save_grid_to_json(
     return path
 
 
-def _load_grid_from_json(path: Path, target_grid_class: Type[G]) -> G:
+def load_grid_from_json(path: Path, target_grid_class: Type[G]) -> G:
     """Load a Grid object from JSON format with cross-type loading support.
 
     Args:
@@ -108,7 +79,30 @@ def _load_grid_from_json(path: Path, target_grid_class: Type[G]) -> G:
     with open(path, "r", encoding="utf-8") as f:
         input_data = json.load(f)
 
-    target_grid = target_grid_class.empty()
-    _restore_grid_values(target_grid, input_data)
+    grid = target_grid_class.empty()
+    _restore_grid_values(grid, input_data)
+    graph_class = grid.graphs.__class__
+    grid.graphs = graph_class.from_arrays(grid)
+    return grid
 
-    return target_grid
+
+def _restore_grid_values(grid: G, json_data: dict) -> None:
+    """Restore arrays to the grid."""
+    for attr_name, attr_values in json_data.items():
+        if not hasattr(grid, attr_name):
+            logger.warning(f"Unexpected attribute '{attr_name}'")
+            continue
+
+        grid_attr = getattr(grid, attr_name)
+        attr_class = grid_attr.__class__
+        if isinstance(grid_attr, FancyArray):
+            if extra := set(attr_values["data"]) - set(grid_attr.columns):
+                logger.warning(f"{attr_name} has extra columns: {extra}")
+
+            matched_columns = {col: attr_values["data"][col] for col in grid_attr.columns if col in attr_values["data"]}
+            restored_array = attr_class(**matched_columns)
+            setattr(grid, attr_name, restored_array)
+            continue
+
+        # load other values
+        setattr(grid, attr_name, attr_class(attr_values))
