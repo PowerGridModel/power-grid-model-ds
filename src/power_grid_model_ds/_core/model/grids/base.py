@@ -363,7 +363,7 @@ class Grid(FancyArrayContainer):
     def cache(self, cache_dir: Path, cache_name: str, compress: bool = True):
         """Cache Grid to a folder using pickle format.
 
-        Note: Consider using save_to_json() for better
+        Note: Consider using serialize() for better
         interoperability and standardized format.
 
         Args:
