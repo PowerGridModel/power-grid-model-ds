@@ -3,19 +3,18 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
-name: CI Build
+name: CI/CD
 
 on:
   push:
     branches:
       - main  # run pipeline on pull request
   pull_request:
-  merge_group:  # run pipeline on merge queue
   workflow_dispatch:  # run this workflow manually from the Actions tab
     inputs:
       create_release:
         type: boolean
-        description: Create a (pre-)release when CI passes
+        description: Create a release (only works on main branch)
         default: false
         required: true
 
@@ -29,47 +28,133 @@ jobs:
     steps:
       - run: echo "ci started"
 
-  build-test-release:
-    name: build-test-release
-    uses: "./.github/workflows/build-test-release.yml"
+  build-python:
+    if: ${{ github.ref == 'refs/heads/main' && inputs.create_release }}
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        if: ${{ always() }}
+        with:
+          activate-environment: true
+          enable-cache: true
+
+      - name: Install dependencies
+        if: ${{ always() }}
+        run: uv sync --frozen
+
+      - name: Set PyPI version
+        uses: PowerGridModel/pgm-version-bump@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save version
+        id: version
+        run: echo "version=$(cat PYPI_VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Build
+        run: |
+          uv build
+
+      - name: Store built wheel file
+        uses: actions/upload-artifact@v5
+        with:
+          name: power-grid-model-ds
+          path: dist/
+
+  tests:
+    if: ${{ github.ref == 'refs/heads/main' && inputs.create_release }}
+    needs: build-python
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        python: ["3.11", "3.12", "3.13"]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        if: ${{ always() }}
+        with:
+          activate-environment: true
+          enable-cache: true
+
+      - name: install poe
+        run: uv tool install poethepoet
+
+      - name: Load built wheel file
+        uses: actions/download-artifact@v6
+        with:
+          name: power-grid-model-ds
+          path: dist/
+
+      - name: Install built wheel file
+        run: uv pip install power-grid-model-ds[dev]==${{ needs.build-python.outputs.version }} --find-links=dist
+
+      - name: Run All Code Quality Checks & Tests
+        run: poe all --check
+
+  github-release:
+    if: ${{ github.ref == 'refs/heads/main' && inputs.create_release }}
+    needs:
+      - build-python
+      - tests
     permissions:
       contents: write
-    with:
-      create_release: ${{ (github.event_name == 'workflow_dispatch' && inputs.create_release) || (github.event_name == 'push') }}
-
-  check-code-quality:
-    uses: "./.github/workflows/check-code-quality.yml"
-
-  reuse-compliance:
-    uses: "./.github/workflows/reuse-compliance.yml"
-
-  ci-passed:
     runs-on: ubuntu-latest
-    needs: [ci-started, build-test-release, check-code-quality, reuse-compliance]
-    if: always()
-
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
-      # this explicit check is needed cfr. https://github.com/orgs/community/discussions/75568
-      - name: "Check whether all jobs passed"
-        run: echo '${{ toJSON(needs) }}' | jq -e 'to_entries | all(.value.result == "success")'
-      - run: echo "ci passed"
+      - name: Checkout source code
+        uses: actions/checkout@v5
+
+      - name: Load built wheel file
+        uses: actions/download-artifact@v6
+        with:
+          name: power-grid-model-ds
+          path: dist/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get tag
+        id: tag
+        run: echo "tag=v${{ needs.build-python.outputs.version }}" >> $GITHUB_OUTPUT
+
+      - name: Display tag
+        run: echo "${{ steps.tag.outputs.tag }}"
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./dist/*
+          tag_name: ${{ steps.tag.outputs.tag }}
+          generate_release_notes: true
+          target_commitish: ${{ github.sha }}
 
   publish:
     name: Publish to PyPI
+    if: ${{ github.ref == 'refs/heads/main' && inputs.create_release }}
+    needs: github-release
     runs-on: ubuntu-latest
     permissions:
       contents: write
       id-token: write  # Required for Trusted Publishing
-    needs: build-test-release
-    if: (github.event_name == 'workflow_dispatch' && inputs.create_release) || github.event_name == 'push'
-
     steps:
       - name: Download assets from latest GitHub release using gh CLI
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p assets-to-publish
-          release_tag="${{ needs.build-test-release.outputs.tag }}"
+          release_tag="${{ needs.github-release.outputs.tag }}"
           gh release download "$release_tag" --repo "$GITHUB_REPOSITORY" --dir assets-to-publish
 
       - name: List downloaded assets
@@ -89,3 +174,9 @@ jobs:
           skip-existing: true
           print-hash: true
           verbose: true
+
+  check-code-quality:
+    uses: "./.github/workflows/check-code-quality.yml"
+
+  reuse-compliance:
+    uses: "./.github/workflows/reuse-compliance.yml"
