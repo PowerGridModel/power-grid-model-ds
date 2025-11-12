@@ -60,15 +60,15 @@ def set_feeder_ids(grid: "Grid"):
 
         for array in grid.branch_arrays:
             array.update_by_id(
-                component_branches.id,
-                feeder_branch_id=feeder_branch.id.item(),
+                component_branches["id"],
+                feeder_branch_id=feeder_branch["id"].item(),
                 feeder_node_id=feeder_node_id,
                 allow_missing=True,
             )
 
         grid.node.update_by_id(
             component_node_ids,
-            feeder_branch_id=feeder_branch.id.item(),
+            feeder_branch_id=feeder_branch["id"].item(),
             feeder_node_id=feeder_node_id,
             allow_missing=True,
         )
@@ -76,11 +76,11 @@ def set_feeder_ids(grid: "Grid"):
 
 def set_is_feeder(grid: "Grid") -> None:
     "Set the is_feeder property for all branches in the network."
-    feeder_node_ids = grid.node.filter(node_type=NodeType.SUBSTATION_NODE).id
+    feeder_node_ids = grid.node.filter(node_type=NodeType.SUBSTATION_NODE)["id"]
     array: BranchArray
     for array in [grid.link, grid.line, grid.transformer]:
-        array.is_feeder = np.logical_xor(
-            np.isin(array.from_node, feeder_node_ids), np.isin(array.to_node, feeder_node_ids)
+        array["is_feeder"] = np.logical_xor(
+            np.isin(array["from_node"], feeder_node_ids), np.isin(array["to_node"], feeder_node_ids)
         )
 
 
