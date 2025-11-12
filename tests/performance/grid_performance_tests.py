@@ -28,8 +28,8 @@ def perf_test_add_lines():
         + "nodes = NodeArray.zeros({size});"
         + "grid.append(nodes);"
         + "lines = LineArray.zeros({size});"
-        + "lines.from_node = nodes.id;"
-        + "lines.to_node = nodes.id;"
+        + "lines['from_node'] = nodes['id'];"
+        + "lines['to_node'] = nodes['id'];"
     }
 
     code_to_test = ["grid.append(lines);"]
@@ -45,7 +45,7 @@ def perf_test_get_downstream_nodes_performance():
         + "from power_grid_model_ds.generators import RadialGridGenerator;"
         + "from power_grid_model_ds.graph_models import RustworkxGraphModel;"
         + "grid=RadialGridGenerator(nr_nodes={size}, grid_class=Grid, graph_model=RustworkxGraphModel).run();"
-        + "non_substation_node = grid.node.filter(node_type=NodeType.UNSPECIFIED).id;"
+        + "non_substation_node = grid.node.filter(node_type=NodeType.UNSPECIFIED)['id'];"
         + "node_id = np.random.choice(non_substation_node)"
     }
 
