@@ -26,11 +26,11 @@ class RustworkxGraphModel(BaseGraphModel):
         self._external_to_internal: dict[int, int] = {}
 
     @property
-    def nr_nodes(self):
+    def nr_nodes(self) -> int:
         return self._graph.num_nodes()
 
     @property
-    def nr_branches(self):
+    def nr_branches(self) -> int:
         return self._graph.num_edges()
 
     @property

@@ -29,12 +29,12 @@ class BaseGraphModel(ABC):
 
     @property
     @abstractmethod
-    def nr_nodes(self):
+    def nr_nodes(self) -> int:
         """Returns the number of nodes in the graph"""
 
     @property
     @abstractmethod
-    def nr_branches(self):
+    def nr_branches(self) -> int:
         """Returns the number of branches in the graph"""
 
     @property
@@ -251,7 +251,7 @@ class BaseGraphModel(ABC):
         return [self._internals_to_externals(path) for path in internal_paths]
 
     def get_components(self) -> list[list[int]]:
-        """Returns all separate components when the substation_nodes are removed of the graph as lists
+        """Returns all separate components of the graph as lists
 
         If you want to get the components of the graph without certain nodes,
         use the `tmp_remove_nodes` context manager.

@@ -212,11 +212,18 @@ class FancyArrayContainer:
             array = self.attach_ids(array)
         elif np.any(array.id == EMPTY_ID):
             raise ValueError(f"Cannot append: array contains empty [{EMPTY_ID}] and non-empty ids.")
+        elif check_max_id and self.id_counter > 0:
+            # Only check for overlaps when array has prescribed (non-empty) IDs
+            # Check if any incoming ID might overlap with existing IDs
+            # This prevents overlaps since counter tracks the highest used ID
+            new_min_id = np.min(array.id)
+            if new_min_id <= self._id_counter:
+                raise ValueError(
+                    f"Cannot append: minimum id {new_min_id} is not greater than "
+                    f"the current id counter {self._id_counter}"
+                )
 
         new_max_id = np.max(array.id)
-        if check_max_id and new_max_id < self._id_counter:
-            raise ValueError(f"Cannot append: id {new_max_id} is lower than the id counter")
-
         # Update _id_counter
         self._id_counter = max(self._id_counter, new_max_id)
 

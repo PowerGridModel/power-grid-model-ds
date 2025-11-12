@@ -29,6 +29,11 @@ def get_coordinated_grid() -> CoordinatedGrid:
     return grid
 
 
+def get_grid_with_links() -> Grid:
+    grid = Grid.from_txt("S1 2 transformer", "2 3 link", "3 4")
+    return grid
+
+
 def visualize_grid():
     visualize(grid=get_radial_grid(), debug=True)
 
@@ -40,6 +45,11 @@ def visualize_coordinated_grid():
     )
 
 
+def visualize_grid_with_links():
+    visualize(grid=get_grid_with_links(), debug=True)
+
+
 if __name__ == "__main__":
     visualize_grid()
     # visualize_coordinated_grid()
+    # visualize_grid_with_links()

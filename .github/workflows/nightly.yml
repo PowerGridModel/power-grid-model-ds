@@ -15,15 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-test-release:
-    uses: "./.github/workflows/build-test-release.yml"
-    permissions:
-      contents: write
-    with:
-      create_release: false
-
   check-code-quality:
     uses: "./.github/workflows/check-code-quality.yml"
-
-  reuse-compliance:
-    uses: "./.github/workflows/reuse-compliance.yml"
+    with:
+      update_dependencies: true

@@ -155,6 +155,46 @@ def test_id_counter():
     assert 42 == container.id_counter
 
 
+def test_append_with_overlapping_ids():
+    """Test that appending arrays with overlapping IDs raises an error."""
+    grid = Grid.empty()
+
+    # Create first array with IDs [1, 2, 3]
+    nodes_1 = NodeArray.zeros(3)
+    nodes_1.id = [1, 2, 3]
+    grid.append(nodes_1)
+
+    # Create second array with overlapping IDs [3, 4, 5] (ID 3 overlaps)
+    nodes_2 = NodeArray.zeros(3)
+    nodes_2.id = [3, 4, 5]
+
+    # This should raise a ValueError due to overlapping ID 3
+    with pytest.raises(ValueError, match="Cannot append: minimum id 3 is not greater than the current id counter 3"):
+        grid.append(nodes_2)
+
+
+def test_append_with_non_overlapping_ids():
+    """Test that appending arrays with non-overlapping IDs works correctly."""
+    grid = Grid.empty()
+
+    # Create first array with IDs [1, 2, 3]
+    nodes_1 = NodeArray.zeros(3)
+    nodes_1.id = [1, 2, 3]
+    grid.append(nodes_1)
+
+    # Create second array with non-overlapping IDs [4, 5, 6]
+    nodes_2 = NodeArray.zeros(3)
+    nodes_2.id = [4, 5, 6]
+
+    # This should work without error
+    grid.append(nodes_2)
+
+    # Verify all nodes are in the grid
+    assert grid.node.size == 6
+    expected_ids = [1, 2, 3, 4, 5, 6]
+    assert sorted(grid.node.id.tolist()) == expected_ids
+
+
 def test_branches(grid: Grid):
     nodes = NodeArray.zeros(10)
     grid.append(nodes)

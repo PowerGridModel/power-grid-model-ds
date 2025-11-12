@@ -8,6 +8,12 @@ name: Check Code Quality
 on:
   # run pipeline from another workflow
   workflow_call:
+    inputs:
+      update_dependencies:
+        type: boolean
+        description: Update dependencies to their latest version
+        default: false
+        required: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-code-quality
@@ -16,21 +22,52 @@ concurrency:
 jobs:
   check-code-quality:
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Checkout source code
+        uses: actions/checkout@v5
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        if: ${{ always() }}
         with:
-          python-version: 3.11
+          activate-environment: true
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
 
-      - name: Upgrade pip
-        run: pip install --upgrade pip
+      - name: install poe
+        if: ${{ always() }}
+        run: uv tool install poethepoet
 
       - name: Install dependencies
-        run: pip install -e .[dev]
-      
-      - name: Run pre-commit on all files
-        run: pre-commit run --all-files
+        if: ${{ always() }}
+        run: uv sync --frozen --dev
+
+      - name: Update dependencies
+        if: ${{ inputs.update_dependencies && always() }}
+        run: uv sync --upgrade --dev
+
+      - name: lint
+        if: ${{ always() }}
+        run: poe lint --check
+      - name: format
+        if: ${{ always() }}
+        run: poe format --check
+      - name: lock
+        if: ${{ always() }}
+        run: poe lock
+      - name: type
+        if: ${{ always() }}
+        run: poe type
+      - name: cover
+        if: ${{ always() }}
+        run: poe cover
+      - name: report
+        if: ${{ always() }}
+        run: poe report
+
+      - name: Actually stop now if any quality control failed
+        if: ${{ failure() }}
+        run: exit 1

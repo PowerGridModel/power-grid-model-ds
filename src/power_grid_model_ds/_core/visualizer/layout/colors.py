@@ -5,11 +5,12 @@
 YELLOW = "#facc37"
 CYTO_COLORS = {
     "line": YELLOW,
-    "link": "green",
+    "link": "#008000",
     "transformer": "#4290f5",
     "node": YELLOW,
     "selected": "#e28743",
     "selected_transformer": "#0349a3",
+    "selected_link": "#004000",
     "substation_node": "purple",
     "open_branch": "#c9c9c9",
     "highlighted": "#a10000",
