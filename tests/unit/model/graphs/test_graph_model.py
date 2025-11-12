@@ -209,7 +209,7 @@ def test_get_components_with_tmp_removed_substation_nodes(graph_with_2_routes):
 
 def test_from_arrays(basic_grid: Grid):
     new_graph = basic_grid.graphs.complete_graph.__class__.from_arrays(basic_grid)
-    assert_array_equal(new_graph.external_ids, basic_grid.node.id)
+    assert_array_equal(new_graph.external_ids, basic_grid.node["id"])
 
 
 class TestPathMethods:
