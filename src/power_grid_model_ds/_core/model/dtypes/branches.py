@@ -54,15 +54,6 @@ class GenericBranch(Branch):
     x1: NDArray[np.float64]  # positive-sequence reactance
     g1: NDArray[np.float64]  # positive-sequence conductance
     b1: NDArray[np.float64]  # positive-sequence susceptance
-    k: NDArray[np.float64]  # off-nominal ratio
-    theta: NDArray[np.float64]  # angle shift (radian)
-    sn: NDArray[np.float64]  # rated power
-
-    _defaults = {
-        "k": 1.0,
-        "theta": 0.0,
-        "sn": 0.0,
-    }
 
 
 class Transformer(Branch):
