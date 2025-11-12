@@ -133,7 +133,7 @@ class Grid(FancyArrayContainer):
         branch_dtype = BranchArray.get_dtype()
         branches = BranchArray()
         for array in self.branch_arrays:
-            new_branch = BranchArray(data=array.data[list(branch_dtype.names)])
+            new_branch = BranchArray(data=array[list(branch_dtype.names)])
             branches = fp.concatenate(branches, new_branch)
         return branches
 
