@@ -74,6 +74,17 @@ def test_getitem_unique_multiple_columns(fancy_test_array: FancyTestArray):
     assert np.array_equal(np.unique(fancy_test_array[columns]), fancy_test_array[columns])
 
 
+def test_getitem_array_index(fancy_test_array: FancyTestArray):
+    assert fancy_test_array[0].data.tolist() == fancy_test_array.data[0:1].tolist()
+
+
+def test_getitem_array_nested_index(fancy_test_array: FancyTestArray):
+    nested_array = fancy_test_array[0][0][0][0][0][0]
+    assert isinstance(nested_array, FancyArray)
+    assert nested_array.data.shape == (1,)
+    assert nested_array.data.tolist() == fancy_test_array.data[0:1].tolist()
+
+
 def test_getitem_array_slice(fancy_test_array: FancyTestArray):
     assert fancy_test_array.data[0:2].tolist() == fancy_test_array[0:2].tolist()
 
@@ -84,16 +95,18 @@ def test_getitem_with_array_mask(fancy_test_array: FancyTestArray):
     assert np.array_equal(fancy_test_array.data[mask], fancy_test_array[mask].data)
 
 
-def test_getitem_with_tuple_mask(fancy_test_array: FancyTestArray):
-    mask = (True, False, True)
-    assert isinstance(fancy_test_array[mask], FancyArray)
-    assert np.array_equal(fancy_test_array.data[mask], fancy_test_array[mask].data)
-
-
 def test_getitem_with_list_mask(fancy_test_array: FancyTestArray):
     mask = [True, False, True]
     assert isinstance(fancy_test_array[mask], FancyArray)
     assert np.array_equal(fancy_test_array.data[mask], fancy_test_array[mask].data)
+
+
+def test_getitem_with_tuple_mask(fancy_test_array: FancyTestArray):
+    # Numpy gives unexpected results with tuple masks. Therefore, we raise NotImplementedError here.
+    # e.g: np.array([1,2,3])[(True, False, True)] returns an empty array (array([], shape=(0, 3), dtype=int64)
+    mask = (True, False, True)
+    with pytest.raises(NotImplementedError):
+        fancy_test_array[mask]  # type: ignore[call-overload]  # noqa
 
 
 def test_getitem_with_empty_list_mask():

@@ -15,6 +15,7 @@ from power_grid_model_ds._core.model.arrays import (
     LineArray,
     LinkArray,
     NodeArray,
+    ThreeWindingTransformerArray,
     TransformerArray,
     TransformerTapRegulatorArray,
 )
@@ -225,6 +226,42 @@ def test_grid_delete_tranformer(basic_grid: Grid):
     assert transformer.id not in grid.transformer.id
 
     assert not grid.graphs.complete_graph.has_branch(transformer.from_node.item(), transformer.to_node.item())
+
+
+def test_grid_add_three_winding_transformer():
+    grid = Grid.empty()
+    nodes = NodeArray.zeros(3)
+    nodes.id = [102, 103, 104]
+    grid.append(nodes)
+
+    three_winding_transformer = ThreeWindingTransformerArray.zeros(1)
+    three_winding_transformer.node_1 = 102
+    three_winding_transformer.node_2 = 103
+    three_winding_transformer.node_3 = 104
+    three_winding_transformer.status_1 = 1
+    three_winding_transformer.status_2 = 1
+    three_winding_transformer.status_3 = 1
+    grid.append(three_winding_transformer)
+
+    assert 1 == len(grid.three_winding_transformer)
+    assert grid.graphs.active_graph.has_branch(102, 103)
+    assert grid.graphs.active_graph.has_branch(102, 104)
+    assert grid.graphs.active_graph.has_branch(103, 104)
+
+
+def test_grid_delete_three_winding_transformer(grid_with_3wt: Grid):
+    grid = grid_with_3wt
+    assert grid.graphs.active_graph.has_branch(101, 102)
+    assert grid.graphs.active_graph.has_branch(101, 103)
+    assert grid.graphs.active_graph.has_branch(102, 103)
+
+    grid.delete_branch3(branch=grid.three_winding_transformer[0])
+
+    assert 0 == len(grid.three_winding_transformer)
+
+    assert not grid.graphs.active_graph.has_branch(101, 102)
+    assert not grid.graphs.active_graph.has_branch(101, 103)
+    assert not grid.graphs.active_graph.has_branch(102, 103)
 
 
 def test_grid_activate_branch(basic_grid: Grid):
