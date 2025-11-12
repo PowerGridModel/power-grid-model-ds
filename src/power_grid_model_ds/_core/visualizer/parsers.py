@@ -18,10 +18,11 @@ def parse_node_array(nodes: NodeArray) -> list[dict[str, Any]]:
     columns = nodes.columns
     for node in nodes:
         cyto_elements = {"data": _array_to_dict(node, columns)}
-        cyto_elements["data"]["id"] = str(node.id.item())
+        cyto_elements["data"]["id"] = str(node["id"].item())
         cyto_elements["data"]["group"] = "node"
         if with_coords:
-            cyto_elements["position"] = {"x": node.x.item(), "y": -node.y.item()}  # invert y-axis for visualization
+            y_value = -node["y"].item()  # invert y-axis for visualization
+            cyto_elements["position"] = {"x": node["x"].item(), "y": y_value}
         parsed_nodes.append(cyto_elements)
     return parsed_nodes
 
@@ -46,9 +47,9 @@ def parse_branch3_array(branches: Branch3Array, group: Literal["transformer"]) -
             cyto_elements["data"].update(
                 {
                     # IDs need to be unique, so we combine the branch ID with the from and to nodes
-                    "id": str(branch3.id.item()) + f"_{branch1.from_node.item()}_{branch1.to_node.item()}",
-                    "source": str(branch1.from_node.item()),
-                    "target": str(branch1.to_node.item()),
+                    "id": str(branch3["id"].item()) + f"_{branch1['from_node'].item()}_{branch1['to_node'].item()}",
+                    "source": str(branch1["from_node"].item()),
+                    "target": str(branch1["to_node"].item()),
                     "group": group,
                 }
             )
@@ -64,9 +65,9 @@ def parse_branch_array(branches: BranchArray, group: Literal["line", "link", "tr
         cyto_elements = {"data": _array_to_dict(branch, columns)}
         cyto_elements["data"].update(
             {
-                "id": str(branch.id.item()),
-                "source": str(branch.from_node.item()),
-                "target": str(branch.to_node.item()),
+                "id": str(branch["id"].item()),
+                "source": str(branch["from_node"].item()),
+                "target": str(branch["to_node"].item()),
                 "group": group,
             }
         )
