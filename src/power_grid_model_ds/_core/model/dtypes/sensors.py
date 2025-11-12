@@ -31,7 +31,7 @@ class GenericPowerSensor(Sensor):
     """Base class for power sensor data type"""
 
     measured_terminal_type: NDArray[np.int32]
-
+    power_sigma: NDArray[np.float64]  # std of total power
 
 class SymPowerSensor(GenericPowerSensor):
     """SymPowerSensor data type"""
