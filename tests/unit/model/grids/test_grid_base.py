@@ -31,24 +31,25 @@ def test_initialize_empty_grid(grid: Grid):
     assert isinstance(grid, Grid)
     fields = dataclasses.asdict(grid).keys()
     assert {
+        "_id_counter",
+        "asym_current_sensor",
+        "asym_line",
+        "asym_power_sensor",
+        "asym_voltage_sensor",
+        "generic_branch",
+        "graphs",
+        "line",
         "link",
+        "node",
+        "source",
+        "sym_current_sensor",
+        "sym_gen",
         "sym_load",
         "sym_power_sensor",
-        "source",
-        "_id_counter",
-        "transformer_tap_regulator",
-        "asym_voltage_sensor",
-        "sym_current_sensor",
-        "asym_current_sensor",
+        "sym_voltage_sensor",
         "three_winding_transformer",
         "transformer",
-        "node",
-        "line",
-        "generic_branch",
-        "asym_line",
-        "sym_gen",
-        "graphs",
-        "sym_voltage_sensor",
+        "transformer_tap_regulator",
     } == set(fields)
 
 

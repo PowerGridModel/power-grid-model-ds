@@ -27,6 +27,7 @@ from power_grid_model_ds._core.model.dtypes.nodes import Node
 from power_grid_model_ds._core.model.dtypes.regulators import TransformerTapRegulator
 from power_grid_model_ds._core.model.dtypes.sensors import (
     AsymCurrentSensor,
+    AsymPowerSensor,
     AsymVoltageSensor,
     SymCurrentSensor,
     SymPowerSensor,
@@ -154,11 +155,15 @@ class SymVoltageSensorArray(IdArray, SymVoltageSensor):
     pass
 
 
-class AsymVoltageSensorArray(IdArray, AsymVoltageSensor):
+class SymCurrentSensorArray(IdArray, SymCurrentSensor):
     pass
 
 
-class SymCurrentSensorArray(IdArray, SymCurrentSensor):
+class AsymPowerSensorArray(IdArray, AsymPowerSensor):
+    pass
+
+
+class AsymVoltageSensorArray(IdArray, AsymVoltageSensor):
     pass
 
 
