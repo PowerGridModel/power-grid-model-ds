@@ -101,7 +101,6 @@ class Grid(FancyArrayContainer):
             from_node = self.node.get(id=branch["from_node"])
             to_node = self.node.get(id=branch["to_node"])
 
-            # pylint: disable=no-member  # pylint false positive on from_node["id"].item()
             from_node_str = (
                 f"S{from_node['id']}"
                 if from_node["node_type"] == NodeType.SUBSTATION_NODE
