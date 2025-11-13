@@ -95,8 +95,8 @@ class GraphContainer:
     def make_active(self, branch: BranchArray) -> None:
         """Add branch to all active_only graphs"""
 
-        from_node = branch.from_node.item()
-        to_node = branch.to_node.item()
+        from_node = branch["from_node"].item()
+        to_node = branch["to_node"].item()
         for field in dataclasses.fields(self):
             graph = getattr(self, field.name)
             if graph.active_only:
@@ -105,8 +105,8 @@ class GraphContainer:
     def make_inactive(self, branch: BranchArray) -> None:
         """Remove a branch from all active_only graphs"""
 
-        from_node = branch.from_node.item()
-        to_node = branch.to_node.item()
+        from_node = branch["from_node"].item()
+        to_node = branch["to_node"].item()
         for field in dataclasses.fields(self):
             graph = getattr(self, field.name)
             if graph.active_only:
@@ -128,10 +128,10 @@ class GraphContainer:
     @staticmethod
     def _validate_branches(arrays: "Grid") -> None:
         for array in arrays.branch_arrays:
-            if any(~np.isin(array.from_node, arrays.node.id)):
-                raise RecordDoesNotExist(f"Found invalid .from_node values in {array.__class__.__name__}")
-            if any(~np.isin(array.to_node, arrays.node.id)):
-                raise RecordDoesNotExist(f"Found invalid .to_node values in {array.__class__.__name__}")
+            if any(~np.isin(array["from_node"], arrays.node["id"])):
+                raise RecordDoesNotExist(f"Found invalid from_node values in {array.__class__.__name__}")
+            if any(~np.isin(array["to_node"], arrays.node["id"])):
+                raise RecordDoesNotExist(f"Found invalid to_node values in {array.__class__.__name__}")
 
     def _append(self, array: FancyArray) -> None:
         if isinstance(array, NodeArray):

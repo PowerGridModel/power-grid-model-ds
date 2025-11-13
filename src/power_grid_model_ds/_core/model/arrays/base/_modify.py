@@ -10,7 +10,7 @@ from numpy.typing import ArrayLike, NDArray
 
 def re_order(array: np.ndarray, new_order: ArrayLike, column: str = "id") -> np.ndarray:
     """Re-order an id-array by the id column so that it follows a new_order.
-    Expects the new_order input to contain the same values as self.id
+    Expects the new_order input to contain the same values as self["id"]
     """
     if column not in (array.dtype.names or ()):
         raise ValueError(f"Cannot re-order array: column {column} does not exist.")

@@ -165,7 +165,7 @@ class PowerGridModelInterfaceMethods:
         core_interface = PowerGridModelInterface(grid=grid)
 
         update_sym_load = initialize_array("update", "sym_load", (10, len(grid.sym_load)))
-        update_sym_load["id"] = [grid.sym_load.id.tolist()]
+        update_sym_load["id"] = [grid.sym_load["id"].tolist()]
         update_sym_load["p_specified"] = [grid.sym_load.p_specified.tolist()] * np.linspace(0, 1, 10).reshape(-1, 1)
         update_sym_load["q_specified"] = [grid.sym_load.q_specified.tolist()] * np.linspace(0, 1, 10).reshape(-1, 1)
         update_data = {

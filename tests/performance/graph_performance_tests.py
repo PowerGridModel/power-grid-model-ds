@@ -17,7 +17,7 @@ def perftest_initialize():
 def perftest_get_components():
     code_to_test = (
         "from power_grid_model_ds.enums import NodeType;"
-        + "feeder_node_ids=grid.node.filter(node_type=NodeType.SUBSTATION_NODE).id;"
+        + "feeder_node_ids=grid.node.filter(node_type=NodeType.SUBSTATION_NODE)['id'];"
         + "grid.graphs.active_graph.get_components(feeder_node_ids)"
     )
     do_performance_test(code_to_test, GRAPH_SIZES, 100, setup_codes=GRAPH_SETUP_CODES)

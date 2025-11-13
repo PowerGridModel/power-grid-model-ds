@@ -119,7 +119,7 @@ class BaseGraphModel(ABC):
     def delete_node_array(self, node_array: NodeArray, raise_on_fail: bool = True) -> None:
         """Delete all nodes in node_array from the graph"""
         for node in node_array:
-            self.delete_node(node.id.item(), raise_on_fail=raise_on_fail)
+            self.delete_node(node["id"].item(), raise_on_fail=raise_on_fail)
 
     def has_branch(self, from_ext_node_id: int, to_ext_node_id: int) -> bool:
         """Check if a branch exists between two nodes."""
@@ -180,7 +180,7 @@ class BaseGraphModel(ABC):
         """Delete all branches in branch_array from the graph."""
         for branch in branch_array:
             if self._branch_is_relevant(branch):
-                self.delete_branch(branch.from_node.item(), branch.to_node.item(), raise_on_fail=raise_on_fail)
+                self.delete_branch(branch["from_node"].item(), branch["to_node"].item(), raise_on_fail=raise_on_fail)
 
     def delete_branch3_array(self, branch3_array: Branch3Array, raise_on_fail: bool = True) -> None:
         """Delete all branch3s in the branch3 array from the graph."""
@@ -399,7 +399,7 @@ class BaseGraphModel(ABC):
         """
 
     @abstractmethod
-    def _get_shortest_path(self, source, target): ...
+    def _get_shortest_path(self, source, target) -> tuple[list[int], int]: ...
 
     @abstractmethod
     def _get_all_paths(self, source, target) -> list[list[int]]: ...

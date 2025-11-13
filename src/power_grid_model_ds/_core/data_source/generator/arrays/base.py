@@ -12,7 +12,7 @@ from power_grid_model_ds._core.model.grids.base import Grid
 class BaseGenerator:
     """Base class to build a generator for grid elements"""
 
-    def __init__(self, grid: Grid, seed: int) -> None:
+    def __init__(self, grid: Grid, seed: int | None) -> None:
         """Initializes generator with grid and amount"""
         self.grid = grid
 

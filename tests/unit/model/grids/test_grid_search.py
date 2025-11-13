@@ -14,7 +14,7 @@ from power_grid_model_ds._core.model.enums.nodes import NodeType
 
 def test_grid_get_nearest_substation_node(basic_grid):
     substation_node = basic_grid.get_nearest_substation_node(node_id=103)
-    assert NodeType.SUBSTATION_NODE == substation_node.node_type
+    assert NodeType.SUBSTATION_NODE == substation_node["node_type"]
 
 
 def test_grid_get_nearest_substation_node_no_substation(basic_grid):
@@ -40,12 +40,12 @@ class TestGetDownstreamNodes:
 class TestGetBranchesInPath:
     def test_get_branches_in_path(self, basic_grid):
         branches = basic_grid.get_branches_in_path([106, 102, 101])
-        np.testing.assert_array_equal(branches.id, [301, 201])
+        np.testing.assert_array_equal(branches["id"], [301, 201])
 
     def test_get_branches_in_path_inactive(self, basic_grid):
         branches = basic_grid.get_branches_in_path([101, 102, 103, 104, 105])
         # branch 203 is the normally open point should not be in the result
-        np.testing.assert_array_equal(branches.id, [201, 202, 204, 601])
+        np.testing.assert_array_equal(branches["id"], [201, 202, 204, 601])
 
     def test_get_branches_in_path_one_node(self, basic_grid):
         branches = basic_grid.get_branches_in_path([106])
@@ -57,7 +57,7 @@ class TestGetBranchesInPath:
 
 
 def test_component_three_winding_transformer(grid_with_3wt):
-    substation_nodes = grid_with_3wt.node.filter(node_type=NodeType.SUBSTATION_NODE.value).id
+    substation_nodes = grid_with_3wt.node.filter(node_type=NodeType.SUBSTATION_NODE.value)["id"]
     with grid_with_3wt.graphs.active_graph.tmp_remove_nodes(substation_nodes):
         component_list = grid_with_3wt.graphs.active_graph.get_components()
 

@@ -31,7 +31,7 @@ def test_generate_random_grid():
     assert 2 == len(grid.source)
     assert 100 == len(grid.sym_load)
 
-    inactive_mask = np.logical_or(grid.line.from_status == 0, grid.line.to_status == 0)
+    inactive_mask = np.logical_or(grid.line["from_status"] == 0, grid.line["to_status"] == 0)
     inactive_lines = grid.line[inactive_mask]
     assert 10 == len(inactive_lines)
     assert len(grid.line) - 10 == grid.graphs.active_graph.nr_branches
@@ -61,8 +61,8 @@ def test_generate_random_nodes(grid: Grid):
     assert isinstance(loads_high, SymLoadArray)
 
     # All loads are coupled to a node in the nodes array
-    assert all(np.isin(loads_high.node, nodes.id))
-    assert all(np.isin(loads_low.node, nodes.id))
+    assert all(np.isin(loads_high["node"], nodes["id"]))
+    assert all(np.isin(loads_low["node"], nodes["id"]))
 
 
 def test_generate_random_sources(grid: Grid):
@@ -79,20 +79,20 @@ def test_generate_random_sources(grid: Grid):
     assert isinstance(sources, SourceArray)
 
     # All sources are coupled to a node in the nodes array
-    assert all(np.isin(sources.node, nodes.id))
+    assert all(np.isin(sources["node"], nodes["id"]))
 
 
 def test_generate_random_lines(grid: Grid):
     """Generate random lines"""
     nodes = NodeArray.zeros(4)
-    nodes.id = [0, 1, 2, 3]
-    nodes.u_rated = [10_500] * 4
+    nodes["id"] = [0, 1, 2, 3]
+    nodes["u_rated"] = [10_500] * 4
 
     sources = SourceArray.zeros(1)
-    sources.id = [4]
-    sources.node = [0]
-    sources.status = [1]
-    sources.u_ref = [1]
+    sources["id"] = [4]
+    sources["node"] = [0]
+    sources["status"] = [1]
+    sources["u_ref"] = [1]
 
     grid.append(nodes)
     grid.append(sources)
@@ -103,27 +103,27 @@ def test_generate_random_lines(grid: Grid):
     # We have generated at least 5 lines
     assert len(lines) >= 5
     # Two lines are inactive
-    inactive_line_mask = np.logical_or(lines.from_status == 0, lines.to_status == 0)
+    inactive_line_mask = np.logical_or(lines["from_status"] == 0, lines["to_status"] == 0)
     assert 2 == sum(inactive_line_mask)
 
     assert isinstance(lines, LineArray)
 
     # All lines have from and to nodes in the nodes array
-    assert all(np.isin(lines.from_node, nodes.id))
-    assert all(np.isin(lines.to_node, nodes.id))
+    assert all(np.isin(lines["from_node"], nodes["id"]))
+    assert all(np.isin(lines["to_node"], nodes["id"]))
 
 
 def test_create_routes(grid: Grid):
     """Generate new routes"""
     nodes = NodeArray.zeros(4)
-    nodes.id = [0, 1, 2, 3]
-    nodes.u_rated = [10_500] * 4
+    nodes["id"] = [0, 1, 2, 3]
+    nodes["u_rated"] = [10_500] * 4
 
     sources = SourceArray.zeros(1)
-    sources.id = [4]
-    sources.node = [0]
-    sources.status = [1]
-    sources.u_ref = [1]
+    sources["id"] = [4]
+    sources["node"] = [0]
+    sources["status"] = [1]
+    sources["u_ref"] = [1]
 
     grid.append(nodes)
     grid.append(sources)
@@ -136,15 +136,15 @@ def test_create_routes(grid: Grid):
     assert 2 == len(line_generator.line_array)
     # These lines are active
     inactive_line_mask = np.logical_or(
-        line_generator.line_array.from_status == 0,
-        line_generator.line_array.to_status == 0,
+        line_generator.line_array["from_status"] == 0,
+        line_generator.line_array["to_status"] == 0,
     )
     assert 0 == sum(inactive_line_mask)
 
-    # All lines have from node in sources.node
-    assert all(np.isin(line_generator.line_array.from_node, sources.node))
-    # All lines have to node in nodes.id
-    assert all(np.isin(line_generator.line_array.to_node, nodes.id))
+    # All lines have from node in sources["node"]
+    assert all(np.isin(line_generator.line_array["from_node"], sources["node"]))
+    # All lines have to node in nodes["id"]
+    assert all(np.isin(line_generator.line_array["to_node"], nodes["id"]))
 
 
 def test_determine_number_of_routes(grid: Grid):
@@ -172,21 +172,21 @@ def test_determine_number_of_routes(grid: Grid):
 def test_connect_nodes(grid: Grid):
     """Connect nodes"""
     nodes = NodeArray.zeros(4)
-    nodes.id = [0, 1, 2, 3]
-    nodes.u_rated = [10_500] * 4
+    nodes["id"] = [0, 1, 2, 3]
+    nodes["u_rated"] = [10_500] * 4
 
     sources = SourceArray.zeros(1)
-    sources.id = [4]
-    sources.node = [0]
-    sources.status = [1]
-    sources.u_ref = [1]
+    sources["id"] = [4]
+    sources["node"] = [0]
+    sources["status"] = [1]
+    sources["u_ref"] = [1]
 
     line_array = LineArray.zeros(1)
-    line_array.id = [5]
-    line_array.from_node = [0]
-    line_array.to_node = [1]
-    line_array.from_status = [1]
-    line_array.to_status = [1]
+    line_array["id"] = [5]
+    line_array["from_node"] = [0]
+    line_array["to_node"] = [1]
+    line_array["from_status"] = [1]
+    line_array["to_status"] = [1]
 
     grid.append(nodes)
     grid.append(sources)
@@ -209,21 +209,21 @@ def test_connect_nodes(grid: Grid):
 def test_create_nops(grid: Grid):
     """Create normally open points"""
     nodes = NodeArray.zeros(4)
-    nodes.id = [0, 1, 2, 3]
-    nodes.u_rated = [10_500] * 4
+    nodes["id"] = [0, 1, 2, 3]
+    nodes["u_rated"] = [10_500] * 4
 
     sources = SourceArray.zeros(1)
-    sources.id = [4]
-    sources.node = [0]
-    sources.status = [1]
-    sources.u_ref = [1]
+    sources["id"] = [4]
+    sources["node"] = [0]
+    sources["status"] = [1]
+    sources["u_ref"] = [1]
 
     line_array = LineArray.zeros(2)
-    line_array.id = [5, 6]
-    line_array.from_node = [0, 0]
-    line_array.to_node = [1, 2]
-    line_array.from_status = [1, 1]
-    line_array.to_status = [1, 1]
+    line_array["id"] = [5, 6]
+    line_array["from_node"] = [0, 0]
+    line_array["to_node"] = [1, 2]
+    line_array["from_status"] = [1, 1]
+    line_array["to_status"] = [1, 1]
 
     grid.append(nodes)
     grid.append(sources)
@@ -238,8 +238,8 @@ def test_create_nops(grid: Grid):
     assert 3 == len(line_generator.line_array)
     # This line is inactive
     inactive_line_mask = np.logical_or(
-        line_generator.line_array.from_status == 0,
-        line_generator.line_array.to_status == 0,
+        line_generator.line_array["from_status"] == 0,
+        line_generator.line_array["to_status"] == 0,
     )
     assert 1 == sum(inactive_line_mask)
 
@@ -251,8 +251,8 @@ def test_generate_random_grid_with_tranformers():
 
     # two ten to 3 kv transformers have been added
     assert 2 == len(grid.transformer)
-    assert all(np.isclose([10_500] * 2, grid.transformer.u1.tolist()))
-    assert all(np.isclose([3_000] * 2, grid.transformer.u2.tolist()))
+    assert all(np.isclose([10_500] * 2, grid.transformer["u1"].tolist()))
+    assert all(np.isclose([3_000] * 2, grid.transformer["u2"].tolist()))
 
     core_interface = PowerGridModelInterface(grid=grid)
     core_interface.create_input_from_grid()

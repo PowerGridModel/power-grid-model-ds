@@ -75,6 +75,6 @@ class RadialGridGenerator(Generic[T]):
             grid.append(transformers)
 
             lines = line_generator.run(amount=0, number_of_routes=0)
-            grid.append(lines[~np.isin(lines.id, grid.line.id)])
+            grid.append(lines[~np.isin(lines["id"], grid.line["id"])])
 
         return grid

@@ -22,10 +22,10 @@ def get_radial_grid() -> Grid:
 def get_coordinated_grid() -> CoordinatedGrid:
     scale = 500
     grid = CoordinatedGrid.from_txt("S1 2 open", "2 3", "3 4", "S1 500000000", "500000000 6", "6 7 transformer")
-    grid.node.x = [3, 2.5, 2, 1.5, 3.5, 4, 4.5]
-    grid.node.x *= scale
-    grid.node.y = [3, 4, 3, 4, 3, 4, 3]
-    grid.node.y *= scale
+    grid.node["x"] = [3, 2.5, 2, 1.5, 3.5, 4, 4.5]
+    grid.node["x"] *= scale
+    grid.node["y"] = [3, 4, 3, 4, 3, 4, 3]
+    grid.node["y"] *= scale
     return grid
 
 

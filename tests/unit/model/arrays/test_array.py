@@ -51,7 +51,7 @@ def test_setattr(fancy_test_array: FancyTestArray):
     fancy_test_array.id = [9, 9, 9]
 
     assert_array_equal(fancy_test_array.id, [9, 9, 9])
-    assert_array_equal(fancy_test_array.data["id"], [9, 9, 9])
+    assert_array_equal(fancy_test_array["id"], [9, 9, 9])
 
 
 def test_prevent_delete_numpy_attribute(fancy_test_array: FancyTestArray):
@@ -75,18 +75,18 @@ def test_getitem_unique_multiple_columns(fancy_test_array: FancyTestArray):
 
 
 def test_getitem_array_index(fancy_test_array: FancyTestArray):
-    assert fancy_test_array[0].data.tolist() == fancy_test_array.data[0:1].tolist()
+    assert fancy_test_array[0].tolist() == fancy_test_array[0:1].tolist()
 
 
 def test_getitem_array_nested_index(fancy_test_array: FancyTestArray):
     nested_array = fancy_test_array[0][0][0][0][0][0]
     assert isinstance(nested_array, FancyArray)
     assert nested_array.data.shape == (1,)
-    assert nested_array.data.tolist() == fancy_test_array.data[0:1].tolist()
+    assert nested_array.tolist() == fancy_test_array[0:1].tolist()
 
 
 def test_getitem_array_slice(fancy_test_array: FancyTestArray):
-    assert fancy_test_array.data[0:2].tolist() == fancy_test_array[0:2].tolist()
+    assert fancy_test_array[0:2].tolist() == fancy_test_array[0:2].tolist()
 
 
 def test_getitem_with_array_mask(fancy_test_array: FancyTestArray):

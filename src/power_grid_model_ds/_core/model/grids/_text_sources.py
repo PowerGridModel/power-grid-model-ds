@@ -74,13 +74,13 @@ class TextSource:
 
         for node_id in source_nodes:
             new_node = self.grid.node.empty(1)
-            new_node.id = node_id
-            new_node.node_type = NodeType.SUBSTATION_NODE
+            new_node["id"] = node_id
+            new_node["node_type"] = NodeType.SUBSTATION_NODE
             self.grid.append(new_node, check_max_id=False)
 
         for node_id in regular_nodes:
             new_node = self.grid.node.empty(1)
-            new_node.id = node_id
+            new_node["id"] = node_id
             self.grid.append(new_node, check_max_id=False)
 
     def add_branches(self, branches: dict[tuple[str, str], list[str]]):
@@ -105,13 +105,13 @@ class TextSource:
         if branch_ids:
             if len(branch_ids) > 1:
                 raise ValueError(f"Multiple branch ids found in row {branch} {','.join(comments)}")
-            new_branch.id = int(branch_ids[0])
+            new_branch["id"] = int(branch_ids[0])
 
-        new_branch.from_node = from_node
-        new_branch.to_node = to_node
-        new_branch.from_status = 1
+        new_branch["from_node"] = from_node
+        new_branch["to_node"] = to_node
+        new_branch["from_status"] = 1
         if "open" in comments:
-            new_branch.to_status = 0
+            new_branch["to_status"] = 0
         else:
-            new_branch.to_status = 1
+            new_branch["to_status"] = 1
         self.grid.append(new_branch, check_max_id=False)

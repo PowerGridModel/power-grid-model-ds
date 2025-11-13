@@ -59,7 +59,7 @@ def test_build_without_array_definition():
 
 def test_build_without_args_or_kwargs():
     array = FancyTestArray()
-    assert_array_equal(array.id, [])
+    assert_array_equal(array["id"], [])
     assert 0 == array.size
 
 
@@ -72,11 +72,11 @@ def test_build_from_kwargs():
         test_bool=[True, False, True],
     )
     assert array.size == 3
-    assert_array_equal(array.id, [1, 2, 3])
-    assert_array_equal(array.test_int, [3, 0, 4])
-    assert_array_equal(array.test_float, [4.0, 4.0, 1.0])
-    assert_array_equal(array.test_str, ["a", "c", "d"])
-    assert_array_equal(array.test_bool, [True, False, True])
+    assert_array_equal(array["id"], [1, 2, 3])
+    assert_array_equal(array["test_int"], [3, 0, 4])
+    assert_array_equal(array["test_float"], [4.0, 4.0, 1.0])
+    assert_array_equal(array["test_str"], ["a", "c", "d"])
+    assert_array_equal(array["test_bool"], [True, False, True])
 
 
 def test_build_from_kwargs_with_missing_input_fields():
@@ -129,7 +129,7 @@ def test_build_from_numpy_2d_shape_2_4():
     numpy_array = np.array([[1, 2, 3, 4, 5], [9, 9, 9, 9, 9]])
     assert (2, 5) == numpy_array.shape
     array = FancyTestArray(numpy_array)
-    assert_array_equal([2, 9], array.test_int)
+    assert_array_equal([2, 9], array["test_int"])
     assert 2 == array.size
 
 
@@ -137,7 +137,7 @@ def test_build_from_numpy_2d_shape_4_2():
     numpy_array = np.array([[15, 9], [2, 9], [3, 9], [4, 9], [7, 9]])
     assert (5, 2) == numpy_array.shape
     array = FancyTestArray(numpy_array)
-    assert_array_equal([2, 9], array.test_int)
+    assert_array_equal([2, 9], array["test_int"])
     assert 2 == array.size
 
 
@@ -149,14 +149,13 @@ def test_array_invalid_columns_before_initialization():
 def test_some_zeros():
     array = FancyTestArray.zeros(3)
     assert 3 == array.size
-    assert_array_equal([np.iinfo(np.int32).min] * 3, array.id)
-    assert_array_equal([0, 0, 0], array.test_int)
-    assert 3 == array.size
+    assert_array_equal([np.iinfo(np.int32).min] * 3, array["id"])
+    assert_array_equal([0, 0, 0], array["test_int"])
     assert 3 == len(array)
     assert 3 == len(array.data)
-    assert 3 == len(array.id)
-    assert 3 == len(array.test_int)
-    assert 3 == len(array.test_float)
+    assert 3 == len(array["id"])
+    assert 3 == len(array["test_int"])
+    assert 3 == len(array["test_float"])
 
 
 def test_many_zeros():
@@ -164,46 +163,46 @@ def test_many_zeros():
     assert int(1e6) == array.size
     assert int(1e6) == len(array)
     assert int(1e6) == len(array.data)
-    assert int(1e6) == len(array.id)
-    assert int(1e6) == len(array.test_int)
-    assert int(1e6) == len(array.test_float)
+    assert int(1e6) == len(array["id"])
+    assert int(1e6) == len(array["test_int"])
+    assert int(1e6) == len(array["test_float"])
 
 
 def test_empty():
     array = FancyTestArray.empty(3)
     assert 3 == array.size
-    assert_array_equal([EMPTY_ID, EMPTY_ID, EMPTY_ID], array.id)
+    assert_array_equal([EMPTY_ID, EMPTY_ID, EMPTY_ID], array["id"])
     min_int64 = np.iinfo(np.int64).min
-    assert_array_equal([min_int64] * 3, array.test_int)
+    assert_array_equal([min_int64] * 3, array["test_int"])
 
 
 def test_empty_with_sized_dtypes():
     array = SizedDTypesArray.empty(1)
 
-    assert_array_equal([np.iinfo(np.int8).min], array.test_int8)
-    assert_array_equal([np.iinfo(np.int16).min], array.test_int16)
-    assert_array_equal([np.iinfo(np.int32).min], array.test_int32)
-    assert_array_equal([np.iinfo(np.int64).min], array.test_int64)
+    assert_array_equal([np.iinfo(np.int8).min], array["test_int8"])
+    assert_array_equal([np.iinfo(np.int16).min], array["test_int16"])
+    assert_array_equal([np.iinfo(np.int32).min], array["test_int32"])
+    assert_array_equal([np.iinfo(np.int64).min], array["test_int64"])
 
-    assert_array_equal([np.nan], array.test_float16)
-    assert_array_equal([np.nan], array.test_float32)
-    assert_array_equal([np.nan], array.test_float64)
+    assert_array_equal([np.nan], array["test_float16"])
+    assert_array_equal([np.nan], array["test_float32"])
+    assert_array_equal([np.nan], array["test_float64"])
 
 
 def test_empty_with_defaults():
     array = DefaultedFancyTestArray.empty(3)
     assert 3 == array.size
-    assert_array_equal([-1, -1, -1], array.id)
-    assert_array_equal([4, 4, 4], array.test_int)
-    assert_array_equal([4.5, 4.5, 4.5], array.test_float)
-    assert_array_equal(["DEFAULT", "DEFAULT", "DEFAULT"], array.test_str)
+    assert_array_equal([-1, -1, -1], array["id"])
+    assert_array_equal([4, 4, 4], array["test_int"])
+    assert_array_equal([4.5, 4.5, 4.5], array["test_float"])
+    assert_array_equal(["DEFAULT", "DEFAULT", "DEFAULT"], array["test_str"])
 
 
 def test_from_structured_subarray_with_defaults(fancy_test_array: FancyTestArray):
     array = ExtendedFancyTestArray(fancy_test_array.data)
     assert 3 == array.size
-    assert all(np.isnan(array.test_float2))
-    assert_array_equal([42.0, 42.0, 42.0], array.test_float3)
+    assert all(np.isnan(array["test_float2"]))
+    assert_array_equal([42.0, 42.0, 42.0], array["test_float3"])
 
 
 def test_from_structured_subarray_no_defaults(fancy_test_array: FancyTestArray):
@@ -258,8 +257,8 @@ def test_sensor_array():
 def test_inherit_defaults_from_multiple_parents():
     array = ChildArray.empty(3)
     assert 3 == array.size
-    assert_array_equal([-1, -1, -1], array.id)
-    assert_array_equal([4, 4, 4], array.test_int)
-    assert_array_equal([4.5, 4.5, 4.5], array.test_float)
-    assert_array_equal(["DEFAULT", "DEFAULT", "DEFAULT"], array.test_str)
-    assert_array_equal([42.0, 42.0, 42.0], array.test_float4)
+    assert_array_equal([-1, -1, -1], array["id"])
+    assert_array_equal([4, 4, 4], array["test_int"])
+    assert_array_equal([4.5, 4.5, 4.5], array["test_float"])
+    assert_array_equal(["DEFAULT", "DEFAULT", "DEFAULT"], array["test_str"])
+    assert_array_equal([42.0, 42.0, 42.0], array["test_float4"])

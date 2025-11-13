@@ -10,7 +10,7 @@ ARRAY_SETUP_CODES = {
     "structured": "import numpy as np;" + NUMPY_DTYPE + "input_array = np.zeros({size}, dtype=dtype)",
     "rec": "import numpy as np;" + NUMPY_DTYPE + "input_array = np.recarray(({size},),dtype=dtype)",
     "fancy": "from tests.conftest import FancyTestArray; input_array=FancyTestArray.zeros({size});"
-    + "import numpy as np;input_array.id = np.arange({size})",
+    + "import numpy as np;input_array['id'] = np.arange({size})",
 }
 
 GRAPH_SETUP_CODES = {

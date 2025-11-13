@@ -36,10 +36,10 @@ def test_add_active_branch():
     grid.append(nodes)
 
     line = CustomLineArray.zeros(1)
-    line.from_node = nodes[0].id
-    line.to_node = nodes[1].id
-    line.from_status = 1
-    line.to_status = 1
+    line["from_node"] = nodes["id"][0]
+    line["to_node"] = nodes["id"][1]
+    line["from_status"] = 1
+    line["to_status"] = 1
     assert 0 == grid.line.size
     grid.append(line)
     assert 1 == grid.line.size

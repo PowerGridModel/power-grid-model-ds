@@ -17,35 +17,35 @@ def test_exclude_by_id_kwarg(fancy_test_array: FancyTestArray):
     array = fancy_test_array.exclude(id=1)
     assert isinstance(array, FancyTestArray)
     assert array.size == 2
-    assert_array_equal(array.id, [2, 3])
+    assert_array_equal(array["id"], [2, 3])
 
 
 def test_exclude_by_id_arg(fancy_test_array: FancyTestArray):
     array = fancy_test_array.exclude(1)
     assert array.size == 2
-    assert_array_equal(array.id, [2, 3])
+    assert_array_equal(array["id"], [2, 3])
 
 
 def test_exclude_by_int(fancy_test_array: FancyTestArray):
     array = fancy_test_array.exclude(test_int=4)
     assert array.size == 2
-    assert_array_equal(array.test_int, [3, 0])
+    assert_array_equal(array["test_int"], [3, 0])
 
 
 def test_exclude_by_float(fancy_test_array: FancyTestArray):
     array = fancy_test_array.exclude(test_float=1.0)
     assert array.size == 2
-    assert_array_equal(array.test_float, [4.0, 4.0])
+    assert_array_equal(array["test_float"], [4.0, 4.0])
 
 
 def test_exclude_by_str(fancy_test_array: FancyTestArray):
     array = fancy_test_array.exclude(test_str="c")
     assert array.size == 2
-    assert_array_equal(array.test_str, ["a", "d"])
+    assert_array_equal(array["test_str"], ["a", "d"])
 
 
 def test_exclude_no_match(fancy_test_array: FancyTestArray):
-    assert fancy_test_array.size == 3
+    assert len(fancy_test_array) == 3
     array = fancy_test_array.exclude(test_str="z")
     assert array.size == 3
 
@@ -53,8 +53,7 @@ def test_exclude_no_match(fancy_test_array: FancyTestArray):
 def test_exclude_multiple_matches(fancy_test_array: FancyTestArray):
     array = fancy_test_array.exclude(test_float=4.0)
     assert array.size == 1
-    record = array.record
-    assert math.isclose(record.test_float, 1.0)
+    assert math.isclose(array["test_float"].item(), 1.0)
 
 
 def test_exclude_no_input(fancy_test_array: FancyTestArray):
@@ -71,7 +70,7 @@ def test_exclude_empty_list_input(fancy_test_array: FancyTestArray):
 def test_exclude_mode_or(fancy_test_array: FancyTestArray):
     array = fancy_test_array.exclude(test_float=1.0, test_str="a", mode_="OR")
     assert 1 == array.size
-    assert_array_equal(array.id, [2])
+    assert_array_equal(array["id"], [2])
 
 
 def test_exclude_mask_by_id_kwarg(fancy_test_array: FancyTestArray):
@@ -129,4 +128,4 @@ def test_exclude_kwarg_set_input(fancy_test_array: FancyTestArray):
     array = fancy_test_array.exclude(id={1})
     assert isinstance(array, FancyTestArray)
     assert array.size == 2
-    assert 1 not in array.id
+    assert 1 not in array["id"]

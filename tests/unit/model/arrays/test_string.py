@@ -24,7 +24,7 @@ def test_str_empty_array():
 
 def test_str_large_array():
     array = FancyTestArray.zeros(100)
-    array.test_str = "ABC"
+    array["test_str"] = "ABC"
     array_str = str(array)
 
     splits = array_str.replace("\n", "|").split("|")
@@ -44,8 +44,8 @@ def test_str_long_column_name():
 
 def test_str_long_values():
     array = FancyTestArray.zeros(1)
-    array.test_str = "this_is_a_very_long_value"
-    array.test_int = 112233445566778899
+    array["test_str"] = "this_is_a_very_long_value"
+    array["test_int"] = 112233445566778899
     array_str = array.as_table(column_width=15)
 
     splits = array_str.replace("\n", "|").split("|")
@@ -63,8 +63,8 @@ def test_str_long_column_name_autosize():
 
 def test_str_long_values_autosize():
     array = FancyTestArray.zeros(1)
-    array.test_str = "this_is_a_very_long_value"
-    array.test_int = 112233445566778899
+    array["test_str"] = "this_is_a_very_long_value"
+    array["test_int"] = 112233445566778899
     array_str = str(array)
     assert "| this_is_a_very_long_value" in array_str
     assert "| 112233445566778899" in array_str

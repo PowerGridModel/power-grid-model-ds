@@ -13,6 +13,7 @@ from typing import Type, TypeVar
 import numpy as np
 
 from power_grid_model_ds._core import fancypy as fp
+from power_grid_model_ds._core.model.arrays import IdArray
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.constants import EMPTY_ID
@@ -75,7 +76,7 @@ class FancyArrayContainer:
     @property
     def max_id(self) -> int:
         """Returns the max id across all arrays within the container."""
-        max_per_array = [np.max(array.id) if array.size > 0 else 0 for array in self.all_arrays()]
+        max_per_array = [np.max(array["id"]) if array.size > 0 else 0 for array in self.all_arrays()]
         return int(max(max_per_array))
 
     def check_ids(self, check_between_arrays: bool = True, check_within_arrays: bool = True) -> None:
@@ -89,7 +90,7 @@ class FancyArrayContainer:
             ValueError: if duplicates are found.
         """
 
-        id_arrays = [array for array in self.all_arrays() if hasattr(array, "id")]
+        id_arrays = [array for array in self.all_arrays() if isinstance(array, IdArray)]
         if not id_arrays:
             return  # no arrays to check
 
@@ -113,7 +114,7 @@ class FancyArrayContainer:
 
         Args:
             array(FancyArray): the asset_array to be appended (e.g. a NodeArray instance).
-            check_max_id(bool): whether to check max(array.id) with the id counter
+            check_max_id(bool): whether to check max(array["id"]) with the id counter
 
         Returns:
             None
@@ -132,12 +133,12 @@ class FancyArrayContainer:
         if not array.size:
             return array
 
-        if (id_set := set(array.id)) != {array.get_empty_value("id")}:
+        if (id_set := set(array["id"])) != {array.get_empty_value("id")}:
             raise ValueError(f"Cannot attach ids to array that contains non-empty ids: {id_set}")
 
         start = self._id_counter + 1
         end = start + len(array)
-        array.id = np.arange(start, end)
+        array["id"] = np.arange(start, end)
         self._id_counter = max(self._id_counter, end - 1)
 
         return array
@@ -175,7 +176,7 @@ class FancyArrayContainer:
         Append the given asset_array to the corresponding field of Grid and generate ids.
         Args:
             array: the asset_array to be appended (e.g. a KabelArray instance).
-            check_max_id: whether to check max(array.id) with the id counter
+            check_max_id: whether to check max(array["id"]) with the id counter
         Returns: None.
         """
         if array.size == 0:
@@ -183,7 +184,7 @@ class FancyArrayContainer:
 
         array_field = self.find_array_field(array.__class__)
 
-        if hasattr(array, "id"):
+        if isinstance(array, IdArray):
             self._update_id_counter(array, check_max_id)
 
         # Add the given asset_array to the corresponding array in the Grid.
@@ -208,30 +209,30 @@ class FancyArrayContainer:
         }
 
     def _update_id_counter(self, array, check_max_id: bool = True):
-        if np.all(array.id == EMPTY_ID):
+        if np.all(array["id"] == EMPTY_ID):
             array = self.attach_ids(array)
-        elif np.any(array.id == EMPTY_ID):
+        elif np.any(array["id"] == EMPTY_ID):
             raise ValueError(f"Cannot append: array contains empty [{EMPTY_ID}] and non-empty ids.")
         elif check_max_id and self.id_counter > 0:
             # Only check for overlaps when array has prescribed (non-empty) IDs
             # Check if any incoming ID might overlap with existing IDs
             # This prevents overlaps since counter tracks the highest used ID
-            new_min_id = np.min(array.id)
+            new_min_id = np.min(array["id"])
             if new_min_id <= self._id_counter:
                 raise ValueError(
                     f"Cannot append: minimum id {new_min_id} is not greater than "
                     f"the current id counter {self._id_counter}"
                 )
 
-        new_max_id = np.max(array.id)
+        new_max_id = np.max(array["id"])
         # Update _id_counter
         self._id_counter = max(self._id_counter, new_max_id)
 
     @staticmethod
-    def _get_duplicates_between_arrays(id_arrays: list[FancyArray], check: bool) -> np.ndarray:
+    def _get_duplicates_between_arrays(id_arrays: list[IdArray], check: bool) -> np.ndarray:
         if not check:
             return np.array([])
-        unique_ids_per_array = [np.unique(array.id) for array in id_arrays]
+        unique_ids_per_array = [np.unique(array["id"]) for array in id_arrays]
 
         all_ids = np.concatenate(unique_ids_per_array)
 
@@ -240,7 +241,7 @@ class FancyArrayContainer:
         return unique_ids[duplicate_mask]
 
     @staticmethod
-    def _get_arrays_with_duplicates(id_arrays: list[FancyArray], check: bool) -> list:
+    def _get_arrays_with_duplicates(id_arrays: list[IdArray], check: bool) -> list:
         arrays_with_duplicates: list[Type] = []
         if not check:
             return arrays_with_duplicates

@@ -22,8 +22,8 @@ def test_from_arrays(basic_grid: Grid):
     assert basic_grid.graphs.active_graph.nr_nodes == graphs.active_graph.nr_nodes
     assert basic_grid.graphs.active_graph.nr_branches == 5
 
-    assert set(basic_grid.node.id) == set(graphs.active_graph.external_ids)
-    assert set(basic_grid.node.id) == set(graphs.complete_graph.external_ids)
+    assert set(basic_grid.node["id"]) == set(graphs.active_graph.external_ids)
+    assert set(basic_grid.node["id"]) == set(graphs.complete_graph.external_ids)
 
 
 @pytest.fixture
@@ -31,7 +31,7 @@ def graph_container_with_5_nodes():
     graph_container = GraphContainer.empty()
     for node_id in range(1, 6):
         node = NodeArray.empty(1)
-        node.id = node_id
+        node["id"] = node_id
         graph_container.add_node_array(node)
     return graph_container
 
@@ -39,13 +39,13 @@ def graph_container_with_5_nodes():
 @pytest.fixture
 def three_winding_transformers():
     three_winding_transformers = ThreeWindingTransformerArray.empty(2)
-    three_winding_transformers.id = [301, 302]
-    three_winding_transformers.node_1 = [1, 1]
-    three_winding_transformers.node_2 = [2, 4]
-    three_winding_transformers.node_3 = [3, 5]
-    three_winding_transformers.status_1 = [1, 1]
-    three_winding_transformers.status_2 = [1, 1]
-    three_winding_transformers.status_3 = [0, 1]
+    three_winding_transformers["id"] = [301, 302]
+    three_winding_transformers["node_1"] = [1, 1]
+    three_winding_transformers["node_2"] = [2, 4]
+    three_winding_transformers["node_3"] = [3, 5]
+    three_winding_transformers["status_1"] = [1, 1]
+    three_winding_transformers["status_2"] = [1, 1]
+    three_winding_transformers["status_3"] = [0, 1]
 
     return three_winding_transformers
 
@@ -83,16 +83,16 @@ def test_delete_branch3(
 
 def test_from_arrays_active_three_winding(basic_grid: Grid):
     nodes = NodeArray.zeros(3)
-    nodes.id = [1000, 1001, 1002]
+    nodes["id"] = [1000, 1001, 1002]
     basic_grid.append(nodes)
 
     three_winding_transformer = ThreeWindingTransformerArray.zeros(1)
-    three_winding_transformer.node_1 = 1000
-    three_winding_transformer.node_2 = 1001
-    three_winding_transformer.node_3 = 1002
-    three_winding_transformer.status_1 = 1
-    three_winding_transformer.status_2 = 1
-    three_winding_transformer.status_3 = 1
+    three_winding_transformer["node_1"] = 1000
+    three_winding_transformer["node_2"] = 1001
+    three_winding_transformer["node_3"] = 1002
+    three_winding_transformer["status_1"] = 1
+    three_winding_transformer["status_2"] = 1
+    three_winding_transformer["status_3"] = 1
     basic_grid.append(three_winding_transformer)
 
     graphs = GraphContainer.from_arrays(basic_grid)
@@ -105,16 +105,16 @@ def test_from_arrays_active_three_winding(basic_grid: Grid):
 
 def test_from_arrays_partially_active_three_winding(basic_grid: Grid):
     nodes = NodeArray.zeros(3)
-    nodes.id = [1000, 1001, 1002]
+    nodes["id"] = [1000, 1001, 1002]
     basic_grid.append(nodes)
 
     three_winding_transformer = ThreeWindingTransformerArray.zeros(1)
-    three_winding_transformer.node_1 = 1000
-    three_winding_transformer.node_2 = 1001
-    three_winding_transformer.node_3 = 1002
-    three_winding_transformer.status_1 = 1
-    three_winding_transformer.status_2 = 1
-    three_winding_transformer.status_3 = 0
+    three_winding_transformer["node_1"] = 1000
+    three_winding_transformer["node_2"] = 1001
+    three_winding_transformer["node_3"] = 1002
+    three_winding_transformer["status_1"] = 1
+    three_winding_transformer["status_2"] = 1
+    three_winding_transformer["status_3"] = 0
     basic_grid.append(three_winding_transformer)
 
     graphs = GraphContainer.from_arrays(basic_grid)

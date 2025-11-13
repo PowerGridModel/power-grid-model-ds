@@ -63,7 +63,7 @@ def _determine_column_widths(array: "FancyArray") -> list[tuple[str, int]]:
         return column_widths
 
     for column in array.dtype.names:
-        data = array.data[column]
+        data = array[column]
         if data.size:
             # if float, round to 3 decimals
             if data.dtype.kind == "f":
