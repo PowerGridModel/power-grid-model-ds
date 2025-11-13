@@ -32,7 +32,7 @@ def perf_test_add_lines():
         + "lines.to_node = nodes.id;"
     }
 
-    code_to_test = ["grid.append(lines, che ck_max_id=False);"]
+    code_to_test = ["grid.append(lines, check_max_id=False);"]
 
     do_performance_test(code_to_test, [10, 200, 1000], 100, setup_code)
 
