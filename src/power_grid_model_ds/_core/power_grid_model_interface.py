@@ -74,7 +74,7 @@ class PowerGridModelInterface:
         Returns a Grid object with the arrays filled with the PowerGridModel input.
         """
         for pgm_name in ComponentType:
-            if pgm_name in self._input_data and hasattr(self.grid, pgm_name):
+            if pgm_name in self._input_data:
                 pgm_ds_array_class = getattr(self.grid, pgm_name).__class__
                 pgm_ds_array = pgm_ds_array_class(self._input_data[pgm_name])
                 self.grid.append(pgm_ds_array, check_max_id=False)

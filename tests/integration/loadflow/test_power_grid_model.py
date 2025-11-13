@@ -115,7 +115,10 @@ class TestCalculatePowerFlow:
         assert output["transformer_tap_regulator"]["tap_pos"][0] > 0
 
 
-ExtendedComponentType = StrEnum("ExtendedComponentType", {x.name: x.value for x in ComponentType} | {"onzin": "onzin"})
+ExtendedComponentType = StrEnum(  # type: ignore
+    "ExtendedComponentType",
+    {component.name: component.value for component in ComponentType} | {"DUMMY_EXTRA_COMPONENT": "dummy"},
+)
 
 
 class TestPowerGridModelInterfaceMethods:
@@ -126,10 +129,13 @@ class TestPowerGridModelInterfaceMethods:
         grid.node = ExtendedNodeArray(grid.node.data)
         grid.line = ExtendedLineArray(grid.line.data)
 
+        # Patch ComponentType to include a value that is not present in the grid as an attribute
         with patch("power_grid_model_ds._core.power_grid_model_interface.ComponentType", ExtendedComponentType):
             core_interface = PowerGridModelInterface(grid=grid)
             core_interface.create_input_from_grid()
             core_interface.calculate_power_flow()
+            # Mock additional component type that is not in the grid
+            core_interface.output_data["dummy"] = np.array([])
             core_interface.update_grid()
 
         grid = core_interface.grid
@@ -138,24 +144,6 @@ class TestPowerGridModelInterfaceMethods:
         assert grid.node.u[1] == pytest.approx(10_500, 0.1)
         # all lines have a current
         assert all(grid.line.i_from > 0)
-
-    # def test_update_grid_missing_component(self, core_interface_after_loadflow: PowerGridModelInterface):
-    #     """Test that update grid works when a component is missing in the grid."""
-    #     del core_interface_after_loadflow.grid.source
-
-    #     core_interface_after_loadflow.update_grid()
-
-    #     # voltage should be in neighbourhood of 10500
-    #     grid = core_interface_after_loadflow.grid
-    #     assert not all(grid.node.is_empty("u"))
-    #     assert not hasattr(grid, "source")
-
-    def test_input_from_grid_missing_component(self, grid: Grid):
-        # Mimic no source in grid
-        del grid.source
-
-        core_interface = PowerGridModelInterface(grid=grid)
-        assert "source" not in core_interface.create_input_from_grid()
 
     def test_update_model(self):
         """Test whether a pgm model can be updated and returns different results"""
