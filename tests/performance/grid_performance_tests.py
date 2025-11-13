@@ -57,6 +57,6 @@ def perf_test_get_downstream_nodes_performance():
 
 
 if __name__ == "__main__":
-    # perf_test_get_downstream_nodes_performance()
+    perf_test_get_downstream_nodes_performance()
     perf_test_add_nodes()
     perf_test_add_lines()
