@@ -42,6 +42,7 @@ from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.grids._text_sources import TextSource
 from power_grid_model_ds._core.model.grids.helpers import set_feeder_ids, set_is_feeder
 from power_grid_model_ds._core.utils.pickle import get_pickle_path, load_from_pickle, save_to_pickle
+from power_grid_model_ds._core.utils.serialization import load_grid_from_json, save_grid_to_json
 from power_grid_model_ds._core.utils.zip import file2gzip
 
 Self = TypeVar("Self", bound="Grid")
@@ -360,7 +361,10 @@ class Grid(FancyArrayContainer):
         )
 
     def cache(self, cache_dir: Path, cache_name: str, compress: bool = True):
-        """Cache Grid to a folder
+        """Cache Grid to a folder using pickle format.
+
+        Note: Consider using serialize() for better
+        interoperability and standardized format.
 
         Args:
             cache_dir (Path): The directory to save the cache to.
@@ -434,6 +438,22 @@ class Grid(FancyArrayContainer):
         with open(txt_file_path, "r", encoding="utf-8") as f:
             txt_lines = f.readlines()
         return TextSource(grid_class=cls).load_from_txt(*txt_lines)
+
+    def serialize(self, path: Path, **kwargs) -> Path:
+        """Serialize the grid to JSON format.
+
+        Args:
+            path: Destination file path to write JSON to.
+            **kwargs: Additional keyword arguments forwarded to ``json.dump``
+        Returns:
+            Path: The path where the file was saved.
+        """
+        return save_grid_to_json(grid=self, path=path, **kwargs)
+
+    @classmethod
+    def deserialize(cls: Type[Self], path: Path) -> Self:
+        """Deserialize the grid from JSON format."""
+        return load_grid_from_json(path=path, target_grid_class=cls)
 
     def set_feeder_ids(self):
         """Sets feeder and substation id properties in the grids arrays"""
