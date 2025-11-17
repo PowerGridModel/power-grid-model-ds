@@ -13,24 +13,24 @@ from power_grid_model_ds._core.model.arrays import Branch3Array, BranchArray
 @pytest.fixture(name="branches")
 def parallel_branches():
     branches = BranchArray.zeros(3)
-    branches.from_node = [0, 0, 1]
-    branches.to_node = [1, 1, 2]
+    branches["from_node"] = [0, 0, 1]
+    branches["to_node"] = [1, 1, 2]
     return branches
 
 
 class TestBranchArray:
     def test_branch_is_active(self):
         branches = BranchArray.zeros(4)
-        branches.from_status = [1, 1, 0, 0]
-        branches.to_status = [1, 0, 1, 0]
+        branches["from_status"] = [1, 1, 0, 0]
+        branches["to_status"] = [1, 0, 1, 0]
 
         assert_array_equal(branches.is_active, [True, False, False, False])
         assert branches[0].is_active
 
     def test_branch_node_ids(self):
         branches = BranchArray.zeros(2)
-        branches.from_node = [0, 1]
-        branches.to_node = [1, 2]
+        branches["from_node"] = [0, 1]
+        branches["to_node"] = [1, 2]
 
         assert_array_equal(branches.node_ids, [0, 1, 1, 2])
 
@@ -58,10 +58,10 @@ class TestBranch3Array:
 
         assert branch_array.size == 3
 
-        assert branch_array.from_node.tolist() == [1, 1, 2]
-        assert branch_array.to_node.tolist() == [2, 3, 3]
-        assert branch_array.from_status.tolist() == [1, 1, 1]
-        assert branch_array.to_status.tolist() == [1, 0, 0]
+        assert branch_array["from_node"].tolist() == [1, 1, 2]
+        assert branch_array["to_node"].tolist() == [2, 3, 3]
+        assert branch_array["from_status"].tolist() == [1, 1, 1]
+        assert branch_array["to_status"].tolist() == [1, 0, 0]
 
     def test_as_branches_multiple(self):
         branch3 = Branch3Array(
@@ -77,7 +77,7 @@ class TestBranch3Array:
         branch_array.sort(order=["from_node", "to_node"])
 
         assert branch_array.size == 6
-        assert branch_array.from_node.tolist() == [1, 1, 2, 4, 4, 5]
-        assert branch_array.to_node.tolist() == [2, 3, 3, 5, 6, 6]
-        assert branch_array.from_status.tolist() == [1, 1, 1, 1, 1, 1]
-        assert branch_array.to_status.tolist() == [1, 1, 1, 1, 0, 0]
+        assert branch_array["from_node"].tolist() == [1, 1, 2, 4, 4, 5]
+        assert branch_array["to_node"].tolist() == [2, 3, 3, 5, 6, 6]
+        assert branch_array["from_status"].tolist() == [1, 1, 1, 1, 1, 1]
+        assert branch_array["to_status"].tolist() == [1, 1, 1, 1, 0, 0]

@@ -69,21 +69,21 @@ def build_basic_grid(grid: T) -> T:
 
     # Add a transformer
     transformer = grid.transformer.__class__.empty(1)
-    transformer.id = 301
-    transformer.from_status = 1
-    transformer.to_status = 1
-    transformer.from_node = 102
-    transformer.to_node = 106
+    transformer["id"] = 301
+    transformer["from_status"] = 1
+    transformer["to_status"] = 1
+    transformer["from_node"] = 102
+    transformer["to_node"] = 106
 
     grid.append(transformer, check_max_id=False)
 
     # Add a link
     link = grid.link.__class__.empty(1)
-    link.id = 601
-    link.from_status = 1
-    link.to_status = 1
-    link.from_node = 104
-    link.to_node = 105
+    link["id"] = 601
+    link["from_status"] = 1
+    link["to_status"] = 1
+    link["from_node"] = 104
+    link["to_node"] = 105
 
     grid.append(link, check_max_id=False)
 
@@ -161,38 +161,38 @@ def build_basic_grid_with_three_winding(grid: T) -> T:
 
     # Add a transformer
     three_winding_transformer = ThreeWindingTransformerArray.empty(1)
-    three_winding_transformer.id = [301]
-    three_winding_transformer.node_1 = [101]
-    three_winding_transformer.node_2 = [102]
-    three_winding_transformer.node_3 = [103]
-    three_winding_transformer.status_1 = [1]
-    three_winding_transformer.status_2 = [1]
-    three_winding_transformer.status_3 = [1]
-    three_winding_transformer.u1 = [150_000]
-    three_winding_transformer.u2 = [20_000]
-    three_winding_transformer.u3 = [10_000]
-    three_winding_transformer.sn_1 = [1e5]
-    three_winding_transformer.sn_2 = [1e5]
-    three_winding_transformer.sn_3 = [1e5]
-    three_winding_transformer.uk_12 = [0.09]
-    three_winding_transformer.uk_13 = [0.06]
-    three_winding_transformer.uk_23 = [0.06]
-    three_winding_transformer.pk_12 = [1e3]
-    three_winding_transformer.pk_13 = [1e3]
-    three_winding_transformer.pk_23 = [1e3]
-    three_winding_transformer.i0 = [0]
-    three_winding_transformer.p0 = [0]
-    three_winding_transformer.winding_1 = [2]
-    three_winding_transformer.winding_2 = [1]
-    three_winding_transformer.winding_3 = [1]
-    three_winding_transformer.clock_12 = [5]
-    three_winding_transformer.clock_13 = [5]
-    three_winding_transformer.tap_side = [0]
-    three_winding_transformer.tap_pos = [0]
-    three_winding_transformer.tap_min = [-10]
-    three_winding_transformer.tap_max = [10]
-    three_winding_transformer.tap_nom = [0]
-    three_winding_transformer.tap_size = [1380]
+    three_winding_transformer["id"] = [301]
+    three_winding_transformer["node_1"] = [101]
+    three_winding_transformer["node_2"] = [102]
+    three_winding_transformer["node_3"] = [103]
+    three_winding_transformer["status_1"] = [1]
+    three_winding_transformer["status_2"] = [1]
+    three_winding_transformer["status_3"] = [1]
+    three_winding_transformer["u1"] = [150_000]
+    three_winding_transformer["u2"] = [20_000]
+    three_winding_transformer["u3"] = [10_000]
+    three_winding_transformer["sn_1"] = [1e5]
+    three_winding_transformer["sn_2"] = [1e5]
+    three_winding_transformer["sn_3"] = [1e5]
+    three_winding_transformer["uk_12"] = [0.09]
+    three_winding_transformer["uk_13"] = [0.06]
+    three_winding_transformer["uk_23"] = [0.06]
+    three_winding_transformer["pk_12"] = [1e3]
+    three_winding_transformer["pk_13"] = [1e3]
+    three_winding_transformer["pk_23"] = [1e3]
+    three_winding_transformer["i0"] = [0]
+    three_winding_transformer["p0"] = [0]
+    three_winding_transformer["winding_1"] = [2]
+    three_winding_transformer["winding_2"] = [1]
+    three_winding_transformer["winding_3"] = [1]
+    three_winding_transformer["clock_12"] = [5]
+    three_winding_transformer["clock_13"] = [5]
+    three_winding_transformer["tap_side"] = [0]
+    three_winding_transformer["tap_pos"] = [0]
+    three_winding_transformer["tap_min"] = [-10]
+    three_winding_transformer["tap_max"] = [10]
+    three_winding_transformer["tap_nom"] = [0]
+    three_winding_transformer["tap_size"] = [1380]
 
     grid.append(three_winding_transformer, check_max_id=False)
 
