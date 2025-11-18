@@ -43,6 +43,15 @@ class SymPowerSensor(GenericPowerSensor):
     q_sigma: NDArray[np.float64]  # std of reactive power
 
 
+class AsymPowerSensor(GenericPowerSensor):
+    """AsymPowerSensor data type"""
+
+    p_measured: NDArray3[np.float64]  # measured active power
+    q_measured: NDArray3[np.float64]  # measured reactive power
+    p_sigma: NDArray3[np.float64]  # std of active power
+    q_sigma: NDArray3[np.float64]  # std of reactive power
+
+
 class GenericVoltageSensor(Sensor):
     """Base class for voltage sensor data type"""
 

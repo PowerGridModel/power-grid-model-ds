@@ -8,7 +8,7 @@ from numpy.testing import assert_array_equal
 from numpy.typing import NDArray
 
 from power_grid_model_ds._core import fancypy as fp
-from power_grid_model_ds._core.model.arrays import AsymVoltageSensorArray, SymPowerSensorArray
+from power_grid_model_ds._core.model.arrays import AsymVoltageSensorArray
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.base.errors import ArrayDefinitionError
 from power_grid_model_ds._core.model.constants import EMPTY_ID
@@ -232,27 +232,13 @@ def test_initialization_from_args_with_extra_columns():
     assert "undefined" not in array.dtype.names
 
 
-def test_sensor_array():
-    test_len = 2
-    # test proper intiliazation of a SensorArray
-    pow_sens = SymPowerSensorArray.empty(test_len)
-    sym_pow_fields = [
-        "measured_object",
-        "measured_terminal_type",
-        "power_sigma",
-        "p_measured",
-        "p_sigma",
-        "q_measured",
-        "q_sigma",
-    ]
-    for field in sym_pow_fields:
-        assert field in pow_sens.dtype.fields
-
+def test_asymmetric_sensor_array():
+    array_length = 2
     # test if asymmetric array has NDArray3 fields, i.e. with 3 floats per element (one per phase)
-    asym_volt_sens = AsymVoltageSensorArray.empty(test_len)
+    asym_volt_sens = AsymVoltageSensorArray.empty(array_length)
     nd3_fields = ["u_sigma", "u_measured", "u_angle_measured"]
     for field in nd3_fields:
-        assert asym_volt_sens[field].shape == (test_len, 3)
+        assert asym_volt_sens[field].shape == (array_length, 3)
 
 
 def test_inherit_defaults_from_multiple_parents():

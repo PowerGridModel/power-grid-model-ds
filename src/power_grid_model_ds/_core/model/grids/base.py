@@ -19,6 +19,7 @@ from power_grid_model_ds._core import fancypy as fp
 from power_grid_model_ds._core.model.arrays import (
     AsymCurrentSensorArray,
     AsymLineArray,
+    AsymPowerSensorArray,
     AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
@@ -89,8 +90,9 @@ class Grid(FancyArrayContainer):
     # sensors
     sym_power_sensor: SymPowerSensorArray
     sym_voltage_sensor: SymVoltageSensorArray
-    asym_voltage_sensor: AsymVoltageSensorArray
     sym_current_sensor: SymCurrentSensorArray
+    asym_power_sensor: AsymPowerSensorArray
+    asym_voltage_sensor: AsymVoltageSensorArray
     asym_current_sensor: AsymCurrentSensorArray
 
     def __str__(self) -> str:
