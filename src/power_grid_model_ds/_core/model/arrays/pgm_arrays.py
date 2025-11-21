@@ -13,8 +13,10 @@ from power_grid_model_ds._core.fancypy import concatenate
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.dtypes.appliances import Source, SymGen, SymLoad
 from power_grid_model_ds._core.model.dtypes.branches import (
+    AsymLine,
     Branch,
     Branch3,
+    GenericBranch,
     Line,
     Link,
     ThreeWindingTransformer,
@@ -23,7 +25,14 @@ from power_grid_model_ds._core.model.dtypes.branches import (
 from power_grid_model_ds._core.model.dtypes.id import Id
 from power_grid_model_ds._core.model.dtypes.nodes import Node
 from power_grid_model_ds._core.model.dtypes.regulators import TransformerTapRegulator
-from power_grid_model_ds._core.model.dtypes.sensors import AsymVoltageSensor, SymPowerSensor, SymVoltageSensor
+from power_grid_model_ds._core.model.dtypes.sensors import (
+    AsymCurrentSensor,
+    AsymPowerSensor,
+    AsymVoltageSensor,
+    SymCurrentSensor,
+    SymPowerSensor,
+    SymVoltageSensor,
+)
 
 # pylint: disable=missing-class-docstring
 
@@ -99,6 +108,14 @@ class TransformerArray(Transformer, BranchArray):
     pass
 
 
+class GenericBranchArray(GenericBranch, BranchArray):
+    pass
+
+
+class AsymLineArray(AsymLine, BranchArray):
+    pass
+
+
 class Branch3Array(IdArray, Branch3):
     def as_branches(self) -> BranchArray:
         """Convert Branch3Array to BranchArray."""
@@ -138,5 +155,17 @@ class SymVoltageSensorArray(IdArray, SymVoltageSensor):
     pass
 
 
+class SymCurrentSensorArray(IdArray, SymCurrentSensor):
+    pass
+
+
+class AsymPowerSensorArray(IdArray, AsymPowerSensor):
+    pass
+
+
 class AsymVoltageSensorArray(IdArray, AsymVoltageSensor):
+    pass
+
+
+class AsymCurrentSensorArray(IdArray, AsymCurrentSensor):
     pass
