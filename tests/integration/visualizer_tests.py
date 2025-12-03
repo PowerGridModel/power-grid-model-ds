@@ -50,13 +50,7 @@ def visualize_grid_with_links():
 
 
 def visualize_grid_with_all_types():
-    grid = Grid.from_txt(
-        "S1 2",
-        "2 3 asym_line",
-        "3 4 generic_branch",
-        "4 5 link",
-        "5 6 transformer",
-    )
+    grid = Grid.from_txt("S1 2", "2 3 asym_line", "3 4 generic_branch", "4 5 link", "5 6 transformer", "")
     visualize(grid=grid, debug=True)
 
 
