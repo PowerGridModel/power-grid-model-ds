@@ -31,20 +31,25 @@ def test_initialize_empty_grid(grid: Grid):
     assert isinstance(grid, Grid)
     fields = dataclasses.asdict(grid).keys()
     assert {
+        "_id_counter",
+        "asym_current_sensor",
+        "asym_line",
+        "asym_power_sensor",
+        "asym_voltage_sensor",
+        "generic_branch",
+        "graphs",
+        "line",
         "link",
+        "node",
+        "source",
+        "sym_current_sensor",
+        "sym_gen",
         "sym_load",
         "sym_power_sensor",
-        "source",
-        "_id_counter",
-        "transformer_tap_regulator",
-        "asym_voltage_sensor",
+        "sym_voltage_sensor",
         "three_winding_transformer",
         "transformer",
-        "node",
-        "line",
-        "sym_gen",
-        "graphs",
-        "sym_voltage_sensor",
+        "transformer_tap_regulator",
     } == set(fields)
 
 
@@ -401,3 +406,18 @@ class TestFromTxt:
         assert 1 == grid.branches.filter(to_status=0).size
         assert 1 == grid.transformer.size
         np.testing.assert_array_equal([14, 10, 11, 12, 13, 15, 16, 17], grid.branches.id)
+
+    def test_from_txt_all_branch_types(self):
+        grid = Grid.from_txt(
+            "1 2 12",
+            "2 3 link,23",
+            "3 4 transformer,34",
+            "4 5 generic_branch,45",
+            "5 6 asym_line,56",
+        )
+
+        assert grid.line.id.tolist() == [12]
+        assert grid.link.id.tolist() == [23]
+        assert grid.transformer.id.tolist() == [34]
+        assert grid.generic_branch.id.tolist() == [45]
+        assert grid.asym_line.id.tolist() == [56]

@@ -14,16 +14,22 @@ from typing import Type, TypeVar
 
 import numpy as np
 import numpy.typing as npt
+from power_grid_model import ComponentType
 
 from power_grid_model_ds._core import fancypy as fp
 from power_grid_model_ds._core.model.arrays import (
+    AsymCurrentSensorArray,
+    AsymLineArray,
+    AsymPowerSensorArray,
     AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
+    GenericBranchArray,
     LineArray,
     LinkArray,
     NodeArray,
     SourceArray,
+    SymCurrentSensorArray,
     SymGenArray,
     SymLoadArray,
     SymPowerSensorArray,
@@ -72,6 +78,8 @@ class Grid(FancyArrayContainer):
     three_winding_transformer: ThreeWindingTransformerArray
     line: LineArray
     link: LinkArray
+    generic_branch: GenericBranchArray
+    asym_line: AsymLineArray
 
     source: SourceArray
     sym_load: SymLoadArray
@@ -83,7 +91,10 @@ class Grid(FancyArrayContainer):
     # sensors
     sym_power_sensor: SymPowerSensorArray
     sym_voltage_sensor: SymVoltageSensorArray
+    sym_current_sensor: SymCurrentSensorArray
+    asym_power_sensor: AsymPowerSensorArray
     asym_voltage_sensor: AsymVoltageSensorArray
+    asym_current_sensor: AsymCurrentSensorArray
 
     def __str__(self) -> str:
         """String representation of the grid.
@@ -109,13 +120,17 @@ class Grid(FancyArrayContainer):
                 suffix_str = f"{suffix_str},open"
 
             if branch.id in self.transformer.id:
-                suffix_str = f"{suffix_str},transformer"
+                suffix_str = f"{suffix_str},{ComponentType.transformer.value}"
             elif branch.id in self.link.id:
-                suffix_str = f"{suffix_str},link"
+                suffix_str = f"{suffix_str},{ComponentType.link.value}"
             elif branch.id in self.line.id:
                 pass  # no suffix needed
+            elif branch.id in self.generic_branch.id:
+                suffix_str = f"{suffix_str},{ComponentType.generic_branch.value}"
+            elif branch.id in self.asym_line.id:
+                suffix_str = f"{suffix_str},{ComponentType.asym_line.value}"
             else:
-                raise ValueError(f"Branch {branch.id} is not a transformer, link or line")
+                raise ValueError(f"Branch {branch.id} is not a transformer, link, line, generic_branch or asym_line")
 
             grid_str += f"{from_node_str} {to_node_str} {suffix_str}\n"
         return grid_str
@@ -141,7 +156,7 @@ class Grid(FancyArrayContainer):
         return branch_arrays
 
     def get_typed_branches(self, branch_ids: list[int] | npt.NDArray[np.int32]) -> BranchArray:
-        """Find a matching LineArray, LinkArray or TransformerArray for the given branch_ids
+        """Find a matching Branch-subtype array for the given branch_ids
 
         Raises:
             ValueError:
@@ -162,7 +177,7 @@ class Grid(FancyArrayContainer):
         """Reverse the direction of the branches."""
         if not branches.size:
             return
-        if not isinstance(branches, (LineArray, LinkArray, TransformerArray)):
+        if not isinstance(branches, (LineArray, LinkArray, TransformerArray, GenericBranchArray, AsymLineArray)):
             try:
                 branches = self.get_typed_branches(branches.id)
             except ValueError:
