@@ -358,13 +358,14 @@ class TestCreateGridFromInputData:
             core_interface.create_grid_from_input_data()
 
     def test_with_additional_component_type_in_input_data(self, input_data_pgm):
+        # If there is a new component from PGM in the input_data
         input_data_pgm["new_component"] = initialize_array("input", "node", 2)
-
         ExtendedComponentType = StrEnum(  # type: ignore
             "ExtendedComponentType",
             {component.name: component.value for component in ComponentType} | {"NEW_COMPONENT": "new_component"},
         )
 
+        # We should skip it, but still succesfully generate a grid
         with patch("power_grid_model_ds._core.power_grid_model_interface.ComponentType", ExtendedComponentType):
             core_interface = PowerGridModelInterface(input_data=input_data_pgm)
-            output = core_interface.create_grid_from_input_data()
+            core_interface.create_grid_from_input_data()
