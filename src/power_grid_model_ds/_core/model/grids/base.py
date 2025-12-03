@@ -14,6 +14,7 @@ from typing import Type, TypeVar
 
 import numpy as np
 import numpy.typing as npt
+from power_grid_model import ComponentType
 
 from power_grid_model_ds._core import fancypy as fp
 from power_grid_model_ds._core.model.arrays import (
@@ -119,15 +120,15 @@ class Grid(FancyArrayContainer):
                 suffix_str = f"{suffix_str},open"
 
             if branch.id in self.transformer.id:
-                suffix_str = f"{suffix_str},transformer"
+                suffix_str = f"{suffix_str},{ComponentType.transformer.value}"
             elif branch.id in self.link.id:
-                suffix_str = f"{suffix_str},link"
+                suffix_str = f"{suffix_str},{ComponentType.link.value}"
             elif branch.id in self.line.id:
                 pass  # no suffix needed
             elif branch.id in self.generic_branch.id:
-                suffix_str = f"{suffix_str},generic_branch"
+                suffix_str = f"{suffix_str},{ComponentType.generic_branch.value}"
             elif branch.id in self.asym_line.id:
-                suffix_str = f"{suffix_str},asym_line"
+                suffix_str = f"{suffix_str},{ComponentType.asym_line.value}"
             else:
                 raise ValueError(f"Branch {branch.id} is not a transformer, link, line, generic_branch or asym_line")
 
