@@ -4,6 +4,7 @@
 
 """Comprehensive unit tests for Grid serialization with power-grid-model compatibility."""
 
+import json
 from dataclasses import dataclass, fields
 from pathlib import Path
 
@@ -191,3 +192,60 @@ class TestExtensionHandling:
         np.testing.assert_array_equal(loaded_grid.custom_metadata.id, [100, 200, 300])
         np.testing.assert_array_almost_equal(loaded_grid.custom_metadata.metadata_value, [1.5, 2.5, 3.5])
         np.testing.assert_array_equal(loaded_grid.custom_metadata.category, [1, 2, 1])
+
+
+class TestIncompatibleJson:
+    def test_unexpected_field(self, tmp_path: Path):
+        path = tmp_path / "incompatible.json"
+
+        # Create incompatible JSON data
+        incompatible_data = {
+            "node": [{"id": 1, "u_rated": 10000}, {"id": 2, "u_rated": 10000}],
+            "unexpected_field": "unexpected_value",
+        }
+
+        # Write incompatible data to file
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(incompatible_data, f)
+
+        grid = load_grid_from_json(path, target_grid_class=Grid)
+        assert not hasattr(grid, "unexpected_field")
+
+    def test_missing_array_field(self, tmp_path: Path):
+        path = tmp_path / "missing_array.json"
+
+        # Node data does not contain 'id' field
+        missing_array_data = {
+            "node": [{"u_rated": 10000}, {"u_rated": 10000}],
+        }
+
+        # Write data to file
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(missing_array_data, f)
+
+        grid = load_grid_from_json(path, target_grid_class=Grid)
+        assert grid.line.size == 0  # line array should be empty
+
+    def test_some_records_miss_data(self, tmp_path):
+        path = tmp_path / "incomplete_array.json"
+        incomplete_data = {
+            "node": [{"id": 1, "u_rated": 10000}, {"u_rated": 10000}, {"id": 3}],
+        }
+
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(incomplete_data, f)
+
+        with pytest.raises(KeyError):
+            load_grid_from_json(path, target_grid_class=Grid)
+
+    def test_extra_fields(self, caplog, tmp_path: Path):
+        path = tmp_path / "incomplete_array.json"
+        incomplete_data = {
+            "node": [{"id": 1, "u_rated": 10000, "extra_field": 1}, {"id": 2, "u_rated": 10000, "extra_field": 1}]
+        }
+
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(incomplete_data, f)
+
+        assert load_grid_from_json(path, target_grid_class=Grid)
+        assert "Skipping extra columns from input data for NodeArray: {'extra_field'}" in caplog.text
