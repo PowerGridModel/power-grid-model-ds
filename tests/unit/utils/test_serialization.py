@@ -59,6 +59,8 @@ def basic_grid():
 def extended_grid():
     """Extended grid fixture with additional columns"""
     grid = ExtendedGrid.empty()
+    grid.value_extension = 1.0
+    grid.str_extension = "not_default"
     nodes = ExtendedNodeArray(
         id=[1, 2, 3], u_rated=[10500, 10500, 10500], u=[10450, 10400, 10350], analysis_flag=[1, 0, 1]
     )

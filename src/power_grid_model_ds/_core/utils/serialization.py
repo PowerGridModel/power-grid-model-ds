@@ -8,7 +8,7 @@ import dataclasses
 import json
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Type, TypeVar
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 
@@ -52,12 +52,8 @@ def save_grid_to_json(grid, path: Path, strict: bool = True, **kwargs) -> Path:
             }
             continue
 
-        try:
-            json.dumps(field_value)
-        except TypeError as e:
-            if strict:
-                raise
-            logger.warning(f"Failed to serialize '{field.name}': {e}")
+        if _is_serializable(field_value, strict):
+            serialized_data[field.name] = field_value
 
     # Write to file
     with open(path, "w", encoding="utf-8") as f:
@@ -106,3 +102,16 @@ def _restore_grid_values(grid: G, json_data: dict) -> None:
 
         # load other values
         setattr(grid, attr_name, attr_class(attr_values))
+
+
+def _is_serializable(value: Any, strict: bool) -> bool:
+    # Check if a value is JSON serializable.
+    try:
+        json.dumps(value)
+    except TypeError as error:
+        msg = f"Failed to serialize '{value}'. You can set strict=False to ignore this attribute."
+        if strict:
+            raise TypeError(msg) from error
+        logger.warning(msg)
+        return False
+    return True
