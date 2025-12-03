@@ -41,7 +41,7 @@ def save_grid_to_json(grid, path: Path, strict: bool = True, **kwargs) -> Path:
     serialized_data = {}
 
     for field in dataclasses.fields(grid):
-        if field.name in ["graphs", "_id_counter"]:
+        if field.name in ["graphs"]:
             continue
 
         field_value = getattr(grid, field.name)
@@ -105,7 +105,9 @@ def _serialize_array(array: FancyArray) -> list[dict[str, Any]]:
 def _deserialize_array(array_data: list[dict[str, Any]], array_class: type[FancyArray]) -> FancyArray:
     if not array_data:
         return array_class()
-    data_as_dict_of_lists = {k: [d[k] for d in array_data] for k in array_data[0]}
+
+    columns = array_data[0].keys()
+    data_as_dict_of_lists: dict[str, Any] = {k: [d[k] for d in array_data] for k in columns}
     array_columns = set(array_class.get_dtype().names)
     if extra := set(data_as_dict_of_lists.keys()) - array_columns:
         logger.warning(f"Skipping extra columns from input data for {array_class.__name__}: {extra}")

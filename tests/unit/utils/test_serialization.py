@@ -4,7 +4,7 @@
 
 """Comprehensive unit tests for Grid serialization with power-grid-model compatibility."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from pathlib import Path
 
 import numpy as np
@@ -86,47 +86,32 @@ def extended_grid():
 class TestSerializationRoundtrips:
     """Test serialization across different formats and configurations"""
 
-    def test_basic_serialization_roundtrip(self, basic_grid: Grid, tmp_path: Path):
-        """Test basic serialization roundtrip for all formats"""
-        path = tmp_path / "test.json"
-        result_path = save_grid_to_json(basic_grid, path)
-        assert result_path.exists()
+    @pytest.mark.parametrize("grid_fixture", ("basic_grid", "extended_grid", "grid"))
+    def test_serialization_roundtrip(self, request, grid_fixture, tmp_path: Path):
+        """Test serialization roundtrip
 
-        # Load and verify
-        loaded_grid = load_grid_from_json(path, target_grid_class=Grid)
-        array_equal(loaded_grid.node, basic_grid.node)
-        array_equal(loaded_grid.line, basic_grid.line)
-        assert list(loaded_grid.node.id) == list(basic_grid.node.id)
-
-    def test_extended_serialization_roundtrip(self, extended_grid: ExtendedGrid, tmp_path: Path):
-        """Test extended serialization preserving custom data"""
+        Scenarios:
+        - Basic grid
+        - Extended grid with extended arrays and additional non-array attributes
+        - Empty grid
+        """
         path = tmp_path / "extended.json"
+        grid = request.getfixturevalue(grid_fixture)
 
-        save_grid_to_json(extended_grid, path)
-        loaded_grid = load_grid_from_json(path, target_grid_class=ExtendedGrid)
+        save_grid_to_json(grid, path)
+        loaded_grid = load_grid_from_json(path, target_grid_class=grid.__class__)
 
-        # Verify core data
-        assert loaded_grid.node.size == extended_grid.node.size
-        assert loaded_grid.line.size == extended_grid.line.size
-        assert loaded_grid.value_extension == extended_grid.value_extension
-        assert loaded_grid.str_extension == extended_grid.str_extension
+        for field in fields(grid):
+            if field.name in ["graphs"]:
+                continue
 
-        # Verify extended data
-        np.testing.assert_array_equal(loaded_grid.node.u, extended_grid.node.u)
-        np.testing.assert_array_equal(loaded_grid.line.i_from, extended_grid.line.i_from)
+            orig_value = getattr(grid, field.name)
+            loaded_value = getattr(loaded_grid, field.name)
 
-    def test_empty_grid_handling(self, tmp_path: Path):
-        """Test serialization of empty grids"""
-        empty_grid = Grid.empty()
-
-        json_path = tmp_path / "empty.json"
-
-        # Should handle empty grids
-        save_grid_to_json(empty_grid, json_path)
-
-        # Should load back as empty
-        loaded_json = load_grid_from_json(json_path, target_grid_class=Grid)
-        assert loaded_json.node.size == 0
+            if isinstance(loaded_value, FancyArray):
+                assert array_equal(orig_value, loaded_value)
+            else:
+                assert orig_value == loaded_value
 
 
 class TestCrossTypeCompatibility:
