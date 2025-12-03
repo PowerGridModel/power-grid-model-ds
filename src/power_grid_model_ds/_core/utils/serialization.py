@@ -47,9 +47,7 @@ def save_grid_to_json(grid, path: Path, strict: bool = True, **kwargs) -> Path:
         field_value = getattr(grid, field.name)
 
         if isinstance(field_value, FancyArray):
-            serialized_data[field.name] = {
-                "data": {name: field_value[name].tolist() for name in field_value.dtype.names},
-            }
+            serialized_data[field.name] = _serialize_array(field_value)
             continue
 
         if _is_serializable(field_value, strict):
@@ -92,16 +90,27 @@ def _restore_grid_values(grid: G, json_data: dict) -> None:
         grid_attr = getattr(grid, attr_name)
         attr_class = grid_attr.__class__
         if isinstance(grid_attr, FancyArray):
-            if extra := set(attr_values["data"]) - set(grid_attr.columns):
-                logger.warning(f"{attr_name} has extra columns: {extra}")
-
-            matched_columns = {col: attr_values["data"][col] for col in grid_attr.columns if col in attr_values["data"]}
-            restored_array = attr_class(**matched_columns)
-            setattr(grid, attr_name, restored_array)
+            array = _deserialize_array(array_data=attr_values, array_class=attr_class)
+            setattr(grid, attr_name, array)
             continue
 
         # load other values
         setattr(grid, attr_name, attr_class(attr_values))
+
+
+def _serialize_array(array: FancyArray) -> list[dict[str, Any]]:
+    return [{name: record[name].item() for name in array.columns} for record in array]
+
+
+def _deserialize_array(array_data: list[dict[str, Any]], array_class: type[FancyArray]) -> FancyArray:
+    if not array_data:
+        return array_class()
+    data_as_dict_of_lists = {k: [d[k] for d in array_data] for k in array_data[0]}
+    array_columns = set(array_class.get_dtype().names)
+    if extra := set(data_as_dict_of_lists.keys()) - array_columns:
+        logger.warning(f"Skipping extra columns from input data for {array_class.__name__}: {extra}")
+    matched_columns = {col: data_as_dict_of_lists[col] for col in array_columns if col in data_as_dict_of_lists}
+    return array_class(**matched_columns)
 
 
 def _is_serializable(value: Any, strict: bool) -> bool:
