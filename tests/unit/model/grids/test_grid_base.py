@@ -406,3 +406,18 @@ class TestFromTxt:
         assert 1 == grid.branches.filter(to_status=0).size
         assert 1 == grid.transformer.size
         np.testing.assert_array_equal([14, 10, 11, 12, 13, 15, 16, 17], grid.branches.id)
+
+    def test_from_txt_all_branch_types(self):
+        grid = Grid.from_txt(
+            "1 2 12",
+            "2 3 link,23",
+            "3 4 transformer,34",
+            "4 5 generic_branch,45",
+            "5 6 asym_line,56",
+        )
+
+        assert grid.line.id.tolist() == [12]
+        assert grid.link.id.tolist() == [23]
+        assert grid.transformer.id.tolist() == [34]
+        assert grid.generic_branch.id.tolist() == [45]
+        assert grid.asym_line.id.tolist() == [56]

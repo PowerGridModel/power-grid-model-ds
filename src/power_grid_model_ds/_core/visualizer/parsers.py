@@ -4,6 +4,8 @@
 
 from typing import Any, Literal
 
+from power_grid_model import ComponentType
+
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds.arrays import Branch3Array, BranchArray, NodeArray
@@ -29,10 +31,13 @@ def parse_node_array(nodes: NodeArray) -> list[dict[str, Any]]:
 def parse_branches(grid: Grid) -> list[dict[str, Any]]:
     """Parse the branches."""
     parsed_branches = []
-    parsed_branches.extend(parse_branch_array(grid.line, "line"))
-    parsed_branches.extend(parse_branch_array(grid.link, "link"))
-    parsed_branches.extend(parse_branch_array(grid.transformer, "transformer"))
-    parsed_branches.extend(parse_branch3_array(grid.three_winding_transformer, "transformer"))
+    parsed_branches.extend(parse_branch_array(grid.line, ComponentType.line))
+    parsed_branches.extend(parse_branch_array(grid.link, ComponentType.link))
+    parsed_branches.extend(parse_branch_array(grid.transformer, ComponentType.transformer))
+    parsed_branches.extend(parse_branch_array(grid.generic_branch, ComponentType.generic_branch))
+    parsed_branches.extend(parse_branch_array(grid.asym_line, ComponentType.asym_line))
+    parsed_branches.extend(parse_branch3_array(grid.three_winding_transformer, ComponentType.three_winding_transformer))
+
     return parsed_branches
 
 
