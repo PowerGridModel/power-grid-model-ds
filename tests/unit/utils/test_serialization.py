@@ -10,10 +10,12 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from numpy.testing import assert_array_equal
 from numpy.typing import NDArray
 
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
+from power_grid_model_ds._core.utils.misc import array_equal_with_nan
 from power_grid_model_ds._core.utils.serialization import (
     load_grid_from_json,
     save_grid_to_json,
@@ -88,7 +90,7 @@ class TestSerializationRoundtrips:
     """Test serialization across different formats and configurations"""
 
     @pytest.mark.parametrize("grid_fixture", ("basic_grid", "extended_grid", "grid"))
-    def test_serialization_roundtrip(self, request, grid_fixture, tmp_path: Path):
+    def test_serialization_roundtrip(self, request, grid_fixture: str, tmp_path: Path):
         """Test serialization roundtrip
 
         Scenarios:
@@ -96,23 +98,17 @@ class TestSerializationRoundtrips:
         - Extended grid with extended arrays and additional non-array attributes
         - Empty grid
         """
-        path = tmp_path / "extended.json"
-        grid = request.getfixturevalue(grid_fixture)
+        path = tmp_path / "grid.json"
+        grid: Grid = request.getfixturevalue(grid_fixture)
 
         save_grid_to_json(grid, path)
         loaded_grid = load_grid_from_json(path, target_grid_class=grid.__class__)
+        assert loaded_grid.is_equal(grid)
 
-        for field in fields(grid):
-            if field.name in ["graphs"]:
-                continue
-
-            orig_value = getattr(grid, field.name)
-            loaded_value = getattr(loaded_grid, field.name)
-
-            if isinstance(loaded_value, FancyArray):
-                assert array_equal(orig_value, loaded_value)
-            else:
-                assert orig_value == loaded_value
+    @pytest.mark.parametrize("grid_fixture", ("basic_grid", "extended_grid", "grid"))
+    def test_pgm_roundtrip(self, request, grid_fixture: str, tmp_path: Path):
+        """Test roundtrip serialization for PGM-compatible grid"""
+        assert False ## ToDo
 
 
 class TestCrossTypeCompatibility:
@@ -123,24 +119,23 @@ class TestCrossTypeCompatibility:
         path = tmp_path / "basic.json"
 
         # Save basic grid
-        save_grid_to_json(basic_grid, path)
-        loaded_grid = load_grid_from_json(path, target_grid_class=ExtendedGrid)
+        basic_grid.serialize(path)
+        loaded_grid = ExtendedGrid.deserialize(path)
 
         # Core data should transfer
-        array_equal(loaded_grid.node, basic_grid.node)
-        array_equal(loaded_grid.line, basic_grid.line)
+        assert basic_grid.is_equal(loaded_grid, partial_match=True)
 
-    def test_extended_to_basic_loading(self, extended_grid: ExtendedGrid, tmp_path: Path):
+    def test_extended_to_basic_loading(self, extended_grid: ExtendedGrid, tmp_path: Path, caplog):
         """Test loading extended grid into basic type"""
         path = tmp_path / "extended.json"
 
         # Save extended grid
-        save_grid_to_json(extended_grid, path)
-        loaded_grid = load_grid_from_json(path, target_grid_class=Grid)
+        extended_grid.serialize(path)
+        loaded_grid = Grid.deserialize(path)
 
         # Core data should transfer
-        array_equal(loaded_grid.node, extended_grid.node)
-        array_equal(loaded_grid.line, extended_grid.line)
+        assert loaded_grid.is_equal(extended_grid, partial_match=True)
+        assert "Skipping extra columns from input data for NodeArray: {'u', 'analysis_flag'}" in caplog.text
 
 
 class TestExtensionHandling:
@@ -237,15 +232,3 @@ class TestIncompatibleJson:
 
         with pytest.raises(KeyError):
             load_grid_from_json(path, target_grid_class=Grid)
-
-    def test_extra_fields(self, caplog, tmp_path: Path):
-        path = tmp_path / "incomplete_array.json"
-        incomplete_data = {
-            "node": [{"id": 1, "u_rated": 10000, "extra_field": 1}, {"id": 2, "u_rated": 10000, "extra_field": 1}]
-        }
-
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(incomplete_data, f)
-
-        assert load_grid_from_json(path, target_grid_class=Grid)
-        assert "Skipping extra columns from input data for NodeArray: {'extra_field'}" in caplog.text
