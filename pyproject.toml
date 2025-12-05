@@ -140,10 +140,10 @@ control.expr = "check"
 args = [{name = "check", type="boolean", help= "Does not correct files, only warns"}]
   [[tool.poe.tasks.all.switch]]
   case     = "True"
-  sequence = ["lint --check", "format --check", "lock", "type", "cover", "report"]
+  sequence = ["format --check", "lint --check", "lock", "type", "cover", "report"]
 
   [[tool.poe.tasks.all.switch]]
-  sequence = ["lint", "format", "lock", "type", "cover", "report"]
+  sequence = ["format", "lint", "lock", "type", "cover", "report"]
 
 
 [tool.poe.tasks.lint]
