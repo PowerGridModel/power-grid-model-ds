@@ -1,16 +1,12 @@
-# SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
-#
-# SPDX-License-Identifier: MPL-2.0
-
 from typing import TYPE_CHECKING
 
 import numpy as np
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray
+from power_grid_model_ds._core.model.arrays import BranchArray
 from power_grid_model_ds._core.model.enums.nodes import NodeType
 
 if TYPE_CHECKING:
-    from .base import Grid
+    from power_grid_model_ds._core.model.grids.base import Grid
 
 
 def set_feeder_ids(grid: "Grid"):
@@ -44,6 +40,7 @@ def set_feeder_ids(grid: "Grid"):
     301 | 101          | 201
     601 | 101          | 204
     """
+    _set_is_feeder(grid=grid)
     _reset_feeder_ids(grid)
     feeder_node_ids = grid.node.filter(node_type=NodeType.SUBSTATION_NODE)["id"]
     with grid.graphs.active_graph.tmp_remove_nodes(feeder_node_ids.tolist()):
@@ -74,7 +71,7 @@ def set_feeder_ids(grid: "Grid"):
         )
 
 
-def set_is_feeder(grid: "Grid") -> None:
+def _set_is_feeder(grid: "Grid") -> None:
     "Set the is_feeder property for all branches in the network."
     feeder_node_ids = grid.node.filter(node_type=NodeType.SUBSTATION_NODE).id
     array: BranchArray
