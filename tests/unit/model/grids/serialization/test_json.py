@@ -5,24 +5,18 @@
 """Comprehensive unit tests for Grid serialization with power-grid-model compatibility."""
 
 import json
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
 import pytest
-from numpy.testing import assert_array_equal
 from numpy.typing import NDArray
 
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
-from power_grid_model_ds._core.utils.misc import array_equal_with_nan
-from power_grid_model_ds._core.utils.serialization import (
-    load_grid_from_json,
-    save_grid_to_json,
-)
+
 from power_grid_model_ds.arrays import LineArray
 from power_grid_model_ds.arrays import NodeArray as BaseNodeArray
-from power_grid_model_ds.fancypy import array_equal
 
 
 class ExtendedNodeArray(BaseNodeArray):
@@ -101,8 +95,8 @@ class TestSerializationRoundtrips:
         path = tmp_path / "grid.json"
         grid: Grid = request.getfixturevalue(grid_fixture)
 
-        save_grid_to_json(grid, path)
-        loaded_grid = load_grid_from_json(path, target_grid_class=grid.__class__)
+        grid.serialize(path)
+        loaded_grid = Grid.deserialize(path)
         assert loaded_grid.is_equal(grid)
 
     @pytest.mark.parametrize("grid_fixture", ("basic_grid", "extended_grid", "grid"))
@@ -172,10 +166,10 @@ class TestExtensionHandling:
 
         # Test JSON serialization
         json_path = tmp_path / "custom_array.json"
-        save_grid_to_json(grid, json_path)
+        grid.serialize(json_path)
 
         # Load back and verify
-        loaded_grid = load_grid_from_json(json_path, target_grid_class=GridWithCustomArray)
+        loaded_grid = GridWithCustomArray.deserialize(json_path)
 
         # Verify core data
         assert loaded_grid.node.size == 2
@@ -203,7 +197,7 @@ class TestIncompatibleJson:
         with open(path, "w", encoding="utf-8") as f:
             json.dump(incompatible_data, f)
 
-        grid = load_grid_from_json(path, target_grid_class=Grid)
+        grid = Grid.deserialize(path)
         assert not hasattr(grid, "unexpected_field")
 
     def test_missing_array_field(self, tmp_path: Path):
@@ -218,7 +212,7 @@ class TestIncompatibleJson:
         with open(path, "w", encoding="utf-8") as f:
             json.dump(missing_array_data, f)
 
-        grid = load_grid_from_json(path, target_grid_class=Grid)
+        grid = Grid.deserialize(path)
         assert grid.line.size == 0  # line array should be empty
 
     def test_some_records_miss_data(self, tmp_path):
@@ -231,4 +225,4 @@ class TestIncompatibleJson:
             json.dump(incomplete_data, f)
 
         with pytest.raises(KeyError):
-            load_grid_from_json(path, target_grid_class=Grid)
+            Grid.deserialize(path)

@@ -16,15 +16,14 @@ if TYPE_CHECKING:
     # Import only for type checking to avoid circular imports at runtime
     from power_grid_model_ds._core.model.grids.base import Grid
 
-    G = TypeVar("G", bound=Grid)
-else:
-    # Runtime: don't import Grid to avoid circular import; keep unbound TypeVar
-    G = TypeVar("G")
+
+G = TypeVar("G", bound="Grid")
+
 
 logger = logging.getLogger(__name__)
 
 
-def save_grid_to_json(grid, path: Path, strict: bool = True, **kwargs) -> Path:
+def serialize_to_json(grid: G, path: Path, strict: bool = True, **kwargs) -> Path:
     """Save a Grid object to JSON format using power-grid-model serialization with extensions support.
 
     Args:
@@ -60,7 +59,7 @@ def save_grid_to_json(grid, path: Path, strict: bool = True, **kwargs) -> Path:
     return path
 
 
-def load_grid_from_json(path: Path, target_grid_class: Type[G]) -> G:
+def deserialize_from_json(path: Path, target_grid_class: type[G]) -> G:
     """Load a Grid object from JSON format with cross-type loading support.
 
     Args:
