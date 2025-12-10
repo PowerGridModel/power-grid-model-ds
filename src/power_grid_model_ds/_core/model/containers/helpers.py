@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 import logging
-from dataclasses import fields, Field
-from typing import TYPE_CHECKING, Any
+from dataclasses import Field, fields
+from typing import TYPE_CHECKING
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.utils.misc import array_equal_with_nan
