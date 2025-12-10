@@ -16,6 +16,7 @@ from power_grid_model_ds._core import fancypy as fp
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.constants import EMPTY_ID
+from power_grid_model_ds._core.model.containers._helpers import check_is_equal
 
 Self = TypeVar("Self", bound="FancyArrayContainer")
 
@@ -28,6 +29,24 @@ class FancyArrayContainer:
     """
 
     _id_counter: int
+
+    def __eq__(self, other: "FancyArrayContainer") -> bool:
+        if not isinstance(other, self.__class__):
+            return False
+        return check_is_equal(self, other, ignore_extras=False, early_exit=True)
+
+    def is_equal(self, other: "FancyArrayContainer", ignore_extras: bool = False, early_exit: bool = True, ignore: list[str] = None) -> bool:
+        """Check whether this container is equal to another container.
+
+        Args:
+            other(FancyArrayContainer): the other container to compare with.
+            ignore_extras(bool): whether to ignore fields that are only present in `other`.
+            early_exit(bool): whether to stop checking upon finding the first difference.
+            ignore(list[str]): list of field names to ignore during comparison.
+        Returns:
+            bool: True if the containers are equal, False otherwise.
+        """
+        return check_is_equal(self, other, ignore_extras=ignore_extras, early_exit=early_exit, ignore=ignore)
 
     @property
     def id_counter(self):

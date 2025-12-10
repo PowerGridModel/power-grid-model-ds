@@ -28,16 +28,13 @@ from power_grid_model_ds._core.model.arrays import (
     TransformerTapRegulatorArray,
 )
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
+from power_grid_model_ds._core.model.containers._helpers import check_is_equal
 from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.grids._feeders import set_feeder_ids
-from power_grid_model_ds._core.model.grids._helpers import (
-    check_grid_is_equal,
-    create_empty_grid,
-    create_grid_from_extended_grid,
-)
+from power_grid_model_ds._core.model.grids._helpers import create_empty_grid, create_grid_from_extended_grid
 from power_grid_model_ds._core.model.grids._modify import (
     add_array_to_grid,
     add_branch,
@@ -115,9 +112,9 @@ class Grid(FancyArrayContainer):
 
         For more advanced comparisons, use Grid.is_equal() method.
         """
-        if not isinstance(other, Grid):
+        if not isinstance(other, self.__class__):
             return False
-        return check_grid_is_equal(self, other, ignore_extras=False, early_exit=True)
+        return check_is_equal(self, other, ignore_extras=False, early_exit=True, ignore=["graphs"])
 
     @classmethod
     def empty(cls: Type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
@@ -195,7 +192,7 @@ class Grid(FancyArrayContainer):
             early_exit (bool, optional): If True, returns False upon the first detected difference.
                 Defaults to True. Check debug logs when set to False.
         """
-        return check_grid_is_equal(self, other, ignore_extras, early_exit)
+        return check_is_equal(self, other, ignore_extras, early_exit, ignore=["graphs"])
 
     def append(self, array: FancyArray, check_max_id: bool = True):
         """Append an array to the grid. Both 'grid arrays' and 'grid.graphs' will be updated.
