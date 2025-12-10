@@ -1,14 +1,17 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
+import logging
 from dataclasses import fields
 from typing import TYPE_CHECKING
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
-from power_grid_model_ds._core.utils.misc import array_equal_with_nan, logger
+from power_grid_model_ds._core.utils.misc import array_equal_with_nan
 
 if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import FancyArrayContainer
+
+logger = logging.getLogger("power_grid_model_ds.fancypy")  # public location of the container_equal function
 
 
 def container_equal(
