@@ -18,7 +18,7 @@ from power_grid_model_ds._core.model.arrays import (
 from power_grid_model_ds._core.model.grids.base import Grid
 from tests.fixtures.arrays import ExtendedLineArray, ExtendedNodeArray
 from tests.fixtures.grid_classes import ExtendedGrid
-from tests.unit.model.grids.test_custom_grid import CustomGrid
+from tests.unit.model.grids.extended_grid import CustomGrid
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
 

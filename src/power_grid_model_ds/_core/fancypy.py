@@ -4,6 +4,7 @@
 
 """A set of helper functions that mimic numpy functions but are specifically designed for FancyArrays."""
 
+import logging
 from typing import TYPE_CHECKING, TypeVar, Union
 
 import numpy as np
@@ -13,6 +14,7 @@ from power_grid_model_ds._core.utils.misc import array_equal_with_nan
 if TYPE_CHECKING:
     from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 
+logger = logging.getLogger("power_grid_model_ds.fancypy")
 T = TypeVar("T", bound="FancyArray")
 
 

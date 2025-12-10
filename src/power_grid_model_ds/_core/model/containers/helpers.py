@@ -1,27 +1,32 @@
-# SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
-#
-# SPDX-License-Identifier: MPL-2.0
-import logging
 from dataclasses import fields
 from typing import TYPE_CHECKING
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
-from power_grid_model_ds._core.utils.misc import array_equal_with_nan
+from power_grid_model_ds._core.utils.misc import array_equal_with_nan, logger
 
 if TYPE_CHECKING:
-    from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
-
-logger = logging.getLogger(__name__)
+    from power_grid_model_ds._core.model.grids.base import FancyArrayContainer
 
 
-def check_is_equal(
+def container_equal(
     container_a: "FancyArrayContainer",
     container_b: "FancyArrayContainer",
     ignore_extras: bool = False,
     early_exit: bool = True,
     ignore: list[str] = None,
 ) -> bool:
-    """See FancyArrayContainer.is_equal()"""
+    """
+    Args:
+        container_a(FancyArrayContainer): the other container to compare with.
+        container_b(FancyArrayContainer): the container to compare.
+        ignore_extras(bool): whether to ignore fields that are only present in `other`.
+        early_exit(bool): whether to stop checking upon finding the first difference.
+        ignore(list[str]): list of field names to ignore during comparison.
+    Returns:
+        bool: True if the containers are equal, False otherwise.
+
+
+    """
     ignore = ignore or []
 
     class_name = container_a.__class__.__name__

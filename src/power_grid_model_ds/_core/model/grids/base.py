@@ -28,8 +28,8 @@ from power_grid_model_ds._core.model.arrays import (
     TransformerTapRegulatorArray,
 )
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
-from power_grid_model_ds._core.model.containers._helpers import check_is_equal
 from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
+from power_grid_model_ds._core.model.containers.helpers import container_equal
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
@@ -111,10 +111,12 @@ class Grid(FancyArrayContainer):
         """Check if two grids are equal.
 
         For more advanced comparisons, use Grid.is_equal() method.
+
+        Note: differences in graphs are ignored in this comparison.
         """
         if not isinstance(other, self.__class__):
             return False
-        return check_is_equal(self, other, ignore_extras=False, early_exit=True, ignore=["graphs"])
+        return container_equal(self, other, ignore_extras=False, early_exit=True, ignore=["graphs"])
 
     @classmethod
     def empty(cls: Type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
@@ -182,7 +184,7 @@ class Grid(FancyArrayContainer):
         """Returns all branch arrays"""
         return get_branch_arrays(self)
 
-    def is_equal(self, other: "Grid", ignore_extras: bool = False, early_exit: bool = True) -> bool:
+    def is_equal(self, other: G, ignore_extras: bool = False, early_exit: bool = True) -> bool:
         """Check if two grids are equal.
 
         Args:
@@ -191,8 +193,13 @@ class Grid(FancyArrayContainer):
                 Defaults to False.
             early_exit (bool, optional): If True, returns False upon the first detected difference.
                 Defaults to True. Check debug logs when set to False.
+
+        Returns:
+            bool: True if the grids are equal, False otherwise.
+
+        Note: differences in graphs are ignored in this comparison.
         """
-        return check_is_equal(self, other, ignore_extras, early_exit, ignore=["graphs"])
+        return container_equal(self, other, ignore_extras, early_exit, ignore=["graphs"])
 
     def append(self, array: FancyArray, check_max_id: bool = True):
         """Append an array to the grid. Both 'grid arrays' and 'grid.graphs' will be updated.
