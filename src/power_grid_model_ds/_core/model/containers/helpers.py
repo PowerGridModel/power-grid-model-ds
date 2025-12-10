@@ -63,9 +63,8 @@ def container_equal(
                     return False
 
     if not ignore_extras:
-        extra_fields_b = set({field.name for field in fields(container_b)}) - set(
-            {field.name for field in fields(container_a)}
-        )
+        extra_fields_b = {field.name for field in fields(container_b)} - {field.name for field in fields(container_a)}
+
         if extra_fields_b:
             logger.debug(f"Other grid has extra fields: {extra_fields_b}")
             return False
