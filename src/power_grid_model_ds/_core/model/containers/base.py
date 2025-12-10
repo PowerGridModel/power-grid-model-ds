@@ -223,7 +223,7 @@ class FancyArrayContainer:
                     f"the current id counter {self._id_counter}"
                 )
 
-        new_max_id = np.max(array.id)
+        new_max_id = np.max(array.id).item()
         # Update _id_counter
         self._id_counter = max(self._id_counter, new_max_id)
 
