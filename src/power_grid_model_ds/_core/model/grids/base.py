@@ -6,7 +6,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Self, Type, TypeVar
+from typing import Any, Self, Type, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -34,6 +34,7 @@ from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.grids._feeders import set_feeder_ids
 from power_grid_model_ds._core.model.grids._helpers import (
+    check_grid_is_equal,
     create_empty_grid,
     create_grid_from_extended_grid,
 )
@@ -109,6 +110,15 @@ class Grid(FancyArrayContainer):
         """
         return serialize_to_str(self)
 
+    def __eq__(self, other: Any) -> bool:
+        """Check if two grids are equal.
+
+        For more advanced comparisons, use Grid.is_equal() method.
+        """
+        if not isinstance(other, Grid):
+            return False
+        return check_grid_is_equal(self, other, ignore_extras=False, early_exit=True)
+
     @classmethod
     def empty(cls: Type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
         """Create an empty grid
@@ -174,6 +184,18 @@ class Grid(FancyArrayContainer):
     def branch_arrays(self) -> list[BranchArray]:
         """Returns all branch arrays"""
         return get_branch_arrays(self)
+
+    def is_equal(self, other: "Grid", ignore_extras: bool = False, early_exit: bool = True) -> bool:
+        """Check if two grids are equal.
+
+        Args:
+            other (Grid): The other grid to compare to.
+            ignore_extras (bool, optional): If True, allows other to have extra fields and arrays to have extra columns.
+                Defaults to False.
+            early_exit (bool, optional): If True, returns False upon the first detected difference.
+                Defaults to True. Check debug logs when set to False.
+        """
+        return check_grid_is_equal(self, other, ignore_extras, early_exit)
 
     def append(self, array: FancyArray, check_max_id: bool = True):
         """Append an array to the grid. Both 'grid arrays' and 'grid.graphs' will be updated.
