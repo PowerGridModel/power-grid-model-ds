@@ -4,13 +4,10 @@
 
 """Misc utils"""
 
-import logging
 from collections.abc import Sequence
 from typing import Type, get_type_hints
 
 import numpy as np
-
-logger = logging.getLogger(__name__)
 
 
 def is_sequence(seq):
