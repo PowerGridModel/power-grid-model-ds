@@ -31,6 +31,6 @@ class TestContainerEqual:
         grid1 = build_basic_grid(ExtendedGrid.empty())
         grid2 = Grid.from_extended(grid1)
         assert container_equal(grid1, grid2, ignore_extras=True, ignore=["graphs"])
-        assert not container_equal(grid2, grid1, ignore_extras=False, ignore=["graphs"])
+        assert not container_equal(grid1, grid2, ignore_extras=False, ignore=["graphs"])
 
-        assert not container_equal(grid2, grid1, ignore_extras=True)
+        assert not container_equal(grid1, grid2, ignore_extras=True)
