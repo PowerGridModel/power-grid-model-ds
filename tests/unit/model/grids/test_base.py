@@ -13,7 +13,6 @@ from numpy.ma.testutils import assert_array_equal
 from power_grid_model_ds._core.model.grids.base import Grid
 from tests.fixtures.grid_classes import ExtendedGrid
 from tests.fixtures.grids import build_basic_grid
-from tests.unit.model.grids.extended_grid import CustomGridWithDefaults
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
 
@@ -111,31 +110,7 @@ class TestGridEquality:
         assert grid1 != grid2
 
     def test_differt_type(self):
-        grid1 = build_basic_grid(CustomGridWithDefaults.empty())
+        grid1 = build_basic_grid(ExtendedGrid.empty())
         grid2 = Grid.from_extended(grid1)
 
         assert grid1 != grid2
-
-
-class TestGridIsEqual:
-    def test_grids_equal(self, basic_grid: Grid):
-        grid1 = basic_grid
-        grid2 = deepcopy(grid1)
-        assert grid1.is_equal(grid2)
-
-    def test_different_nodes(self, basic_grid: Grid):
-        grid1 = basic_grid
-        grid2 = deepcopy(grid1)
-        # modify a node
-        grid2.node.u_rated[0] += 1000.0
-        assert not grid1.is_equal(grid2)
-
-    def test_different_type(self):
-        grid1 = build_basic_grid(CustomGridWithDefaults.empty())
-        grid2 = Grid.from_extended(grid1)
-        assert not grid1.is_equal(grid2)
-
-    def test_ignore_extras(self, basic_grid: Grid):
-        grid1 = build_basic_grid(CustomGridWithDefaults.empty())
-        grid2 = Grid.from_extended(grid1)
-        assert grid2.is_equal(grid1, ignore_extras=True)

@@ -184,23 +184,6 @@ class Grid(FancyArrayContainer):
         """Returns all branch arrays"""
         return get_branch_arrays(self)
 
-    def is_equal(self, other: G, ignore_extras: bool = False, early_exit: bool = True) -> bool:
-        """Check if two grids are equal.
-
-        Args:
-            other (Grid): The other grid to compare to.
-            ignore_extras (bool, optional): If True, allows other to have extra fields and arrays to have extra columns.
-                Defaults to False.
-            early_exit (bool, optional): If True, returns False upon the first detected difference.
-                Defaults to True. Check debug logs when set to False.
-
-        Returns:
-            bool: True if the grids are equal, False otherwise.
-
-        Note: differences in graphs are ignored in this comparison.
-        """
-        return container_equal(self, other, ignore_extras, early_exit, ignore=["graphs"])
-
     def append(self, array: FancyArray, check_max_id: bool = True):
         """Append an array to the grid. Both 'grid arrays' and 'grid.graphs' will be updated.
 

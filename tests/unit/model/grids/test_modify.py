@@ -11,7 +11,8 @@ from power_grid_model_ds._core.model.arrays import (
     TransformerTapRegulatorArray,
 )
 from power_grid_model_ds._core.model.constants import EMPTY_ID
-from tests.unit.model.grids.extended_grid import CustomGrid, CustomLineArray
+from tests.fixtures.arrays import DefaultedCustomLineArray, DefaultedCustomNodeArray
+from tests.fixtures.grid_classes import ExtendedGrid
 
 
 def test_grid_add_node(basic_grid: Grid):
@@ -237,11 +238,11 @@ def test_grid_make_inactive_to_side(basic_grid: Grid):
 
 def test_add_active_branch_to_extended_grid():
     """Test adding a branch to the custom grid"""
-    grid = CustomGrid.empty()
-    nodes = NodeArray.zeros(2)
+    grid = ExtendedGrid.empty()
+    nodes = DefaultedCustomNodeArray.zeros(2)
     grid.append(nodes)
 
-    line = CustomLineArray.zeros(1)
+    line = DefaultedCustomLineArray.zeros(1)
     line.from_node = nodes[0].id
     line.to_node = nodes[1].id
     line.from_status = 1
