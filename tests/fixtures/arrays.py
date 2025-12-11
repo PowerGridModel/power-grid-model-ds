@@ -60,7 +60,17 @@ class FancyTestArray3(FancyArray):
     test_float2: NDArray3[np.float64]
 
 
-class ExtendedNodeArray(NodeArray):
+class CustomNodeArray(NodeArray):
+    """Extends the node array with an output value"""
+
+    u: NDArray[np.float64]
+
+
+class CustomLineArray(LineArray):
+    i_from: NDArray[np.float64]
+
+
+class DefaultedCustomNodeArray(NodeArray):
     """Extends the node array with an output value"""
 
     _defaults = {"u": 0}
@@ -68,8 +78,8 @@ class ExtendedNodeArray(NodeArray):
     u: NDArray[np.float64]
 
 
-class ExtendedLineArray(LineArray):
-    """Extends the line array with an output value"""
+class DefaultedCustomLineArray(LineArray):
+    """Extends the line array with a defaulted output value"""
 
     _defaults = {"i_from": 0}
 
