@@ -32,5 +32,4 @@ class TestContainerEqual:
         grid2 = Grid.from_extended(grid1)
         assert container_equal(grid1, grid2, ignore_extras=True, ignore=["graphs"])
         assert not container_equal(grid1, grid2, ignore_extras=False, ignore=["graphs"])
-
         assert not container_equal(grid1, grid2, ignore_extras=True)
