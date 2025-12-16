@@ -19,6 +19,8 @@ _SUBSTATION_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": C
 _LINE_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["line"]}
 _LINK_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["link"]}
 _TRANSFORMER_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["transformer"]}
+_GENERIC_BRANCH_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["generic_branch"]}
+_ASYM_LINE_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["asym_line"]}
 _OPEN_BRANCH_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["open_branch"]}
 LEGENDA_ELEMENTS = [
     html.I(className="fas fa-circle", id="node-icon", style=NODE_ICON_STYLE),
@@ -31,6 +33,10 @@ LEGENDA_ELEMENTS = [
     dbc.Tooltip("Transformer", target="transformer-icon", placement="bottom"),
     html.I(className=_BOOTSTRAP_ARROW_ICON_CLASS, id="link-icon", style=_LINK_ICON_STYLE),
     dbc.Tooltip("Link", target="link-icon", placement="bottom"),
+    html.I(className=_BOOTSTRAP_ARROW_ICON_CLASS, id="generic-branch-icon", style=_GENERIC_BRANCH_ICON_STYLE),
+    dbc.Tooltip("Generic Branch", target="generic-branch-icon", placement="bottom"),
+    html.I(className=_BOOTSTRAP_ARROW_ICON_CLASS, id="asym-line-icon", style=_ASYM_LINE_ICON_STYLE),
+    dbc.Tooltip("Asymmetrical Line", target="asym-line-icon", placement="bottom"),
     html.I(className="fas fa-ellipsis", id="open-branch-icon", style=_OPEN_BRANCH_ICON_STYLE),
     dbc.Tooltip("Open Branch", target="open-branch-icon", placement="bottom"),
 ]

@@ -5,6 +5,7 @@
 import dash_bootstrap_components as dbc
 from dash import Dash, dcc, html
 from dash_bootstrap_components.icons import FONT_AWESOME
+from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.callbacks import (  # noqa: F401  # pylint: disable=unused-import
@@ -57,11 +58,13 @@ def _get_columns_store(grid: Grid) -> dcc.Store:
     return dcc.Store(
         id="columns-store",
         data={
-            "node": grid.node.columns,
-            "line": grid.line.columns,
-            "link": grid.link.columns,
-            "transformer": grid.transformer.columns,
-            "three_winding_transformer": grid.three_winding_transformer.columns,
+            ComponentType.node: grid.node.columns,
+            ComponentType.line: grid.line.columns,
+            ComponentType.link: grid.link.columns,
+            ComponentType.transformer: grid.transformer.columns,
+            ComponentType.three_winding_transformer: grid.three_winding_transformer.columns,
+            ComponentType.asym_line: grid.asym_line.columns,
+            ComponentType.generic_branch: grid.generic_branch.columns,
             "branch": grid.branches.columns,
         },
     )

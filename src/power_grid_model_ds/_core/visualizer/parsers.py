@@ -32,7 +32,10 @@ def parse_branches(grid: Grid) -> list[dict[str, Any]]:
     parsed_branches.extend(parse_branch_array(grid.line, "line"))
     parsed_branches.extend(parse_branch_array(grid.link, "link"))
     parsed_branches.extend(parse_branch_array(grid.transformer, "transformer"))
+    parsed_branches.extend(parse_branch_array(grid.generic_branch, "generic_branch"))
+    parsed_branches.extend(parse_branch_array(grid.asym_line, "asym_line"))
     parsed_branches.extend(parse_branch3_array(grid.three_winding_transformer, "transformer"))
+
     return parsed_branches
 
 
@@ -56,7 +59,10 @@ def parse_branch3_array(branches: Branch3Array, group: Literal["transformer"]) -
     return parsed_branches
 
 
-def parse_branch_array(branches: BranchArray, group: Literal["line", "link", "transformer"]) -> list[dict[str, Any]]:
+def parse_branch_array(
+    branches: BranchArray,
+    group: Literal["line", "link", "transformer", "generic_branch", "asym_line"],
+) -> list[dict[str, Any]]:
     """Parse the branch array."""
     parsed_branches = []
     columns = branches.columns
