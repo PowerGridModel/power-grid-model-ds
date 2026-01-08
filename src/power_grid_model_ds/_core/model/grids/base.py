@@ -357,7 +357,8 @@ class Grid(FancyArrayContainer):
         # First offset the ids of the other grid to avoid conflicts
         # Todo: code this
 
-        # Find all columns with references to ids (e.g. node ids, e.g. using https://github.com/PowerGridModel/power-grid-model-ds/issues/118#issuecomment-3552555218):
+        # Find all columns with references to ids (e.g. node ids, e.g. using
+        # https://github.com/PowerGridModel/power-grid-model-ds/issues/118#issuecomment-3552555218):
         # Todo: code this
 
         # Update all these columns by adding the maximum id of this grid to the ids in the other grid
