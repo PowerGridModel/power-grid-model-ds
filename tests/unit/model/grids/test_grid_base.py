@@ -401,3 +401,30 @@ class TestFromTxt:
         assert 1 == grid.branches.filter(to_status=0).size
         assert 1 == grid.transformer.size
         np.testing.assert_array_equal([14, 10, 11, 12, 13, 15, 16, 17], grid.branches.id)
+
+class TestMergeGrids:
+    def test_merge_two_simple_grid(self):
+        grid1 = Grid.from_txt(
+            "S1 2",
+            "S1 3 link",
+            "3 4 transformer"
+        )
+
+        grid2 = Grid.from_txt(
+            "S11 12",
+            "S11 13 link",
+            "13 14 transformer"
+        )
+
+        initial_size = grid1.node.size
+
+        grid1.merge(grid2)
+
+        # assert grid1.node.size == initial_size * 2
+        # assert ids are unique
+        # assert from and to nodes in grid1._branches_ are updated
+        # assert node in grid.source is updated
+        # assert all other arrays with node as column
+
+    def test_merge_two_grid_overlapping_nodes(self):
+        pass
