@@ -17,7 +17,7 @@ from power_grid_model_ds._core.visualizer.layout.cytoscape_html import get_cytos
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
 from power_grid_model_ds._core.visualizer.layout.header import HEADER_HTML
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
-from power_grid_model_ds._core.visualizer.parsers import parse_branches, parse_node_array
+from power_grid_model_ds._core.visualizer.parsers import parse_branches, parse_element_data, parse_node_array
 from power_grid_model_ds.arrays import NodeArray
 
 GOOGLE_FONTS = "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
@@ -63,13 +63,25 @@ def _get_columns_store(grid: Grid) -> dcc.Store:
             "transformer": grid.transformer.columns,
             "three_winding_transformer": grid.three_winding_transformer.columns,
             "branch": grid.branches.columns,
+            "sym_load": grid.sym_load.columns,
+            "sym_gen": grid.sym_gen.columns,
+            "source": grid.source.columns,
+            "sym_power_sensor": grid.sym_power_sensor.columns,
+            "sym_voltage_sensor": grid.sym_voltage_sensor.columns,
+            "transformer_tap_regulator": grid.transformer_tap_regulator.columns,
         },
     )
+
+
+def _get_viz_to_comp_store(grid: Grid) -> dcc.Store:
+    """Create a store for appliance data mapped by node ID."""
+    return dcc.Store(id="viz-to-comp-store", data=parse_element_data(grid))
 
 
 def get_app_layout(grid: Grid) -> html.Div:
     """Get the app layout."""
     columns_store = _get_columns_store(grid)
+    viz_to_comp_store = _get_viz_to_comp_store(grid)
     graph_layout = _get_graph_layout(grid.node)
     elements = parse_node_array(grid.node) + parse_branches(grid)
     cytoscape_html = get_cytoscape_html(graph_layout, elements)
@@ -77,6 +89,7 @@ def get_app_layout(grid: Grid) -> html.Div:
     return html.Div(
         [
             columns_store,
+            viz_to_comp_store,
             dcc.Store(id="stylesheet-store", data=DEFAULT_STYLESHEET),
             HEADER_HTML,
             html.Hr(style={"border-color": "white", "margin": "0"}),

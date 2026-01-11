@@ -5,3 +5,5 @@
 from typing import Any
 
 STYLESHEET = list[dict[str, Any]]
+ListArrayData = list[dict[str, Any]]
+VizToComponentData = dict[str, dict[str, ListArrayData]]
