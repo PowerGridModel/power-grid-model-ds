@@ -347,7 +347,7 @@ class Grid(FancyArrayContainer):
         """
         return save_grid_to_pickle(self, cache_dir=cache_dir, cache_name=cache_name, compress=compress)
 
-    def merge(self, other_grid: G) -> None:
+    def merge(self, other_grid: G) -> G:
         """Merge another grid into this grid.
 
         Args:
@@ -355,7 +355,5 @@ class Grid(FancyArrayContainer):
         """
 
         merged_grid = merge_grids(self, other_grid)
-
-
 
         return merged_grid

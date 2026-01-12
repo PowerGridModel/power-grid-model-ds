@@ -416,15 +416,15 @@ class TestMergeGrids:
             "13 14 transformer"
         )
 
+        simple_merged_grid = grid1.merge(grid2)
+
         initial_size = grid1.node.size
-
-        grid1.merge(grid2)
-
-        # assert grid1.node.size == initial_size * 2
+        assert simple_merged_grid.node.size == initial_size * 2
         # assert ids are unique
         # assert from and to nodes in grid1._branches_ are updated
         # assert node in grid.source is updated
         # assert all other arrays with node as column
+        # use grid.check_ids() to verify stuff
 
     def test_merge_two_grid_overlapping_nodes(self):
         pass
