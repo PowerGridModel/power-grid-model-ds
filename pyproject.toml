@@ -30,7 +30,6 @@ dependencies = [
     "power-grid-model>=1.7",
     "rustworkx>= 0.15.1",
     "numpy>=2.0",
-    "poethepoet>=0.40.0",
 ]
 dynamic = ["version"]
 
@@ -55,6 +54,7 @@ dev = [
   "ruff",
   "mypy",
   "pre-commit",
+  "poethepoet",
   # Visualization (make sure these stay equalivalent to the 'visualizer' group)
   "dash>=3.0.0",
   "dash-bootstrap-components>=2.0.0",
