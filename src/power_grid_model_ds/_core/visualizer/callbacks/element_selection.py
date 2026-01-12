@@ -27,9 +27,9 @@ def display_selected_element(
     """Display the tapped edge data."""
     # 0th element means data for only a single selection is shown
     if node_data:
-        elm_id_str = node_data[0]["id"]
+        elm_id_str = node_data.pop()["id"]
     elif edge_data:
-        elm_id_str = edge_data[0]["id"]
+        elm_id_str = edge_data.pop()["id"]
     else:
         return SELECTION_OUTPUT_HTML.children
 
