@@ -36,7 +36,7 @@ def display_selected_element(
     tables: list[html.H5 | html.Div] = []
     if elm_id_str in viz_to_comp:
         for comp_type, list_array_data in viz_to_comp[elm_id_str].items():
-            tables.append(html.H5(comp_type, style={"marginTop": "15px"}))
+            tables.append(html.H5(comp_type, style={"marginTop": "15px", "textAlign": "left"}))
             tables.append(
                 _to_multiple_entries_data_tables(list_array_data=list_array_data, columns=columns_data[comp_type])
             )
