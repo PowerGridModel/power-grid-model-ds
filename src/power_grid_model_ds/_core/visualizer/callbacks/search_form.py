@@ -9,6 +9,16 @@ from dash.exceptions import PreventUpdate
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
 from power_grid_model_ds._core.visualizer.typing import STYLESHEET, ListArrayData, VizToComponentData
 
+NODE_HIGHLIGHT_STYLE = {
+    "background-color": CYTO_COLORS["highlighted"],
+    "text-background-color": CYTO_COLORS["highlighted"],
+}
+
+EDGE_HIGHLIGHT_STYLE = {
+    "line-color": CYTO_COLORS["highlighted"],
+    "target-arrow-color": CYTO_COLORS["highlighted"],
+}
+
 
 @callback(
     Output("cytoscape-graph", "stylesheet"),
@@ -41,10 +51,10 @@ def search_element(  #  pylint: disable=too-many-arguments, disable=too-many-pos
     new_styles = []
     if selected_nodes:
         node_selector = ", ".join([f'[id = "{node_id}"]' for node_id in selected_nodes])
-        new_styles.append(_generate_node_highlight_style(node_selector))
+        new_styles.append({"selector": node_selector, "style": NODE_HIGHLIGHT_STYLE})
     if selected_edges:
         edge_selector = ", ".join([f'[id = "{edge_id}"]' for edge_id in selected_edges])
-        new_styles.append(_generate_edge_highlight_style(edge_selector))
+        new_styles.append({"selector": edge_selector, "style": EDGE_HIGHLIGHT_STYLE})
 
     updated_stylesheet = stylesheet + new_styles
     return updated_stylesheet
@@ -66,27 +76,6 @@ def update_column_options(selected_group, store_data):
     default_value = columns[0] if columns else "id"
 
     return columns, default_value
-
-
-def _generate_node_highlight_style(selector: str) -> dict[str, str | dict[str, str]]:
-    """Get the highlight style for a given group."""
-    return {
-        "selector": selector,
-        "style": {
-            "background-color": CYTO_COLORS["highlighted"],
-            "text-background-color": CYTO_COLORS["highlighted"],
-        },
-    }
-
-
-def _generate_edge_highlight_style(selector: str) -> dict[str, str | dict[str, str]]:
-    return {
-        "selector": selector,
-        "style": {
-            "line-color": CYTO_COLORS["highlighted"],
-            "target-arrow-color": CYTO_COLORS["highlighted"],
-        },
-    }
 
 
 def _find_components_node_edge(
