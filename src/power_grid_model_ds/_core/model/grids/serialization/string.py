@@ -2,20 +2,64 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-"""Create a grid from text a text file"""
-
-import logging
-from typing import TYPE_CHECKING
+import itertools
+from pathlib import Path
+from typing import TYPE_CHECKING, Generic, Type, TypeVar
 
 from power_grid_model_ds._core.model.enums.nodes import NodeType
 
 if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import Grid
 
-_logger = logging.getLogger(__name__)
+G = TypeVar("G", bound="Grid")
 
 
-class TextSource:
+def serialize_to_str(grid: "Grid") -> str:
+    """See Grid.__str__()"""
+    grid_str = ""
+
+    for transformer3 in grid.three_winding_transformer:
+        nodes = [transformer3.node_1.item(), transformer3.node_2.item(), transformer3.node_3.item()]
+        for combo in itertools.combinations(nodes, 2):
+            grid_str += f"S{combo[0]} S{combo[1]} {transformer3.id.item()},3-transformer\n"
+
+    for branch in grid.branches:
+        from_node = grid.node.get(id=branch.from_node).record
+        to_node = grid.node.get(id=branch.to_node).record
+
+        from_node_str = f"S{from_node.id}" if from_node.node_type == NodeType.SUBSTATION_NODE else str(from_node.id)
+        to_node_str = f"S{to_node.id}" if to_node.node_type == NodeType.SUBSTATION_NODE else str(to_node.id)
+
+        suffix_str = str(branch.id.item())
+        if branch.from_status.item() == 0 or branch.to_status.item() == 0:
+            suffix_str = f"{suffix_str},open"
+
+        if branch.id in grid.transformer.id:
+            suffix_str = f"{suffix_str},transformer"
+        elif branch.id in grid.link.id:
+            suffix_str = f"{suffix_str},link"
+        elif branch.id in grid.line.id:
+            pass  # no suffix needed
+        else:
+            raise ValueError(f"Branch {branch.id} is not a transformer, link or line")
+
+        grid_str += f"{from_node_str} {to_node_str} {suffix_str}\n"
+    return grid_str
+
+
+def deserialize_from_str(grid_class: type[G], *args: str) -> G:
+    """See Grid.from_txt()"""
+    return _TextSource(grid_class).load_from_txt(*args)
+
+
+def deserialize_from_txt_file(grid_class: type[G], txt_file_path: Path) -> G:
+    """See Grid.from_txt_file()"""
+    with open(txt_file_path, "r", encoding="utf-8") as f:
+        txt_lines = f.readlines()
+    return deserialize_from_str(grid_class, *txt_lines)
+
+
+class _TextSource(Generic[G]):
     """Class for handling text sources.
 
     Text sources are only intended for test purposes so that a grid can quickly be designed from a text file.
@@ -31,10 +75,10 @@ class TextSource:
     See docs/examples/3_drawing_a_grid.md for more information.
     """
 
-    def __init__(self, grid_class: type["Grid"]):
-        self.grid = grid_class.empty()
+    def __init__(self, grid_class: Type[G]):
+        self.grid: G = grid_class.empty()
 
-    def load_from_txt(self, *args: str) -> "Grid":
+    def load_from_txt(self, *args: str) -> G:
         """Load a grid from text"""
 
         text_lines = [line for arg in args for line in arg.strip().split("\n")]

@@ -91,7 +91,7 @@ jobs:
         run: uv tool install poethepoet
 
       - name: Load built wheel file
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: power-grid-model-ds
           path: dist/
@@ -117,7 +117,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Load built wheel file
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: power-grid-model-ds
           path: dist/
