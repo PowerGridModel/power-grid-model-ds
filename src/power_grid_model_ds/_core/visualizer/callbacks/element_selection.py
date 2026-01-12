@@ -31,7 +31,7 @@ def display_selected_element(
     elif edge_data:
         elm_id_str = edge_data[0]["id"]
     else:
-        return SELECTION_OUTPUT_HTML
+        return SELECTION_OUTPUT_HTML.children
 
     tables: list[html.H5 | html.Div] = []
     if elm_id_str in viz_to_comp:
@@ -40,12 +40,12 @@ def display_selected_element(
             tables.append(
                 _to_multiple_entries_data_tables(list_array_data=list_array_data, columns=columns_data[comp_type])
             )
-        return tables
-    return SELECTION_OUTPUT_HTML
+        return html.Div(children=tables, style={"overflowX": "scroll", "margin": "10px"}).children
+    return SELECTION_OUTPUT_HTML.children
 
 
 def _to_multiple_entries_data_tables(list_array_data: ListArrayData, columns: list[str]) -> html.Div:
     data_table = dash_table.DataTable(  # type: ignore[attr-defined]
-        data=list_array_data, columns=[{"name": key, "id": key} for key in columns], editable=False
+        data=list_array_data, columns=[{"name": key, "id": key} for key in columns], editable=False, fill_width=False
     )
     return data_table
