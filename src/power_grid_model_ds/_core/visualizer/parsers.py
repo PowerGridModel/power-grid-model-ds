@@ -186,7 +186,14 @@ def _parse_transformer_tap_regulators(grid: Grid, viz_to_comp: VizToComponentDat
 
 
 def parse_element_data(grid: Grid) -> VizToComponentData:
-    """Parse grid element data and organize by node ID."""
+    """
+    Parse grid element data and organize by node ID as string.
+
+    Args:
+        grid (Grid): The power grid model.
+    Returns:
+        VizToComponentData: A mapping from node or edge IDs to their associated component data.
+    """
     viz_to_comp: VizToComponentData = {}
 
     _parse_component_data(grid, "node", viz_to_comp)
