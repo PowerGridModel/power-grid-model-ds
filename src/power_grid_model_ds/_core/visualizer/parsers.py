@@ -28,39 +28,64 @@ _APPLIANCE_POWER_SENSORS = [
 ]
 
 
-def parse_node_array(nodes: NodeArray) -> ListArrayData:
-    """Parse the nodes."""
+def parse_node_array(nodes: NodeArray, viz_to_comp: VizToComponentData) -> list[dict[str, Any]]:
+    """Parse the nodes. Fills node data to viz_to_comp."""
     parsed_nodes = []
 
     with_coords = "x" in nodes.columns and "y" in nodes.columns
 
     for node in nodes:
-        cyto_elements = {"data": {"id": str(node.id.item()), "group": "node"}}
+        node_id_str = str(node.id.item())
+
+        _ensure_component_list(viz_to_comp, node_id_str, "node")
+        viz_to_comp[node_id_str]["node"].append(_array_to_dict(node, nodes.columns))
+
+        cyto_elements = {"data": {"id": node_id_str, "group": "node"}}
         if with_coords:
             cyto_elements["position"] = {"x": node.x.item(), "y": -node.y.item()}  # invert y-axis for visualization
         parsed_nodes.append(cyto_elements)
     return parsed_nodes
 
 
-def parse_branches(grid: Grid) -> ListArrayData:
-    """Parse the branches."""
+def parse_branches(grid: Grid, viz_to_comp: VizToComponentData) -> list[dict[str, Any]]:
+    """Parse the branches. Fills branch data to viz_to_comp."""
     parsed_branches = []
-    parsed_branches.extend(parse_branch_array(grid.line, "line"))
-    parsed_branches.extend(parse_branch_array(grid.link, "link"))
-    parsed_branches.extend(parse_branch_array(grid.transformer, "transformer"))
-    parsed_branches.extend(parse_branch3_array(grid.three_winding_transformer, "transformer"))
+    parsed_branches.extend(parse_branch_array(grid.line, "line", viz_to_comp))
+    parsed_branches.extend(parse_branch_array(grid.link, "link", viz_to_comp))
+    parsed_branches.extend(parse_branch_array(grid.transformer, "transformer", viz_to_comp))
+    
+    # TODO (nitbharambe) Remove ambiguity of group
+    parsed_branches.extend(
+        parse_branch3_array(
+            grid.three_winding_transformer,
+            component_type="three_winding_transformer",
+            group="transformer",
+            viz_to_comp=viz_to_comp,
+        )
+    )
     return parsed_branches
 
 
-def parse_branch3_array(branches: Branch3Array, group: Literal["transformer"]) -> ListArrayData:
-    """Parse the three-winding transformer array."""
+def parse_branch3_array(
+    branches: Branch3Array,
+    component_type: Literal["three_winding_transformer"],
+    group: Literal["transformer"],
+    viz_to_comp: VizToComponentData,
+) -> list[dict[str, Any]]:
+    """Parse the three-winding transformer array. Fills branch3 data to viz_to_comp."""
     parsed_branches = []
     for branch3 in branches:
+        branch3_component_data = _array_to_dict(branches[0], branches.columns)  # Same for all three branches
         for count, branch1 in enumerate(branch3.as_branches()):
+            branch3_id_str = str(branch3.id.item())
+
+            _ensure_component_list(viz_to_comp, branch3_id_str, component_type)
+            viz_to_comp[branch3_id_str][component_type].append(branch3_component_data)
+
             cyto_elements = {
                 "data": {
                     # IDs need to be unique, so we combine the branch ID with the from and to nodes
-                    "id": f"{branch3.id.item()}_{count}",
+                    "id": f"{branch3_id_str}_{count}",
                     "source": str(branch1.from_node.item()),
                     "target": str(branch1.to_node.item()),
                     "group": group,
@@ -70,10 +95,15 @@ def parse_branch3_array(branches: Branch3Array, group: Literal["transformer"]) -
     return parsed_branches
 
 
-def parse_branch_array(branches: BranchArray, group: Literal["line", "link", "transformer"]) -> ListArrayData:
-    """Parse the branch array."""
+def parse_branch_array(
+    branches: BranchArray, group: Literal["line", "link", "transformer"], viz_to_comp: VizToComponentData
+) -> list[dict[str, Any]]:
+    """Parse the branch array. Fills branch data to viz_to_comp."""
     parsed_branches = []
     for branch in branches:
+        _ensure_component_list(viz_to_comp, str(branch.id.item()), group)
+        viz_to_comp[str(branch.id.item())][group].append(_array_to_dict(branch, branches.columns))
+
         cyto_elements = {
             "data": {
                 "id": str(branch.id.item()),
@@ -156,25 +186,6 @@ def _parse_voltage_sensors(grid: Grid, viz_to_comp: VizToComponentData) -> None:
         )
 
 
-def _parse_component_data(grid: Grid, component_type: str, viz_to_comp: VizToComponentData) -> None:
-    """Parse node data and populate viz_to_comp mapping."""
-    columns = getattr(grid, component_type).columns
-    for component in getattr(grid, component_type):
-        component_id_str = str(component.id.item())
-        _ensure_component_list(viz_to_comp, component_id_str, component_type)
-        viz_to_comp[component_id_str][component_type].append(_array_to_dict(component, columns))
-
-
-def _parse_branch3_data(grid: Grid, component_type: str, viz_to_comp: VizToComponentData) -> None:
-    """Parse three-winding transformer data and populate viz_to_comp mapping."""
-    columns = getattr(grid, component_type).columns
-    for branch3 in getattr(grid, component_type):
-        for count in range(3):
-            branch1_id_str = f"{branch3.id.item()}_{count}"
-            _ensure_component_list(viz_to_comp, branch1_id_str, component_type)
-            viz_to_comp[branch1_id_str][component_type].append(_array_to_dict(branch3, columns))
-
-
 def _parse_transformer_tap_regulators(grid: Grid, viz_to_comp: VizToComponentData) -> None:
     """Parse transformer tap regulators and associate them with transformers."""
     for tap_regulator in grid.transformer_tap_regulator:
@@ -185,22 +196,22 @@ def _parse_transformer_tap_regulators(grid: Grid, viz_to_comp: VizToComponentDat
         )
 
 
-def parse_element_data(grid: Grid) -> VizToComponentData:
+def parse_element_data(grid: Grid) -> tuple[list[dict[str, Any]], VizToComponentData]:
     """
     Parse grid element data and organize by node ID as string.
 
     Args:
         grid (Grid): The power grid model.
     Returns:
-        VizToComponentData: A mapping from node or edge IDs to their associated component data.
+        tuple[list[dict[str, Any]], VizToComponentData]: A tuple containing 
+            a list of elements for visualization 
+            A mapping from node or edge IDs used in visualization to their associated component data.
     """
     viz_to_comp: VizToComponentData = {}
 
-    _parse_component_data(grid, "node", viz_to_comp)
-    _parse_component_data(grid, "line", viz_to_comp)
-    _parse_component_data(grid, "link", viz_to_comp)
-    _parse_component_data(grid, "transformer", viz_to_comp)
-    _parse_branch3_data(grid, "three_winding_transformer", viz_to_comp)
+    elements = []
+    elements += parse_node_array(grid.node, viz_to_comp)
+    elements += parse_branches(grid, viz_to_comp)
 
     indirect_connections = _parse_power_sensors(grid, viz_to_comp)
 
@@ -208,4 +219,4 @@ def parse_element_data(grid: Grid) -> VizToComponentData:
     _parse_voltage_sensors(grid, viz_to_comp)
     _parse_transformer_tap_regulators(grid, viz_to_comp)
 
-    return viz_to_comp
+    return elements, viz_to_comp
