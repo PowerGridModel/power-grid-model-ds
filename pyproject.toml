@@ -25,7 +25,7 @@ classifiers = [
   "Operating System :: MacOS",
   "Topic :: Scientific/Engineering :: Physics",
 ]
-requires-python = ">=3.12,<3.15"
+requires-python = ">=3.12"
 dependencies = [
     "power-grid-model>=1.7",
     "rustworkx>= 0.15.1",
