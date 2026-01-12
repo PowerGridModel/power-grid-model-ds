@@ -53,7 +53,8 @@ def create_empty_grid(grid_class: Type[G], graph_model: type[BaseGraphModel] = R
 
 def merge_grids(grid: G, other_grid: G) -> G:
     """See Grid.merge()"""
-    # merged_grid = grid
+    print(grid)
+    print(other_grid)
 
     # First offset the ids of other_grid to avoid conflicts
     ids_grid = grid.node.id
@@ -66,12 +67,15 @@ def merge_grids(grid: G, other_grid: G) -> G:
         # Update columns with references to ids (e.g. node ids, e.g. using
         _increment_grid_ids_by_offset(other_grid, offset)
 
+    print(other_grid)
+
     # Now append all arrays from other_grid to grid
     for array in other_grid.all_arrays():
-        print(array)
-
+        # print(array)
         grid.append(array, check_max_id=False)
 
+
+    print(grid)
     return grid
 
 

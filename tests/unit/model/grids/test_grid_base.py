@@ -409,18 +409,20 @@ class TestMergeGrids:
             "S1 3 link",
             "3 4 transformer"
         )
+        grid1_size = grid1.node.size
 
         grid2 = Grid.from_txt(
             "S11 12",
             "S11 13 link",
             "13 14 transformer"
         )
+        grid2_size = grid2.node.size
 
-        simple_merged_grid = grid1.merge(grid2)
+        merged_grid = grid1.merge(grid2)
+        merged_grid_size = merged_grid.node.size
 
-        initial_size = grid1.node.size
-        assert simple_merged_grid.node.size == initial_size * 2
-        # assert ids are unique
+        assert merged_grid_size == grid1_size + grid2_size, "Merged grid size should be the sum of both grids' sizes"
+
         # assert from and to nodes in grid1._branches_ are updated
         # assert node in grid.source is updated
         # assert all other arrays with node as column
@@ -428,3 +430,5 @@ class TestMergeGrids:
 
     def test_merge_two_grid_overlapping_nodes(self):
         pass
+
+        # assert ids are unique
