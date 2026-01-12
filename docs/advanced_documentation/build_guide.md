@@ -10,7 +10,7 @@ This document explains how you can build this library from source.
 
 ## Building the Library from source
 
-Example Setup for Ubuntu 22.04 (in WSL or physical/virtual machine)
+Example Setup for Ubuntu 24.04 (in WSL or physical/virtual machine)
 
 It is recommended to create a virtual environment. 
 
