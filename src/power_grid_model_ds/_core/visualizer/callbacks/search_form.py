@@ -7,7 +7,7 @@ from dash import Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
-from power_grid_model_ds._core.visualizer.typing import STYLESHEET, VizToComponentData
+from power_grid_model_ds._core.visualizer.typing import STYLESHEET, ListArrayData, VizToComponentData
 
 
 @callback(
@@ -31,17 +31,19 @@ def search_element(  #  pylint: disable=too-many-arguments, disable=too-many-pos
     if not group or not column or not value:
         raise PreventUpdate
 
-    node_selector, edge_selector = _create_selector_for_connected_components(
-        viz_to_comp=viz_to_comp, component_type=group, column=column, operator=operator, value=value
+    selected_nodes, selected_edges = _search_components(
+        viz_to_comp=viz_to_comp, group=group, column=column, operator=operator, value=value
     )
 
-    if not node_selector and not edge_selector:
+    if not selected_nodes and not selected_edges:
         raise PreventUpdate
 
     new_styles = []
-    if node_selector:
+    if selected_nodes:
+        node_selector = ", ".join([f'[id = "{node_id}"]' for node_id in selected_nodes])
         new_styles.append(_generate_node_highlight_style(node_selector))
-    if edge_selector:
+    if selected_edges:
+        edge_selector = ", ".join([f'[id = "{edge_id}"]' for edge_id in selected_edges])
         new_styles.append(_generate_edge_highlight_style(edge_selector))
 
     updated_stylesheet = stylesheet + new_styles
@@ -87,44 +89,56 @@ def _generate_edge_highlight_style(selector: str) -> dict[str, str | dict[str, s
     }
 
 
-def _create_selector_for_connected_components(
-    viz_to_comp: VizToComponentData, component_type: str, column: str, operator: str, value: str
-) -> tuple[str, str]:
+def _find_components_node_edge(
+    node_edge_data: dict[str, ListArrayData],
+    component_types: list[str],
+    column: str,
+    numeric_value: float,
+    operator: str,
+) -> bool:
+    for component_type in component_types:
+        if component_type in node_edge_data:
+            for component in node_edge_data[component_type]:
+                if column in component:
+                    if _compare_values(numeric_value, component[column], operator):
+                        return True
+    return False
+
+
+def _compare_values(numeric_value: float, component_value: float, operator: str) -> bool:
+    """Compare component value with the numeric value based on the operator."""
+    match operator:
+        case "=":
+            return component_value == numeric_value
+        case ">":
+            return component_value > numeric_value
+        case "<":
+            return component_value < numeric_value
+        case "!=":
+            return component_value != numeric_value
+        case _:
+            return False
+
+
+def _search_components(
+    viz_to_comp: VizToComponentData, group: str, column: str, operator: str, value: str
+) -> tuple[list[str], list[str]]:
     """Find node or edge IDs that have components matching the search criteria."""
     try:
         numeric_value = float(value)
     except ValueError:
-        return "", ""
+        return [], []
+
+    component_types = ["line", "link", "transformer"] if group == "branch" else [group]
 
     matching_nodes = []
     matching_edges = []
     for node_edge_id, node_edge_data in viz_to_comp.items():
-        if component_type not in node_edge_data:
-            continue
-
-        for component in node_edge_data[component_type]:
-            if column not in component:
-                continue
-
-            match operator:
-                case "=":
-                    match = component[column] == numeric_value
-                case ">":
-                    match = component[column] > numeric_value
-                case "<":
-                    match = component[column] < numeric_value
-                case "!=":
-                    match = component[column] != numeric_value
-                case _:
-                    match = False
-            if not match:
-                continue
-
+        if _find_components_node_edge(node_edge_data, component_types, column, numeric_value, operator):
             if "node" in node_edge_data:
                 matching_nodes.append(node_edge_id)
             else:
                 matching_edges.append(node_edge_id)
+            break
 
-    node_selector = ", ".join([f'[id = "{node_id}"]' for node_id in matching_nodes])
-    edge_selector = ", ".join([f'[id = "{edge_id}"]' for edge_id in matching_edges])
-    return node_selector, edge_selector
+    return matching_nodes, matching_edges
