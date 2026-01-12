@@ -17,31 +17,34 @@ It is recommended to create a virtual environment.
 ```shell
 git clone https://github.com/PowerGridModel/power-grid-model-ds.git
 cd power-grid-model-ds
-python3.11 -m venv .venv
+uv sync
 source ./.venv/bin/activate
 ```
 
 Install from source in develop mode.
 
-```
-pip install -e .[dev]
+```sh
+uv sync
 ```
 
 Then you can run the tests.
 
-```
-pytest
+```sh
+uv run pytest
 ```
 
 ## Building Documentation
 
 To build the documentation locally execute the following commands
-```
-pip install -e .[doc]
+
+```sh
+uv sync --group doc
+source ./.venv/bin/activate
 
 # build the docs
 cd docs
 make clean #clean the build folder
 make html
 ```
+
 This will generate a webpage in the `build` folder with an `index.html` file. Open this file in a browser to view the documentation.

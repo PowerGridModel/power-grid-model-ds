@@ -25,11 +25,12 @@ classifiers = [
   "Operating System :: MacOS",
   "Topic :: Scientific/Engineering :: Physics",
 ]
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.12"
 dependencies = [
     "power-grid-model>=1.7",
     "rustworkx>= 0.15.1",
     "numpy>=2.0",
+    "poethepoet>=0.40.0",
 ]
 dynamic = ["version"]
 
