@@ -423,7 +423,6 @@ class TestMergeGrids:
 
         assert merged_grid_size == grid1_size + grid2_size, "Merged grid size should be the sum of both grids' sizes"
 
-
     def test_merge_two_grids_with_overlapping_node_ids(self):
         grid1 = Grid.from_txt(
             "S1 2",
@@ -451,8 +450,6 @@ class TestMergeGrids:
         # assert node in grid.source is updated by checking if the node column contains values that are all node ids:
         assert set(merged_grid.source.node).issubset(merged_grid.node.id), "All source nodes should be valid node ids!"
         # Question for reviewer: should we add hardcoded assertions for all other arrays with node as column?
-
-
 
     def test_merge_two_grids_with_overlapping_line(self):
         # Now both grids have 14 as highest node id, so both will have branch ids 15, 16 and 17:
