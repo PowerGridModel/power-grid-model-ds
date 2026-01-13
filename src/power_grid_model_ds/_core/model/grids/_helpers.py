@@ -1,10 +1,24 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
+import copy
 import dataclasses
 import logging
 from typing import TYPE_CHECKING, Type, TypeVar
 
+from power_grid_model_ds._core.model.arrays import (
+    AsymVoltageSensorArray,
+    Branch3Array,
+    BranchArray,
+    IdArray,
+    NodeArray,
+    SourceArray,
+    SymGenArray,
+    SymLoadArray,
+    SymPowerSensorArray,
+    SymVoltageSensorArray,
+    TransformerTapRegulatorArray,
+)
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 
@@ -14,20 +28,6 @@ from ..graphs.models.base import BaseGraphModel
 if TYPE_CHECKING:
     from .base import Grid
 
-from power_grid_model_ds._core.model.arrays import (
-    NodeArray,
-    SourceArray,
-    SymLoadArray,
-    SymPowerSensorArray,
-    SymVoltageSensorArray,
-    AsymVoltageSensorArray,
-    TransformerTapRegulatorArray,
-    BranchArray,
-    Branch3Array,
-    SymGenArray,
-    IdArray,
-)
-import copy
 
 G = TypeVar("G", bound="Grid")
 
@@ -62,7 +62,6 @@ def create_empty_grid(grid_class: Type[G], graph_model: type[BaseGraphModel] = R
 def merge_grids(grid: G, other_grid: G) -> G:
     """See Grid.merge()"""
 
-    # Question for reviewer: below 2 deep copies keep the 2 original grids intact, is there a more elegant way?
     new_grid = copy.deepcopy(grid)
     new_other_grid = copy.deepcopy(other_grid)
 
@@ -91,7 +90,7 @@ def _increment_grid_ids_by_offset(grid: G, offset: int) -> None:
             array.id += offset
         if isinstance(array, NodeArray | SymPowerSensorArray | SymVoltageSensorArray | AsymVoltageSensorArray):
             continue
-        elif isinstance(array, TransformerTapRegulatorArray):
+        if isinstance(array, TransformerTapRegulatorArray):
             array.regulated_object += offset
         elif isinstance(array, BranchArray):
             array.from_node += offset

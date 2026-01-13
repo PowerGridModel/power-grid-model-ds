@@ -348,7 +348,7 @@ class Grid(FancyArrayContainer):
         """
         return save_grid_to_pickle(self, cache_dir=cache_dir, cache_name=cache_name, compress=compress)
 
-    def merge(self, other_grid: G) -> G:
+    def merge(self, other_grid: G):
         """Merge another grid into this grid. When ids overlap, ids of other_grid are offset to avoid conflicts.
 
         Args:
