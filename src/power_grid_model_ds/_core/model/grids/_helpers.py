@@ -55,9 +55,6 @@ import copy
 
 def merge_grids(grid: G, other_grid: G) -> G:
     """See Grid.merge()"""
-    print(grid)
-    print(other_grid)
-    other_grid_backup = copy.deepcopy(other_grid)
 
     # Todo: turn into recalculate_ids() function
     # First offset the ids of other_grid to avoid conflicts
@@ -68,15 +65,10 @@ def merge_grids(grid: G, other_grid: G) -> G:
         offset = grid.id_counter  # Todo: grid.id_counter - other_grid.min_id() + 1
         _increment_grid_ids_by_offset(other_grid, offset=offset)
 
-    print(other_grid_backup)
-    print(other_grid)
-
     # Now append all arrays from other_grid to grid
     for array in other_grid.all_arrays():
         grid.append(array, check_max_id=False)
 
-
-    print(grid)
     return grid
 
 

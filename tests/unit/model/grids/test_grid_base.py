@@ -438,9 +438,13 @@ class TestMergeGrids:
         )
         merged_grid = grid1.merge(grid2)
 
-        assert True, "Test not implemented yet"
-        # assert ids are unique
-        # assert from and to nodes in grid1._branches_ are updated
+
+        assert merged_grid.check_ids() is None  # assert ids are unique
+
+        # From and to nodes should be updated as well:
+        assert set(merged_grid.branches.from_node).union(merged_grid.branches.to_node) == set(merged_grid.node.id), \
+            "All branch from and to nodes should reference valid node ids in the merged grid"
+
         # assert node in grid.source is updated
         # assert all other arrays with node as column
         # use grid.check_ids() to verify stuff
