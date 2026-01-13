@@ -35,7 +35,8 @@ from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.grids._feeders import set_feeder_ids
 from power_grid_model_ds._core.model.grids._helpers import (
     create_empty_grid,
-    create_grid_from_extended_grid, merge_grids,
+    create_grid_from_extended_grid,
+    merge_grids,
 )
 from power_grid_model_ds._core.model.grids._modify import (
     add_array_to_grid,

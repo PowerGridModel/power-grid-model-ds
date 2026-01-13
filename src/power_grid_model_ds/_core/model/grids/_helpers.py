@@ -17,9 +17,17 @@ if TYPE_CHECKING:
 from power_grid_model_ds._core.model.arrays import (
     NodeArray,
     SourceArray,
-    SymLoadArray, SymPowerSensorArray, SymVoltageSensorArray, AsymVoltageSensorArray, TransformerTapRegulatorArray,
-    BranchArray, Branch3Array, SymGenArray, IdArray,
+    SymLoadArray,
+    SymPowerSensorArray,
+    SymVoltageSensorArray,
+    AsymVoltageSensorArray,
+    TransformerTapRegulatorArray,
+    BranchArray,
+    Branch3Array,
+    SymGenArray,
+    IdArray,
 )
+import copy
 
 G = TypeVar("G", bound="Grid")
 
@@ -50,8 +58,6 @@ def create_empty_grid(grid_class: Type[G], graph_model: type[BaseGraphModel] = R
     empty_fields["graphs"] = GraphContainer.empty(graph_model=graph_model)
     return grid_class(**empty_fields)
 
-
-import copy
 
 def merge_grids(grid: G, other_grid: G) -> G:
     """See Grid.merge()"""

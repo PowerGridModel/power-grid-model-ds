@@ -17,7 +17,8 @@ from power_grid_model_ds._core.model.arrays import (
     NodeArray,
     ThreeWindingTransformerArray,
     TransformerArray,
-    TransformerTapRegulatorArray, SourceArray,
+    TransformerTapRegulatorArray,
+    SourceArray,
 )
 from power_grid_model_ds._core.model.constants import EMPTY_ID
 from power_grid_model_ds._core.model.grids.base import Grid
@@ -402,20 +403,12 @@ class TestFromTxt:
         assert 1 == grid.transformer.size
         np.testing.assert_array_equal([14, 10, 11, 12, 13, 15, 16, 17], grid.branches.id)
 
+
 class TestMergeGrids:
     def test_merge_two_grids(self):
-        grid1 = Grid.from_txt(
-            "S1 2",
-            "S1 3 link",
-            "3 4 transformer"
-        )
+        grid1 = Grid.from_txt("S1 2", "S1 3 link", "3 4 transformer")
+        grid2 = Grid.from_txt("S11 12", "S11 13 link", "13 14 transformer")
         grid1_size = grid1.node.size
-
-        grid2 = Grid.from_txt(
-            "S11 12",
-            "S11 13 link",
-            "13 14 transformer"
-        )
         grid2_size = grid2.node.size
 
         merged_grid = grid1.merge(grid2)
@@ -424,27 +417,19 @@ class TestMergeGrids:
         assert merged_grid_size == grid1_size + grid2_size, "Merged grid size should be the sum of both grids' sizes"
 
     def test_merge_two_grids_with_overlapping_node_ids(self):
-        grid1 = Grid.from_txt(
-            "S1 2",
-            "S1 3 link",
-            "3 4 transformer"
-        )
+        grid1 = Grid.from_txt("S1 2", "S1 3 link", "3 4 transformer")
+        grid2 = Grid.from_txt("S1 2", "S1 13 link", "13 14 transformer")
         source = SourceArray(id=[501], node=[1], status=[1], u_ref=[0.0])
         grid1.append(source)
-
-        grid2 = Grid.from_txt(
-            "S1 2",
-            "S1 13 link",
-            "13 14 transformer"
-        )
         grid2.append(source)
 
         merged_grid = grid1.merge(grid2)
         assert merged_grid.check_ids() is None, "Asset ids are not unique after merging!"
 
         # Check if from and to nodes are updated by checking that their values form the entire set of node ids:
-        assert set(merged_grid.branches.from_node).union(merged_grid.branches.to_node) == set(merged_grid.node.id), \
+        assert set(merged_grid.branches.from_node).union(merged_grid.branches.to_node) == set(merged_grid.node.id), (
             "All from and to nodes should form the entire set of node ids in the merged grid!"
+        )
         # Question for reviewer: should we repeat this for all other BranchArrays?
 
         # assert node in grid.source is updated by checking if the node column contains values that are all node ids:
@@ -453,16 +438,8 @@ class TestMergeGrids:
 
     def test_merge_two_grids_with_overlapping_line(self):
         # Now both grids have 14 as highest node id, so both will have branch ids 15, 16 and 17:
-        grid1 = Grid.from_txt(
-            "S1 2",
-            "S1 3 link",
-            "3 14 transformer"
-        )
-        grid2 = Grid.from_txt(
-            "S1 2",
-            "S1 13 link",
-            "13 14 transformer"
-        )
+        grid1 = Grid.from_txt("S1 2", "S1 3 link", "3 14 transformer")
+        grid2 = Grid.from_txt("S1 2", "S1 13 link", "13 14 transformer")
 
         merged_grid = grid1.merge(grid2)
         assert merged_grid.check_ids() is None, "Asset ids are not unique after merging!"
