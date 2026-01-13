@@ -17,7 +17,7 @@ from power_grid_model_ds._core.model.arrays import (
     NodeArray,
     ThreeWindingTransformerArray,
     TransformerArray,
-    TransformerTapRegulatorArray,
+    TransformerTapRegulatorArray, SourceArray,
 )
 from power_grid_model_ds._core.model.constants import EMPTY_ID
 from power_grid_model_ds._core.model.grids.base import Grid
@@ -430,24 +430,42 @@ class TestMergeGrids:
             "S1 3 link",
             "3 4 transformer"
         )
+        source = SourceArray(id=[501], node=[1], status=[1], u_ref=[0.0])
+        grid1.append(source)
 
         grid2 = Grid.from_txt(
             "S1 2",
             "S1 13 link",
             "13 14 transformer"
         )
+        grid2.append(source)
+
         merged_grid = grid1.merge(grid2)
+        assert merged_grid.check_ids() is None, "Asset ids are not unique after merging!"
 
-
-        assert merged_grid.check_ids() is None  # assert ids are unique
-
-        # From and to nodes should be updated as well:
+        # Check if from and to nodes are updated by checking that their values form the entire set of node ids:
         assert set(merged_grid.branches.from_node).union(merged_grid.branches.to_node) == set(merged_grid.node.id), \
-            "All branch from and to nodes should reference valid node ids in the merged grid"
+            "All from and to nodes should form the entire set of node ids in the merged grid!"
+        # Question for reviewer: should we repeat this for all other BranchArrays?
 
-        # assert node in grid.source is updated
-        # assert all other arrays with node as column
-        # use grid.check_ids() to verify stuff
+        # assert node in grid.source is updated by checking if the node column contains values that are all node ids:
+        assert set(merged_grid.source.node).issubset(merged_grid.node.id), "All source nodes should be valid node ids!"
+        # Question for reviewer: should we add hardcoded assertions for all other arrays with node as column?
+
+
 
     def test_merge_two_grids_with_overlapping_line(self):
-        pass  # needed?
+        # Now both grids have 14 as highest node id, so both will have branch ids 15, 16 and 17:
+        grid1 = Grid.from_txt(
+            "S1 2",
+            "S1 3 link",
+            "3 14 transformer"
+        )
+        grid2 = Grid.from_txt(
+            "S1 2",
+            "S1 13 link",
+            "13 14 transformer"
+        )
+
+        merged_grid = grid1.merge(grid2)
+        assert merged_grid.check_ids() is None, "Asset ids are not unique after merging!"

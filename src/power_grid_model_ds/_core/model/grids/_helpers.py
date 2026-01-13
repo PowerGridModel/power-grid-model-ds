@@ -55,6 +55,8 @@ import copy
 
 def merge_grids(grid: G, other_grid: G) -> G:
     """See Grid.merge()"""
+    new_grid = copy.deepcopy(grid)
+    other_grid_reindexed = copy.deepcopy(other_grid)
 
     # Todo: turn into recalculate_ids() function
     # First offset the ids of other_grid to avoid conflicts
@@ -63,18 +65,18 @@ def merge_grids(grid: G, other_grid: G) -> G:
     overlapping_ids = set(ids_grid).intersection(set(ids_other_grid))
     if overlapping_ids:  # If any index overlaps, then bump columns with references to node ids
         offset = grid.id_counter  # Todo: grid.id_counter - other_grid.min_id() + 1
-        _increment_grid_ids_by_offset(other_grid, offset=offset)
+        _increment_grid_ids_by_offset(other_grid_reindexed, offset=offset)
 
     # Now append all arrays from other_grid to grid
-    for array in other_grid.all_arrays():
-        grid.append(array, check_max_id=False)
+    for array in other_grid_reindexed.all_arrays():
+        new_grid.append(array, check_max_id=False)
 
-    return grid
+    return new_grid
 
 
 def _increment_grid_ids_by_offset(grid: G, offset: int) -> None:
     for array in grid.all_arrays():
-        print(array)
+        # print(array)
         if isinstance(array, IdArray):
             array.id += offset
         if isinstance(array, NodeArray | SymPowerSensorArray | SymVoltageSensorArray | AsymVoltageSensorArray):
@@ -92,4 +94,4 @@ def _increment_grid_ids_by_offset(grid: G, offset: int) -> None:
             array.node += offset
         else:
             raise NotImplementedError(f"The array of type {type(array)} is not implemented for appending")
-        print()
+        # print()
