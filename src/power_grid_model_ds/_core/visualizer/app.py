@@ -5,6 +5,7 @@
 import dash_bootstrap_components as dbc
 from dash import Dash, dcc, html
 from dash_bootstrap_components.icons import FONT_AWESOME
+from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.callbacks import (  # noqa: F401  # pylint: disable=unused-import
@@ -17,7 +18,8 @@ from power_grid_model_ds._core.visualizer.layout.cytoscape_html import get_cytos
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
 from power_grid_model_ds._core.visualizer.layout.header import HEADER_HTML
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
-from power_grid_model_ds._core.visualizer.parsers import parse_branches, parse_node_array
+from power_grid_model_ds._core.visualizer.parsers import parse_element_data
+from power_grid_model_ds._core.visualizer.typing import VizToComponentData
 from power_grid_model_ds.arrays import NodeArray
 
 GOOGLE_FONTS = "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
@@ -57,26 +59,33 @@ def _get_columns_store(grid: Grid) -> dcc.Store:
     return dcc.Store(
         id="columns-store",
         data={
-            "node": grid.node.columns,
-            "line": grid.line.columns,
-            "link": grid.link.columns,
-            "transformer": grid.transformer.columns,
-            "three_winding_transformer": grid.three_winding_transformer.columns,
+            ComponentType.node: grid.node.columns,
+            ComponentType.line: grid.line.columns,
+            ComponentType.link: grid.link.columns,
+            ComponentType.transformer: grid.transformer.columns,
+            ComponentType.three_winding_transformer: grid.three_winding_transformer.columns,
             "branch": grid.branches.columns,
         },
     )
+
+
+def _get_viz_to_comp_store(viz_to_comp_data: VizToComponentData) -> dcc.Store:
+    """Create a store for all data mapped by visualization element to component data."""
+    return dcc.Store(id="viz-to-comp-store", data=viz_to_comp_data)
 
 
 def get_app_layout(grid: Grid) -> html.Div:
     """Get the app layout."""
     columns_store = _get_columns_store(grid)
     graph_layout = _get_graph_layout(grid.node)
-    elements = parse_node_array(grid.node) + parse_branches(grid)
+    elements, viz_to_comp_data = parse_element_data(grid)
+    viz_to_comp_store = _get_viz_to_comp_store(viz_to_comp_data)
     cytoscape_html = get_cytoscape_html(graph_layout, elements)
 
     return html.Div(
         [
             columns_store,
+            viz_to_comp_store,
             dcc.Store(id="stylesheet-store", data=DEFAULT_STYLESHEET),
             HEADER_HTML,
             html.Hr(style={"border-color": "white", "margin": "0"}),

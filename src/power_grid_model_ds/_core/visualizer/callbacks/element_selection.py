@@ -4,29 +4,32 @@
 
 from typing import Any
 
-from dash import Input, Output, callback, dash_table
+from dash import Input, Output, State, callback, dash_table
+from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.visualizer.layout.selection_output import (
     SELECTION_OUTPUT_HTML,
 )
+from power_grid_model_ds._core.visualizer.typing import VizToComponentData
 
 
 @callback(
     Output("selection-output", "children"),
     Input("cytoscape-graph", "selectedNodeData"),
     Input("cytoscape-graph", "selectedEdgeData"),
+    State("viz-to-comp-store", "data"),
 )
-def display_selected_element(node_data: list[dict[str, Any]], edge_data: list[dict[str, Any]]):
+def display_selected_element(
+    node_data: list[dict[str, Any]], edge_data: list[dict[str, Any]], viz_to_comp: VizToComponentData
+):
     """Display the tapped edge data."""
     if node_data:
-        return _to_data_table(node_data.pop())
+        elm_id_str = node_data.pop()["id"]
+        return _to_data_table(viz_to_comp[elm_id_str][ComponentType.node][0])
     if edge_data:
-        edge_data_dict = edge_data.pop()
-        del edge_data_dict["source"]  # duplicated by from_node
-        del edge_data_dict["target"]  # duplicated by to_node
-        del edge_data_dict["group"]  # unnecessary information
-        return _to_data_table(edge_data_dict)
-    return SELECTION_OUTPUT_HTML
+        elm_id_str = edge_data.pop()["id"]
+        return _to_data_table(viz_to_comp[elm_id_str][ComponentType.node][0])
+    return SELECTION_OUTPUT_HTML.children
 
 
 def _to_data_table(data: dict[str, Any]):
