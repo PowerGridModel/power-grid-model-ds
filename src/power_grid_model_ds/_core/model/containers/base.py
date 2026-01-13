@@ -78,12 +78,6 @@ class FancyArrayContainer:
         max_per_array = [np.max(array.id) if array.size > 0 else 0 for array in self.all_arrays()]
         return int(max(max_per_array))
 
-    @property
-    def min_id(self) -> int:
-        """Returns the max id across all arrays within the container."""
-        min_per_array = [np.min(array.id) if array.size > 0 else 0 for array in self.all_arrays()]
-        return int(min(min_per_array))
-
     def check_ids(self, check_between_arrays: bool = True, check_within_arrays: bool = True) -> None:
         """Checks for duplicate id values across all arrays in the container.
 

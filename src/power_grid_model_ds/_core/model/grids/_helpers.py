@@ -61,28 +61,32 @@ def create_empty_grid(grid_class: Type[G], graph_model: type[BaseGraphModel] = R
 
 def merge_grids(grid: G, other_grid: G) -> G:
     """See Grid.merge()"""
+
+    # Question for reviewer: below 2 deep copies keep the 2 original grids intact, is there a more elegant way?
     new_grid = copy.deepcopy(grid)
-    other_grid_reindexed = copy.deepcopy(other_grid)
+    new_other_grid = copy.deepcopy(other_grid)
 
-    # Todo: turn into recalculate_ids() function
-    # First offset the ids of other_grid to avoid conflicts
-    ids_grid = grid.node.id
-    ids_other_grid = other_grid.node.id
-    overlapping_ids = set(ids_grid).intersection(set(ids_other_grid))
-    if overlapping_ids:  # If any index overlaps, then bump columns with references to node ids
-        offset = grid.id_counter  # Todo: grid.id_counter - other_grid.min_id() + 1
-        _increment_grid_ids_by_offset(other_grid_reindexed, offset=offset)
+    _reindex_grid(new_grid, new_other_grid)
 
-    # Now append all arrays from other_grid to grid
-    for array in other_grid_reindexed.all_arrays():
+    # Append all arrays from the first grid to the second
+    for array in new_other_grid.all_arrays():
         new_grid.append(array, check_max_id=False)
 
     return new_grid
 
 
+def _reindex_grid(grid: G, other_grid) -> None:
+    """Offset the ids of other_grid to avoid conflicts in merged grid"""
+    ids_grid = grid.node.id
+    ids_other_grid = other_grid.node.id
+    overlapping_ids = set(ids_grid).intersection(set(ids_other_grid))
+    if overlapping_ids:  # If any index overlaps, then bump values of columns with references to node ids
+        offset = grid.id_counter  # Possible improvement: grid.id_counter - other_grid.min_id() + 1
+        _increment_grid_ids_by_offset(other_grid, offset)
+
+
 def _increment_grid_ids_by_offset(grid: G, offset: int) -> None:
     for array in grid.all_arrays():
-        # print(array)
         if isinstance(array, IdArray):
             array.id += offset
         if isinstance(array, NodeArray | SymPowerSensorArray | SymVoltageSensorArray | AsymVoltageSensorArray):
@@ -100,4 +104,3 @@ def _increment_grid_ids_by_offset(grid: G, offset: int) -> None:
             array.node += offset
         else:
             raise NotImplementedError(f"The array of type {type(array)} is not implemented for appending")
-        # print()
