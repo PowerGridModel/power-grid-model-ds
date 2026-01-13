@@ -51,27 +51,28 @@ def create_empty_grid(grid_class: Type[G], graph_model: type[BaseGraphModel] = R
     return grid_class(**empty_fields)
 
 
+import copy
+
 def merge_grids(grid: G, other_grid: G) -> G:
     """See Grid.merge()"""
     print(grid)
     print(other_grid)
+    other_grid_backup = copy.deepcopy(other_grid)
 
+    # Todo: turn into recalculate_ids() function
     # First offset the ids of other_grid to avoid conflicts
     ids_grid = grid.node.id
     ids_other_grid = other_grid.node.id
-    if (set(ids_grid) & set(ids_other_grid)):  # If indices overlap...
-        offset = grid.node.id.max()
-        ids_other_grid += offset  # bump indices in other_grid
-        logger.info(f"Offsetting ids in other_grid by {offset}")
+    overlapping_ids = set(ids_grid).intersection(set(ids_other_grid))
+    if overlapping_ids:  # If any index overlaps, then bump columns with references to node ids
+        offset = grid.id_counter  # Todo: grid.id_counter - other_grid.min_id() + 1
+        _increment_grid_ids_by_offset(other_grid, offset=offset)
 
-        # Update columns with references to ids (e.g. node ids, e.g. using
-        _increment_grid_ids_by_offset(other_grid, offset)
-
+    print(other_grid_backup)
     print(other_grid)
 
     # Now append all arrays from other_grid to grid
     for array in other_grid.all_arrays():
-        # print(array)
         grid.append(array, check_max_id=False)
 
 
@@ -81,26 +82,22 @@ def merge_grids(grid: G, other_grid: G) -> G:
 
 def _increment_grid_ids_by_offset(grid: G, offset: int) -> None:
     for array in grid.all_arrays():
+        print(array)
         if isinstance(array, IdArray):
             array.id += offset
-
         if isinstance(array, NodeArray | SymPowerSensorArray | SymVoltageSensorArray | AsymVoltageSensorArray):
             continue
-
         elif isinstance(array, TransformerTapRegulatorArray):
             array.regulated_object += offset
-
         elif isinstance(array, BranchArray):
             array.from_node += offset
             array.to_node += offset
-
         elif isinstance(array, Branch3Array):
             array.node_1 += offset
             array.node_2 += offset
             array.node_3 += offset
-
         elif isinstance(array, SymGenArray | SymLoadArray | SourceArray):
             array.node += offset
-
         else:
             raise NotImplementedError(f"The array of type {type(array)} is not implemented for appending")
+        print()

@@ -403,7 +403,7 @@ class TestFromTxt:
         np.testing.assert_array_equal([14, 10, 11, 12, 13, 15, 16, 17], grid.branches.id)
 
 class TestMergeGrids:
-    def test_merge_two_simple_grid(self):
+    def test_merge_two_grids(self):
         grid1 = Grid.from_txt(
             "S1 2",
             "S1 3 link",
@@ -423,12 +423,27 @@ class TestMergeGrids:
 
         assert merged_grid_size == grid1_size + grid2_size, "Merged grid size should be the sum of both grids' sizes"
 
+
+    def test_merge_two_grids_with_overlapping_node_ids(self):
+        grid1 = Grid.from_txt(
+            "S1 2",
+            "S1 3 link",
+            "3 4 transformer"
+        )
+
+        grid2 = Grid.from_txt(
+            "S1 2",
+            "S1 13 link",
+            "13 14 transformer"
+        )
+        merged_grid = grid1.merge(grid2)
+
+        assert True, "Test not implemented yet"
+        # assert ids are unique
         # assert from and to nodes in grid1._branches_ are updated
         # assert node in grid.source is updated
         # assert all other arrays with node as column
         # use grid.check_ids() to verify stuff
 
-    def test_merge_two_grid_overlapping_nodes(self):
-        pass
-
-        # assert ids are unique
+    def test_merge_two_grids_with_overlapping_line(self):
+        pass  # needed?
