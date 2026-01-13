@@ -4,6 +4,7 @@
 
 import numpy as np
 from numpy.typing import NDArray
+from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.arrays import LineArray, NodeArray
 from power_grid_model_ds._core.model.arrays.pgm_arrays import Branch3Array
@@ -21,7 +22,8 @@ class TestParseNodeArray:
         nodes["id"] = [1, 2, 3]
         nodes["u_rated"] = [10, 20.4, 30.99]
 
-        parsed = parse_node_array(nodes)
+        viz_to_comp = {}
+        parsed = parse_node_array(nodes, viz_to_comp)
         assert len(parsed) == 3
 
         node_1_data = parsed[0]["data"]
@@ -35,9 +37,9 @@ class TestParseNodeArray:
         assert node_2_data["id"] == "2"
         assert node_3_data["id"] == "3"
 
-        assert node_1_data["u_rated"] == 10
-        assert node_2_data["u_rated"] == 20.4
-        assert node_3_data["u_rated"] == 30.99
+        assert viz_to_comp["1"][ComponentType.node] == [dict(zip(nodes.columns, nodes[0].tolist().pop()))]
+        assert viz_to_comp["2"][ComponentType.node] == [dict(zip(nodes.columns, nodes[1].tolist().pop()))]
+        assert viz_to_comp["3"][ComponentType.node] == [dict(zip(nodes.columns, nodes[2].tolist().pop()))]
 
     def test_parse_coordinated_node_array(self):
         nodes = CoordinatedNodeArray.zeros(3)
@@ -45,7 +47,7 @@ class TestParseNodeArray:
         nodes["x"] = [10, 20, 30]
         nodes["y"] = [99, 88, 77]
 
-        parsed = parse_node_array(nodes)
+        parsed = parse_node_array(nodes, {})
         position = parsed[0].get("position")
         assert position is not None
         assert position["x"] == 10
@@ -58,13 +60,18 @@ class TestParseBranches:
         lines["id"] = [100, 101, 102]
         lines["from_node"] = [1, 2, 3]
         lines["to_node"] = [4, 5, 6]
-        parsed = parse_branch_array(lines, "line")
+        viz_to_comp = {}
+        parsed = parse_branch_array(lines, ComponentType.line, viz_to_comp)
 
         assert len(parsed) == 3
         assert parsed[0]["data"]["id"] == "100"
         assert parsed[0]["data"]["source"] == "1"
         assert parsed[0]["data"]["target"] == "4"
         assert parsed[0]["data"]["group"] == "line"
+
+        assert viz_to_comp["100"][ComponentType.line] == [dict(zip(lines.columns, lines[0].tolist().pop()))]
+        assert viz_to_comp["101"][ComponentType.line] == [dict(zip(lines.columns, lines[1].tolist().pop()))]
+        assert viz_to_comp["102"][ComponentType.line] == [dict(zip(lines.columns, lines[2].tolist().pop()))]
 
     def test_parse_branch3_array(self):
         branch3 = Branch3Array.zeros(1)
@@ -76,17 +83,29 @@ class TestParseBranches:
         branch3["status_2"] = [1]
         branch3["status_3"] = [1]
 
-        parsed = parse_branch3_array(branch3, "transformer")
+        viz_to_comp = {}
+        parsed = parse_branch3_array(branch3, ComponentType.three_winding_transformer, "transformer", viz_to_comp)
+
         assert len(parsed) == 3
-        assert parsed[0]["data"]["id"] == "200_1_2"
+        assert parsed[0]["data"]["id"] == "200_0"
         assert parsed[0]["data"]["source"] == "1"
         assert parsed[0]["data"]["target"] == "2"
         assert parsed[0]["data"]["group"] == "transformer"
-        assert parsed[1]["data"]["id"] == "200_1_3"
+        assert parsed[1]["data"]["id"] == "200_1"
         assert parsed[1]["data"]["source"] == "1"
         assert parsed[1]["data"]["target"] == "3"
         assert parsed[1]["data"]["group"] == "transformer"
-        assert parsed[2]["data"]["id"] == "200_2_3"
+        assert parsed[2]["data"]["id"] == "200_2"
         assert parsed[2]["data"]["source"] == "2"
         assert parsed[2]["data"]["target"] == "3"
         assert parsed[2]["data"]["group"] == "transformer"
+
+        assert viz_to_comp["200_0"][ComponentType.three_winding_transformer] == [
+            dict(zip(branch3.columns, branch3[0].tolist()[0]))
+        ]
+        assert viz_to_comp["200_1"][ComponentType.three_winding_transformer] == [
+            dict(zip(branch3.columns, branch3[0].tolist()[0]))
+        ]
+        assert viz_to_comp["200_2"][ComponentType.three_winding_transformer] == [
+            dict(zip(branch3.columns, branch3[0].tolist()[0]))
+        ]
