@@ -31,7 +31,6 @@ if TYPE_CHECKING:
 
 G = TypeVar("G", bound="Grid")
 
-
 logger = logging.getLogger(__name__)
 
 
