@@ -5,7 +5,6 @@
 from typing import Any
 
 from dash import Input, Output, State, callback, dash_table
-from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.visualizer.layout.selection_output import (
     SELECTION_OUTPUT_HTML,
@@ -25,11 +24,13 @@ def display_selected_element(
     """Display the tapped edge data."""
     if node_data:
         elm_id_str = node_data.pop()["id"]
-        return _to_data_table(viz_to_comp[elm_id_str][ComponentType.node][0])
-    if edge_data:
+    elif edge_data:
         elm_id_str = edge_data.pop()["id"]
-        return _to_data_table(viz_to_comp[elm_id_str][ComponentType.node][0])
-    return SELECTION_OUTPUT_HTML.children
+    else:
+        return SELECTION_OUTPUT_HTML.children
+
+    first_value = next(iter(viz_to_comp[elm_id_str].values()))
+    return _to_data_table(first_value[0])
 
 
 def _to_data_table(data: dict[str, Any]):
