@@ -5,7 +5,6 @@
 """Grid tests"""
 
 import dataclasses
-from copy import deepcopy
 
 import numpy as np
 from numpy.ma.testutils import assert_array_equal
@@ -87,4 +86,3 @@ def test_basic_grid_fixture(basic_grid: Grid):
 
     assert len(grid.line) + len(grid.transformer) + len(grid.link) - 1 == grid.graphs.active_graph.nr_branches
     assert len(grid.line) + len(grid.transformer) + len(grid.link) == grid.graphs.complete_graph.nr_branches
-
