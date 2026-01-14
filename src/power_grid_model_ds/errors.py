@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from power_grid_model_ds._core.load_flow import PGMCoreException
 from power_grid_model_ds._core.model.arrays.base.errors import (
     ArrayDefinitionError,
     MultipleRecordsReturned,
@@ -14,6 +13,7 @@ from power_grid_model_ds._core.model.graphs.errors import (
     MissingNodeError,
     NoPathBetweenNodes,
 )
+from power_grid_model_ds._core.power_grid_model_interface import PGMCoreException
 
 __all__ = [
     "PGMCoreException",
