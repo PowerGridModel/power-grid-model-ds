@@ -109,7 +109,7 @@ class TestGridEquality:
         grid2.line.r1[0] += 0.01
         assert grid1 != grid2
 
-    def test_differt_type(self):
+    def test_different_type(self):
         grid1 = build_basic_grid(ExtendedGrid.empty())
         grid2 = Grid.from_extended(grid1)
 
