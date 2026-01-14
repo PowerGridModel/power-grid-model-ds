@@ -110,8 +110,6 @@ class Grid(FancyArrayContainer):
     def __eq__(self, other: Any) -> bool:
         """Check if two grids are equal.
 
-        For more advanced comparisons, use Grid.is_equal() method.
-
         Note: differences in graphs are ignored in this comparison.
         """
         if not isinstance(other, self.__class__):
