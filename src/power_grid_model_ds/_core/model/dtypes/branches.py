@@ -43,6 +43,19 @@ class Line(Branch):
     i_n: NDArray[np.float64]  # rated current
 
 
+class GenericBranch(Branch):
+    """GenericBranch data type (generic_branch in power-grid-model)
+
+    Off-nominal ratio k and phase shift theta are modelled explicitly. Rated power sn optional.
+    The impedance (r1, x1) and admittance (g1, b1) are given wrt the to-side.
+    """
+
+    r1: NDArray[np.float64]  # positive-sequence resistance
+    x1: NDArray[np.float64]  # positive-sequence reactance
+    g1: NDArray[np.float64]  # positive-sequence conductance
+    b1: NDArray[np.float64]  # positive-sequence susceptance
+
+
 class Transformer(Branch):
     """Transformer data type"""
 
@@ -115,3 +128,34 @@ class ThreeWindingTransformer(Branch3):
     pk_12_max: NDArray[np.float64]
     pk_13_max: NDArray[np.float64]
     pk_23_max: NDArray[np.float64]
+
+
+class AsymLine(Branch):
+    """Asymmetric Line data type (asym_line in power-grid-model)
+
+    Supports 3 or 4 phase (with neutral) resistance / reactance matrices and optional capacitance matrix
+    or sequence capacitances c0/c1. If c_* matrix is omitted, c0 & c1 may be specified instead.
+    Only include fields; validation logic handled elsewhere (not implemented here yet).
+    """
+
+    # Resistance matrix entries (series)
+    r_aa: NDArray[np.float64]
+    r_ba: NDArray[np.float64]
+    r_bb: NDArray[np.float64]
+    r_ca: NDArray[np.float64]
+    r_cb: NDArray[np.float64]
+    r_cc: NDArray[np.float64]
+
+    # Reactance matrix entries (series)
+    x_aa: NDArray[np.float64]
+    x_ba: NDArray[np.float64]
+    x_bb: NDArray[np.float64]
+    x_ca: NDArray[np.float64]
+    x_cb: NDArray[np.float64]
+    x_cc: NDArray[np.float64]
+
+    # Alternative sequence capacitances
+    c0: NDArray[np.float64]
+    c1: NDArray[np.float64]
+
+    i_n: NDArray[np.float64]  # rated current

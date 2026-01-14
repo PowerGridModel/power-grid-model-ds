@@ -6,6 +6,8 @@ import itertools
 from pathlib import Path
 from typing import TYPE_CHECKING, Generic, Type, TypeVar
 
+from power_grid_model import ComponentType
+
 from power_grid_model_ds._core.model.enums.nodes import NodeType
 
 if TYPE_CHECKING:
@@ -35,13 +37,17 @@ def serialize_to_str(grid: "Grid") -> str:
             suffix_str = f"{suffix_str},open"
 
         if branch.id in grid.transformer.id:
-            suffix_str = f"{suffix_str},transformer"
+            suffix_str = f"{suffix_str},{ComponentType.transformer.value}"
         elif branch.id in grid.link.id:
-            suffix_str = f"{suffix_str},link"
+            suffix_str = f"{suffix_str},{ComponentType.link.value}"
         elif branch.id in grid.line.id:
             pass  # no suffix needed
+        elif branch.id in grid.generic_branch.id:
+            suffix_str = f"{suffix_str},{ComponentType.generic_branch.value}"
+        elif branch.id in grid.asym_line.id:
+            suffix_str = f"{suffix_str},{ComponentType.asym_line.value}"
         else:
-            raise ValueError(f"Branch {branch.id} is not a transformer, link or line")
+            raise ValueError(f"Branch {branch.id} is not a transformer, link, line, generic_branch or asym_line")
 
         grid_str += f"{from_node_str} {to_node_str} {suffix_str}\n"
     return grid_str
@@ -138,10 +144,14 @@ class _TextSource(Generic[G]):
         from_node = int(from_node_str.replace("S", ""))
         to_node = int(to_node_str.replace("S", ""))
 
-        if "transformer" in comments:
+        if ComponentType.transformer.value in comments:
             new_branch = self.grid.transformer.empty(1)
-        elif "link" in comments:
+        elif ComponentType.link.value in comments:
             new_branch = self.grid.link.empty(1)
+        elif ComponentType.generic_branch.value in comments:
+            new_branch = self.grid.generic_branch.empty(1)
+        elif ComponentType.asym_line.value in comments:
+            new_branch = self.grid.asym_line.empty(1)
         else:  # assume it is a line
             new_branch = self.grid.line.empty(1)
 
