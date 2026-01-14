@@ -8,7 +8,7 @@ import dataclasses
 from copy import deepcopy
 
 import numpy as np
-from numpy.ma.testutils import assert_array_equal
+from numpy.testing import assert_array_equal
 
 from power_grid_model_ds._core.model.grids.base import Grid
 from tests.fixtures.grid_classes import ExtendedGrid
