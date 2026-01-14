@@ -18,4 +18,5 @@ These example explain the PGM-DS interface and how to use it.
    pgm/basic_pgm_examples
    model/grid_extensions_examples
    utils/grid_from_txt_examples
+   utils/grid_serialization_examples
 
