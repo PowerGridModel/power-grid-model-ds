@@ -13,13 +13,18 @@ import numpy as np
 import numpy.typing as npt
 
 from power_grid_model_ds._core.model.arrays import (
+    AsymCurrentSensorArray,
+    AsymLineArray,
+    AsymPowerSensorArray,
     AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
+    GenericBranchArray,
     LineArray,
     LinkArray,
     NodeArray,
     SourceArray,
+    SymCurrentSensorArray,
     SymGenArray,
     SymLoadArray,
     SymPowerSensorArray,
@@ -90,6 +95,8 @@ class Grid(FancyArrayContainer):
     three_winding_transformer: ThreeWindingTransformerArray
     line: LineArray
     link: LinkArray
+    generic_branch: GenericBranchArray
+    asym_line: AsymLineArray
 
     source: SourceArray
     sym_load: SymLoadArray
@@ -101,7 +108,10 @@ class Grid(FancyArrayContainer):
     # sensors
     sym_power_sensor: SymPowerSensorArray
     sym_voltage_sensor: SymVoltageSensorArray
+    sym_current_sensor: SymCurrentSensorArray
+    asym_power_sensor: AsymPowerSensorArray
     asym_voltage_sensor: AsymVoltageSensorArray
+    asym_current_sensor: AsymCurrentSensorArray
 
     def __str__(self) -> str:
         """Serialize grid to a string.
