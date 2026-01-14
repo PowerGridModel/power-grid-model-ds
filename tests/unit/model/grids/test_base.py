@@ -8,7 +8,7 @@ import dataclasses
 from copy import deepcopy
 
 import numpy as np
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_equal
 
 from power_grid_model_ds._core.model.grids.base import Grid
 from tests.fixtures.grid_classes import ExtendedGrid
@@ -47,7 +47,7 @@ def test_from_extended_grid():
     extended_grid = build_basic_grid(ExtendedGrid.empty())
     grid = Grid.from_extended(extended_grid)
     assert not isinstance(grid, ExtendedGrid)
-    assert_array_equal(grid.line.data, extended_grid.line.data[grid.line.columns])
+    assert_equal(grid.line.data, extended_grid.line.data[grid.line.columns])
     assert grid.node.size
     assert grid.branches.size
     assert grid.graphs.active_graph.nr_nodes == len(grid.node)
