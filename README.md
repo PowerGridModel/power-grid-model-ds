@@ -49,8 +49,14 @@ See the [power-grid-model-ds documentation](https://power-grid-model-ds.readthed
 
 ### Pip
 
-```
+```sh
 pip install power-grid-model-ds
+```
+
+### uv
+
+```sh
+uv add power-grid-model-ds
 ```
 
 ## License

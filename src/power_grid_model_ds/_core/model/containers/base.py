@@ -16,6 +16,7 @@ from power_grid_model_ds._core import fancypy as fp
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.constants import EMPTY_ID
+from power_grid_model_ds._core.model.containers.helpers import container_equal
 
 Self = TypeVar("Self", bound="FancyArrayContainer")
 
@@ -28,6 +29,11 @@ class FancyArrayContainer:
     """
 
     _id_counter: int
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, self.__class__):
+            return False
+        return container_equal(self, other, ignore_extras=False, early_exit=True)
 
     @property
     def id_counter(self):
