@@ -13,23 +13,23 @@ class TestContainerEqual:
     def test_grids_equal(self, basic_grid: Grid):
         grid1 = basic_grid
         grid2 = deepcopy(grid1)
-        assert container_equal(grid1, grid2, ignore=["graphs"])
+        assert container_equal(grid1, grid2, fields_to_ignore=["graphs"])
 
     def test_different_nodes(self, basic_grid: Grid):
         grid1 = basic_grid
         grid2 = deepcopy(grid1)
         # modify a node
         grid2.node.u_rated[0] += 1000.0
-        assert not container_equal(grid1, grid2, ignore=["graphs"])
+        assert not container_equal(grid1, grid2, fields_to_ignore=["graphs"])
 
     def test_different_type(self):
         grid1 = build_basic_grid(ExtendedGrid.empty())
         grid2 = Grid.from_extended(grid1)
-        assert not container_equal(grid1, grid2, ignore=["graphs"])
+        assert not container_equal(grid1, grid2, fields_to_ignore=["graphs"])
 
     def test_ignore_extras(self, basic_grid: Grid):
         grid1 = build_basic_grid(ExtendedGrid.empty())
         grid2 = Grid.from_extended(grid1)
-        assert container_equal(grid1, grid2, ignore_extras=True, ignore=["graphs"])
-        assert not container_equal(grid1, grid2, ignore_extras=False, ignore=["graphs"])
+        assert container_equal(grid1, grid2, ignore_extras=True, fields_to_ignore=["graphs"])
+        assert not container_equal(grid1, grid2, ignore_extras=False, fields_to_ignore=["graphs"])
         assert not container_equal(grid1, grid2, ignore_extras=True)

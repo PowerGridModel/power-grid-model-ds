@@ -112,13 +112,11 @@ class Grid(FancyArrayContainer):
     def __eq__(self, other: Any) -> bool:
         """Check if two grids are equal.
 
-        For more advanced comparisons, use Grid.is_equal() method.
-
         Note: differences in graphs are ignored in this comparison.
         """
         if not isinstance(other, self.__class__):
             return False
-        return container_equal(self, other, ignore_extras=False, early_exit=True, ignore=["graphs"])
+        return container_equal(self, other, ignore_extras=False, early_exit=True, fields_to_ignore=["graphs"])
 
     @classmethod
     def empty(cls: Type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:

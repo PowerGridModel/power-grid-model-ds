@@ -19,7 +19,7 @@ def container_equal(
     container_b: "FancyArrayContainer",
     ignore_extras: bool = False,
     early_exit: bool = True,
-    ignore: list[str] = None,
+    fields_to_ignore: list[str] = None,
 ) -> bool:
     """
     Compares two containers for equality.
@@ -31,17 +31,17 @@ def container_equal(
             If True,
                 ignores fields present in one container_a but not in container_b.
                 ignores extra columns in arrays in container_b that are not present in container_a.
-        early_exit: If True, returns False on the first detected difference.
-        ignore: A list of field names to exclude from comparison.
+        early_exit: If True, returns False on the first detected difference. False to log all differences as debug.
+        fields_to_ignore: A list of field names to exclude from comparison.
 
     Returns:
         True if the containers are equal, False otherwise.
     """
-    ignore = ignore or []
+    fields_to_ignore = fields_to_ignore or []
     is_equal = True
 
     for field in fields(container_a):
-        if field.name in ignore or (ignore_extras and not hasattr(container_b, field.name)):
+        if field.name in fields_to_ignore or (ignore_extras and not hasattr(container_b, field.name)):
             continue
 
         if not _fields_are_equal(container_a, container_b, field, ignore_extras):
