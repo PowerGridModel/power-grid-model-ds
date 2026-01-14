@@ -114,7 +114,7 @@ class Grid(FancyArrayContainer):
         """
         if not isinstance(other, self.__class__):
             return False
-        return container_equal(self, other, ignore_extras=False, early_exit=True, ignore=["graphs"])
+        return container_equal(self, other, ignore_extras=False, early_exit=True, fields_to_ignore=["graphs"])
 
     @classmethod
     def empty(cls: Type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:

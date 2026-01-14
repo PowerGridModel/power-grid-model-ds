@@ -32,7 +32,7 @@ def container_equal(
                 ignores fields present in one container_a but not in container_b.
                 ignores extra columns in arrays in container_b that are not present in container_a.
         early_exit: If True, returns False on the first detected difference. False to log all differences as debug.
-        ignore: A list of field names to exclude from comparison.
+        fields_to_ignore: A list of field names to exclude from comparison.
 
     Returns:
         True if the containers are equal, False otherwise.
