@@ -7,4 +7,4 @@ from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
 from power_grid_model_ds._core.model.containers.helpers import container_equal
 
-__all__ = ["FancyArray", "FancyArrayContainer", "concatenate", "unique", "sort", "array_equal", "container_equal"]
+__all__ = ["FancyArray", "FancyArrayContainer", "concatenate", "unique", "sort", "array_equal"]
