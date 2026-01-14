@@ -19,9 +19,8 @@ from power_grid_model_ds._core.model.arrays import (
 )
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.power_grid_model_interface import PowerGridModelInterface
-from tests.fixtures.arrays import ExtendedNodeArray
-from tests.fixtures.grid_classes import ExtendedGrid
-from tests.unit.model.grids.test_custom_grid import CustomGrid
+from tests.fixtures.arrays import DefaultedCustomNodeArray
+from tests.fixtures.grid_classes import ExtendedGrid, ExtendedGridNoDefaults
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
 
@@ -209,7 +208,7 @@ class TestPowerGridModelInterfaceMethods:
 
     def test_setup_model(self):
         """Test whether a pgm model can be setup with a custom grid"""
-        grid_generator = RadialGridGenerator(grid_class=CustomGrid, nr_nodes=5, nr_sources=1, nr_nops=0)
+        grid_generator = RadialGridGenerator(grid_class=ExtendedGrid, nr_nodes=5, nr_sources=1, nr_nops=0)
         grid = grid_generator.run(seed=0)
 
         core_interface = PowerGridModelInterface(grid=grid)
@@ -329,7 +328,7 @@ class TestCreateGridFromInputData:
         output = core_interface.create_grid_from_input_data()
 
         assert isinstance(grid, ExtendedGrid)
-        assert isinstance(grid.node, ExtendedNodeArray)
+        assert isinstance(grid.node, DefaultedCustomNodeArray)
         assert np.array_equal(
             output.node.data,
             np.array(
@@ -350,11 +349,11 @@ class TestCreateGridFromInputData:
         )
 
     def test_create_extended_grid_without_default_from_input_data(self, input_data_pgm):
-        grid = CustomGrid.empty()
+        grid = ExtendedGridNoDefaults.empty()
 
         core_interface = PowerGridModelInterface(grid=grid, input_data=input_data_pgm)
 
-        with pytest.raises(ValueError, match="Missing required columns: {'extra_field'}"):
+        with pytest.raises(ValueError, match="Missing required columns: {'u'}"):
             core_interface.create_grid_from_input_data()
 
     def test_with_additional_component_type_in_input_data(self, input_data_pgm):

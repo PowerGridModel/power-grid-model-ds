@@ -25,7 +25,7 @@ classifiers = [
   "Operating System :: MacOS",
   "Topic :: Scientific/Engineering :: Physics",
 ]
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.11"
 dependencies = [
     "power-grid-model>=1.7",
     "rustworkx>= 0.15.1",
@@ -54,6 +54,7 @@ dev = [
   "ruff",
   "mypy",
   "pre-commit",
+  "poethepoet",
   # Visualization (make sure these stay equalivalent to the 'visualizer' group)
   "dash>=3.0.0",
   "dash-bootstrap-components>=2.0.0",
@@ -140,10 +141,10 @@ control.expr = "check"
 args = [{name = "check", type="boolean", help= "Does not correct files, only warns"}]
   [[tool.poe.tasks.all.switch]]
   case     = "True"
-  sequence = ["lint --check", "format --check", "lock", "type", "cover", "report"]
+  sequence = ["format --check", "lint --check", "lock", "type", "cover", "report"]
 
   [[tool.poe.tasks.all.switch]]
-  sequence = ["lint", "format", "lock", "type", "cover", "report"]
+  sequence = ["format", "lint", "lock", "type", "cover", "report"]
 
 
 [tool.poe.tasks.lint]
