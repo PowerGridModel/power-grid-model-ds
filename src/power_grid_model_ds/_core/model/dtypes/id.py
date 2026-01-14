@@ -4,7 +4,7 @@
 
 """Base data types"""
 
-from typing import Any
+from typing import Annotated, Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -16,4 +16,4 @@ class Id:
     """Base dtype for id arrays"""
 
     _defaults: dict[str, Any] = {"id": empty}
-    id: NDArray[np.int32]
+    id: Annotated[NDArray[np.int32], {"id": True}]
