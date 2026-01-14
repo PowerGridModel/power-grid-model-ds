@@ -8,7 +8,7 @@ import dataclasses
 import json
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Type, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 

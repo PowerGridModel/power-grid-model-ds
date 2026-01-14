@@ -14,7 +14,6 @@ from numpy.typing import NDArray
 
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
-
 from power_grid_model_ds.arrays import LineArray
 from power_grid_model_ds.arrays import NodeArray as BaseNodeArray
 
@@ -102,7 +101,7 @@ class TestSerializationRoundtrips:
     @pytest.mark.parametrize("grid_fixture", ("basic_grid", "extended_grid", "grid"))
     def test_pgm_roundtrip(self, request, grid_fixture: str, tmp_path: Path):
         """Test roundtrip serialization for PGM-compatible grid"""
-        assert False ## ToDo
+        assert False  ## ToDo
 
 
 class TestCrossTypeCompatibility:

@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 """Base grid classes"""
+
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
@@ -55,13 +56,13 @@ from power_grid_model_ds._core.model.grids._search import (
     get_nearest_substation_node,
     get_typed_branches,
 )
+from power_grid_model_ds._core.model.grids.serialization.json import deserialize_from_json, serialize_to_json
 from power_grid_model_ds._core.model.grids.serialization.pickle import load_grid_from_pickle, save_grid_to_pickle
 from power_grid_model_ds._core.model.grids.serialization.string import (
     deserialize_from_str,
     deserialize_from_txt_file,
     serialize_to_str,
 )
-from power_grid_model_ds._core.utils.serialization import save_grid_to_json, load_grid_from_json
 
 G = TypeVar("G", bound="Grid")
 
@@ -135,8 +136,7 @@ class Grid(FancyArrayContainer):
             G: The grid loaded from cache
         """
         warnings.warn(
-            "Grid.from_cache() is deprecated and will be removed in a future version. "
-            "Use deserialize() instead.",
+            "Grid.from_cache() is deprecated and will be removed in a future version. Use deserialize() instead.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -356,8 +356,7 @@ class Grid(FancyArrayContainer):
             compress (bool, optional): Whether to compress the cache. Defaults to True.
         """
         warnings.warn(
-            "grid.cache() is deprecated and will be removed in a future version. "
-            "Use grid.serialize() instead.",
+            "grid.cache() is deprecated and will be removed in a future version. Use grid.serialize() instead.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -372,9 +371,9 @@ class Grid(FancyArrayContainer):
         Returns:
             Path: The path where the file was saved.
         """
-        return save_grid_to_json(grid=self, path=path, **kwargs)
+        return serialize_to_json(grid=self, path=path, **kwargs)
 
     @classmethod
     def deserialize(cls: Type[Self], path: Path) -> Self:
         """Deserialize the grid from JSON format."""
-        return load_grid_from_json(path=path, target_grid_class=cls)
+        return deserialize_from_json(path=path, target_grid_class=cls)
