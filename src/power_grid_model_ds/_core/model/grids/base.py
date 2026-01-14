@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 """Base grid classes"""
-
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Self, Type, TypeVar
@@ -134,6 +134,12 @@ class Grid(FancyArrayContainer):
         Returns:
             G: The grid loaded from cache
         """
+        warnings.warn(
+            "Grid.from_cache() is deprecated and will be removed in a future version. "
+            "Use deserialize() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return load_grid_from_pickle(cls, cache_path=cache_path, load_graphs=load_graphs)
 
     @classmethod
@@ -349,6 +355,12 @@ class Grid(FancyArrayContainer):
             cache_name (str): The name of the cache.
             compress (bool, optional): Whether to compress the cache. Defaults to True.
         """
+        warnings.warn(
+            "grid.cache() is deprecated and will be removed in a future version. "
+            "Use grid.serialize() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return save_grid_to_pickle(self, cache_dir=cache_dir, cache_name=cache_name, compress=compress)
 
     def serialize(self, path: Path, **kwargs) -> Path:
