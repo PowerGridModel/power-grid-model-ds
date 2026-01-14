@@ -58,29 +58,24 @@ def create_empty_grid(grid_class: Type[G], graph_model: type[BaseGraphModel] = R
     return grid_class(**empty_fields)
 
 
-def merge_grids(grid: G, other_grid: G) -> G:
+def merge_grids(grid: G, other_grid: G, mode: str) -> G:
     """See Grid.merge()"""
 
-    new_grid = copy.deepcopy(grid)
-    new_other_grid = copy.deepcopy(other_grid)
-
-    _reindex_grid(new_grid, new_other_grid)
+    match mode:
+        case "recalculate_ids":
+            other_grid = copy.deepcopy(other_grid)
+            offset = int(grid.id_counter)  # Possible improvement: grid.id_counter - other_grid.min_id() + 1
+            _increment_grid_ids_by_offset(other_grid, offset)
+        case "keep_ids":
+            pass
+        case _:
+            raise NotImplementedError(f"Merge mode {mode} is not implemented")
 
     # Append all arrays from the first grid to the second
-    for array in new_other_grid.all_arrays():
-        new_grid.append(array, check_max_id=False)
+    for array in other_grid.all_arrays():
+        grid.append(array, check_max_id=False)
 
-    return new_grid
-
-
-def _reindex_grid(grid: G, other_grid) -> None:
-    """Offset the ids of other_grid to avoid conflicts in merged grid"""
-    ids_grid = grid.node.id
-    ids_other_grid = other_grid.node.id
-    overlapping_ids = set(ids_grid).intersection(set(ids_other_grid))
-    if overlapping_ids:  # If any index overlaps, then bump values of columns with references to node ids
-        offset = grid.id_counter  # Possible improvement: grid.id_counter - other_grid.min_id() + 1
-        _increment_grid_ids_by_offset(other_grid, offset)
+    return grid
 
 
 def _increment_grid_ids_by_offset(grid: G, offset: int) -> None:

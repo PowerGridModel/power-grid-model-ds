@@ -411,7 +411,7 @@ class TestMergeGrids:
         grid1_size = grid1.node.size
         grid2_size = grid2.node.size
 
-        merged_grid = grid1.merge(grid2)
+        merged_grid = grid1.merge(grid2, mode="keep_ids")
         merged_grid_size = merged_grid.node.size
 
         assert merged_grid_size == grid1_size + grid2_size, "Merged grid size should be the sum of both grids' sizes"
@@ -423,7 +423,7 @@ class TestMergeGrids:
         grid1.append(source)
         grid2.append(source)
 
-        merged_grid = grid1.merge(grid2)
+        merged_grid = grid1.merge(grid2, mode="recalculate_ids")
         assert merged_grid.check_ids() is None, "Asset ids are not unique after merging!"
 
         # Check if from and to nodes are updated by checking that their values form the entire set of node ids:
@@ -439,5 +439,5 @@ class TestMergeGrids:
         grid1 = Grid.from_txt("S1 2", "S1 3 link", "3 14 transformer")
         grid2 = Grid.from_txt("S1 2", "S1 13 link", "13 14 transformer")
 
-        merged_grid = grid1.merge(grid2)
+        merged_grid = grid1.merge(grid2, mode="recalculate_ids")
         assert merged_grid.check_ids() is None, "Asset ids are not unique after merging!"
