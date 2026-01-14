@@ -5,6 +5,7 @@
 """Grid tests"""
 
 import dataclasses
+from copy import deepcopy
 
 import numpy as np
 from numpy.testing import assert_equal
@@ -86,3 +87,30 @@ def test_basic_grid_fixture(basic_grid: Grid):
 
     assert len(grid.line) + len(grid.transformer) + len(grid.link) - 1 == grid.graphs.active_graph.nr_branches
     assert len(grid.line) + len(grid.transformer) + len(grid.link) == grid.graphs.complete_graph.nr_branches
+
+
+class TestGridEquality:
+    def test_grids_equal(self, basic_grid: Grid):
+        grid1 = basic_grid
+        grid2 = deepcopy(grid1)
+        assert grid1 == grid2
+
+    def test_different_nodes(self, basic_grid: Grid):
+        grid1 = basic_grid
+        grid2 = deepcopy(grid1)
+        # modify a node
+        grid2.node.u_rated[0] += 1000.0
+        assert grid1 != grid2
+
+    def test_different_lines(self, basic_grid: Grid):
+        grid1 = basic_grid
+        grid2 = build_basic_grid(Grid.empty())
+        # modify a line
+        grid2.line.r1[0] += 0.01
+        assert grid1 != grid2
+
+    def test_different_type(self):
+        grid1 = build_basic_grid(ExtendedGrid.empty())
+        grid2 = Grid.from_extended(grid1)
+
+        assert grid1 != grid2
