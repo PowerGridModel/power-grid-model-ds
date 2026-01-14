@@ -6,7 +6,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Self, Type, TypeVar
+from typing import Any, Self, Type, TypeVar
 
 import numpy as np
 import numpy.typing as npt
