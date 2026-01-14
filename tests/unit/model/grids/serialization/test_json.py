@@ -217,7 +217,7 @@ class TestDeserialize:
 
         # Write incompatible data to file
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f)
+            json.dump({"data": data}, f)
 
         grid = Grid.deserialize(path)
         assert grid.node.size == 2
@@ -236,7 +236,7 @@ class TestDeserialize:
 
         # Write incompatible data to file
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(incompatible_data, f)
+            json.dump({"data": incompatible_data}, f)
 
         grid = Grid.deserialize(path)
         assert not hasattr(grid, "unexpected_field")
@@ -251,7 +251,7 @@ class TestDeserialize:
 
         # Write data to file
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(missing_array_data, f)
+            json.dump({"data": missing_array_data}, f)
 
         grid = Grid.deserialize(path)
         assert grid.line.size == 0  # line array should be empty
@@ -263,7 +263,7 @@ class TestDeserialize:
         }
 
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(incomplete_data, f)
+            json.dump({"data": incomplete_data}, f)
 
         with pytest.raises(KeyError):
             Grid.deserialize(path)
