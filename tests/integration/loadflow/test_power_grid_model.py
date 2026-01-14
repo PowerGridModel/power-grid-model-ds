@@ -16,9 +16,8 @@ from power_grid_model_ds._core.model.arrays import (
     SymLoadArray,
 )
 from power_grid_model_ds._core.model.grids.base import Grid
-from tests.fixtures.arrays import ExtendedLineArray, ExtendedNodeArray
-from tests.fixtures.grid_classes import ExtendedGrid
-from tests.unit.model.grids.test_custom_grid import CustomGrid
+from tests.fixtures.arrays import DefaultedCustomLineArray, DefaultedCustomNodeArray
+from tests.fixtures.grid_classes import ExtendedGrid, ExtendedGridNoDefaults
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
 
@@ -118,8 +117,8 @@ class PowerGridModelInterfaceMethods:
         grid_generator = RadialGridGenerator(grid_class=Grid, nr_nodes=5, nr_sources=1, nr_nops=0)
         grid = grid_generator.run(seed=0)
 
-        grid.node = ExtendedNodeArray(grid.node.data)
-        grid.line = ExtendedLineArray(grid.line.data)
+        grid.node = DefaultedCustomNodeArray(grid.node.data)
+        grid.line = DefaultedCustomLineArray(grid.line.data)
 
         core_interface = PowerGridModelInterface(grid=grid)
         core_interface.create_input_from_grid()
@@ -178,7 +177,7 @@ class PowerGridModelInterfaceMethods:
 
     def test_setup_model(self):
         """Test whether a pgm model can be setup with a custom grid"""
-        grid_generator = RadialGridGenerator(grid_class=CustomGrid, nr_nodes=5, nr_sources=1, nr_nops=0)
+        grid_generator = RadialGridGenerator(grid_class=ExtendedGrid, nr_nodes=5, nr_sources=1, nr_nops=0)
         grid = grid_generator.run(seed=0)
 
         core_interface = PowerGridModelInterface(grid=grid)
@@ -298,7 +297,7 @@ class TestCreateGridFromInputData:
         output = core_interface.create_grid_from_input_data()
 
         assert isinstance(grid, ExtendedGrid)
-        assert isinstance(grid.node, ExtendedNodeArray)
+        assert isinstance(grid.node, DefaultedCustomNodeArray)
         assert np.array_equal(
             output.node.data,
             np.array(
@@ -319,9 +318,9 @@ class TestCreateGridFromInputData:
         )
 
     def test_create_extended_grid_without_default_from_input_data(self, input_data_pgm):
-        grid = CustomGrid.empty()
+        grid = ExtendedGridNoDefaults.empty()
 
         core_interface = PowerGridModelInterface(grid=grid, input_data=input_data_pgm)
 
-        with pytest.raises(ValueError, match="Missing required columns: {'extra_field'}"):
+        with pytest.raises(ValueError, match="Missing required columns: {'u'}"):
             core_interface.create_grid_from_input_data()

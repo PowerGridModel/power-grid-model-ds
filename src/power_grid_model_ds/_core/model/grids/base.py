@@ -7,7 +7,7 @@
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Self, Type, TypeVar
+from typing import Any, Self, Type, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -30,14 +30,12 @@ from power_grid_model_ds._core.model.arrays import (
 )
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
+from power_grid_model_ds._core.model.containers.helpers import container_equal
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.grids._feeders import set_feeder_ids
-from power_grid_model_ds._core.model.grids._helpers import (
-    create_empty_grid,
-    create_grid_from_extended_grid,
-)
+from power_grid_model_ds._core.model.grids._helpers import create_empty_grid, create_grid_from_extended_grid
 from power_grid_model_ds._core.model.grids._modify import (
     add_array_to_grid,
     add_branch,
@@ -110,6 +108,17 @@ class Grid(FancyArrayContainer):
         Compatible with https://csacademy.com/app/graph_editor/
         """
         return serialize_to_str(self)
+
+    def __eq__(self, other: Any) -> bool:
+        """Check if two grids are equal.
+
+        For more advanced comparisons, use Grid.is_equal() method.
+
+        Note: differences in graphs are ignored in this comparison.
+        """
+        if not isinstance(other, self.__class__):
+            return False
+        return container_equal(self, other, ignore_extras=False, early_exit=True, ignore=["graphs"])
 
     @classmethod
     def empty(cls: Type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
