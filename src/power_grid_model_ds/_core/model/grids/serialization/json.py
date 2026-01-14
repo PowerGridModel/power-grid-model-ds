@@ -52,9 +52,11 @@ def serialize_to_json(grid: G, path: Path, strict: bool = True, **kwargs) -> Pat
         if _is_serializable(field_value, strict):
             serialized_data[field.name] = field_value
 
-    # Write to file
+    # Store in a wrapper for PGM compatibility
+    json_data = {"data": serialized_data}
+
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(serialized_data, f, **kwargs)
+        json.dump(json_data, f, **kwargs)
 
     return path
 
@@ -73,7 +75,7 @@ def deserialize_from_json(path: Path, target_grid_class: type[G]) -> G:
         input_data = json.load(f)
 
     grid = target_grid_class.empty()
-    _restore_grid_values(grid, input_data)
+    _restore_grid_values(grid, input_data["data"])
     graph_class = grid.graphs.__class__
     grid.graphs = graph_class.from_arrays(grid)
     return grid

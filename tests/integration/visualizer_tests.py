@@ -4,7 +4,6 @@
 
 
 from dataclasses import dataclass
-from pathlib import Path
 
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.visualizer.app import visualize

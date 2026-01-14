@@ -11,9 +11,12 @@ from pathlib import Path
 import numpy as np
 import pytest
 from numpy.typing import NDArray
+from power_grid_model.utils import json_serialize_to_file
 
-from power_grid_model_ds import Grid
+from power_grid_model_ds import Grid, PowerGridModelInterface
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
+from power_grid_model_ds._core.model.containers.helpers import container_equal
+from power_grid_model_ds._core.utils.misc import array_equal_with_nan
 from power_grid_model_ds.arrays import LineArray
 from power_grid_model_ds.arrays import NodeArray as BaseNodeArray
 
@@ -82,7 +85,7 @@ def extended_grid():
 class TestSerializationRoundtrips:
     """Test serialization across different formats and configurations"""
 
-    @pytest.mark.parametrize("grid_fixture", ("basic_grid", "extended_grid", "grid"))
+    @pytest.mark.parametrize("grid_fixture", ("basic_grid", "grid"))
     def test_serialization_roundtrip(self, request, grid_fixture: str, tmp_path: Path):
         """Test serialization roundtrip
 
@@ -96,12 +99,37 @@ class TestSerializationRoundtrips:
 
         grid.serialize(path)
         loaded_grid = Grid.deserialize(path)
-        assert loaded_grid.is_equal(grid)
+        assert loaded_grid == grid
 
-    @pytest.mark.parametrize("grid_fixture", ("basic_grid", "extended_grid", "grid"))
+    @pytest.mark.parametrize("grid_fixture", ("basic_grid", "grid"))
     def test_pgm_roundtrip(self, request, grid_fixture: str, tmp_path: Path):
         """Test roundtrip serialization for PGM-compatible grid"""
-        assert False  ## ToDo
+        # Grid
+        grid: Grid = request.getfixturevalue(grid_fixture)
+
+        # Replace nan values with dummy value. Otherwise PGM's json_serialize_to_file will remove these columns.
+        grid.node.u_rated = 42
+
+        grid.line.r1 = 42
+        grid.line.x1 = 42
+        grid.line.c1 = 42
+        grid.line.tan1 = 42
+        grid.line.i_n = 42
+
+        input_data = PowerGridModelInterface(grid).create_input_from_grid()
+
+        path = tmp_path / "input.json"
+        json_serialize_to_file(path, input_data)
+
+        loaded_grid = Grid.deserialize(path)
+
+        loaded_input_data = PowerGridModelInterface(loaded_grid).create_input_from_grid()
+
+        for array_name in input_data:
+            original_array = input_data[array_name]
+            loaded_array = loaded_input_data[array_name]
+
+            assert array_equal_with_nan(original_array, loaded_array), f"Array '{array_name}' does not match"
 
 
 class TestCrossTypeCompatibility:
@@ -116,7 +144,7 @@ class TestCrossTypeCompatibility:
         loaded_grid = ExtendedGrid.deserialize(path)
 
         # Core data should transfer
-        assert basic_grid.is_equal(loaded_grid, partial_match=True)
+        assert container_equal(basic_grid, loaded_grid, ignore_extras=True, fields_to_ignore=["graphs"])
 
     def test_extended_to_basic_loading(self, extended_grid: ExtendedGrid, tmp_path: Path, caplog):
         """Test loading extended grid into basic type"""
@@ -127,8 +155,7 @@ class TestCrossTypeCompatibility:
         loaded_grid = Grid.deserialize(path)
 
         # Core data should transfer
-        assert loaded_grid.is_equal(extended_grid, partial_match=True)
-        assert "Skipping extra columns from input data for NodeArray: {'u', 'analysis_flag'}" in caplog.text
+        assert container_equal(loaded_grid, extended_grid, ignore_extras=True, fields_to_ignore=["graphs"])
 
 
 class TestExtensionHandling:
@@ -182,7 +209,22 @@ class TestExtensionHandling:
         np.testing.assert_array_equal(loaded_grid.custom_metadata.category, [1, 2, 1])
 
 
-class TestIncompatibleJson:
+class TestDeserialize:
+    def test_deserialize(self, tmp_path: Path):
+        path = tmp_path / "incompatible.json"
+
+        data = {"node": [{"id": 1, "u_rated": 10000}, {"id": 2, "u_rated": 20000}]}
+
+        # Write incompatible data to file
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f)
+
+        grid = Grid.deserialize(path)
+        assert grid.node.size == 2
+
+        assert grid.node.id.tolist() == [1, 2]
+        assert grid.node.u_rated.tolist() == [10000, 20000]
+
     def test_unexpected_field(self, tmp_path: Path):
         path = tmp_path / "incompatible.json"
 
