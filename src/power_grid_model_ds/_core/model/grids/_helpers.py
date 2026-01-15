@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 import copy
-import dataclasses
 import logging
+from dataclasses import fields
 from typing import TYPE_CHECKING, Type, TypeVar
 
 from power_grid_model_ds._core.model.arrays import (
@@ -21,9 +21,8 @@ from power_grid_model_ds._core.model.arrays import (
 )
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
-
-from ..graphs.models import RustworkxGraphModel
-from ..graphs.models.base import BaseGraphModel
+from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
+from power_grid_model_ds._core.model.graphs.models.rustworkx import RustworkxGraphModel
 
 if TYPE_CHECKING:
     from .base import Grid
@@ -41,7 +40,7 @@ def create_grid_from_extended_grid(grid_class: type[G], extended: G) -> G:
     # Add nodes first, so that branches can reference them
     new_grid.append(new_grid.node.__class__.from_extended(extended.node))
 
-    for field in dataclasses.fields(new_grid):
+    for field in fields(new_grid):
         if field.name == "node":
             continue  # already added
         if isinstance(field.type, type) and issubclass(field.type, FancyArray):
