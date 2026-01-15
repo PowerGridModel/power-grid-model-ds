@@ -64,7 +64,7 @@ def merge_grids(grid: G, other_grid: G, mode: str) -> G:
     match mode:
         case "recalculate_ids":
             other_grid = copy.deepcopy(other_grid)
-            offset = int(grid.id_counter)  # Possible improvement: grid.id_counter - other_grid.min_id() + 1
+            offset = grid.id_counter  # Possible improvement: grid.id_counter - other_grid.min_id() + 1
             _increment_grid_ids_by_offset(other_grid, offset)
         case "keep_ids":
             pass
@@ -81,19 +81,29 @@ def merge_grids(grid: G, other_grid: G, mode: str) -> G:
 def _increment_grid_ids_by_offset(grid: G, offset: int) -> None:
     for array in grid.all_arrays():
         if isinstance(array, IdArray):
-            array.id += offset
-        if isinstance(array, NodeArray | SymPowerSensorArray | SymVoltageSensorArray | AsymVoltageSensorArray):
-            continue
-        if isinstance(array, TransformerTapRegulatorArray):
-            array.regulated_object += offset
-        elif isinstance(array, BranchArray):
-            array.from_node += offset
-            array.to_node += offset
-        elif isinstance(array, Branch3Array):
-            array.node_1 += offset
-            array.node_2 += offset
-            array.node_3 += offset
-        elif isinstance(array, SymGenArray | SymLoadArray | SourceArray):
-            array.node += offset
-        else:
-            raise NotImplementedError(f"The array of type {type(array)} is not implemented for appending")
+            _update_id_column(array, "id", offset)
+
+        columns = []
+        match array:
+            case SymPowerSensorArray() | SymVoltageSensorArray() | AsymVoltageSensorArray():
+                columns = []
+            case NodeArray():
+                columns = ["feeder_node_id", "feeder_branch_id"]
+            case TransformerTapRegulatorArray():
+                columns = ["regulated_object"]
+            case BranchArray():
+                columns = ["from_node", "to_node", "feeder_node_id", "feeder_branch_id"]
+            case Branch3Array():
+                columns = ["node_1", "node_2", "node_3"]
+            case SymGenArray() | SymLoadArray() | SourceArray():
+                columns = ["node"]
+            case _:
+                raise NotImplementedError(f"The array of type {type(array)} is not implemented for appending")
+
+        for column in columns:
+            _update_id_column(array, column, offset)
+
+
+def _update_id_column(array: IdArray, column: str, offset: int) -> None:
+    mask = array.is_empty(column)
+    array[column][~mask] += offset
