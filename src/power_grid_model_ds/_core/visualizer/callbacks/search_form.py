@@ -18,6 +18,25 @@ EDGE_HIGHLIGHT_STYLE = {
     "line-color": CYTO_COLORS["highlighted"],
     "target-arrow-color": CYTO_COLORS["highlighted"],
 }
+HIGHLIGHT_STYLE = {
+    "background-color": CYTO_COLORS["highlighted"],
+    "text-background-color": CYTO_COLORS["highlighted"],
+    "line-color": CYTO_COLORS["highlighted"],
+    "target-arrow-color": CYTO_COLORS["highlighted"],
+}
+
+
+NODE_GROUPS = ["node"]
+EDGE_GROUPS = ["line", "link", "transformer", "three_winding_transformer", "sym_load", "sym_gen", "source"]
+
+GROUPS_IN_BRANCH = EDGE_GROUPS
+
+INDIRECT_SEARCH_ELEMENTS = [
+    "sym_power_sensor",
+    "sym_voltage_sensor",
+    "asym_voltage_sensor",
+    "transformer_tap_regulator",
+]
 
 
 @callback(
@@ -41,22 +60,32 @@ def search_element(  #  pylint: disable=too-many-arguments, disable=too-many-pos
     if not group or not column or not value:
         raise PreventUpdate
 
-    selected_nodes, selected_edges = _search_components(
-        viz_to_comp=viz_to_comp, group=group, column=column, operator=operator, value=value
-    )
+    # id column was renamed to pgm_id because of cytoscape reserved word
+    search_column = column if column != "id" else "pgm_id"
+    search_query = f"{search_column} {operator} {value}"
 
-    if not selected_nodes and not selected_edges:
+    if group in NODE_GROUPS:
+        selector = f"node[{search_query}][group = '{group}']"
+    elif group in EDGE_GROUPS:
+        selector = f"edge[{search_query}][group = '{group}']"
+    elif group == "branch":
+        selector = f"edge[{search_query}]" + "".join(f"[group = '{group}']" for group in GROUPS_IN_BRANCH)
+    elif group in INDIRECT_SEARCH_ELEMENTS:
+        found = _search_components(
+            viz_to_comp=viz_to_comp, component_type=group, column=search_column, operator=operator, value=value
+        )
+        if found:
+            selector = ", ".join([f'[id = "{node_id}"]' for node_id in found])
+        else:
+            raise PreventUpdate
+    else:
         raise PreventUpdate
 
-    new_styles = []
-    if selected_nodes:
-        node_selector = ", ".join([f'[id = "{node_id}"]' for node_id in selected_nodes])
-        new_styles.append({"selector": node_selector, "style": NODE_HIGHLIGHT_STYLE})
-    if selected_edges:
-        edge_selector = ", ".join([f'[id = "{edge_id}"]' for edge_id in selected_edges])
-        new_styles.append({"selector": edge_selector, "style": EDGE_HIGHLIGHT_STYLE})
-
-    updated_stylesheet = stylesheet + new_styles
+    new_style = {
+        "selector": selector,
+        "style": HIGHLIGHT_STYLE,
+    }
+    updated_stylesheet = stylesheet + [new_style]
     return updated_stylesheet
 
 
@@ -78,19 +107,35 @@ def update_column_options(selected_group, store_data):
     return columns, default_value
 
 
+def _search_components(
+    viz_to_comp: VizToComponentData, component_type: str, column: str, operator: str, value: str
+) -> list[str]:
+    """Find node or edge IDs that have components matching the search criteria."""
+    try:
+        numeric_value = float(value)
+    except ValueError:
+        return []
+
+    matching_nodes = []
+    for node_edge_id, node_edge_data in viz_to_comp.items():
+        if _find_components_node_edge(node_edge_data, component_type, column, numeric_value, operator):
+            matching_nodes.append(node_edge_id)
+
+    return matching_nodes
+
+
 def _find_components_node_edge(
     node_edge_data: dict[str, ListArrayData],
-    component_types: list[str],
+    component_type: str,
     column: str,
     numeric_value: float,
     operator: str,
 ) -> bool:
-    for component_type in component_types:
-        if component_type in node_edge_data:
-            for component in node_edge_data[component_type]:
-                if column in component:
-                    if _compare_values(numeric_value, component[column], operator):
-                        return True
+    if component_type in node_edge_data:
+        for component in node_edge_data[component_type]:
+            if column in component:
+                if _compare_values(numeric_value, component[column], operator):
+                    return True
     return False
 
 
@@ -107,27 +152,3 @@ def _compare_values(numeric_value: float, component_value: float, operator: str)
             return component_value != numeric_value
         case _:
             return False
-
-
-def _search_components(
-    viz_to_comp: VizToComponentData, group: str, column: str, operator: str, value: str
-) -> tuple[list[str], list[str]]:
-    """Find node or edge IDs that have components matching the search criteria."""
-    try:
-        numeric_value = float(value)
-    except ValueError:
-        return [], []
-
-    component_types = ["line", "link", "transformer"] if group == "branch" else [group]
-
-    matching_nodes = []
-    matching_edges = []
-    for node_edge_id, node_edge_data in viz_to_comp.items():
-        if _find_components_node_edge(node_edge_data, component_types, column, numeric_value, operator):
-            if "node" in node_edge_data:
-                matching_nodes.append(node_edge_id)
-            else:
-                matching_edges.append(node_edge_id)
-            break
-
-    return matching_nodes, matching_edges

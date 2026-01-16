@@ -82,8 +82,8 @@ def _get_viz_to_comp_store(viz_to_comp_data: VizToComponentData) -> dcc.Store:
 def get_app_layout(grid: Grid) -> html.Div:
     """Get the app layout."""
     columns_store = _get_columns_store(grid)
-    graph_layout = _get_graph_layout(grid.node)
     elements, viz_to_comp_data = parse_element_data(grid)
+    graph_layout = _get_graph_layout(grid.node)
     viz_to_comp_store = _get_viz_to_comp_store(viz_to_comp_data)
     cytoscape_html = get_cytoscape_html(graph_layout, elements)
 
@@ -100,8 +100,12 @@ def get_app_layout(grid: Grid) -> html.Div:
     )
 
 
-def _get_graph_layout(nodes: NodeArray) -> str:
+def _get_graph_layout(nodes: NodeArray):
     """Determine the graph layout"""
     if "x" in nodes.columns and "y" in nodes.columns:
-        return "preset"
-    return "breadthfirst"
+        return {"name": "preset"}
+    return {"name": "breadthfirst", "roots": 'node[group = "source_ghost_node"]'}
+    # TODO (nitbharambe) Add layout params after config option is used
+    # TODO (nitbharambe) Experiment with different layout parameters (Remove comments)
+    # return {'name': 'cose', 'nodeOverlap': '1000', 'gravity': 100}
+    # return {'name': 'cose',  "nodeRepulsion": "function( node ){ return 12048; }"}

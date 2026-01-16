@@ -21,6 +21,19 @@ NODE_SCALE_HTML = [
     html.Span(style={"margin-right": "10px"}),
 ]
 
+APPLIANCE_SCALE_HTML = [
+    html.I(className="fas fa-circle", style={"color": CYTO_COLORS["node"], "margin-right": "10px"}),
+    dcc.Input(
+        id="appliance-scale-input",
+        type="number",
+        value=1,
+        min=0.1,
+        step=0.1,
+        style={"width": "75px"},
+    ),
+    html.Span(style={"margin-right": "10px"}),
+]
+
 EDGE_SCALE_HTML = [
     html.I(className="fas fa-arrow-right-long", style={"color": CYTO_COLORS["line"], "margin-right": "10px"}),
     dcc.Input(

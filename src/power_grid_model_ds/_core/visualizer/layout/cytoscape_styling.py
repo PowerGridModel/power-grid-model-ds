@@ -4,10 +4,12 @@
 
 """Contains selectors for the Cytoscape stylesheet."""
 
-from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
+from power_grid_model_ds._core.visualizer.layout.colors import BACKGROUND_COLOR, CYTO_COLORS
 
 NODE_SIZE = 100
 BRANCH_WIDTH = 10
+APPLIANCE_NODE_SIZE = NODE_SIZE * 0.5
+APPLIANCE_EDGE_WIDTH = BRANCH_WIDTH
 
 _BRANCH_STYLE = {
     "selector": "edge",
@@ -36,6 +38,24 @@ _NODE_STYLE = {
         "height": 75,
     },
 }
+_PARENT_NODE_STYLE = {
+    "selector": "node[group = 'parent_node']",
+    "style": {
+        "label": "",
+        "border-width": 5,
+        "border-color": BACKGROUND_COLOR,
+        "font-size": 25,
+        "text-halign": "center",
+        "text-valign": "center",
+        "background-color": BACKGROUND_COLOR,
+        "text-background-color": BACKGROUND_COLOR,
+        "text-background-opacity": 0,
+        "text-background-shape": "round-rectangle",
+        # "width": 75,
+        # "height": 75,
+    },
+}
+
 _NODE_LARGE_ID_STYLE = {
     "selector": "node[id > 10000000]",
     "style": {"font-size": 15},
@@ -45,9 +65,64 @@ _SELECTED_NODE_STYLE = {
     "style": {"border-width": 5, "border-color": CYTO_COLORS["selected"]},
 }
 
+_APPLIANCE_STYLE = {
+    "selector": "node[group *= '_ghost_node']",
+    "style": {
+        "label": "data(label)",
+        "border-width": 5,
+        "border-color": "black",
+        "font-size": 25,
+        "text-halign": "center",
+        "text-valign": "center",
+        "background-color": CYTO_COLORS["node"],
+        "text-background-color": CYTO_COLORS["node"],
+        "text-background-opacity": 1,
+        "text-background-shape": "round-rectangle",
+        "width": 10,
+        "height": 10,
+    },
+}
+
+_GEN_EDGE_STYLE = {
+    "selector": "edge[group = 'sym_gen_edge']",
+    "style": {
+        "line-color": CYTO_COLORS["line"],
+        "source-arrow-color": CYTO_COLORS["line"],
+        "curve-style": "bezier",
+        "source-arrow-shape": "triangle",
+        "source-arrow-size": 100,
+        "width": APPLIANCE_EDGE_WIDTH,
+    },
+}
+_LOAD_EDGE_STYLE = {
+    "selector": "edge[group = 'sym_load_edge']",
+    "style": {
+        "line-color": CYTO_COLORS["line"],
+        "target-arrow-color": CYTO_COLORS["line"],
+        "curve-style": "bezier",
+        "target-arrow-shape": "triangle",
+        "width": APPLIANCE_EDGE_WIDTH,
+    },
+}
+_SOURCE_EDGE_STYLE = {
+    "selector": "edge[group = 'source_edge']",
+    "style": {
+        "line-color": CYTO_COLORS["substation_node"],
+        "source-arrow-color": CYTO_COLORS["substation_node"],
+        "curve-style": "bezier",
+        "source-arrow-shape": "triangle",
+        "source-arrow-size": 100,
+        "width": APPLIANCE_EDGE_WIDTH,
+    },
+}
+
 _SELECTED_BRANCH_STYLE = {
     "selector": "edge:selected, edge:active",
-    "style": {"line-color": CYTO_COLORS["selected"], "target-arrow-color": CYTO_COLORS["selected"], "width": 10},
+    "style": {
+        "line-color": CYTO_COLORS["selected"],
+        "target-arrow-color": CYTO_COLORS["selected"],
+        "width": 10,
+    },
 }
 
 
@@ -86,7 +161,7 @@ _SELECTED_LINK_STYLE = {
 }
 
 _OPEN_BRANCH_STYLE = {
-    "selector": "edge[from_status = 0], edge[to_status = 0]",
+    "selector": "edge[from_status = 0], edge[to_status = 0], edge[status = 0]",
     "style": {
         "line-style": "dashed",
         "line-color": CYTO_COLORS["open_branch"],
@@ -108,6 +183,13 @@ _OPEN_TO_SIDE_BRANCH_STYLE = {
         "target-arrow-fill": "hollow",
     },
 }
+_OPEN_APPLIANCE_EDGE_STYLE = {
+    "selector": "edge[status = 0]",
+    "style": {
+        "source-arrow-shape": "diamond",
+        "source-arrow-fill": "hollow",
+    },
+}
 
 
 DEFAULT_STYLESHEET = [
@@ -124,4 +206,10 @@ DEFAULT_STYLESHEET = [
     _OPEN_BRANCH_STYLE,
     _OPEN_FROM_SIDE_BRANCH_STYLE,
     _OPEN_TO_SIDE_BRANCH_STYLE,
+    _APPLIANCE_STYLE,
+    _PARENT_NODE_STYLE,
+    _GEN_EDGE_STYLE,
+    _LOAD_EDGE_STYLE,
+    _SOURCE_EDGE_STYLE,
+    _OPEN_APPLIANCE_EDGE_STYLE,
 ]

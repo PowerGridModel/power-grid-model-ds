@@ -21,6 +21,7 @@ GROUP_INPUT = dbc.Select(
         {"label": "source", "value": "source"},
         {"label": "sym_power_sensor", "value": "sym_power_sensor"},
         {"label": "sym_voltage_sensor", "value": "sym_voltage_sensor"},
+        {"label": "asym_voltage_sensor", "value": "asym_voltage_sensor"},
         {"label": "three_winding_transformer", "value": "three_winding_transformer"},
         {"label": "transformer_tap_regulator", "value": "transformer_tap_regulator"},
     ],
