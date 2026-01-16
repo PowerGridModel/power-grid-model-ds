@@ -388,7 +388,7 @@ class Grid(FancyArrayContainer):
         Returns:
             Path: The path where the file was saved.
         """
-        return serialize_to_json(grid=self, path=path, **kwargs)
+        return serialize_to_json(grid=self, path=path, strict=True, **kwargs)
 
     @classmethod
     def deserialize(cls: Type[Self], path: Path) -> Self:
