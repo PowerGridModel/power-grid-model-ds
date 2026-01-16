@@ -380,7 +380,7 @@ class Grid(FancyArrayContainer):
         return save_grid_to_pickle(self, cache_dir=cache_dir, cache_name=cache_name, compress=compress)
 
     def serialize(self, path: Path, **kwargs) -> Path:
-        """Serialize the grid to JSON format.
+        """Serialize the grid.
 
         Args:
             path: Destination file path to write JSON to.
@@ -392,5 +392,5 @@ class Grid(FancyArrayContainer):
 
     @classmethod
     def deserialize(cls: Type[Self], path: Path) -> Self:
-        """Deserialize the grid from JSON format."""
+        """Deserialize the grid."""
         return deserialize_from_json(path=path, target_grid_class=cls)
