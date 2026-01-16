@@ -80,17 +80,26 @@ class FancyArray(ABC):
         annotations = get_inherited_attrs(cls, "_str_lengths")
         str_lengths = annotations.pop("_str_lengths")
         dtypes = {}
+        metadatas = {}
         for name, dtype in annotations.items():
             if len(dtype.__args__) > 1:
                 # regular numpy dtype (i.e. without shape)
                 dtypes[name] = dtype.__args__[1].__args__[0]
             elif hasattr(dtype, "__metadata__"):
-                # metadata annotation contains shape
-                # define dtype using a (type, shape) tuple
-                # see: #1 in https://numpy.org/doc/stable/user/basics.rec.html#structured-datatype-creation
-                dtype_type = dtype.__args__[0].__args__[1].__args__[0]
-                dtype_shape = dtype.__metadata__[0].__args__
-                dtypes[name] = (dtype_type, dtype_shape)
+                # metadata annotation contains shape or custom metadata (dict)
+                metadata = dtype.__metadata__[0]
+                if hasattr(metadata, "__args__"):
+                    # shape metadata - define dtype using a (type, shape) tuple
+                    # see: #1 in https://numpy.org/doc/stable/user/basics.rec.html#structured-datatype-creation
+                    dtype_type = dtype.__args__[0].__args__[1].__args__[0]
+                    dtype_shape = metadata.__args__
+                    dtypes[name] = (dtype_type, dtype_shape)
+                elif isinstance(metadata, dict):
+                    # custom metadata dict - extract the base dtype
+                    dtypes[name] = dtype.__args__[0].__args__[1].__args__[0]
+                    metadatas[name] = metadata
+                else:
+                    raise ValueError(f"metadata {metadata} not understood or supported")
             else:
                 raise ValueError(f"dtype {dtype} not understood or supported")
 
@@ -106,6 +115,8 @@ class FancyArray(ABC):
                 dtype_list.append((name, np.dtype(f"U{string_length}")))
             elif dtype is tuple:
                 dtype_list.append((name, *dtype))
+            elif name in metadatas:
+                dtype_list.append((name, np.dtype(dtype, metadata=metadatas[name])))
             else:
                 dtype_list.append((name, dtype))
         return np.dtype(dtype_list)
