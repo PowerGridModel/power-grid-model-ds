@@ -62,7 +62,6 @@ class GridWithNonSerializableExtension(Grid):
     non_serializable: NonSerializableExtension = NonSerializableExtension()
 
 
-
 @pytest.fixture
 def basic_grid():
     """Basic grid fixture"""
@@ -312,7 +311,6 @@ class TestDeserialize:
 
         with pytest.raises(ValueError):
             Grid.deserialize(path)
-
 
     def test_non_serializable_extension(self, tmp_path: Path):
         path = tmp_path / "non_serializable.json"
