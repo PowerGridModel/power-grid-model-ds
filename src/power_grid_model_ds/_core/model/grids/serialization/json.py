@@ -72,10 +72,10 @@ def deserialize_from_json(path: Path, target_grid_class: type[G]) -> G:
         Grid: The deserialized Grid object of the specified target class
     """
     with open(path, "r", encoding="utf-8") as f:
-        input_data = json.load(f)
+        json_data = json.load(f)
 
     grid = target_grid_class.empty()
-    _restore_grid_values(grid, input_data["data"])
+    _restore_grid_values(grid, json_data["data"])
     graph_class = grid.graphs.__class__
     grid.graphs = graph_class.from_arrays(grid)
     return grid
@@ -107,13 +107,24 @@ def _deserialize_array(array_data: list[dict[str, Any]], array_class: type[Fancy
     if not array_data:
         return array_class()
 
-    columns = array_data[0].keys()
-    data_as_dict_of_lists: dict[str, Any] = {k: [d[k] for d in array_data] for k in columns}
     array_columns = set(array_class.get_dtype().names)
-    if extra := set(data_as_dict_of_lists.keys()) - array_columns:
-        logger.warning(f"Skipping extra columns from input data for {array_class.__name__}: {extra}")
-    matched_columns = {col: data_as_dict_of_lists[col] for col in array_columns if col in data_as_dict_of_lists}
-    return array_class(**matched_columns)
+
+    data_as_dict_of_lists: dict[str, Any] = {}
+    for column in array_columns:
+        column_data = [row[column] for row in array_data if column in row]
+        if len(column_data) not in [0, len(array_data)]:
+            raise ValueError(
+                f"Some records in column '{column}' have missing values. "
+                f"For defaulted columns, either provide all values or none."
+            )
+        if column_data:
+            data_as_dict_of_lists[column] = column_data
+
+    all_columns_in_array_data = set().union(*(row.keys() for row in array_data))
+    extra_columns = all_columns_in_array_data - array_columns
+    if extra_columns:
+        logger.warning(f"Ignoring extra columns {extra_columns} from array data for {array_class.__name__}.")
+    return array_class(**data_as_dict_of_lists)
 
 
 def _is_serializable(value: Any, strict: bool) -> bool:

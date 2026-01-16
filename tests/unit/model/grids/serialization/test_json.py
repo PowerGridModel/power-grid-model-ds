@@ -226,7 +226,10 @@ class TestDeserialize:
 
     def test_extended_grid(self, tmp_path: Path, extended_grid: ExtendedGrid):
         extended_data = {
-            "node": [{"id": 1, "u_rated": 10000, "analysis_flag": 42}, {"id": 2, "u_rated": 10000}],
+            "node": [
+                {"id": 1, "u_rated": 10000, "analysis_flag": 42},
+                {"id": 2, "u_rated": 10000, "analysis_flag": 43},
+            ],
             "value_extension": 4.2,
         }
 
@@ -236,7 +239,7 @@ class TestDeserialize:
 
         grid = ExtendedGrid.deserialize(path)
         assert grid.value_extension == 4.2
-        assert grid.node.analysis_flag.tolist() == [42, 0]
+        assert grid.node.analysis_flag.tolist() == [42, 43]
 
     def test_unexpected_field(self, tmp_path: Path):
         path = tmp_path / "incompatible.json"
@@ -254,10 +257,10 @@ class TestDeserialize:
         grid = Grid.deserialize(path)
         assert not hasattr(grid, "unexpected_field")
 
-    def test_missing_array_field(self, tmp_path: Path):
+    def test_missing_defaulted_array_field(self, tmp_path: Path):
         path = tmp_path / "missing_array.json"
 
-        # Node data does not contain 'id' field
+        # Node data does not contain 'id' field, but there is a default
         missing_array_data = {
             "node": [{"u_rated": 10000}, {"u_rated": 10000}],
         }
@@ -266,8 +269,22 @@ class TestDeserialize:
         with open(path, "w", encoding="utf-8") as f:
             json.dump({"data": missing_array_data}, f)
 
-        grid = Grid.deserialize(path)
-        assert grid.line.size == 0  # line array should be empty
+        Grid.deserialize(path)
+
+    def test_missing_required_array_field(self, tmp_path: Path):
+        path = tmp_path / "missing_array.json"
+
+        # Node data does not contain 'id' field, but there is a default
+        missing_array_data = {
+            "node": [{"id": 10000}, {"id": 123}],
+        }
+
+        # Write data to file
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump({"data": missing_array_data}, f)
+
+        with pytest.raises(ValueError):
+            Grid.deserialize(path)
 
     def test_some_records_miss_data(self, tmp_path):
         path = tmp_path / "incomplete_array.json"
@@ -278,6 +295,5 @@ class TestDeserialize:
         with open(path, "w", encoding="utf-8") as f:
             json.dump({"data": incomplete_data}, f)
 
-        with pytest.raises(KeyError):
+        with pytest.raises(ValueError):
             Grid.deserialize(path)
-

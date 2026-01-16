@@ -331,6 +331,5 @@ class TestReverseBranches:
     def test_reverse_no_branches(self, basic_grid: Grid):
         basic_grid.reverse_branches(BranchArray())
 
-
     def test_id_counter_type(self, basic_grid: Grid):
         assert isinstance(basic_grid.id_counter, int)
