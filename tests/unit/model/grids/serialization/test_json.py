@@ -48,6 +48,21 @@ class ExtendedGrid(Grid):
     str_extension: str = "default"
 
 
+class NonSerializableExtension:
+    """A non-serializable extension class"""
+
+    def __init__(self):
+        self.data = "non_serializable"
+
+
+@dataclass
+class GridWithNonSerializableExtension(Grid):
+    """Grid with a non-serializable extension attribute"""
+
+    non_serializable: NonSerializableExtension = NonSerializableExtension()
+
+
+
 @pytest.fixture
 def basic_grid():
     """Basic grid fixture"""
@@ -297,3 +312,13 @@ class TestDeserialize:
 
         with pytest.raises(ValueError):
             Grid.deserialize(path)
+
+
+    def test_non_serializable_extension(self, tmp_path: Path):
+        path = tmp_path / "non_serializable.json"
+
+        grid = GridWithNonSerializableExtension.empty()
+        grid.non_serializable = NonSerializableExtension()
+
+        with pytest.raises(TypeError):
+            grid.serialize(path)
