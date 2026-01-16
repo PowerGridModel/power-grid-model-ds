@@ -211,11 +211,10 @@ class TestExtensionHandling:
 
 class TestDeserialize:
     def test_deserialize(self, tmp_path: Path):
-        path = tmp_path / "incompatible.json"
+        path = tmp_path / "json_data.json"
 
         data = {"node": [{"id": 1, "u_rated": 10000}, {"id": 2, "u_rated": 20000}]}
 
-        # Write incompatible data to file
         with open(path, "w", encoding="utf-8") as f:
             json.dump({"data": data}, f)
 
@@ -224,6 +223,20 @@ class TestDeserialize:
 
         assert grid.node.id.tolist() == [1, 2]
         assert grid.node.u_rated.tolist() == [10000, 20000]
+
+    def test_extended_grid(self, tmp_path: Path, extended_grid: ExtendedGrid):
+        extended_data = {
+            "node": [{"id": 1, "u_rated": 10000, "analysis_flag": 42}, {"id": 2, "u_rated": 10000}],
+            "value_extension": 4.2,
+        }
+
+        path = tmp_path / "json_data.json"
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump({"data": extended_data}, f)
+
+        grid = ExtendedGrid.deserialize(path)
+        assert grid.value_extension == 4.2
+        assert grid.node.analysis_flag.tolist() == [42, 0]
 
     def test_unexpected_field(self, tmp_path: Path):
         path = tmp_path / "incompatible.json"
@@ -267,3 +280,4 @@ class TestDeserialize:
 
         with pytest.raises(KeyError):
             Grid.deserialize(path)
+
