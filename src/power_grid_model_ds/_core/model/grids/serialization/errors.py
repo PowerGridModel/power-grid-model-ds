@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+
 class JSONSerializationError(Exception):
     """Exception raised for errors during JSON serialization of grid attributes."""
 
