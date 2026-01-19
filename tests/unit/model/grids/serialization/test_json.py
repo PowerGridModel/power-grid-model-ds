@@ -16,6 +16,7 @@ from power_grid_model.utils import json_serialize_to_file
 from power_grid_model_ds import Grid, PowerGridModelInterface
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.containers.helpers import container_equal
+from power_grid_model_ds._core.model.grids.serialization.errors import JSONDeserializationError, JSONSerializationError
 from power_grid_model_ds._core.utils.misc import array_equal_with_nan
 from power_grid_model_ds.arrays import LineArray
 from power_grid_model_ds.arrays import NodeArray as BaseNodeArray
@@ -52,7 +53,7 @@ class NonSerializableExtension:
     """A non-serializable extension class"""
 
     def __init__(self):
-        self.data = "non_serializable"
+        self.data = "the data"
 
 
 @dataclass
@@ -60,6 +61,29 @@ class GridWithNonSerializableExtension(Grid):
     """Grid with a non-serializable extension attribute"""
 
     non_serializable: NonSerializableExtension = NonSerializableExtension()
+
+
+class SerializableExtension:
+    """A non-serializable extension class"""
+
+    def __init__(self):
+        self.data = "the data"
+
+    def to_dict(self):
+        return {"data": self.data}
+
+    @classmethod
+    def from_dict(cls, data: dict[str, str]):
+        instance = cls()
+        instance.data = data["data"]
+        return instance
+
+
+@dataclass
+class GridWithSerializableExtension(Grid):
+    """Grid with a non-serializable extension attribute"""
+
+    serializable: SerializableExtension = SerializableExtension()
 
 
 @pytest.fixture
@@ -225,7 +249,7 @@ class TestExtensionHandling:
 
 class TestDeserialize:
     def test_deserialize(self, tmp_path: Path):
-        path = tmp_path / "json_data.json"
+        path = tmp_path / "grid.json"
 
         data = {"node": [{"id": 1, "u_rated": 10000}, {"id": 2, "u_rated": 20000}]}
 
@@ -239,7 +263,7 @@ class TestDeserialize:
         assert grid.node.u_rated.tolist() == [10000, 20000]
 
     def test_extended_grid(self, tmp_path: Path, extended_grid: ExtendedGrid):
-        extended_data = {
+        data = {
             "node": [
                 {"id": 1, "u_rated": 10000, "analysis_flag": 42},
                 {"id": 2, "u_rated": 10000, "analysis_flag": 43},
@@ -247,76 +271,105 @@ class TestDeserialize:
             "value_extension": 4.2,
         }
 
-        path = tmp_path / "json_data.json"
+        path = tmp_path / "grid.json"
         with open(path, "w", encoding="utf-8") as f:
-            json.dump({"data": extended_data}, f)
+            json.dump({"data": data}, f)
 
         grid = ExtendedGrid.deserialize(path)
         assert grid.value_extension == 4.2
         assert grid.node.analysis_flag.tolist() == [42, 43]
 
     def test_unexpected_field(self, tmp_path: Path):
-        path = tmp_path / "incompatible.json"
+        path = tmp_path / "grid.json"
 
         # Create incompatible JSON data
-        incompatible_data = {
+        data = {
             "node": [{"id": 1, "u_rated": 10000}, {"id": 2, "u_rated": 10000}],
             "unexpected_field": "unexpected_value",
         }
 
         # Write incompatible data to file
         with open(path, "w", encoding="utf-8") as f:
-            json.dump({"data": incompatible_data}, f)
+            json.dump({"data": data}, f)
 
         grid = Grid.deserialize(path)
         assert not hasattr(grid, "unexpected_field")
 
     def test_missing_defaulted_array_field(self, tmp_path: Path):
-        path = tmp_path / "missing_array.json"
+        path = tmp_path / "grid.json"
 
         # Node data does not contain 'id' field, but there is a default
-        missing_array_data = {
+        data = {
             "node": [{"u_rated": 10000}, {"u_rated": 10000}],
         }
 
         # Write data to file
         with open(path, "w", encoding="utf-8") as f:
-            json.dump({"data": missing_array_data}, f)
+            json.dump({"data": data}, f)
 
         Grid.deserialize(path)
 
     def test_missing_required_array_field(self, tmp_path: Path):
-        path = tmp_path / "missing_array.json"
+        path = tmp_path / "grid.json"
 
         # Node data does not contain 'id' field, but there is a default
-        missing_array_data = {
+        data = {
             "node": [{"id": 10000}, {"id": 123}],
         }
 
         # Write data to file
         with open(path, "w", encoding="utf-8") as f:
-            json.dump({"data": missing_array_data}, f)
+            json.dump({"data": data}, f)
 
         with pytest.raises(ValueError):
             Grid.deserialize(path)
 
     def test_some_records_miss_data(self, tmp_path):
-        path = tmp_path / "incomplete_array.json"
-        incomplete_data = {
-            "node": [{"id": 1, "u_rated": 10000}, {"u_rated": 10000}, {"id": 3}],
+        path = tmp_path / "grid.json"
+        data = {
+            "node": [
+                {"id": 1, "u_rated": 10000},
+                {"u_rated": 10000},
+                {"id": 3},
+            ],
         }
 
         with open(path, "w", encoding="utf-8") as f:
-            json.dump({"data": incomplete_data}, f)
+            json.dump({"data": data}, f)
 
         with pytest.raises(ValueError):
             Grid.deserialize(path)
 
     def test_non_serializable_extension(self, tmp_path: Path):
-        path = tmp_path / "non_serializable.json"
+        path = tmp_path / "grid.json"
 
         grid = GridWithNonSerializableExtension.empty()
         grid.non_serializable = NonSerializableExtension()
 
-        with pytest.raises(TypeError):
+        with pytest.raises(JSONSerializationError):
             grid.serialize(path)
+
+    def test_deserialize_non_serializable_extension(self, tmp_path: Path):
+        path = tmp_path / "grid.json"
+
+        data = {"non_serializable": {"data": "some_data"}}
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump({"data": data}, f)
+
+        with pytest.raises(JSONDeserializationError):
+            GridWithNonSerializableExtension.deserialize(path)
+
+    def test_serializable_extension(self, tmp_path: Path):
+        path = tmp_path / "grid.json"
+        grid = GridWithSerializableExtension.empty()
+        grid.serialize(path)
+
+    def test_deserialize_serializable_extension(self, tmp_path: Path):
+        path = tmp_path / "grid.json"
+
+        data = {"serializable": {"data": "some_data"}}
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump({"data": data}, f)
+
+        grid = GridWithSerializableExtension.deserialize(path)
+        assert grid.serializable.data == "some_data"

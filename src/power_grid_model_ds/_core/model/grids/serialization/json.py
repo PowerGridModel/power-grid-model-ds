@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
+from power_grid_model_ds._core.model.grids.serialization.errors import JSONDeserializationError, JSONSerializationError
 
 if TYPE_CHECKING:
     # Import only for type checking to avoid circular imports at runtime
@@ -64,12 +65,13 @@ def serialize_to_json(grid: G, path: Path, strict: bool = True, **kwargs) -> Pat
     return path
 
 
-def deserialize_from_json(path: Path, target_grid_class: type[G]) -> G:
+def deserialize_from_json(path: Path, target_grid_class: type[G], strict: bool = True) -> G:
     """Load a Grid object from JSON format with cross-type loading support.
 
     Args:
         path: The file path to load from
         target_grid_class: Grid class to load into.
+        strict: Whether to raise an error if the grid object cannot be fully restored.
 
     Returns:
         Grid: The deserialized Grid object of the specified target class
@@ -78,13 +80,13 @@ def deserialize_from_json(path: Path, target_grid_class: type[G]) -> G:
         json_data = json.load(f)
 
     grid = target_grid_class.empty()
-    _restore_grid_values(grid, json_data["data"])
+    _restore_grid_values(grid, json_data["data"], strict=strict)
     graph_class = grid.graphs.__class__
     grid.graphs = graph_class.from_arrays(grid)
     return grid
 
 
-def _restore_grid_values(grid: G, json_data: dict) -> None:
+def _restore_grid_values(grid: G, json_data: dict, strict: bool) -> None:
     """Restore arrays to the grid."""
     for attr_name, attr_values in json_data.items():
         if not hasattr(grid, attr_name):
@@ -97,9 +99,19 @@ def _restore_grid_values(grid: G, json_data: dict) -> None:
             array = _deserialize_array(array_data=attr_values, array_class=attr_class)
             setattr(grid, attr_name, array)
             continue
+        if hasattr(grid_attr, "from_dict"):
+            attr_value = grid_attr.from_dict(attr_values)
+            setattr(grid, attr_name, attr_value)
+            continue
 
-        # load other values
-        setattr(grid, attr_name, attr_class(attr_values))
+        try:
+            setattr(grid, attr_name, attr_class(attr_values))
+        except TypeError as error:
+            msg = f"Failed to set attribute '{attr_name}' on grid of type '{grid.__class__.__name__}'."
+            if strict:
+                msg += " Set strict=False to skip it or add a .from_dict() class method to the attribute's class."
+                raise JSONDeserializationError(msg) from error
+            logger.warning(msg)
 
 
 def _serialize_array(array: FancyArray) -> list[dict[str, Any]]:
@@ -135,9 +147,10 @@ def _is_serializable(value: Any, strict: bool) -> bool:
     try:
         json.dumps(value)
     except TypeError as error:
-        msg = f"Failed to serialize '{value}'. You can set strict=False to ignore this attribute."
+        msg = f"Failed to serialize '{value}'. "
         if strict:
-            raise TypeError(msg) from error
+            msg += "Set strict=False to skip this attribute or add a .to_dict() method to the attribute's class."
+            raise JSONSerializationError(msg) from error
         logger.warning(msg)
         return False
     return True
