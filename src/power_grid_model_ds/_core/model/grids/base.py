@@ -379,18 +379,24 @@ class Grid(FancyArrayContainer):
         )
         return save_grid_to_pickle(self, cache_dir=cache_dir, cache_name=cache_name, compress=compress)
 
-    def serialize(self, path: Path, **kwargs) -> Path:
+    def serialize(self, path: Path, strict: bool = True, **kwargs) -> Path:
         """Serialize the grid.
 
         Args:
             path: Destination file path to write JSON to.
+            strict: Whether to raise an error if the grid object cannot be fully serialized.
             **kwargs: Additional keyword arguments forwarded to ``json.dump``
         Returns:
             Path: The path where the file was saved.
         """
-        return serialize_to_json(grid=self, path=path, strict=True, **kwargs)
+        return serialize_to_json(grid=self, path=path, strict=strict, **kwargs)
 
     @classmethod
-    def deserialize(cls: Type[Self], path: Path) -> Self:
-        """Deserialize the grid."""
-        return deserialize_from_json(path=path, target_grid_class=cls)
+    def deserialize(cls: Type[Self], path: Path, strict: bool = True) -> Self:
+        """Deserialize the grid.
+
+        Args:
+            path: Source file path to read JSON from.
+            strict: Whether to raise an error if the grid object cannot be fully restored.
+        """
+        return deserialize_from_json(path=path, target_grid_class=cls, strict=strict)

@@ -359,6 +359,16 @@ class TestDeserialize:
         with pytest.raises(JSONDeserializationError):
             GridWithNonSerializableExtension.deserialize(path)
 
+    def test_deserialize_non_serializable_extension_non_strict(self, tmp_path: Path):
+        path = tmp_path / "grid.json"
+
+        data = {"non_serializable": {"data": "some_data"}}
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump({"data": data}, f)
+
+        grid = GridWithNonSerializableExtension.deserialize(path, strict=False)
+        assert grid.non_serializable.data == "the data"  # Default value
+
     def test_serializable_extension(self, tmp_path: Path):
         path = tmp_path / "grid.json"
         grid = GridWithSerializableExtension.empty()
