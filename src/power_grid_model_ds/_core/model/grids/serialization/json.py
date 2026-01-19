@@ -49,6 +49,9 @@ def serialize_to_json(grid: G, path: Path, strict: bool = True, **kwargs) -> Pat
             serialized_data[field.name] = _serialize_array(field_value)
             continue
 
+        if hasattr(field_value, "to_dict"):
+            field_value = field_value.to_dict()
+
         if _is_serializable(field_value, strict):
             serialized_data[field.name] = field_value
 
