@@ -147,7 +147,7 @@ def _is_serializable(value: Any, strict: bool) -> bool:
     try:
         json.dumps(value)
     except TypeError as error:
-        msg = f"Failed to serialize '{value}'. "
+        msg = f"Failed to serialize '{value.__class__.__name__}'. "
         if strict:
             msg += "Set strict=False to skip this attribute or add a .to_dict() method to the attribute's class."
             raise JSONSerializationError(msg) from error
