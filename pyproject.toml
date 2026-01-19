@@ -27,7 +27,7 @@ classifiers = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "power-grid-model>=1.7",
+    "power-grid-model>=1.12.11",
     "rustworkx>= 0.15.1",
     "numpy>=2.0",
 ]
