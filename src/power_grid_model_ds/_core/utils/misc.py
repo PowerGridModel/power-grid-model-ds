@@ -5,7 +5,7 @@
 """Misc utils"""
 
 from collections.abc import Sequence
-from typing import Type, get_type_hints
+from typing import Type, get_type_hints, Any
 
 import numpy as np
 
@@ -23,7 +23,7 @@ def is_sequence(seq):
     return isinstance(seq, Sequence)
 
 
-def get_inherited_attrs(cls: Type, *private_attributes):
+def get_inherited_attrs(cls: Type, *private_attributes) -> dict[str, Any]:
     """
     Get the attribute from the object and all its parents
     """
