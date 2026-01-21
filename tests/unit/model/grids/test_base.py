@@ -10,7 +10,6 @@ from copy import deepcopy
 import numpy as np
 from numpy.testing import assert_equal
 
-from power_grid_model_ds._core.model.arrays import SourceArray
 from power_grid_model_ds._core.model.grids.base import Grid
 from tests.fixtures.grid_classes import ExtendedGrid
 from tests.fixtures.grids import build_basic_grid
@@ -120,4 +119,3 @@ class TestGridEquality:
         grid2 = Grid.from_extended(grid1)
 
         assert grid1 != grid2
-
