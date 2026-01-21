@@ -115,7 +115,6 @@ _OPEN_BRANCH_STYLE = {
     "selector": "edge[from_status = 0], edge[to_status = 0]",
     "style": {
         "line-style": "dashed",
-        "line-color": CYTO_COLORS["open_branch"],
         "target-arrow-color": CYTO_COLORS["open_branch"],
         "source-arrow-color": CYTO_COLORS["open_branch"],
     },
