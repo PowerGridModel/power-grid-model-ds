@@ -60,6 +60,7 @@ def visualize_grid_with_all_types():
     )
     visualize(grid=grid, debug=True)
 
+
 def visualize_grid_with_all_open_types():
     grid = Grid.from_txt(
         "1 2 12,open",
