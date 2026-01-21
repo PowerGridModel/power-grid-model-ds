@@ -101,6 +101,18 @@ def test_build_from_kwargs_with_different_input_lengths():
         )
 
 
+def test_build_from_kwargs_with_different_input_lengths_with_defaults():
+    # Also fail when defaults are defined
+    with pytest.raises(ValueError):
+        DefaultedFancyTestArray(
+            id=[1, 2, 3],
+            test_int=[3, 0, 4],
+            test_float=[4.0, 4.0, 1.0],
+            test_str=["a", "c", "d"],
+            test_bool=[True, False, True, True],  # extra element
+        )
+
+
 def test_build_from_args(fancy_test_array: FancyTestArray):
     array = FancyTestArray(
         (1, 3, 4.0, "a", True),

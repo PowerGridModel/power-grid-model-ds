@@ -4,6 +4,7 @@
 
 """Base grid classes"""
 
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Self, Type, TypeVar
@@ -62,6 +63,7 @@ from power_grid_model_ds._core.model.grids._search import (
     get_nearest_substation_node,
     get_typed_branches,
 )
+from power_grid_model_ds._core.model.grids.serialization.json import deserialize_from_json, serialize_to_json
 from power_grid_model_ds._core.model.grids.serialization.pickle import load_grid_from_pickle, save_grid_to_pickle
 from power_grid_model_ds._core.model.grids.serialization.string import (
     deserialize_from_str,
@@ -154,6 +156,11 @@ class Grid(FancyArrayContainer):
         Returns:
             G: The grid loaded from cache
         """
+        warnings.warn(
+            "Grid.from_cache() is deprecated and will be removed in a future version. Use deserialize() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return load_grid_from_pickle(cls, cache_path=cache_path, load_graphs=load_graphs)
 
     @classmethod
@@ -359,13 +366,21 @@ class Grid(FancyArrayContainer):
         return get_downstream_nodes(self, node_id=node_id, inclusive=inclusive)
 
     def cache(self, cache_dir: Path, cache_name: str, compress: bool = True):
-        """Cache Grid to a folder
+        """Cache Grid to a folder using pickle format.
+
+        Note: Consider using serialize() for better
+        interoperability and standardized format.
 
         Args:
             cache_dir (Path): The directory to save the cache to.
             cache_name (str): The name of the cache.
             compress (bool, optional): Whether to compress the cache. Defaults to True.
         """
+        warnings.warn(
+            "grid.cache() is deprecated and will be removed in a future version. Use grid.serialize() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return save_grid_to_pickle(self, cache_dir=cache_dir, cache_name=cache_name, compress=compress)
 
     def merge(self, other_grid: G, mode: str) -> G:
@@ -381,3 +396,19 @@ class Grid(FancyArrayContainer):
         merged_grid = merge_grids(self, other_grid, mode)
 
         return merged_grid
+
+    def serialize(self, path: Path, **kwargs) -> Path:
+        """Serialize the grid.
+
+        Args:
+            path: Destination file path to write JSON to.
+            **kwargs: Additional keyword arguments forwarded to ``json.dump``
+        Returns:
+            Path: The path where the file was saved.
+        """
+        return serialize_to_json(grid=self, path=path, strict=True, **kwargs)
+
+    @classmethod
+    def deserialize(cls: Type[Self], path: Path) -> Self:
+        """Deserialize the grid."""
+        return deserialize_from_json(path=path, target_grid_class=cls)

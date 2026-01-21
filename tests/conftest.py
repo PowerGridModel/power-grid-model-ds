@@ -4,6 +4,8 @@
 
 """Helper np.arrays used by various tests."""
 
+from typing import Any, Generator
+
 import pytest
 from power_grid_model import initialize_array
 
@@ -31,25 +33,16 @@ def get_installed_graph_models() -> dict[str, type[BaseGraphModel]]:
     return models
 
 
-def pytest_generate_tests(
-    metafunc: pytest.Metafunc,
-) -> None:
-    """Parametrize the graph fixture"""
-    installed_graph_models = get_installed_graph_models()
-    if "grid" in metafunc.fixturenames:
-        grids = [Grid.empty(graph_model=graph) for graph in installed_graph_models.values()]
-        metafunc.parametrize(
-            argnames=["grid"],
-            argvalues=[[grid] for grid in grids],
-            ids=list(installed_graph_models.keys()),
-        )
+@pytest.fixture
+def grid() -> Generator[Grid, Any, None]:
+    """A grid fixture that will be parametrized"""
+    yield Grid.empty()
 
-    if "graph" in metafunc.fixturenames:
-        metafunc.parametrize(
-            argnames=["graph"],
-            argvalues=[[graph()] for graph in installed_graph_models.values()],
-            ids=list(installed_graph_models.keys()),
-        )
+
+@pytest.fixture
+def graph() -> Generator[RustworkxGraphModel, Any, None]:
+    """A graph fixture that will be parametrized"""
+    yield RustworkxGraphModel()
 
 
 @pytest.fixture
