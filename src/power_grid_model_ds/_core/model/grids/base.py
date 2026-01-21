@@ -383,7 +383,7 @@ class Grid(FancyArrayContainer):
         )
         return save_grid_to_pickle(self, cache_dir=cache_dir, cache_name=cache_name, compress=compress)
 
-    def merge(self, other_grid: G, mode: str):
+    def merge(self, other_grid: G, mode: str) -> None:
         """Merge another grid into this grid. When ids overlap, ids of other_grid are offset to avoid conflicts.
 
         Args:
@@ -393,9 +393,7 @@ class Grid(FancyArrayContainer):
                 - "keep_ids": Keep ids of other_grid. Raises an error if grids contain overlapping indices.
         """
 
-        merged_grid = merge_grids(self, other_grid, mode)
-
-        return merged_grid
+        merge_grids(self, other_grid, mode)
 
     def serialize(self, path: Path, **kwargs) -> Path:
         """Serialize the grid.

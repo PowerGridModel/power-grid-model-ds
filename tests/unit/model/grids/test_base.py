@@ -129,8 +129,8 @@ class TestMergeGrids:
         grid1_size = grid1.node.size
         grid2_size = grid2.node.size
 
-        merged_grid = grid1.merge(grid2, mode="keep_ids")
-        merged_grid_size = merged_grid.node.size
+        grid1.merge(grid2, mode="keep_ids")
+        merged_grid_size = grid1.node.size
 
         assert merged_grid_size == grid1_size + grid2_size, "Merged grid size should be the sum of both grids' sizes"
 
@@ -141,21 +141,21 @@ class TestMergeGrids:
         grid1.append(source)
         grid2.append(source)
 
-        merged_grid = grid1.merge(grid2, mode="recalculate_ids")
-        assert merged_grid.check_ids() is None, "Asset ids are not unique after merging!"
+        grid1.merge(grid2, mode="recalculate_ids")
+        assert grid1.check_ids() is None, "Asset ids are not unique after merging!"
 
         # Check if from and to nodes are updated by checking that their values form the entire set of node ids:
-        assert set(merged_grid.branches.from_node).union(merged_grid.branches.to_node) == set(merged_grid.node.id), (
+        assert set(grid1.branches.from_node).union(grid1.branches.to_node) == set(grid1.node.id), (
             "All from and to nodes should form the entire set of node ids in the merged grid!"
         )
 
         # assert node in grid.source is updated by checking if the node column contains values that are all node ids:
-        assert set(merged_grid.source.node).issubset(merged_grid.node.id), "All source nodes should be valid node ids!"
+        assert set(grid1.source.node).issubset(grid1.node.id), "All source nodes should be valid node ids!"
 
     def test_merge_two_grids_with_overlapping_line(self):
         # Now both grids have 14 as highest node id, so both will have branch ids 15, 16 and 17:
         grid1 = Grid.from_txt("S1 2", "S1 3 link", "3 14 transformer")
         grid2 = Grid.from_txt("S1 2", "S1 13 link", "13 14 transformer")
 
-        merged_grid = grid1.merge(grid2, mode="recalculate_ids")
-        assert merged_grid.check_ids() is None, "Asset ids are not unique after merging!"
+        grid1.merge(grid2, mode="recalculate_ids")
+        assert grid1.check_ids() is None, "Asset ids are not unique after merging!"

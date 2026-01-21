@@ -60,7 +60,7 @@ def create_empty_grid(grid_class: Type[G], graph_model: type[BaseGraphModel] = R
     return grid_class(**empty_fields)
 
 
-def merge_grids(grid: G, other_grid: G, mode: str) -> G:
+def merge_grids(grid: G, other_grid: G, mode: str) -> None:
     """See Grid.merge()"""
 
     match mode:
@@ -76,8 +76,6 @@ def merge_grids(grid: G, other_grid: G, mode: str) -> G:
     # Append all arrays from the first grid to the second
     for array in other_grid.all_arrays():
         grid.append(array, check_max_id=False)
-
-    return grid
 
 
 def _increment_grid_ids_by_offset(grid: G, offset: int) -> None:
