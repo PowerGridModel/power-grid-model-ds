@@ -18,6 +18,7 @@ from power_grid_model_ds._core.model.arrays import (
     SymPowerSensorArray,
     SymVoltageSensorArray,
     TransformerTapRegulatorArray,
+    SymCurrentSensorArray, AsymPowerSensorArray, AsymCurrentSensorArray,
 )
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
@@ -63,7 +64,7 @@ def merge_grids(grid: G, other_grid: G, mode: str) -> G:
     match mode:
         case "recalculate_ids":
             other_grid = copy.deepcopy(other_grid)
-            offset = grid.id_counter  # Possible improvement: grid.id_counter - other_grid.min_id() + 1
+            offset = grid.id_counter  # Possible speed up: grid.id_counter - other_grid.min_id() + 1
             _increment_grid_ids_by_offset(other_grid, offset)
         case "keep_ids":
             pass
@@ -84,7 +85,13 @@ def _increment_grid_ids_by_offset(grid: G, offset: int) -> None:
 
         columns = []
         match array:
-            case SymPowerSensorArray() | SymVoltageSensorArray() | AsymVoltageSensorArray():
+            case (SymPowerSensorArray()
+                | SymVoltageSensorArray()
+                | AsymVoltageSensorArray()
+                | SymCurrentSensorArray()
+                | AsymPowerSensorArray()
+                | AsymCurrentSensorArray()
+            ):
                 columns = []
             case NodeArray():
                 columns = ["feeder_node_id", "feeder_branch_id"]
