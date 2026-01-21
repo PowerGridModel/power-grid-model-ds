@@ -115,7 +115,6 @@ _OPEN_BRANCH_STYLE = {
     "selector": "edge[from_status = 0], edge[to_status = 0]",
     "style": {
         "line-style": "dashed",
-        "line-color": CYTO_COLORS["open_branch"],
         "target-arrow-color": CYTO_COLORS["open_branch"],
         "source-arrow-color": CYTO_COLORS["open_branch"],
     },
@@ -147,11 +146,12 @@ DEFAULT_STYLESHEET = [
     _SELECTED_BRANCH_STYLE,
     _SELECTED_TRANSFORMER_STYLE,
     _SELECTED_LINK_STYLE,
-    _OPEN_BRANCH_STYLE,
-    _OPEN_FROM_SIDE_BRANCH_STYLE,
-    _OPEN_TO_SIDE_BRANCH_STYLE,
     _GENERIC_BRANCH_STYLE,
     _SELECTED_GENERIC_BRANCH_STYLE,
     _ASYM_LINE_STYLE,
     _SELECTED_ASYM_LINE_STYLE,
+    # Note: Keep the OPEN BRANCH styles last in list, otherwise they potentially get overridden.
+    _OPEN_BRANCH_STYLE,
+    _OPEN_FROM_SIDE_BRANCH_STYLE,
+    _OPEN_TO_SIDE_BRANCH_STYLE,
 ]
