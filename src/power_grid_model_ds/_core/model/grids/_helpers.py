@@ -7,18 +7,20 @@ from dataclasses import fields
 from typing import TYPE_CHECKING, Type, TypeVar
 
 from power_grid_model_ds._core.model.arrays import (
+    AsymCurrentSensorArray,
+    AsymPowerSensorArray,
     AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
     IdArray,
     NodeArray,
     SourceArray,
+    SymCurrentSensorArray,
     SymGenArray,
     SymLoadArray,
     SymPowerSensorArray,
     SymVoltageSensorArray,
     TransformerTapRegulatorArray,
-    SymCurrentSensorArray, AsymPowerSensorArray, AsymCurrentSensorArray,
 )
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
@@ -83,9 +85,10 @@ def _increment_grid_ids_by_offset(grid: G, offset: int) -> None:
         if isinstance(array, IdArray):
             _update_id_column(array, "id", offset)
 
-        columns = []
+        columns: list[str] = []
         match array:
-            case (SymPowerSensorArray()
+            case (
+                SymPowerSensorArray()
                 | SymVoltageSensorArray()
                 | AsymVoltageSensorArray()
                 | SymCurrentSensorArray()
