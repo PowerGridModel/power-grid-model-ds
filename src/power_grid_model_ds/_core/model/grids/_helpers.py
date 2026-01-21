@@ -76,15 +76,12 @@ def merge_grids(grid: G, other_grid: G, mode: str) -> None:
     # Append all arrays from the first grid to the second
     for array in other_grid.all_arrays():
         grid.append(array, check_max_id=False)
-    
+
     if mode == "keep_ids":
         try:
             grid.check_ids()
         except ValueError as e:
-            raise ValueError(
-                "Asset ids are not unique after merging!"
-                "Use mode='recalculate_ids' to avoid this."
-            ) from e
+            raise ValueError("Asset ids are not unique after merging! Use mode='recalculate_ids' to avoid this.") from e
 
 
 def _increment_grid_ids_by_offset(grid: G, offset: int) -> None:
