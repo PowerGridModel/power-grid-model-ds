@@ -66,7 +66,7 @@ def merge_grids(grid: G, other_grid: G, mode: str) -> None:
     match mode:
         case "recalculate_ids":
             other_grid = copy.deepcopy(other_grid)
-            offset = grid.id_counter  # Possible speed up: grid.id_counter - other_grid.min_id() + 1
+            offset = grid.id_counter
             _increment_grid_ids_by_offset(other_grid, offset)
         case "keep_ids":
             pass
