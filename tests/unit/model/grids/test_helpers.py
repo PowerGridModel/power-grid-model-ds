@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
+import pytest
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays import SourceArray
 
@@ -42,3 +43,11 @@ class TestMergeGrids:
 
         grid1.merge(grid2, mode="recalculate_ids")
         assert grid1.check_ids() is None, "Asset ids are not unique after merging!"
+
+
+    def test_merge_two_grids_with_overlapping_line_failing(self):
+        grid1 = Grid.from_txt("S1 2", "S1 3 link", "3 14 transformer")
+        grid2 = Grid.from_txt("S1 2", "S1 13 link", "13 14 transformer")
+
+        with pytest.raises(ValueError):
+            grid1.merge(grid2, mode="keep_ids")
