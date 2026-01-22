@@ -63,18 +63,19 @@ def create_empty_grid(grid_class: Type[G], graph_model: type[BaseGraphModel] = R
 def merge_grids(grid: G, other_grid: G, mode: str) -> None:
     """See Grid.merge()"""
 
+    other_grid_all_arrays = list(other_grid.all_arrays())
     match mode:
         case "recalculate_ids":
-            other_grid = copy.deepcopy(other_grid)
+            other_grid_all_arrays = copy.deepcopy(other_grid_all_arrays)
             offset = grid.id_counter
-            _increment_grid_ids_by_offset(other_grid, offset)
+            _increment_grid_ids_by_offset(other_grid_all_arrays, offset)
         case "keep_ids":
             pass
         case _:
             raise NotImplementedError(f"Merge mode {mode} is not implemented")
 
-    # Append all arrays from the first grid to the second
-    for array in other_grid.all_arrays():
+    # Append all arrays from the other grid to this grid
+    for array in other_grid_all_arrays:
         grid.append(array, check_max_id=False)
 
     if mode == "keep_ids":
@@ -84,8 +85,8 @@ def merge_grids(grid: G, other_grid: G, mode: str) -> None:
             raise ValueError("Asset ids are not unique after merging! Use mode='recalculate_ids' to avoid this.") from e
 
 
-def _increment_grid_ids_by_offset(grid: G, offset: int) -> None:
-    for array in grid.all_arrays():
+def _increment_grid_ids_by_offset(all_arrays: list[FancyArray], offset: int) -> None:
+    for array in all_arrays:
         if isinstance(array, IdArray):
             _update_id_column(array, "id", offset)
 
