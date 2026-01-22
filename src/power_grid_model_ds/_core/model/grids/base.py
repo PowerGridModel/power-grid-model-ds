@@ -7,7 +7,7 @@
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Self, Type, TypeVar
+from typing import Any, Self, Type, TypeVar, Literal
 
 import numpy as np
 import numpy.typing as npt
@@ -383,7 +383,7 @@ class Grid(FancyArrayContainer):
         )
         return save_grid_to_pickle(self, cache_dir=cache_dir, cache_name=cache_name, compress=compress)
 
-    def merge(self, other_grid: G, mode: str) -> None:
+    def merge(self, other_grid: G, mode: Literal["recalculate_ids", "keep_ids"]) -> None:
         """Merge another grid into this grid. When ids overlap, ids of other_grid are offset to avoid conflicts.
 
         Args:
