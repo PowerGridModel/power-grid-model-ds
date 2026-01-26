@@ -4,7 +4,7 @@
 import copy
 import logging
 from dataclasses import fields
-from typing import TYPE_CHECKING, Type, TypeVar, Literal
+from typing import TYPE_CHECKING, Literal, Type, TypeVar
 
 from power_grid_model_ds._core.model.arrays import (
     AsymCurrentSensorArray,
@@ -64,6 +64,9 @@ def merge_grids(grid: G, other_grid: G, mode: Literal["recalculate_ids", "keep_i
     """See Grid.merge()"""
 
     other_grid_all_arrays = list(other_grid.all_arrays())
+    if not {type(i) for i in grid.all_arrays()} == {type(i) for i in other_grid_all_arrays}:
+        raise TypeError("Both grids should have exactly the same columns")
+
     match mode:
         case "recalculate_ids":
             other_grid_all_arrays = copy.deepcopy(other_grid_all_arrays)
@@ -112,7 +115,10 @@ def _increment_grid_ids_by_offset(all_arrays: list[FancyArray], offset: int) -> 
             case SymGenArray() | SymLoadArray() | SourceArray():
                 columns = ["node"]
             case _:
-                raise NotImplementedError(f"The array of type {type(array)} is not implemented for appending. Let us know if more general support is needed.")
+                raise NotImplementedError(
+                    f"The array of type {type(array)} is not implemented for appending. "
+                    f"Let us know if more general support is needed."
+                )
 
         for column in columns:
             _update_id_column(array, column, offset)

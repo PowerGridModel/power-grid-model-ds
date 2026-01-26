@@ -7,7 +7,7 @@
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Self, Type, TypeVar, Literal
+from typing import Any, Literal, Self, Type, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -390,7 +390,7 @@ class Grid(FancyArrayContainer):
             other_grid (G): The grid to merge into this grid.
             mode (str): The merge mode:
                 - "recalculate_ids": ids in the arrays of other_grid are offset to avoid conflicts.
-                IMPORTANT: we currently only update any `id` column and all id references in the default PGM-DS grid. 
+                IMPORTANT: we currently only update any `id` column and all id references in the default PGM-DS grid.
 
                 - "keep_ids": Keep ids of other_grid. Raises an error if grids contain overlapping indices.
         """
