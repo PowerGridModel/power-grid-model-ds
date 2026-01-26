@@ -4,7 +4,7 @@
 import copy
 import logging
 from dataclasses import fields
-from typing import TYPE_CHECKING, Type, TypeVar
+from typing import TYPE_CHECKING, Type, TypeVar, Literal
 
 from power_grid_model_ds._core.model.arrays import (
     AsymCurrentSensorArray,
@@ -60,7 +60,7 @@ def create_empty_grid(grid_class: Type[G], graph_model: type[BaseGraphModel] = R
     return grid_class(**empty_fields)
 
 
-def merge_grids(grid: G, other_grid: G, mode: str) -> None:
+def merge_grids(grid: G, other_grid: G, mode: Literal["recalculate_ids", "keep_ids"]) -> None:
     """See Grid.merge()"""
 
     other_grid_all_arrays = list(other_grid.all_arrays())
