@@ -112,7 +112,7 @@ def _increment_grid_ids_by_offset(all_arrays: list[FancyArray], offset: int) -> 
             case SymGenArray() | SymLoadArray() | SourceArray():
                 columns = ["node"]
             case _:
-                raise NotImplementedError(f"The array of type {type(array)} is not implemented for appending")
+                raise NotImplementedError(f"The array of type {type(array)} is not implemented for appending. Let us know if more general support is needed.")
 
         for column in columns:
             _update_id_column(array, column, offset)
