@@ -7,10 +7,12 @@ from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays import SourceArray
 from tests.fixtures.grid_classes import ExtendedGrid
 
+
 @pytest.fixture
 def grid1() -> Grid:
     """Build a basic grid to test merging"""
     return Grid.from_txt("S1 2", "S1 3 link", "3 14 transformer")
+
 
 @pytest.fixture
 def grid2() -> Grid:
@@ -57,7 +59,6 @@ class TestMergeGrids:
         grid1.check_ids()
 
     def test_merge_grid_with_some_identical_lines_failing(self, grid1: Grid, grid2: Grid):
-
         with pytest.raises(ValueError):
             grid1.merge(grid2, mode="keep_ids")
 
@@ -72,9 +73,8 @@ class TestMergeGrids:
         # The other way around: test that merging into a grid another grid that lacks some arrays throws a type error
         # since those arrays will not be appended with anything:
         with pytest.raises(TypeError):
-            extended_grid.merge(grid1, mode="recalculate_ids")
+            extended_grid.merge(grid1, mode="recalculate_ids")  # type: ignore[arg-type]
 
     def test_merging_with_incorrect_mode(self, grid1: Grid, grid2: Grid):
-
         with pytest.raises(NotImplementedError):
-            grid1.merge(grid2, mode="invalid_mode")
+            grid1.merge(grid2, mode="invalid_mode")  # type: ignore[arg-type]
