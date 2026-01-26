@@ -57,21 +57,21 @@ class TestMergeGrids:
         with pytest.raises(ValueError):
             grid1.merge(grid2, mode="keep_ids")
 
-    def test_merge_grids_with_unidentical_arrays(self):
-        grid1 = build_grid_to_test_grid_merging()
-        grid2 = ExtendedGrid.from_txt("S1 2", "S1 13 link", "13 14 transformer")
+    def test_merge_grid_into_a_grid_with_different_arrays(self):
+        grid = build_grid_to_test_grid_merging()
+        extended_grid = ExtendedGrid.from_txt("S1 2", "S1 13 link", "13 14 transformer")
 
         # Test that merging into a grid another grid with more arrays throws a type error
         # since we cannot append those arrays to anything:
         with pytest.raises(TypeError):
-            grid1.merge(grid2, mode="recalculate_ids")
+            grid.merge(extended_grid, mode="recalculate_ids")
 
         # The other way around: test that merging into a grid another grid that lacks some arrays throws a type error
-        # since those arrays won't be appended with anything:
+        # since those arrays will not be appended with anything:
         with pytest.raises(TypeError):
-            grid2.merge(grid1, mode="recalculate_ids")
+            extended_grid.merge(grid, mode="recalculate_ids")
 
-    def test_incorrect_mode(self):
+    def test_merging_with_incorrect_mode(self):
         grid1 = build_grid_to_test_grid_merging()
         grid2 = build_another_grid_to_merge()
 
