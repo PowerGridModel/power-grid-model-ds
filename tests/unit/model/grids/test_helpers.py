@@ -11,13 +11,11 @@ class TestMergeGrids:
     def test_merge_two_grids(self):
         grid1 = Grid.from_txt("S1 2", "S1 3 link", "3 4 transformer")
         grid2 = Grid.from_txt("S11 12", "S11 13 link", "13 14 transformer")
-        grid1_size = grid1.node.size
-        grid2_size = grid2.node.size
 
         grid1.merge(grid2, mode="keep_ids")
-        merged_grid_size = grid1.node.size
 
-        assert merged_grid_size == grid1_size + grid2_size, "Merged grid size should be the sum of both grids' sizes"
+
+        assert grid1.node.id.tolist() == [1,2,3,4,11,12,13], "Merged node ids should be equal to those of grid1 and grid2 combined"
 
     def test_merge_two_grids_with_overlapping_node_ids(self):
         grid1 = Grid.from_txt("S1 2", "S1 3 link", "3 4 transformer")
