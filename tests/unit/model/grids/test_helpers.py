@@ -15,7 +15,7 @@ class TestMergeGrids:
         grid1.merge(grid2, mode="keep_ids")
 
 
-        assert grid1.node.id.tolist() == [1,2,3,4,11,12,13], "Merged node ids should be equal to those of grid1 and grid2 combined"
+        assert grid1.node.id.tolist() == [1, 2, 3, 4, 11, 12, 13, 14], "Merged node ids should be equal to those of grid1 and grid2 combined"
 
     def test_merge_two_grids_with_overlapping_node_ids(self):
         grid1 = Grid.from_txt("S1 2", "S1 3 link", "3 4 transformer")
