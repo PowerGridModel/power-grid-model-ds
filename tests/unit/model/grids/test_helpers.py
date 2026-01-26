@@ -27,13 +27,15 @@ class TestMergeGrids:
         grid1.merge(grid2, mode="recalculate_ids")
         assert grid1.check_ids() is None, "Asset ids are not unique after merging!"
 
-        # Check if from and to nodes are updated by checking that their values form the entire set of node ids:
-        assert set(grid1.branches.from_node).union(grid1.branches.to_node) == set(grid1.node.id), (
-            "All from and to nodes should form the entire set of node ids in the merged grid!"
-        )
+        expected_offset = 501
+        assert grid1.node.id.tolist() == [1, 2, 3, 4] + [i + expected_offset for i in [1, 2, 13, 14]]
 
-        # assert node in grid.source is updated by checking if the node column contains values that are all node ids:
-        assert set(grid1.source.node).issubset(grid1.node.id), "All source nodes should be valid node ids!"
+        # Verify the set of branches in the resulting grid:
+        expected_branches = {(int(i), int(j)) for i, j in zip(grid1.branches.from_node, grid1.branches.to_node)}
+        assert expected_branches == {(1, 2), (1, 3), (3, 4), (502, 503), (502, 514), (514, 515)}
+
+        # Verify nodes in grid.source:
+        assert grid1.source.node.tolist() == [1, 502]
 
     def test_merge_two_grids_with_overlapping_line(self):
         # Now both grids have 14 as highest node id, so both will have branch ids 15, 16 and 17:
