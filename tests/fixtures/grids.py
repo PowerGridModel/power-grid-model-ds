@@ -213,15 +213,3 @@ def build_basic_grid_with_three_winding(grid: T) -> T:
     grid.check_ids()
 
     return grid
-
-
-def build_grid_to_test_grid_merging() -> Grid:
-    """Build a basic grid to test merging"""
-    grid = Grid.from_txt("S1 2", "S1 3 link", "3 14 transformer")
-    return grid
-
-
-def build_another_grid_to_merge() -> Grid:
-    """Build a basic grid to merge into the first grid"""
-    grid = Grid.from_txt("S1 2", "S1 13 link", "13 14 transformer")
-    return grid
