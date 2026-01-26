@@ -29,8 +29,8 @@ class TestMergeGrids:
         grid1.merge(grid2, mode="recalculate_ids")
         assert grid1.check_ids() is None, "Asset ids are not unique after merging!"
 
-        expected_offset = 501
-        assert grid1.node.id.tolist() == [1, 2, 3, 4] + [i + expected_offset for i in [1, 2, 13, 14]]
+        # The node ids of the second grid should be offset by 501:
+        assert grid1.node.id.tolist() == [1, 2, 3, 4, 502, 503, 514, 515]
 
         # Verify the lines, links and transformers in the resulting grid:
         columns_to_check = ["id", "from_node", "to_node"]
