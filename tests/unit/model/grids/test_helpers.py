@@ -32,9 +32,11 @@ class TestMergeGrids:
         expected_offset = 501
         assert grid1.node.id.tolist() == [1, 2, 3, 4] + [i + expected_offset for i in [1, 2, 13, 14]]
 
-        # Verify the set of branches in the resulting grid:
-        expected_branches = {(int(i), int(j)) for i, j in zip(grid1.branches.from_node, grid1.branches.to_node)}
-        assert expected_branches == {(1, 2), (1, 3), (3, 4), (502, 503), (502, 514), (514, 515)}
+        # Verify the lines, links and transformers in the resulting grid:
+        columns_to_check = ["id", "from_node", "to_node"]
+        assert grid1.line.data[columns_to_check].tolist() == [(5, 1, 2), (516, 502, 503)]
+        assert grid1.link.data[columns_to_check].tolist() == [(6, 1, 3), (517, 502, 514)]
+        assert grid1.transformer.data[columns_to_check].tolist() == [(7, 3, 4), (518, 514, 515)]
 
         # Verify nodes in grid.source:
         assert grid1.source.node.tolist() == [1, 502]
