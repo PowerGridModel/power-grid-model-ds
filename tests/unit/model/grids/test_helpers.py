@@ -67,3 +67,10 @@ class TestMergeGrids:
         # since those arrays won't be appended with anything:
         with pytest.raises(TypeError):
             grid2.merge(grid1, mode="recalculate_ids")
+
+    def test_incorrect_mode(self):
+        grid1 = Grid.from_txt("S1 2", "S1 3 link", "3 14 transformer")
+        grid2 = Grid.from_txt("S1 2", "S1 13 link", "13 14 transformer")
+
+        with pytest.raises(NotImplementedError):
+            grid1.merge(grid2, mode="invalid_mode")
