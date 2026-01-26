@@ -45,7 +45,7 @@ class TestMergeGrids:
         grid2 = Grid.from_txt("S1 2", "S1 13 link", "13 14 transformer")
 
         grid1.merge(grid2, mode="recalculate_ids")
-        assert grid1.check_ids() is None, "Asset ids are not unique after merging!"
+        grid1.check_ids()
 
     def test_merge_grid_with_some_identical_lines_failing(self):
         grid1 = Grid.from_txt("S1 2", "S1 3 link", "3 14 transformer")
