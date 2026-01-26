@@ -384,12 +384,14 @@ class Grid(FancyArrayContainer):
         return save_grid_to_pickle(self, cache_dir=cache_dir, cache_name=cache_name, compress=compress)
 
     def merge(self, other_grid: G, mode: Literal["recalculate_ids", "keep_ids"]) -> None:
-        """Merge another grid into this grid. When ids overlap, ids of other_grid are offset to avoid conflicts.
+        """Merge another grid into this grid.
 
         Args:
             other_grid (G): The grid to merge into this grid.
             mode (str): The merge mode:
-                - "recalculate_ids": Recalculate ids of other_grid to avoid conflicts.
+                - "recalculate_ids": ids in the arays of other_grid are offset to avoid conflicts.
+                IMPORTANT: we currently only update any `id` column and all id references in the default PGM-DS grid. 
+
                 - "keep_ids": Keep ids of other_grid. Raises an error if grids contain overlapping indices.
         """
 
