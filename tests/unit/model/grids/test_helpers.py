@@ -62,7 +62,7 @@ class TestMergeGrids:
         with pytest.raises(ValueError):
             grid1.merge(grid2, mode="keep_ids")
 
-    def test_merge_grid_into_a_grid_with_different_arrays(self, grid1: Grid):
+    def test_merge_grid_into_a_grid_of_a_different_class(self, grid1: Grid):
         extended_grid = ExtendedGrid.from_txt("S1 2", "S1 13 link", "13 14 transformer")
 
         # Test that merging into a grid another grid with more arrays throws a type error

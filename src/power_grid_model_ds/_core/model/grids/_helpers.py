@@ -64,8 +64,8 @@ def merge_grids(grid: G, other_grid: G, mode: Literal["recalculate_ids", "keep_i
     """See Grid.merge()"""
 
     other_grid_all_arrays = list(other_grid.all_arrays())
-    if not {type(i) for i in grid.all_arrays()} == {type(i) for i in other_grid_all_arrays}:
-        raise TypeError("Both grids should have exactly the same columns")
+    if type(grid) != type(other_grid):
+        raise TypeError("Both grids should be of the same class (to ensure they have the same arrays)")
 
     match mode:
         case "recalculate_ids":
