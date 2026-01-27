@@ -387,7 +387,7 @@ class Grid(FancyArrayContainer):
         """Merge another grid into this grid.
 
         Args:
-            other_grid (G): The grid to merge into this grid.
+            other_grid (Grid): The grid to merge into this grid.
             mode (str): The merge mode:
                 - "recalculate_ids": ids in the arrays of other_grid are offset to avoid conflicts.
                 IMPORTANT: we currently only update any `id` column and all id references in the default PGM-DS grid.
