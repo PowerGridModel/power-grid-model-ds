@@ -15,10 +15,10 @@ from power_grid_model_ds._core.visualizer.callbacks import (  # noqa: F401  # py
 )
 from power_grid_model_ds._core.visualizer.layout.cytoscape_html import get_cytoscape_html
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
+from power_grid_model_ds._core.visualizer.layout.graph_layout import LayoutOptions
 from power_grid_model_ds._core.visualizer.layout.header import HEADER_HTML
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
 from power_grid_model_ds._core.visualizer.parsers import parse_element_data
-from power_grid_model_ds._core.visualizer.typing import VizToComponentData
 from power_grid_model_ds.arrays import NodeArray
 
 GOOGLE_FONTS = "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
@@ -74,24 +74,20 @@ def _get_columns_store(grid: Grid) -> dcc.Store:
     )
 
 
-def _get_viz_to_comp_store(viz_to_comp_data: VizToComponentData) -> dcc.Store:
-    """Create a store for all data mapped by visualization element to component data."""
-    return dcc.Store(id="viz-to-comp-store", data=viz_to_comp_data)
-
-
 def get_app_layout(grid: Grid) -> html.Div:
     """Get the app layout."""
     columns_store = _get_columns_store(grid)
+    layout = _get_graph_layout(grid.node)
     elements, viz_to_comp_data = parse_element_data(grid)
-    graph_layout = _get_graph_layout(grid.node)
-    viz_to_comp_store = _get_viz_to_comp_store(viz_to_comp_data)
-    cytoscape_html = get_cytoscape_html(graph_layout, elements)
+    cytoscape_html = get_cytoscape_html(layout, elements)
 
     return html.Div(
         [
             columns_store,
-            viz_to_comp_store,
+            dcc.Store(id="parsed-elements-store", data=elements),
+            dcc.Store(id="viz-to-comp-store", data=viz_to_comp_data),
             dcc.Store(id="stylesheet-store", data=DEFAULT_STYLESHEET),
+            dcc.Store(id="show-appliances-store", data=True, storage_type="session"),
             HEADER_HTML,
             html.Hr(style={"border-color": "white", "margin": "0"}),
             cytoscape_html,
@@ -100,12 +96,8 @@ def get_app_layout(grid: Grid) -> html.Div:
     )
 
 
-def _get_graph_layout(nodes: NodeArray):
+def _get_graph_layout(nodes: NodeArray) -> LayoutOptions:
     """Determine the graph layout"""
     if "x" in nodes.columns and "y" in nodes.columns:
-        return {"name": "preset"}
-    return {"name": "breadthfirst", "roots": 'node[group = "source_ghost_node"]'}
-    # TODO (nitbharambe) Add layout params after config option is used
-    # TODO (nitbharambe) Experiment with different layout parameters (Remove comments)
-    # return {'name': 'cose', 'nodeOverlap': '1000', 'gravity': 100}
-    # return {'name': 'cose',  "nodeRepulsion": "function( node ){ return 12048; }"}
+        return LayoutOptions.PRESET
+    return LayoutOptions.BREADTHFIRST

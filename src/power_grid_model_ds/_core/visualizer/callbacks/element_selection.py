@@ -11,7 +11,7 @@ from power_grid_model_ds._core.visualizer.layout.selection_output import (
 from power_grid_model_ds._core.visualizer.typing import ListArrayData, VizToComponentData
 
 # Keys used in the visualization elements that are not part of the component data
-VISUALIZATION_KEYS = ["id", "label", "group", "x", "y", "parent", "source", "target"]
+VISUALIZATION_KEYS = ["id", "label", "group", "position", "parent", "source", "target"]
 
 
 @callback(
@@ -37,7 +37,6 @@ def display_selected_element(
         return SELECTION_OUTPUT_HTML.children
 
     group = selected_data["group"]
-    group = group.replace("_ghost_node", "")  # Remove _ghost_node suffix for appliances
 
     elm_data = {k: v for k, v in selected_data.items() if k not in VISUALIZATION_KEYS}
 

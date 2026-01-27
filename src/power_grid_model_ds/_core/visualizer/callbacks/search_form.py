@@ -7,17 +7,9 @@ from dash import Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
+from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import SELECTOR_BRANCH
 from power_grid_model_ds._core.visualizer.typing import STYLESHEET, ListArrayData, VizToComponentData
 
-NODE_HIGHLIGHT_STYLE = {
-    "background-color": CYTO_COLORS["highlighted"],
-    "text-background-color": CYTO_COLORS["highlighted"],
-}
-
-EDGE_HIGHLIGHT_STYLE = {
-    "line-color": CYTO_COLORS["highlighted"],
-    "target-arrow-color": CYTO_COLORS["highlighted"],
-}
 HIGHLIGHT_STYLE = {
     "background-color": CYTO_COLORS["highlighted"],
     "text-background-color": CYTO_COLORS["highlighted"],
@@ -25,18 +17,14 @@ HIGHLIGHT_STYLE = {
     "target-arrow-color": CYTO_COLORS["highlighted"],
 }
 
-
-NODE_GROUPS = ["node"]
-EDGE_GROUPS = ["line", "link", "transformer", "three_winding_transformer", "sym_load", "sym_gen", "source"]
-
-GROUPS_IN_BRANCH = EDGE_GROUPS
-
-INDIRECT_SEARCH_ELEMENTS = [
+NON_VISIBLE_ELMS = [
     "sym_power_sensor",
     "sym_voltage_sensor",
     "asym_voltage_sensor",
     "transformer_tap_regulator",
 ]
+
+NON_VISIBLE_ELMS_INCL_APPLIANCES = ["sym_load", "sym_gen"] + NON_VISIBLE_ELMS
 
 
 @callback(
@@ -47,6 +35,7 @@ INDIRECT_SEARCH_ELEMENTS = [
     Input("search-form-value-input", "value"),
     State("viz-to-comp-store", "data"),
     State("stylesheet-store", "data"),
+    State("show-appliances-store", "data"),
 )
 def search_element(  #  pylint: disable=too-many-arguments, disable=too-many-positional-arguments
     group: str,
@@ -55,6 +44,7 @@ def search_element(  #  pylint: disable=too-many-arguments, disable=too-many-pos
     value: str,
     viz_to_comp: VizToComponentData,
     stylesheet: STYLESHEET,
+    show_appliances: bool,
 ) -> STYLESHEET:
     """Color the specified element red based on the input values."""
     if not group or not column or not value:
@@ -64,13 +54,10 @@ def search_element(  #  pylint: disable=too-many-arguments, disable=too-many-pos
     search_column = column if column != "id" else "pgm_id"
     search_query = f"{search_column} {operator} {value}"
 
-    if group in NODE_GROUPS:
-        selector = f"node[{search_query}][group = '{group}']"
-    elif group in EDGE_GROUPS:
-        selector = f"edge[{search_query}][group = '{group}']"
-    elif group == "branch":
-        selector = f"edge[{search_query}]" + "".join(f"[group = '{group}']" for group in GROUPS_IN_BRANCH)
-    elif group in INDIRECT_SEARCH_ELEMENTS:
+    non_visible_elms = NON_VISIBLE_ELMS if show_appliances else NON_VISIBLE_ELMS_INCL_APPLIANCES
+    if group == "branch":
+        selector = f"edge[{search_query}]" + SELECTOR_BRANCH
+    elif group in non_visible_elms:
         found = _search_components(
             viz_to_comp=viz_to_comp, component_type=group, column=search_column, operator=operator, value=value
         )
@@ -79,7 +66,7 @@ def search_element(  #  pylint: disable=too-many-arguments, disable=too-many-pos
         else:
             raise PreventUpdate
     else:
-        raise PreventUpdate
+        selector = f"[{search_query}][group = '{group}']"
 
     new_style = {
         "selector": selector,
