@@ -63,7 +63,7 @@ def create_empty_grid(grid_class: Type[G], graph_model: type[BaseGraphModel] = R
 def merge_grids(grid: G, other_grid: G, mode: Literal["recalculate_ids", "keep_ids"]) -> None:
     """See Grid.merge()"""
 
-    if type(grid) != type(other_grid):
+    if type(grid) is not type(other_grid):
         raise TypeError("Both grids should be of the same class (to ensure they have the same arrays)")
 
     other_grid_all_arrays = list(other_grid.all_arrays())
