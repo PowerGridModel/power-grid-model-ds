@@ -8,11 +8,14 @@ from power_grid_model import ComponentType, MeasuredTerminalType
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+    AsymCurrentSensorArray,
+    AsymPowerSensorArray,
     AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
     NodeArray,
     SourceArray,
+    SymCurrentSensorArray,
     SymGenArray,
     SymLoadArray,
     SymPowerSensorArray,
@@ -22,17 +25,17 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import (
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.typing import VizToComponentData, VizToComponentElements
 
-_NODE_BRANCH_POWER_SENSORS = [
+_NODE_BRANCH_TERMINAL_TYPE = [
     MeasuredTerminalType.branch_from,
     MeasuredTerminalType.branch_to,
     MeasuredTerminalType.node,
 ]
-_APPLIANCE_POWER_SENSORS = [
+_APPLIANCE_TERMINAL_TYPE = [
     MeasuredTerminalType.load,
     MeasuredTerminalType.generator,
     MeasuredTerminalType.source,
 ]
-_BRANCH3_POWER_SENSORS = [
+_BRANCH3_TERMINAL_TYPE = [
     MeasuredTerminalType.branch3_1,
     MeasuredTerminalType.branch3_2,
     MeasuredTerminalType.branch3_3,
@@ -52,33 +55,48 @@ def parse_element_data(grid: Grid) -> tuple[VizToComponentElements, VizToCompone
     """
 
     elements: VizToComponentElements = {}
-    # These are not visualized directly, but their data is linked to nodes/edges of elements
     viz_to_comp: VizToComponentData = {}
 
     elements.update(parse_node_array(grid.node))
 
+    # Parse branches
+    elements.update(parse_branch_array(grid.asym_line, ComponentType.asym_line))
     elements.update(parse_branch_array(grid.line, ComponentType.line))
     elements.update(parse_branch_array(grid.generic_branch, ComponentType.generic_branch))
     elements.update(parse_branch_array(grid.link, ComponentType.link))
     elements.update(parse_branch_array(grid.transformer, ComponentType.transformer))
 
+    # Parse branch3
     elements.update(parse_branch3_array(grid.three_winding_transformer, ComponentType.three_winding_transformer))
 
-    for appliance_name in [ComponentType.sym_load, ComponentType.sym_gen, ComponentType.source]:
+    # Parse appliances
+    for appliance_name in (ComponentType.sym_load, ComponentType.sym_gen, ComponentType.source):
         parsed, viz_to_comp_appliance = _parse_appliances(
             getattr(grid, appliance_name),
-            appliance_name,  # type: ignore[arg-type]
+            appliance_name,
         )
         elements.update(parsed)
         _merge_viz_to_comp(viz_to_comp, viz_to_comp_appliance)
 
     appliance_to_node = map_appliance_to_nodes(grid)
 
+    # Parse sensors
     _merge_viz_to_comp(
-        viz_to_comp, _parse_power_sensors(grid.sym_power_sensor, ComponentType.sym_power_sensor, appliance_to_node)
+        viz_to_comp, _parse_flow_sensors(grid.sym_power_sensor, ComponentType.sym_power_sensor, appliance_to_node)
+    )
+    _merge_viz_to_comp(
+        viz_to_comp, _parse_flow_sensors(grid.asym_power_sensor, ComponentType.asym_power_sensor, appliance_to_node)
+    )
+    _merge_viz_to_comp(
+        viz_to_comp, _parse_flow_sensors(grid.sym_current_sensor, ComponentType.sym_current_sensor, appliance_to_node)
+    )
+    _merge_viz_to_comp(
+        viz_to_comp, _parse_flow_sensors(grid.asym_current_sensor, ComponentType.asym_current_sensor, appliance_to_node)
     )
     _merge_viz_to_comp(viz_to_comp, _parse_voltage_sensors(grid.sym_voltage_sensor, ComponentType.sym_voltage_sensor))
     _merge_viz_to_comp(viz_to_comp, _parse_voltage_sensors(grid.asym_voltage_sensor, ComponentType.asym_voltage_sensor))
+
+    # Parse regulators
     _merge_viz_to_comp(viz_to_comp, _parse_transformer_tap_regulators(grid.transformer_tap_regulator, elements))
 
     return elements, viz_to_comp
@@ -128,7 +146,13 @@ def parse_branch3_array(
 
 def parse_branch_array(
     branches: BranchArray,
-    group: Literal[ComponentType.line, ComponentType.generic_branch, ComponentType.link, ComponentType.transformer],
+    group: Literal[
+        ComponentType.line,
+        ComponentType.asym_line,
+        ComponentType.generic_branch,
+        ComponentType.link,
+        ComponentType.transformer,
+    ],
 ) -> VizToComponentElements:
     """Parse the branch array. Fills branch data to viz_to_comp."""
     parsed_branches = {}
@@ -184,27 +208,33 @@ def _parse_appliances(
     return parsed_appliances, viz_to_comp_appliance
 
 
-def _parse_power_sensors(
-    power_sensors: SymPowerSensorArray,
-    group: Literal[ComponentType.sym_power_sensor],
+def _parse_flow_sensors(
+    sensors: SymPowerSensorArray | SymCurrentSensorArray | AsymPowerSensorArray | AsymCurrentSensorArray,
+    group: Literal[
+        ComponentType.sym_power_sensor,
+        ComponentType.sym_current_sensor,
+        ComponentType.asym_power_sensor,
+        ComponentType.asym_current_sensor,
+    ],
     appliance_to_node: dict[str, str],
 ) -> VizToComponentData:
     """Parse power sensors and return appliance-to-power-sensor mapping."""
     viz_to_comp: VizToComponentData = {}
-    for power_sensor in power_sensors:
+    for power_sensor in sensors:
         measured_object_id_str = str(power_sensor.measured_object.item())
         measured_terminal_type = power_sensor.measured_terminal_type.item()
-        sensor_dict = _array_to_dict(power_sensor, power_sensors.columns)
+        sensor_dict = _array_to_dict(power_sensor, sensors.columns)
 
-        if measured_terminal_type in _NODE_BRANCH_POWER_SENSORS:
+        if measured_terminal_type in _NODE_BRANCH_TERMINAL_TYPE:
             _append_component_list(viz_to_comp, sensor_dict, measured_object_id_str, group)
-        elif measured_terminal_type in _APPLIANCE_POWER_SENSORS:
-            _append_component_list(viz_to_comp, sensor_dict, measured_object_id_str, group)
-            _append_component_list(viz_to_comp, sensor_dict, appliance_to_node[measured_object_id_str], group)
-        elif measured_terminal_type in _BRANCH3_POWER_SENSORS:
+        elif measured_terminal_type in _BRANCH3_TERMINAL_TYPE:
             for count in range(3):
                 branch1_id = f"{measured_object_id_str}_{count}"
                 _append_component_list(viz_to_comp, sensor_dict, branch1_id, group)
+        elif measured_terminal_type in _APPLIANCE_TERMINAL_TYPE:
+            _append_component_list(viz_to_comp, sensor_dict, measured_object_id_str, group)
+            # Map appliance to both appliance and its node as both can be unvisualized
+            _append_component_list(viz_to_comp, sensor_dict, appliance_to_node[measured_object_id_str], group)
         else:
             raise ValueError(f"Unknown measured_terminal_type: {measured_terminal_type}")
 
@@ -269,12 +299,12 @@ def _merge_viz_to_comp(viz_to_comp: VizToComponentData, to_merge: VizToComponent
     for id_str, component_data in to_merge.items():
         if id_str not in viz_to_comp:
             viz_to_comp[id_str] = component_data
-        else:
-            for comp_type in component_data:
-                if comp_type not in viz_to_comp[id_str]:
-                    viz_to_comp[id_str][comp_type] = component_data[comp_type]
-                else:
-                    viz_to_comp[id_str][comp_type].extend(component_data[comp_type])
+            continue
+        for comp_type in component_data:
+            if comp_type not in viz_to_comp[id_str]:
+                viz_to_comp[id_str][comp_type] = component_data[comp_type]
+                continue
+            viz_to_comp[id_str][comp_type].extend(component_data[comp_type])
     return viz_to_comp
 
 

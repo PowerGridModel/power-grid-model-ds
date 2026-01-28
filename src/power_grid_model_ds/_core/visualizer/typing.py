@@ -13,7 +13,7 @@ VizToComponentElements = dict[str, Any | dict[str, Any]]
 
 """
 Mapping from visualization element ID to component type to list of array data.
-Purpose is to link unvisualized elements data to visualized elements id.
+Purpose is to link unvisualized elements data to visualized elements id they are connected to.
 
 For example:
     {
