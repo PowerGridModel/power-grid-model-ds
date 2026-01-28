@@ -5,6 +5,7 @@
 
 from dash import Input, Output, State, callback
 from dash.exceptions import PreventUpdate
+from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import SELECTOR_BRANCH
@@ -59,7 +60,11 @@ def search_element(  #  pylint: disable=too-many-arguments, disable=too-many-pos
         selector = f"edge[{search_query}]" + SELECTOR_BRANCH
     elif group in non_visible_elms:
         found = _search_components(
-            viz_to_comp=viz_to_comp, component_type=group, column=search_column, operator=operator, value=value
+            viz_to_comp=viz_to_comp,
+            component_type=ComponentType(group),
+            column=search_column,
+            operator=operator,
+            value=value,
         )
         if found:
             selector = ", ".join([f'[id = "{node_id}"]' for node_id in found])
@@ -95,7 +100,7 @@ def update_column_options(selected_group, store_data):
 
 
 def _search_components(
-    viz_to_comp: VizToComponentData, component_type: str, column: str, operator: str, value: str
+    viz_to_comp: VizToComponentData, component_type: ComponentType, column: str, operator: str, value: str
 ) -> list[str]:
     """Find node or edge IDs that have components matching the search criteria."""
     try:
@@ -112,8 +117,8 @@ def _search_components(
 
 
 def _find_components_node_edge(
-    node_edge_data: dict[str, ListArrayData],
-    component_type: str,
+    node_edge_data: dict[ComponentType, ListArrayData],
+    component_type: ComponentType,
     column: str,
     numeric_value: float,
     operator: str,

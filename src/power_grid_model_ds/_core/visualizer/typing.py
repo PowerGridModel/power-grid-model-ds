@@ -4,6 +4,8 @@
 
 from typing import Any
 
+from power_grid_model import ComponentType
+
 STYLESHEET = list[dict[str, Any]]
 ListArrayData = list[dict[str, Any]]
 
@@ -11,6 +13,7 @@ VizToComponentElements = dict[str, Any | dict[str, Any]]
 
 """
 Mapping from visualization element ID to component type to list of array data.
+Purpose is to link unvisualized elements data to visualized elements id.
 
 For example:
     {
@@ -20,23 +23,23 @@ For example:
             ...
         },
         "edge_id_1": {
-            "line": [ {..line data..}, {...} ],
-            "sym_power_sensor": [ {..sensor data..}, {...}],
+            "ComponentType.line": [ {..line data..}, {...} ],
+            "ComponentType.sym_power_sensor": [ {..sensor data..}, {...}],
             ...
         },
         "branch3_id_0": {
-            "three_winding_transformer": [ {..three_winding_transformer data..}, {...} ],
+            "ComponentType.three_winding_transformer": [ {..three_winding_transformer data..}, {...} ],
             ...
         },
         "branch3_id_1": {
-            "three_winding_transformer": [ {..same three_winding_transformer data..}, {...} ],
+            "ComponentType.three_winding_transformer": [ {..same three_winding_transformer data..}, {...} ],
             ...
         },
         {
             "source_id_str": {
-                "sym_power_sensor": [ {..sensor data..}, {...}],
+                "ComponentType.sym_power_sensor": [ {..sensor data..}, {...}],
         }
         ...
     }
 """
-VizToComponentData = dict[str, dict[str, ListArrayData]]
+VizToComponentData = dict[str, dict[ComponentType, ListArrayData]]

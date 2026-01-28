@@ -66,13 +66,13 @@ def _get_columns_store(grid: Grid) -> dcc.Store:
             ComponentType.three_winding_transformer: grid.three_winding_transformer.columns,
             ComponentType.asym_line: grid.asym_line.columns,
             ComponentType.generic_branch: grid.generic_branch.columns,
+            ComponentType.sym_load: grid.sym_load.columns,
+            ComponentType.sym_gen: grid.sym_gen.columns,
+            ComponentType.source: grid.source.columns,
+            ComponentType.sym_power_sensor: grid.sym_power_sensor.columns,
+            ComponentType.sym_voltage_sensor: grid.sym_voltage_sensor.columns,
+            ComponentType.transformer_tap_regulator: grid.transformer_tap_regulator.columns,
             "branch": grid.branches.columns,
-            "sym_load": grid.sym_load.columns,
-            "sym_gen": grid.sym_gen.columns,
-            "source": grid.source.columns,
-            "sym_power_sensor": grid.sym_power_sensor.columns,
-            "sym_voltage_sensor": grid.sym_voltage_sensor.columns,
-            "transformer_tap_regulator": grid.transformer_tap_regulator.columns,
         },
     )
 
@@ -81,7 +81,8 @@ def get_app_layout(grid: Grid) -> html.Div:
     """Get the app layout."""
     columns_store = _get_columns_store(grid)
     layout = _get_graph_layout(grid.node)
-    elements, viz_to_comp_data = parse_element_data(grid)
+    viz_elements_dict, viz_to_comp_data = parse_element_data(grid)
+    elements = list(viz_elements_dict.values())
     cytoscape_html = get_cytoscape_html(layout, elements)
 
     return html.Div(
