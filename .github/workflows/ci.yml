@@ -35,7 +35,7 @@ jobs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -62,7 +62,7 @@ jobs:
           uv build
 
       - name: Store built wheel file
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: power-grid-model-ds
           path: dist/
@@ -73,12 +73,12 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python: ["3.11", "3.12", "3.13"]
+        python: ["3.12", "3.13", "3.14"]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -91,7 +91,7 @@ jobs:
         run: uv tool install poethepoet
 
       - name: Load built wheel file
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: power-grid-model-ds
           path: dist/
@@ -114,10 +114,10 @@ jobs:
       tag: ${{ steps.tag.outputs.tag }}
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Load built wheel file
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           name: power-grid-model-ds
           path: dist/

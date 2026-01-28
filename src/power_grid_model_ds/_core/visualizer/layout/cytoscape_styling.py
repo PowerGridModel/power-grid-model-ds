@@ -4,6 +4,8 @@
 
 """Contains selectors for the Cytoscape stylesheet."""
 
+from power_grid_model import ComponentType
+
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
 
 NODE_SIZE = 75
@@ -20,8 +22,8 @@ SELECTOR_LOADING_EDGE = "edge[group = 'sym_load']"
 _BRANCH_STYLE = {
     "selector": SELECTOR_BRANCH,
     "style": {
-        "line-color": CYTO_COLORS["line"],
-        "target-arrow-color": CYTO_COLORS["line"],
+        "line-color": CYTO_COLORS[ComponentType.line],
+        "target-arrow-color": CYTO_COLORS[ComponentType.line],
         "curve-style": "bezier",
         "target-arrow-shape": "triangle",
         "width": BRANCH_WIDTH,
@@ -151,13 +153,36 @@ _SELECTED_LINK_STYLE = {
     "style": {"line-color": CYTO_COLORS["selected_link"], "target-arrow-color": CYTO_COLORS["selected_link"]},
 }
 
+_GENERIC_BRANCH_STYLE = {
+    "selector": "edge[group = 'generic_branch']",
+    "style": {"line-color": CYTO_COLORS["generic_branch"], "target-arrow-color": CYTO_COLORS["generic_branch"]},
+}
+_SELECTED_GENERIC_BRANCH_STYLE = {
+    "selector": "edge[group = 'generic_branch']:selected, edge[group = 'generic_branch']:active",
+    "style": {
+        "line-color": CYTO_COLORS["selected_generic_branch"],
+        "target-arrow-color": CYTO_COLORS["selected_generic_branch"],
+    },
+}
+
+_ASYM_LINE_STYLE = {
+    "selector": "edge[group = 'asym_line']",
+    "style": {"line-color": CYTO_COLORS["asym_line"], "target-arrow-color": CYTO_COLORS["asym_line"]},
+}
+
+_SELECTED_ASYM_LINE_STYLE = {
+    "selector": "edge[group = 'asym_line']:selected, edge[group = 'asym_line']:active",
+    "style": {
+        "line-color": CYTO_COLORS["selected_asym_line"],
+        "target-arrow-color": CYTO_COLORS["selected_asym_line"],
+    },
+}
 _OPEN_BRANCH_STYLE = {
     "selector": (
         "edge[from_status = 0], edge[to_status = 0], edge[status_1 = 0], edge[status_2 = 0], edge[status_3 = 0]"
     ),
     "style": {
         "line-style": "dashed",
-        "line-color": CYTO_COLORS["open_branch"],
         "target-arrow-color": CYTO_COLORS["open_branch"],
         "source-arrow-color": CYTO_COLORS["open_branch"],
     },
@@ -206,6 +231,11 @@ DEFAULT_STYLESHEET = [
     _SELECTED_BRANCH_STYLE,
     _SELECTED_TRANSFORMER_STYLE,
     _SELECTED_LINK_STYLE,
+    _GENERIC_BRANCH_STYLE,
+    _SELECTED_GENERIC_BRANCH_STYLE,
+    _ASYM_LINE_STYLE,
+    _SELECTED_ASYM_LINE_STYLE,
+    # Note: Keep the OPEN BRANCH styles last in list, otherwise they potentially get overridden.
     _OPEN_BRANCH_STYLE,
     _OPEN_FROM_SIDE_BRANCH_STYLE,
     _OPEN_TO_SIDE_BRANCH_STYLE,

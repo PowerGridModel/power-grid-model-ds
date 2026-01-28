@@ -58,6 +58,7 @@ def parse_element_data(grid: Grid) -> tuple[list[dict[str, Any]], VizToComponent
     elements.update(parse_node_array(grid.node))
 
     elements.update(parse_branch_array(grid.line, "line"))
+    elements.update(parse_branch_array(grid.generic_branch, "generic_branch"))
     elements.update(parse_branch_array(grid.link, "link"))
     elements.update(parse_branch_array(grid.transformer, "transformer"))
 
@@ -123,7 +124,7 @@ def parse_branch3_array(branches: Branch3Array, group: Literal["three_winding_tr
     return parsed_branches
 
 
-def parse_branch_array(branches: BranchArray, group: Literal["line", "link", "transformer"]) -> VizToComponentElements:
+def parse_branch_array(branches: BranchArray, group: Literal["line", "generic_branch", "link", "transformer"]) -> VizToComponentElements:
     """Parse the branch array. Fills branch data to viz_to_comp."""
     parsed_branches = {}
     for branch in branches:

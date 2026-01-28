@@ -12,10 +12,10 @@ from power_grid_model_ds._core.data_source.generator.arrays.line import LineGene
 from power_grid_model_ds._core.data_source.generator.arrays.node import NodeGenerator
 from power_grid_model_ds._core.data_source.generator.arrays.source import SourceGenerator
 from power_grid_model_ds._core.data_source.generator.grid_generators import RadialGridGenerator
-from power_grid_model_ds._core.load_flow import PowerGridModelInterface
 from power_grid_model_ds._core.model.arrays import LineArray, NodeArray, SourceArray, SymLoadArray
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds._core.power_grid_model_interface import PowerGridModelInterface
 
 
 def test_generate_random_grid():

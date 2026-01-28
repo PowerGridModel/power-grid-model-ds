@@ -4,21 +4,27 @@
 
 """Base grid classes"""
 
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Self, Type, TypeVar
+from typing import Any, Literal, Self, Type, TypeVar
 
 import numpy as np
 import numpy.typing as npt
 
 from power_grid_model_ds._core.model.arrays import (
+    AsymCurrentSensorArray,
+    AsymLineArray,
+    AsymPowerSensorArray,
     AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
+    GenericBranchArray,
     LineArray,
     LinkArray,
     NodeArray,
     SourceArray,
+    SymCurrentSensorArray,
     SymGenArray,
     SymLoadArray,
     SymPowerSensorArray,
@@ -29,6 +35,7 @@ from power_grid_model_ds._core.model.arrays import (
 )
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
+from power_grid_model_ds._core.model.containers.helpers import container_equal
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
@@ -36,6 +43,7 @@ from power_grid_model_ds._core.model.grids._feeders import set_feeder_ids
 from power_grid_model_ds._core.model.grids._helpers import (
     create_empty_grid,
     create_grid_from_extended_grid,
+    merge_grids,
 )
 from power_grid_model_ds._core.model.grids._modify import (
     add_array_to_grid,
@@ -55,6 +63,7 @@ from power_grid_model_ds._core.model.grids._search import (
     get_nearest_substation_node,
     get_typed_branches,
 )
+from power_grid_model_ds._core.model.grids.serialization.json import deserialize_from_json, serialize_to_json
 from power_grid_model_ds._core.model.grids.serialization.pickle import load_grid_from_pickle, save_grid_to_pickle
 from power_grid_model_ds._core.model.grids.serialization.string import (
     deserialize_from_str,
@@ -90,6 +99,8 @@ class Grid(FancyArrayContainer):
     three_winding_transformer: ThreeWindingTransformerArray
     line: LineArray
     link: LinkArray
+    generic_branch: GenericBranchArray
+    asym_line: AsymLineArray
 
     source: SourceArray
     sym_load: SymLoadArray
@@ -101,13 +112,25 @@ class Grid(FancyArrayContainer):
     # sensors
     sym_power_sensor: SymPowerSensorArray
     sym_voltage_sensor: SymVoltageSensorArray
+    sym_current_sensor: SymCurrentSensorArray
+    asym_power_sensor: AsymPowerSensorArray
     asym_voltage_sensor: AsymVoltageSensorArray
+    asym_current_sensor: AsymCurrentSensorArray
 
     def __str__(self) -> str:
         """Serialize grid to a string.
         Compatible with https://csacademy.com/app/graph_editor/
         """
         return serialize_to_str(self)
+
+    def __eq__(self, other: Any) -> bool:
+        """Check if two grids are equal.
+
+        Note: differences in graphs are ignored in this comparison.
+        """
+        if not isinstance(other, self.__class__):
+            return False
+        return container_equal(self, other, ignore_extras=False, early_exit=True, fields_to_ignore=["graphs"])
 
     @classmethod
     def empty(cls: Type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
@@ -133,6 +156,11 @@ class Grid(FancyArrayContainer):
         Returns:
             G: The grid loaded from cache
         """
+        warnings.warn(
+            "Grid.from_cache() is deprecated and will be removed in a future version. Use deserialize() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return load_grid_from_pickle(cls, cache_path=cache_path, load_graphs=load_graphs)
 
     @classmethod
@@ -338,11 +366,49 @@ class Grid(FancyArrayContainer):
         return get_downstream_nodes(self, node_id=node_id, inclusive=inclusive)
 
     def cache(self, cache_dir: Path, cache_name: str, compress: bool = True):
-        """Cache Grid to a folder
+        """Cache Grid to a folder using pickle format.
+
+        Note: Consider using serialize() for better
+        interoperability and standardized format.
 
         Args:
             cache_dir (Path): The directory to save the cache to.
             cache_name (str): The name of the cache.
             compress (bool, optional): Whether to compress the cache. Defaults to True.
         """
+        warnings.warn(
+            "grid.cache() is deprecated and will be removed in a future version. Use grid.serialize() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return save_grid_to_pickle(self, cache_dir=cache_dir, cache_name=cache_name, compress=compress)
+
+    def merge(self, other_grid: Self, mode: Literal["recalculate_ids", "keep_ids"]) -> None:
+        """Merge another grid into this grid.
+
+        Args:
+            other_grid (Grid): The grid to merge into this grid.
+            mode (str): The merge mode:
+                - "recalculate_ids": ids in the arrays of other_grid are offset to avoid conflicts.
+                IMPORTANT: we currently only update any `id` column and all id references in the default PGM-DS grid.
+
+                - "keep_ids": Keep ids of other_grid. Raises an error if grids contain overlapping indices.
+        """
+
+        merge_grids(self, other_grid, mode)
+
+    def serialize(self, path: Path, **kwargs) -> Path:
+        """Serialize the grid.
+
+        Args:
+            path: Destination file path to write JSON to.
+            **kwargs: Additional keyword arguments forwarded to ``json.dump``
+        Returns:
+            Path: The path where the file was saved.
+        """
+        return serialize_to_json(grid=self, path=path, strict=True, **kwargs)
+
+    @classmethod
+    def deserialize(cls: Type[Self], path: Path) -> Self:
+        """Deserialize the grid."""
+        return deserialize_from_json(path=path, target_grid_class=cls)

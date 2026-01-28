@@ -1,112 +1,80 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
+import pytest
 
-import numpy as np
-from numpy.testing import assert_array_equal
-
-from power_grid_model_ds._core.model.arrays.pgm_arrays import LineArray, NodeArray
-from power_grid_model_ds._core.model.constants import EMPTY_ID
-from power_grid_model_ds._core.model.enums.nodes import NodeType
-from tests.fixtures.grids import build_basic_grid
+from power_grid_model_ds import Grid
+from power_grid_model_ds._core.model.arrays import SourceArray
+from tests.fixtures.grid_classes import ExtendedGrid
 
 
-def test_set_feeder_ids(grid):
-    """Test the setting of extra properties is_feeder and feeder_id."""
-    grid = build_basic_grid(grid=grid)
-
-    # Set all feeder ids to a value to check they have been reset
-    grid.branches.feeder_branch_id = 1
-    grid.node.feeder_branch_id = 1
-    grid.branches.feeder_node_id = 1
-    grid.node.feeder_node_id = 1
-
-    grid.set_feeder_ids()
-
-    assert_array_equal(grid.branches.is_feeder, np.array([False, True, False, False, True, False]))
-    assert_array_equal(grid.branches.feeder_branch_id, np.array([201, 201, 201, EMPTY_ID, 204, 204]))
-    assert_array_equal(grid.node.feeder_branch_id, np.array([EMPTY_ID, 201, 201, 204, 204, 201]))
-    assert_array_equal(grid.branches.feeder_node_id, np.array([101, 101, 101, EMPTY_ID, 101, 101]))
-    assert_array_equal(grid.node.feeder_node_id, np.array([EMPTY_ID, 101, 101, 101, 101, 101]))
+@pytest.fixture
+def grid1() -> Grid:
+    """Build a basic grid to test merging"""
+    return Grid.from_txt("S1 2", "S1 3 link", "3 14 transformer")
 
 
-def test_set_feeder_ids_unconnected_node(grid):
-    """Test handling of unconnected nodes, these are set to EMPTY_ID"""
-    grid = build_basic_grid(grid=grid)
-    extra_node = NodeArray.empty(1)
-    grid.append(extra_node)
-    grid.set_feeder_ids()
-
-    assert_array_equal(grid.branches.is_feeder, np.array([False, True, False, False, True, False]))
-    assert_array_equal(grid.branches.feeder_branch_id, np.array([201, 201, 201, EMPTY_ID, 204, 204]))
-    assert_array_equal(grid.node.feeder_branch_id, np.array([EMPTY_ID, 201, 201, 204, 204, 201, EMPTY_ID]))
-    assert_array_equal(grid.branches.feeder_node_id, np.array([101, 101, 101, EMPTY_ID, 101, 101]))
-    assert_array_equal(grid.node.feeder_node_id, np.array([EMPTY_ID, 101, 101, 101, 101, 101, EMPTY_ID]))
+@pytest.fixture
+def grid2() -> Grid:
+    """Build a basic grid to merge into the first grid"""
+    return Grid.from_txt("S1 2", "S1 13 link", "13 14 transformer")
 
 
-def test_set_feeder_ids_parallel_line(grid):
-    """Test handling of parallel lines, these get the same feeder id"""
-    grid = build_basic_grid(grid=grid)
+class TestMergeGrids:
+    def test_merge_grid(self):
+        grid1 = Grid.from_txt("S1 2", "S1 3 link", "3 4 transformer")
+        grid2 = Grid.from_txt("S11 12", "S11 13 link", "13 14 transformer")
 
-    # Add a second (parallel) line from 101 to 102
-    extra_line = LineArray.empty(1)
-    extra_line.from_node = 101
-    extra_line.to_node = 102
-    extra_line.from_status = 1
-    extra_line.to_status = 1
-    grid.append(extra_line)
+        grid1.merge(grid2, mode="keep_ids")
 
-    grid.set_feeder_ids()
+        assert grid1.node.id.tolist() == [1, 2, 3, 4, 11, 12, 13, 14], (
+            "Merged node ids should be equal to those of grid1 and grid2 combined"
+        )
 
-    assert_array_equal(grid.branches.is_feeder, np.array([False, True, False, False, True, True, False]))
-    assert_array_equal(grid.branches.feeder_branch_id, np.array([201, 201, 201, EMPTY_ID, 204, 201, 204]))
-    assert_array_equal(grid.node.feeder_branch_id, np.array([EMPTY_ID, 201, 201, 204, 204, 201]))
-    assert_array_equal(grid.branches.feeder_node_id, np.array([101, 101, 101, EMPTY_ID, 101, 101, 101]))
-    assert_array_equal(grid.node.feeder_node_id, np.array([EMPTY_ID, 101, 101, 101, 101, 101]))
+    def test_merge_grid_with_some_identical_node_ids(self, grid2: Grid):
+        grid1 = Grid.from_txt("S1 2", "S1 3 link", "3 4 transformer")
+        source = SourceArray(id=[501], node=[1], status=[1], u_ref=[0.0])
+        grid1.append(source)
+        grid2.append(source)
 
+        grid1.merge(grid2, mode="recalculate_ids")
+        grid1.check_ids()
 
-def test_set_feeder_ids_inactive(grid):
-    grid = build_basic_grid(grid=grid)
+        # The node ids of the second grid should be offset by 501:
+        assert grid1.node.id.tolist() == [1, 2, 3, 4, 502, 503, 514, 515]
 
-    # Make a feeding line inactive
-    grid.make_inactive(grid.line.get(204))
-    grid.make_active(grid.line.get(203))
+        # Verify the lines, links and transformers in the resulting grid:
+        columns_to_check = ["id", "from_node", "to_node"]
+        assert grid1.line.data[columns_to_check].tolist() == [(5, 1, 2), (516, 502, 503)]
+        assert grid1.link.data[columns_to_check].tolist() == [(6, 1, 3), (517, 502, 514)]
+        assert grid1.transformer.data[columns_to_check].tolist() == [(7, 3, 4), (518, 514, 515)]
 
-    grid.set_feeder_ids()
+        # Verify nodes in grid.source:
+        assert grid1.source.node.tolist() == [1, 502]
 
-    assert_array_equal(grid.branches.is_feeder, np.array([False, True, False, False, True, False]))
-    assert_array_equal(grid.branches.feeder_branch_id, np.array([201, 201, 201, 201, EMPTY_ID, 201]))
-    assert_array_equal(grid.node.feeder_branch_id, np.array([EMPTY_ID, 201, 201, 201, 201, 201]))
-    assert_array_equal(grid.branches.feeder_node_id, np.array([101, 101, 101, 101, EMPTY_ID, 101]))
-    assert_array_equal(grid.node.feeder_node_id, np.array([EMPTY_ID, 101, 101, 101, 101, 101]))
+    def test_merge_grid_with_some_identical_lines(self, grid1: Grid, grid2: Grid):
+        # Now both grids have 14 as highest node id, so both will have branch ids 15, 16 and 17:
 
+        grid1.merge(grid2, mode="recalculate_ids")
+        grid1.check_ids()
 
-def test_set_feeder_to_node(grid):
-    """Test that the feeder ids are set correctly when the branch is facing the other way"""
-    # Add Substations
-    substation = NodeArray(id=[100, 101], u_rated=[21_000, 10_500], node_type=[NodeType.SUBSTATION_NODE.value] * 2)
-    grid.append(substation, check_max_id=False)
+    def test_merge_grid_with_some_identical_lines_failing(self, grid1: Grid, grid2: Grid):
+        with pytest.raises(ValueError):
+            grid1.merge(grid2, mode="keep_ids")
 
-    # Add Nodes
-    nodes = NodeArray(
-        id=[102],
-        u_rated=[10_500.0],
-    )
-    grid.append(nodes, check_max_id=False)
+    def test_merge_grid_into_a_grid_of_a_different_class(self, grid1: Grid):
+        extended_grid = ExtendedGrid.from_txt("S1 2", "S1 13 link", "13 14 transformer")
 
-    # Add Lines
-    lines = LineArray.empty(2)
-    lines.id = [200, 201]
-    lines.from_status = [1] * 2
-    lines.to_status = [1] * 2
-    lines.from_node = [100, 102]
-    lines.to_node = [101, 101]
-    grid.append(lines, check_max_id=False)
+        # Test that merging into a grid another grid with more arrays throws a type error
+        # since we cannot append those arrays to anything:
+        with pytest.raises(TypeError):
+            grid1.merge(extended_grid, mode="recalculate_ids")
 
-    grid.set_feeder_ids()
+        # The other way around: test that merging into a grid another grid that lacks some arrays throws a type error
+        # since those arrays will not be appended with anything:
+        with pytest.raises(TypeError):
+            extended_grid.merge(grid1, mode="recalculate_ids")  # type: ignore[arg-type]
 
-    assert_array_equal(grid.branches.is_feeder, np.array([False, True]))
-    assert_array_equal(grid.branches.feeder_branch_id, np.array([EMPTY_ID, 201]))
-    assert_array_equal(grid.node.feeder_branch_id, np.array([EMPTY_ID, EMPTY_ID, 201]))
-    assert_array_equal(grid.branches.feeder_node_id, np.array([EMPTY_ID, 101]))
-    assert_array_equal(grid.node.feeder_node_id, np.array([EMPTY_ID, EMPTY_ID, 101]))
+    def test_merging_with_incorrect_mode(self, grid1: Grid, grid2: Grid):
+        with pytest.raises(NotImplementedError):
+            grid1.merge(grid2, mode="invalid_mode")  # type: ignore[arg-type]
