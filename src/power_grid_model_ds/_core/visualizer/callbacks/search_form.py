@@ -66,10 +66,9 @@ def search_element(  #  pylint: disable=too-many-arguments, disable=too-many-pos
             operator=operator,
             value=value,
         )
-        if found:
-            selector = ", ".join([f'[id = "{node_id}"]' for node_id in found])
-        else:
-            raise PreventUpdate
+        if not found:
+            return stylesheet
+        selector = ", ".join([f'[id = "{node_id}"]' for node_id in found])
     else:
         selector = f"[{search_query}][group = '{group}']"
 
