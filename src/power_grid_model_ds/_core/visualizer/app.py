@@ -16,8 +16,8 @@ from power_grid_model_ds._core.visualizer.callbacks import (  # noqa: F401  # py
 )
 from power_grid_model_ds._core.visualizer.layout.cytoscape_html import get_cytoscape_html
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
-from power_grid_model_ds._core.visualizer.layout.graph_layout import get_default_graph_layout
 from power_grid_model_ds._core.visualizer.layout.header import HEADER_HTML
+from power_grid_model_ds._core.visualizer.layout.layout_config import get_default_graph_layout
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
 from power_grid_model_ds._core.visualizer.parsers import parse_branches, parse_node_array
 

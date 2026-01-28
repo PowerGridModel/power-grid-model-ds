@@ -5,12 +5,11 @@ from power_grid_model_ds._core.data_source.generator.grid_generators import Radi
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.app import get_app_layout
 from power_grid_model_ds._core.visualizer.layout.cytoscape_html import get_cytoscape_html
-from power_grid_model_ds._core.visualizer.layout.graph_layout import LayoutOptions
 
 
 def test_get_cytoscape_html():
     elements = [{"data": {"id": "1", "group": "node"}}]
-    cyto_html = get_cytoscape_html(LayoutOptions.PRESET, elements)
+    cyto_html = get_cytoscape_html("preset", elements)
     assert cyto_html.children.elements == elements
 
 
