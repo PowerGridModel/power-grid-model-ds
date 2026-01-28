@@ -26,12 +26,12 @@ def display_selected_element(node_data: list[dict[str, Any]], edge_data: list[di
         del edge_data_dict["target"]  # duplicated by to_node
         del edge_data_dict["group"]  # unnecessary information
         return _to_data_table(edge_data_dict)
-    return SELECTION_OUTPUT_HTML
+    return SELECTION_OUTPUT_HTML.children
 
 
 def _to_data_table(data: dict[str, Any]):
     columns = data.keys()
     data_table = dash_table.DataTable(  # type: ignore[attr-defined]
-        data=[data], columns=[{"name": key, "id": key} for key in columns], editable=False
+        data=[data], columns=[{"name": key, "id": key} for key in columns], editable=False, fill_width=True
     )
     return data_table

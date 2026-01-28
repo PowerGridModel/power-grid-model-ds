@@ -9,6 +9,7 @@ from dash import html
 
 from power_grid_model_ds._core.visualizer.layout.colors import BACKGROUND_COLOR
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
+from power_grid_model_ds._core.visualizer.layout.layout_config import layout_with_config
 
 _CYTO_INNER_STYLE = {"width": "100%", "height": "100%", "background-color": BACKGROUND_COLOR}
 _CYTO_OUTER_STYLE = {"height": "80vh"}
@@ -19,7 +20,7 @@ def get_cytoscape_html(layout: str, elements: list[dict[str, Any]]) -> html.Div:
     return html.Div(
         cyto.Cytoscape(
             id="cytoscape-graph",
-            layout={"name": layout},
+            layout=layout_with_config(layout),
             style=_CYTO_INNER_STYLE,
             elements=elements,
             stylesheet=DEFAULT_STYLESHEET,
