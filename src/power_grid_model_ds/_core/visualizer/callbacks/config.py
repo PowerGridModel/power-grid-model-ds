@@ -7,6 +7,7 @@ from dash import Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import BRANCH_WIDTH, NODE_SIZE
+from power_grid_model_ds._core.visualizer.layout.graph_layout import LayoutOptions
 from power_grid_model_ds._core.visualizer.typing import STYLESHEET
 
 
@@ -47,7 +48,9 @@ def scale_elements(node_scale: float, edge_scale: float, stylesheet: STYLESHEET)
 @callback(Output("cytoscape-graph", "layout"), Input("dropdown-update-layout", "value"), prevent_initial_call=True)
 def update_layout(layout):
     """Callback to update the layout of the graph."""
-    return {"name": layout, "animate": True}
+    layout_config = LayoutOptions(layout).layout_with_config()
+    layout_config.update({"animate": True})
+    return layout_config
 
 
 @callback(
