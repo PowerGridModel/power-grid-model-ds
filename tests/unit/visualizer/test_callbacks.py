@@ -1,12 +1,15 @@
 # SPDX-FileCopyrightText: 2025 Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
+from unittest.mock import patch
 import pytest
 from dash.exceptions import PreventUpdate
 
-from power_grid_model_ds._core.visualizer.callbacks.config import scale_elements, update_arrows
+from power_grid_model_ds._core.visualizer.callbacks.config import scale_elements, update_arrows, update_layout
+from power_grid_model_ds._core.visualizer.callbacks.element_selection import display_selected_element
 from power_grid_model_ds._core.visualizer.callbacks.search_form import search_element
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
+from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
 
 _EDGE_INDEX = 3
 
@@ -45,3 +48,12 @@ def test_show_arrows():
 def test_hide_arrows():
     stylesheet = update_arrows(False, DEFAULT_STYLESHEET)
     assert stylesheet[_EDGE_INDEX]["style"]["target-arrow-shape"] == "none"
+
+
+def test_display_selected_element_none():
+    result = display_selected_element([], [])
+    assert result == SELECTION_OUTPUT_HTML.children
+
+
+def test_update_layout():
+    assert update_layout("abcd") == {"name": "abcd", "animate": True}
