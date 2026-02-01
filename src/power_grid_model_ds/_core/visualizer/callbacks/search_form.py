@@ -18,17 +18,25 @@ HIGHLIGHT_STYLE = {
 }
 
 NON_VISIBLE_ELMS = [
-    "sym_power_sensor",
-    "sym_voltage_sensor",
-    "asym_voltage_sensor",
-    "transformer_tap_regulator",
+    ComponentType.sym_power_sensor.value,
+    ComponentType.sym_voltage_sensor.value,
+    ComponentType.asym_voltage_sensor.value,
+    ComponentType.transformer_tap_regulator.value,
 ]
 
-NON_VISIBLE_ELMS_INCL_APPLIANCES = ["sym_load", "sym_gen"] + NON_VISIBLE_ELMS
+BRANCHES_COMPONENTS = [
+    ComponentType.line.value,
+    ComponentType.link.value,
+    ComponentType.generic_branch.value,
+    ComponentType.transformer.value,
+    ComponentType.asym_line.value,
+]
+
+NON_VISIBLE_ELMS_INCL_APPLIANCES = [ComponentType.sym_load.value, ComponentType.sym_gen.value] + NON_VISIBLE_ELMS
 
 
 @callback(
-    Output("cytoscape-graph", "stylesheet"),
+    Output("cytoscape-graph", "stylesheet", allow_duplicate=True),
     Input("search-form-group-input", "value"),
     Input("search-form-column-input", "value"),
     Input("search-form-operator-input", "value"),
@@ -36,6 +44,7 @@ NON_VISIBLE_ELMS_INCL_APPLIANCES = ["sym_load", "sym_gen"] + NON_VISIBLE_ELMS
     State("viz-to-comp-store", "data"),
     State("stylesheet-store", "data"),
     State("show-appliances-store", "data"),
+    prevent_initial_call=True,
 )
 def search_element(  #  pylint: disable=too-many-arguments, disable=too-many-positional-arguments
     group: str,
@@ -55,8 +64,9 @@ def search_element(  #  pylint: disable=too-many-arguments, disable=too-many-pos
     search_query = f"{search_column} {operator} {value}"
 
     non_visible_elms = NON_VISIBLE_ELMS if show_appliances else NON_VISIBLE_ELMS_INCL_APPLIANCES
-    if group == "branch":
-        selector = f"edge[{search_query}]" + "edge[group = 'line'], edge[group = 'link'], edge[group = 'transformer']"
+    if group == "branches":
+        branches_selector = ", ".join([f"edge[group = '{comp}']" for comp in BRANCHES_COMPONENTS])
+        selector = f"edge[{search_query}]_[{branches_selector}]"
     elif group in non_visible_elms:
         found = _search_components(
             viz_to_comp=viz_to_comp,

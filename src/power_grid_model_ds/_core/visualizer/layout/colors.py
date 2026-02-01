@@ -19,5 +19,7 @@ CYTO_COLORS = {
     "substation_node": "purple",
     "open_branch": "#c9c9c9",
     "highlighted": "#a10000",
+    "heatmap_min": "#0000ff",
+    "heatmap_max": "#ff0000",
 }
 BACKGROUND_COLOR = "#555555"

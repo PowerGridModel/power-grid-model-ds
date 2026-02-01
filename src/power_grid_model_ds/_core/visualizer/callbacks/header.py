@@ -5,7 +5,7 @@
 import dash
 from dash import Input, Output, callback
 
-from power_grid_model_ds._core.visualizer.layout.header import CONFIG_DIV, LEGENDA_DIV, SEARCH_DIV
+from power_grid_model_ds._core.visualizer.layout.header import CONFIG_DIV, HEATMAP_DIV, LEGENDA_DIV, SEARCH_DIV
 
 
 @callback(
@@ -14,9 +14,10 @@ from power_grid_model_ds._core.visualizer.layout.header import CONFIG_DIV, LEGEN
         Input("btn-legend", "n_clicks"),
         Input("btn-search", "n_clicks"),
         Input("btn-config", "n_clicks"),
+        Input("btn-heatmap", "n_clicks"),
     ],
 )
-def update_right_col(_btn1, _btn2, _btn3):
+def update_right_col(_btn1, _btn2, _btn3, _btn4):
     """Update the right column content based on the button clicked."""
     ctx = dash.callback_context
     if not ctx.triggered:
@@ -26,5 +27,6 @@ def update_right_col(_btn1, _btn2, _btn3):
         "btn-legend": LEGENDA_DIV,
         "btn-search": SEARCH_DIV,
         "btn-config": CONFIG_DIV,
+        "btn-heatmap": HEATMAP_DIV,
     }
     return button_map.get(button_id, "Right Column")
