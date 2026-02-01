@@ -235,14 +235,14 @@ DEFAULT_STYLESHEET = [
     _SELECTED_GENERIC_BRANCH_STYLE,
     _ASYM_LINE_STYLE,
     _SELECTED_ASYM_LINE_STYLE,
-    # Note: Keep the OPEN BRANCH styles last in list, otherwise they potentially get overridden.
-    _OPEN_BRANCH_STYLE,
-    _OPEN_FROM_SIDE_BRANCH_STYLE,
-    _OPEN_TO_SIDE_BRANCH_STYLE,
     _APPLIANCE_GHOST_NODE_STYLE,
     _GENERATING_EDGE_STYLE,
     _LOADING_EDGE_STYLE,
     _SOURCE_EDGE_STYLE,
+    # Note: Keep the OPEN BRANCH styles last in list, otherwise they potentially get overridden.
+    _OPEN_BRANCH_STYLE,
+    _OPEN_FROM_SIDE_BRANCH_STYLE,
+    _OPEN_TO_SIDE_BRANCH_STYLE,
     _OPEN_LOADING_EDGE_STYLE,
     _OPEN_GENERATING_EDGE_STYLE,
 ]

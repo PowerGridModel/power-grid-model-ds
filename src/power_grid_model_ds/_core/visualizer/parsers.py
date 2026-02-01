@@ -2,11 +2,10 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import Any, Literal
+from typing import Literal
 
 from power_grid_model import ComponentType, MeasuredTerminalType
 
-from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     AsymCurrentSensorArray,
     AsymPowerSensorArray,
@@ -23,6 +22,18 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     TransformerTapRegulatorArray,
 )
 from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds._core.visualizer.parsing_utils import (
+    append_component_list,
+    array_to_dict,
+    map_appliance_to_nodes,
+    merge_viz_to_comp,
+)
+from power_grid_model_ds._core.visualizer.styling_classification import (
+    StyleClass,
+    get_appliance_edge_classification,
+    get_branch_classification,
+    get_node_classification,
+)
 from power_grid_model_ds._core.visualizer.typing import VizToComponentData, VizToComponentElements
 
 _NODE_BRANCH_TERMINAL_TYPE = [
@@ -76,43 +87,46 @@ def parse_element_data(grid: Grid) -> tuple[VizToComponentElements, VizToCompone
             appliance_name,
         )
         elements.update(parsed)
-        _merge_viz_to_comp(viz_to_comp, viz_to_comp_appliance)
+        merge_viz_to_comp(viz_to_comp, viz_to_comp_appliance)
 
     appliance_to_node = map_appliance_to_nodes(grid)
 
     # Parse sensors
-    _merge_viz_to_comp(
+    merge_viz_to_comp(
         viz_to_comp, _parse_flow_sensors(grid.sym_power_sensor, ComponentType.sym_power_sensor, appliance_to_node)
     )
-    _merge_viz_to_comp(
+    merge_viz_to_comp(
         viz_to_comp, _parse_flow_sensors(grid.asym_power_sensor, ComponentType.asym_power_sensor, appliance_to_node)
     )
-    _merge_viz_to_comp(
+    merge_viz_to_comp(
         viz_to_comp, _parse_flow_sensors(grid.sym_current_sensor, ComponentType.sym_current_sensor, appliance_to_node)
     )
-    _merge_viz_to_comp(
+    merge_viz_to_comp(
         viz_to_comp, _parse_flow_sensors(grid.asym_current_sensor, ComponentType.asym_current_sensor, appliance_to_node)
     )
-    _merge_viz_to_comp(viz_to_comp, _parse_voltage_sensors(grid.sym_voltage_sensor, ComponentType.sym_voltage_sensor))
-    _merge_viz_to_comp(viz_to_comp, _parse_voltage_sensors(grid.asym_voltage_sensor, ComponentType.asym_voltage_sensor))
+    merge_viz_to_comp(viz_to_comp, _parse_voltage_sensors(grid.sym_voltage_sensor, ComponentType.sym_voltage_sensor))
+    merge_viz_to_comp(viz_to_comp, _parse_voltage_sensors(grid.asym_voltage_sensor, ComponentType.asym_voltage_sensor))
 
     # Parse regulators
-    _merge_viz_to_comp(viz_to_comp, _parse_transformer_tap_regulators(grid.transformer_tap_regulator, elements))
+    merge_viz_to_comp(viz_to_comp, _parse_transformer_tap_regulators(grid.transformer_tap_regulator, elements))
 
     return elements, viz_to_comp
 
 
 def parse_node_array(nodes: NodeArray) -> VizToComponentElements:
     """Parse the nodes. Fills node data to viz_to_comp."""
-    parsed_nodes = {}
+    parsed_nodes: VizToComponentElements = {}
 
     with_coords = "x" in nodes.columns and "y" in nodes.columns
 
     for node in nodes:
         node_id_str = str(node.id.item())
 
-        parsed_nodes[node_id_str] = {"data": {"id": node_id_str, "group": "node"}}
-        parsed_nodes[node_id_str]["data"].update(_array_to_dict(node, nodes.columns))
+        parsed_nodes[node_id_str] = {
+            "data": {"id": node_id_str, "group": "node"},
+            "classes": get_node_classification(node),
+        }
+        parsed_nodes[node_id_str]["data"].update(array_to_dict(node, nodes.columns))
 
         if with_coords:
             parsed_nodes[node_id_str]["position"] = {
@@ -126,9 +140,9 @@ def parse_branch3_array(
     branches: Branch3Array, group: Literal[ComponentType.three_winding_transformer]
 ) -> VizToComponentElements:
     """Parse the three-winding transformer array. Fills branch3 data to viz_to_comp."""
-    parsed_branches = {}
+    parsed_branches: VizToComponentElements = {}
     for branch3 in branches:
-        branch3_component_data = _array_to_dict(branch3, branches.columns)  # Same for all three branches
+        branch3_component_data = array_to_dict(branch3, branches.columns)  # Same for all three branches
         for count, branch in enumerate(branch3.as_branches()):
             branch_id_str = f"{branch3.id.item()}_{count}"
             parsed_branches[branch_id_str] = {
@@ -138,7 +152,8 @@ def parse_branch3_array(
                     "source": str(branch.from_node.item()),
                     "target": str(branch.to_node.item()),
                     "group": group.value,
-                }
+                },
+                "classes": get_branch_classification(branch, group),
             }
             parsed_branches[branch_id_str]["data"].update(branch3_component_data)
     return parsed_branches
@@ -155,7 +170,7 @@ def parse_branch_array(
     ],
 ) -> VizToComponentElements:
     """Parse the branch array. Fills branch data to viz_to_comp."""
-    parsed_branches = {}
+    parsed_branches: VizToComponentElements = {}
     for branch in branches:
         branch_id_str = str(branch.id.item())
         parsed_branches[branch_id_str] = {
@@ -164,9 +179,10 @@ def parse_branch_array(
                 "source": str(branch.from_node.item()),
                 "target": str(branch.to_node.item()),
                 "group": group.value,
-            }
+            },
+            "classes": get_branch_classification(branch, group),
         }
-        parsed_branches[branch_id_str]["data"].update(_array_to_dict(branch, branches.columns))
+        parsed_branches[branch_id_str]["data"].update(array_to_dict(branch, branches.columns))
     return parsed_branches
 
 
@@ -187,10 +203,10 @@ def _parse_appliances(
         parsed_appliances[appliance_ghost_id_str] = {
             "data": {
                 "id": appliance_ghost_id_str,
-                "label": appliance_id_str,
                 "group": f"{group.value}_ghost_node",
             },
             "selectable": False,
+            "classes": StyleClass.APPLIANCE_GHOST_NODE.value,
         }
 
         parsed_appliances[appliance_id_str] = {
@@ -201,10 +217,10 @@ def _parse_appliances(
                 "group": group.value,
                 "status": appliance.status.item(),
             },
+            "classes": get_appliance_edge_classification(appliance, group),
         }
-
-        parsed_appliances[appliance_id_str]["data"].update(_array_to_dict(appliance, appliances.columns))
-        _append_component_list(viz_to_comp_appliance, _array_to_dict(appliance, appliances.columns), node_id_str, group)
+        parsed_appliances[appliance_id_str]["data"].update(array_to_dict(appliance, appliances.columns))
+        append_component_list(viz_to_comp_appliance, array_to_dict(appliance, appliances.columns), node_id_str, group)
     return parsed_appliances, viz_to_comp_appliance
 
 
@@ -223,18 +239,18 @@ def _parse_flow_sensors(
     for power_sensor in sensors:
         measured_object_id_str = str(power_sensor.measured_object.item())
         measured_terminal_type = power_sensor.measured_terminal_type.item()
-        sensor_dict = _array_to_dict(power_sensor, sensors.columns)
+        sensor_dict = array_to_dict(power_sensor, sensors.columns)
 
         if measured_terminal_type in _NODE_BRANCH_TERMINAL_TYPE:
-            _append_component_list(viz_to_comp, sensor_dict, measured_object_id_str, group)
+            append_component_list(viz_to_comp, sensor_dict, measured_object_id_str, group)
         elif measured_terminal_type in _BRANCH3_TERMINAL_TYPE:
             for count in range(3):
                 branch1_id = f"{measured_object_id_str}_{count}"
-                _append_component_list(viz_to_comp, sensor_dict, branch1_id, group)
+                append_component_list(viz_to_comp, sensor_dict, branch1_id, group)
         elif measured_terminal_type in _APPLIANCE_TERMINAL_TYPE:
-            _append_component_list(viz_to_comp, sensor_dict, measured_object_id_str, group)
+            append_component_list(viz_to_comp, sensor_dict, measured_object_id_str, group)
             # Map appliance to both appliance and its node as both can be unvisualized
-            _append_component_list(viz_to_comp, sensor_dict, appliance_to_node[measured_object_id_str], group)
+            append_component_list(viz_to_comp, sensor_dict, appliance_to_node[measured_object_id_str], group)
         else:
             raise ValueError(f"Unknown measured_terminal_type: {measured_terminal_type}")
 
@@ -249,8 +265,8 @@ def _parse_voltage_sensors(
     viz_to_comp: VizToComponentData = {}
     for voltage_sensor in voltage_sensors:
         node_id_str = str(voltage_sensor.measured_object.item())
-        sym_voltage_sensor_data = _array_to_dict(voltage_sensor, voltage_sensors.columns)
-        _append_component_list(viz_to_comp, sym_voltage_sensor_data, node_id_str, sensor_type)
+        sym_voltage_sensor_data = array_to_dict(voltage_sensor, voltage_sensors.columns)
+        append_component_list(viz_to_comp, sym_voltage_sensor_data, node_id_str, sensor_type)
     return viz_to_comp
 
 
@@ -261,57 +277,16 @@ def _parse_transformer_tap_regulators(
     viz_to_comp: VizToComponentData = {}
     for tap_regulator in transformer_tap_regulators:
         regulated_object_str = str(tap_regulator.regulated_object.item())
-        tap_regulator_data = _array_to_dict(tap_regulator, transformer_tap_regulators.columns)
+        tap_regulator_data = array_to_dict(tap_regulator, transformer_tap_regulators.columns)
         if regulated_object_str in elements:
-            _append_component_list(
+            append_component_list(
                 viz_to_comp, tap_regulator_data, regulated_object_str, ComponentType.transformer_tap_regulator
             )
         else:
             for count in range(3):
                 branch3_id_str = f"{regulated_object_str}_{count}"
                 if branch3_id_str in elements:
-                    _append_component_list(
+                    append_component_list(
                         viz_to_comp, tap_regulator_data, branch3_id_str, ComponentType.transformer_tap_regulator
                     )
     return viz_to_comp
-
-
-def _array_to_dict(array_record: FancyArray, columns: list[str]) -> dict[str, Any]:
-    """Stringify the record (required by Dash)."""
-    return {
-        ("pgm_id" if column == "id" else column): value for column, value in zip(columns, array_record.tolist().pop())
-    }
-
-
-def _append_component_list(
-    viz_to_comp: VizToComponentData, to_append: dict[str, Any], id_str: str, component_type: ComponentType
-) -> None:
-    """Append a component to the VizToComponentData structure."""
-    if id_str not in viz_to_comp:
-        viz_to_comp[id_str] = {}
-    if component_type not in viz_to_comp[id_str]:
-        viz_to_comp[id_str][component_type] = []
-    viz_to_comp[id_str][component_type].append(to_append)
-
-
-def _merge_viz_to_comp(viz_to_comp: VizToComponentData, to_merge: VizToComponentData) -> VizToComponentData:
-    """Merge two nested dictionaries of VizToComponentData type."""
-    for id_str, component_data in to_merge.items():
-        if id_str not in viz_to_comp:
-            viz_to_comp[id_str] = component_data
-            continue
-        for comp_type in component_data:
-            if comp_type not in viz_to_comp[id_str]:
-                viz_to_comp[id_str][comp_type] = component_data[comp_type]
-                continue
-            viz_to_comp[id_str][comp_type].extend(component_data[comp_type])
-    return viz_to_comp
-
-
-def map_appliance_to_nodes(grid: Grid) -> dict[str, str]:
-    """Map appliance IDs to their associated node IDs."""
-    appliance_to_node: dict[str, str] = {}
-    for appliance_name in [ComponentType.sym_load, ComponentType.sym_gen, ComponentType.source]:
-        appliance_array = getattr(grid, appliance_name)
-        appliance_to_node.update(dict(zip(map(str, appliance_array.id), map(str, appliance_array.node))))
-    return appliance_to_node
