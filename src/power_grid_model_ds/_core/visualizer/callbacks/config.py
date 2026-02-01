@@ -9,13 +9,9 @@ from dash.exceptions import PreventUpdate
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import (
     BRANCH_WIDTH,
     NODE_SIZE,
-    SELECTOR_APPLIANCE_GHOST_NODE,
-    SELECTOR_BRANCH,
-    SELECTOR_GENERATING_EDGE,
-    SELECTOR_LOADING_EDGE,
-    SELECTOR_NODES,
 )
 from power_grid_model_ds._core.visualizer.layout.graph_layout import LayoutOptions
+from power_grid_model_ds._core.visualizer.styling_classification import StyleClass
 from power_grid_model_ds._core.visualizer.typing import STYLESHEET
 
 
@@ -34,14 +30,14 @@ def scale_elements(node_scale: float, edge_scale: float, stylesheet: STYLESHEET)
     new_stylesheet = stylesheet.copy()
 
     for selector, new_style in [
-        (SELECTOR_BRANCH, {"width": BRANCH_WIDTH * edge_scale}),
-        (SELECTOR_NODES, {"height": NODE_SIZE * node_scale, "width": NODE_SIZE * node_scale}),
+        (f".{StyleClass.BRANCH.value}", {"width": BRANCH_WIDTH * edge_scale}),
+        (f".{StyleClass.NODE.value}", {"height": NODE_SIZE * node_scale, "width": NODE_SIZE * node_scale}),
         (
-            SELECTOR_APPLIANCE_GHOST_NODE,
+            f".{StyleClass.APPLIANCE_GHOST_NODE.value}",
             {"height": NODE_SIZE * 0.25 * node_scale, "width": NODE_SIZE * 0.25 * node_scale},
         ),
-        (SELECTOR_GENERATING_EDGE, {"width": BRANCH_WIDTH * 0.5 * edge_scale}),
-        (SELECTOR_LOADING_EDGE, {"width": BRANCH_WIDTH * 0.5 * edge_scale}),
+        (f".{StyleClass.GENERATING_APPLIANCE.value}", {"width": BRANCH_WIDTH * 0.5 * edge_scale}),
+        (f".{StyleClass.LOADING_APPLIANCE.value}", {"width": BRANCH_WIDTH * 0.5 * edge_scale}),
     ]:
         new_stylesheet.append({"selector": selector, "style": new_style})
 
@@ -65,7 +61,7 @@ def update_layout(layout_config):
 def update_arrows(show_arrows, current_stylesheet):
     """Callback to update the arrow style of edges in the graph."""
     selectors = [rule["selector"] for rule in current_stylesheet]
-    index = selectors.index(SELECTOR_BRANCH)
+    index = selectors.index(f".{StyleClass.BRANCH.value}")
     edge_style = current_stylesheet[index]["style"]
 
     edge_style["target-arrow-shape"] = "triangle" if show_arrows else "none"

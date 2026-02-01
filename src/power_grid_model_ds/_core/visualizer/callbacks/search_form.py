@@ -8,7 +8,6 @@ from dash.exceptions import PreventUpdate
 from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
-from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import SELECTOR_BRANCH
 from power_grid_model_ds._core.visualizer.typing import STYLESHEET, ListArrayData, VizToComponentData
 
 HIGHLIGHT_STYLE = {
@@ -57,7 +56,7 @@ def search_element(  #  pylint: disable=too-many-arguments, disable=too-many-pos
 
     non_visible_elms = NON_VISIBLE_ELMS if show_appliances else NON_VISIBLE_ELMS_INCL_APPLIANCES
     if group == "branch":
-        selector = f"edge[{search_query}]" + SELECTOR_BRANCH
+        selector = f"edge[{search_query}]" + "edge[group = 'line'], edge[group = 'link'], edge[group = 'transformer']"
     elif group in non_visible_elms:
         found = _search_components(
             viz_to_comp=viz_to_comp,

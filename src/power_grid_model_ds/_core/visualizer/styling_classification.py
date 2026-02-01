@@ -22,16 +22,16 @@ class StyleClass(StrEnum):
     GENERIC_BRANCH = "generic_branch"
     ASYM_LINE = "asym_line"
     SOURCE = "source"
-    GENERATING = "generating"
-    LOADING = "loading"
+    GENERATING_APPLIANCE = "generating_appliance"
+    LOADING_APPLIANCE = "loading_appliance"
+    OPEN_GENERATING_APPLIANCE = "open_generating_appliance"
+    OPEN_LOADING_APPLIANCE = "open_loading_appliance"
     APPLIANCE_GHOST_NODE = "appliance_ghost_node"
 
 
 def get_node_classification(node_arr: NodeArray) -> str:
     """Get the space separated string of styling classes for a node."""
     classes = [StyleClass.NODE]
-    if node_arr.is_substation:
-        classes.append(StyleClass.SUBSTATION_NODE)
     if node_arr.id > 10000000:
         classes.append(StyleClass.LARGE_ID_NODE)
     if node_arr.node_type == 1:
@@ -76,16 +76,16 @@ def get_appliance_edge_classification(
 ) -> str:
     """Get the space separated string of styling classes for an appliance edge."""
     type_to_vizclass = {
-        ComponentType.sym_load: StyleClass.LOADING,
-        ComponentType.sym_gen: StyleClass.GENERATING,
-        ComponentType.source: StyleClass.GENERATING,
+        ComponentType.sym_load: StyleClass.LOADING_APPLIANCE,
+        ComponentType.sym_gen: StyleClass.GENERATING_APPLIANCE,
+        ComponentType.source: StyleClass.GENERATING_APPLIANCE,
     }
 
     classes = [type_to_vizclass[component_type]]
     if appliance_arr.status == 0:
-        if type_to_vizclass[component_type] == StyleClass.LOADING:
-            classes.append(StyleClass.OPEN_BRANCH_TO)
+        if type_to_vizclass[component_type] == StyleClass.LOADING_APPLIANCE:
+            classes.append(StyleClass.OPEN_LOADING_APPLIANCE)
         else:
-            classes.append(StyleClass.OPEN_BRANCH_FROM)
+            classes.append(StyleClass.OPEN_GENERATING_APPLIANCE)
 
     return " ".join((entry.value for entry in classes))
