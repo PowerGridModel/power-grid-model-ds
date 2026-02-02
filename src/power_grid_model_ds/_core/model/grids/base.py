@@ -149,6 +149,10 @@ class Grid(FancyArrayContainer):
     def from_cache(cls: Type[Self], cache_path: Path, load_graphs: bool = True) -> Self:
         """Read from cache and build .graphs from arrays
 
+        WARNING: This function uses pickle.load() which can execute arbitrary code.
+        Only load pickle files from trusted sources. Never load pickle files from
+        untrusted or unauthenticated sources as this could lead to arbitrary code execution.
+
         Args:
             cache_path (Path): The path to the cache
             load_graphs (bool, optional): Whether to load the graphs. Defaults to True.
