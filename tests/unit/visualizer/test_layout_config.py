@@ -23,11 +23,11 @@ class CoordinatedNodeArray(NodeArray):
         ("concentric", {"name": "concentric"}),
         ("grid", {"name": "grid"}),
         ("cose", {"name": "cose"}),
-        ("breadthfirst", {"name": "breadthfirst", "roots": "node[node_type = 1]"}),
+        ("breadthfirst", {"name": "breadthfirst", "spacingFactor": 2.5, "roots": '[id = "100"], [id = "101"]'}),
     ],
 )
 def test_layout_with_config(name, expected):
-    result = layout_config.layout_with_config(name)
+    result = layout_config.layout_with_config(name, source_nodes=[100, 101])
     assert result == expected
 
 

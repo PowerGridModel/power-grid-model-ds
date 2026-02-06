@@ -43,10 +43,15 @@ def scale_elements(node_scale: float, edge_scale: float, stylesheet: STYLESHEET)
     return new_stylesheet, new_stylesheet
 
 
-@callback(Output("cytoscape-graph", "layout"), Input("dropdown-update-layout", "value"), prevent_initial_call=True)
-def update_layout(layout):
+@callback(
+    Output("cytoscape-graph", "layout"),
+    Input("dropdown-update-layout", "value"),
+    State("source-nodes-store", "data"),
+    prevent_initial_call=True,
+)
+def update_layout(layout, source_nodes):
     """Callback to update the layout of the graph."""
-    layout_config = layout_with_config(layout)
+    layout_config = layout_with_config(layout, source_nodes)
     layout_config.update({"animate": True})
     return layout_config
 

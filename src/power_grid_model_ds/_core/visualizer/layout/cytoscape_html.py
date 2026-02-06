@@ -15,12 +15,12 @@ _CYTO_INNER_STYLE = {"width": "100%", "height": "100%", "background-color": BACK
 _CYTO_OUTER_STYLE = {"height": "80vh"}
 
 
-def get_cytoscape_html(layout: str, elements: list[dict[str, Any]]) -> html.Div:
+def get_cytoscape_html(layout: str, elements: list[dict[str, Any]], source_nodes: list[int]) -> html.Div:
     """Get the Cytoscape HTML element"""
     return html.Div(
         cyto.Cytoscape(
             id="cytoscape-graph",
-            layout=layout_with_config(layout),
+            layout=layout_with_config(layout, source_nodes=source_nodes),
             style=_CYTO_INNER_STYLE,
             elements=elements,
             stylesheet=DEFAULT_STYLESHEET,

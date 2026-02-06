@@ -2,18 +2,20 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+
 from power_grid_model_ds._core.model.arrays.pgm_arrays import NodeArray
-from power_grid_model_ds._core.model.enums.nodes import NodeType
 
 
-def layout_with_config(layout_name) -> dict:
+def layout_with_config(layout_name, source_nodes) -> dict:
     """Get the layout options for the selected layout."""
     if layout_name == "breadthfirst":
-        return {
+        config_dict = {
             "name": layout_name,
-            "roots": f"node[node_type = {NodeType.SUBSTATION_NODE.value}]",
             "spacingFactor": 2.5,
         }
+        if source_nodes:
+            config_dict["roots"] = ", ".join(f'[id = "{node}"]' for node in source_nodes)
+        return config_dict
     return {"name": layout_name}
 
 

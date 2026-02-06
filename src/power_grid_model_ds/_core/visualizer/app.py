@@ -75,12 +75,13 @@ def get_app_layout(grid: Grid) -> html.Div:
     columns_store = _get_columns_store(grid)
     graph_layout = get_default_graph_layout(grid.node)
     elements = parse_node_array(grid.node) + parse_branches(grid)
-    cytoscape_html = get_cytoscape_html(graph_layout, elements)
+    cytoscape_html = get_cytoscape_html(graph_layout, elements, grid.source.node.tolist())
 
     return html.Div(
         [
             columns_store,
             dcc.Store(id="stylesheet-store", data=DEFAULT_STYLESHEET),
+            dcc.Store(id="source-nodes-store", data=grid.source.node.tolist()),
             HEADER_HTML,
             html.Hr(style={"border-color": "white", "margin": "0"}),
             cytoscape_html,

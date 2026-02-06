@@ -50,4 +50,4 @@ def test_display_selected_element_none():
 
 
 def test_update_layout():
-    assert update_layout("abcd") == {"name": "abcd", "animate": True}
+    assert update_layout("abcd", [0, 1, 2]) == {"name": "abcd", "animate": True}
