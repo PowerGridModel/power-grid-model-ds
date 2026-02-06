@@ -105,6 +105,7 @@ class TestGridEquality:
         grid2 = deepcopy(grid1)
         # modify a node
         grid2.node.u_rated[0] += 1000.0
+
         assert grid1 != grid2
 
     def test_different_lines(self, basic_grid: Grid):
@@ -117,5 +118,24 @@ class TestGridEquality:
     def test_different_type(self):
         grid1 = build_basic_grid(ExtendedGrid.empty())
         grid2 = Grid.from_extended(grid1)
+
+        assert grid1 != grid2
+
+    def test_extended_grid_equality(self):
+        """Extended grids get the default __eq__ from dataclasses.
+        Make sure it works, since we had a bug in our original implementation where it failed for extended grids.
+        """
+        grid1 = build_basic_grid(ExtendedGrid.empty())
+        grid2 = deepcopy(grid1)
+
+        assert grid1 == grid2
+
+    def test_extended_grid_inequality(self):
+        """Extended grids get the default __eq__ from dataclasses.
+        Make sure it works, since we had a bug in our original implementation where it failed for extended grids.
+        """
+        grid1 = build_basic_grid(ExtendedGrid.empty())
+        grid2 = deepcopy(grid1)
+        grid2.node.u_rated[0] += 1000.0
 
         assert grid1 != grid2

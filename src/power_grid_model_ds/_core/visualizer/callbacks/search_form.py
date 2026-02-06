@@ -22,6 +22,8 @@ def search_element(group: str, column: str, operator: str, value: str, styleshee
     if not group or not column or not value:
         raise PreventUpdate
 
+    sanitized_value = str(value).strip().replace("\\", "\\\\").replace('"', '\\"')
+
     # Determine if we're working with a node or an edge type
     if group == "node":
         style = {
@@ -32,9 +34,9 @@ def search_element(group: str, column: str, operator: str, value: str, styleshee
         style = {"line-color": CYTO_COLORS["highlighted"], "target-arrow-color": CYTO_COLORS["highlighted"]}
 
     if column == "id":
-        selector = f'[{column} {operator} "{value}"][group = "{group}"]'
+        selector = f'[{column} {operator} "{sanitized_value}"][group = "{group}"]'
     else:
-        selector = f'[{column} {operator} {value}][group = "{group}"]'
+        selector = f'[{column} {operator} {sanitized_value}][group = "{group}"]'
 
     new_style = {
         "selector": selector,
