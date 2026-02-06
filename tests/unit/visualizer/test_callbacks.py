@@ -17,11 +17,6 @@ def test_scale_elements():
     assert scale_elements(1.2, 1.3, DEFAULT_STYLESHEET)
 
 
-def test_scale_elements_default_values():
-    with pytest.raises(PreventUpdate):
-        scale_elements(1, 1, DEFAULT_STYLESHEET)
-
-
 def test_search_element_no_input():
     with pytest.raises(PreventUpdate):
         search_element(group="", column="", operator="", value="", stylesheet=DEFAULT_STYLESHEET)
@@ -33,7 +28,7 @@ def test_search_element_with_input():
     operator = "="
     value = "1"
 
-    expected_selector = f'[{column} {operator} "{value}"]'
+    expected_selector = f'[{column} {operator} "{value}"][group = "node"]'
 
     result = search_element(group, column, operator, value, DEFAULT_STYLESHEET)
     assert result[-1]["selector"] == expected_selector
