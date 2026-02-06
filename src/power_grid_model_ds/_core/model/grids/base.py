@@ -7,7 +7,7 @@
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal, Self, Type, TypeVar
+from typing import Literal, Self, Type, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -35,7 +35,6 @@ from power_grid_model_ds._core.model.arrays import (
 )
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
-from power_grid_model_ds._core.model.containers.helpers import container_equal
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
@@ -122,15 +121,6 @@ class Grid(FancyArrayContainer):
         Compatible with https://csacademy.com/app/graph_editor/
         """
         return serialize_to_str(self)
-
-    def __eq__(self, other: Any) -> bool:
-        """Check if two grids are equal.
-
-        Note: differences in graphs are ignored in this comparison.
-        """
-        if not isinstance(other, self.__class__):
-            return False
-        return container_equal(self, other, ignore_extras=False, early_exit=True, fields_to_ignore=["graphs"])
 
     @classmethod
     def empty(cls: Type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
