@@ -7,6 +7,7 @@ from dash import Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import BRANCH_WIDTH, NODE_SIZE
+from power_grid_model_ds._core.visualizer.layout.layout_config import layout_with_config
 from power_grid_model_ds._core.visualizer.typing import STYLESHEET
 
 
@@ -21,8 +22,6 @@ from power_grid_model_ds._core.visualizer.typing import STYLESHEET
 def scale_elements(node_scale: float, edge_scale: float, stylesheet: STYLESHEET) -> tuple[STYLESHEET, STYLESHEET]:
     """Callback to scale the elements of the graph."""
     if stylesheet is None:
-        raise PreventUpdate
-    if node_scale == 1 and edge_scale == 1:
         raise PreventUpdate
     new_stylesheet = stylesheet.copy()
     edge_style = {
@@ -44,10 +43,17 @@ def scale_elements(node_scale: float, edge_scale: float, stylesheet: STYLESHEET)
     return new_stylesheet, new_stylesheet
 
 
-@callback(Output("cytoscape-graph", "layout"), Input("dropdown-update-layout", "value"), prevent_initial_call=True)
-def update_layout(layout):
+@callback(
+    Output("cytoscape-graph", "layout"),
+    Input("dropdown-update-layout", "value"),
+    State("source-nodes-store", "data"),
+    prevent_initial_call=True,
+)
+def update_layout(layout, source_nodes):
     """Callback to update the layout of the graph."""
-    return {"name": layout, "animate": True}
+    layout_config = layout_with_config(layout, source_nodes)
+    layout_config.update({"animate": True})
+    return layout_config
 
 
 @callback(

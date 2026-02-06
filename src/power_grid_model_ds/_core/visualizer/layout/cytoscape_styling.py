@@ -8,7 +8,7 @@ from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
 
-NODE_SIZE = 100
+NODE_SIZE = 75
 BRANCH_WIDTH = 10
 
 _BRANCH_STYLE = {
@@ -34,8 +34,8 @@ _NODE_STYLE = {
         "text-background-color": CYTO_COLORS["node"],
         "text-background-opacity": 1,
         "text-background-shape": "round-rectangle",
-        "width": 75,
-        "height": 75,
+        "width": NODE_SIZE,
+        "height": NODE_SIZE,
     },
 }
 _NODE_LARGE_ID_STYLE = {

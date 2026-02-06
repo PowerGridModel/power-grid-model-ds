@@ -19,19 +19,21 @@ from power_grid_model_ds._core.visualizer.layout.selection_output import (
 def display_selected_element(node_data: list[dict[str, Any]], edge_data: list[dict[str, Any]]):
     """Display the tapped edge data."""
     if node_data:
-        return _to_data_table(node_data.pop())
+        node_data_dict = node_data.pop()
+        del node_data_dict["group"]  # unnecessary information
+        return _to_data_table(node_data_dict)
     if edge_data:
         edge_data_dict = edge_data.pop()
         del edge_data_dict["source"]  # duplicated by from_node
         del edge_data_dict["target"]  # duplicated by to_node
         del edge_data_dict["group"]  # unnecessary information
         return _to_data_table(edge_data_dict)
-    return SELECTION_OUTPUT_HTML
+    return SELECTION_OUTPUT_HTML.children
 
 
 def _to_data_table(data: dict[str, Any]):
     columns = data.keys()
     data_table = dash_table.DataTable(  # type: ignore[attr-defined]
-        data=[data], columns=[{"name": key, "id": key} for key in columns], editable=False
+        data=[data], columns=[{"name": key, "id": key} for key in columns], editable=False, fill_width=True
     )
     return data_table

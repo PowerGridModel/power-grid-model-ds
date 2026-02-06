@@ -17,9 +17,9 @@ from power_grid_model_ds._core.visualizer.callbacks import (  # noqa: F401  # py
 from power_grid_model_ds._core.visualizer.layout.cytoscape_html import get_cytoscape_html
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
 from power_grid_model_ds._core.visualizer.layout.header import HEADER_HTML
+from power_grid_model_ds._core.visualizer.layout.layout_config import get_default_graph_layout
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
 from power_grid_model_ds._core.visualizer.parsers import parse_branches, parse_node_array
-from power_grid_model_ds.arrays import NodeArray
 
 GOOGLE_FONTS = "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
 MDBOOTSTRAP = "https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/8.2.0/mdb.min.css"
@@ -73,24 +73,18 @@ def _get_columns_store(grid: Grid) -> dcc.Store:
 def get_app_layout(grid: Grid) -> html.Div:
     """Get the app layout."""
     columns_store = _get_columns_store(grid)
-    graph_layout = _get_graph_layout(grid.node)
+    graph_layout = get_default_graph_layout(grid.node)
     elements = parse_node_array(grid.node) + parse_branches(grid)
-    cytoscape_html = get_cytoscape_html(graph_layout, elements)
+    cytoscape_html = get_cytoscape_html(graph_layout, elements, grid.source.node.tolist())
 
     return html.Div(
         [
             columns_store,
             dcc.Store(id="stylesheet-store", data=DEFAULT_STYLESHEET),
+            dcc.Store(id="source-nodes-store", data=grid.source.node.tolist()),
             HEADER_HTML,
             html.Hr(style={"border-color": "white", "margin": "0"}),
             cytoscape_html,
             SELECTION_OUTPUT_HTML,
         ],
     )
-
-
-def _get_graph_layout(nodes: NodeArray) -> str:
-    """Determine the graph layout"""
-    if "x" in nodes.columns and "y" in nodes.columns:
-        return "preset"
-    return "breadthfirst"
