@@ -45,6 +45,6 @@ def _to_data_table(data: dict[str, Any]):
     columns.insert(0, "id")
 
     data_table = dash_table.DataTable(  # type: ignore[attr-defined]
-        data=[data], columns=[{"name": key, "id": key} for key in columns], editable=False, fill_width=True
+        data=[data], columns=[{"name": key, "id": key} for key in columns], editable=False, fill_width=False
     )
     return data_table
