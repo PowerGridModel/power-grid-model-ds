@@ -5,6 +5,7 @@
 """Grid tests"""
 
 from collections import Counter
+from copy import deepcopy
 
 import numpy as np
 import pytest
@@ -373,3 +374,49 @@ class TestFindFirstConnected:
         graph.add_node(99)
         with pytest.raises(MissingNodeError):
             graph.find_first_connected(1, candidate_node_ids=[99])
+
+
+class TestEq:
+    def test_eq(self, graph_with_2_routes: BaseGraphModel):
+        copied_graph = deepcopy(graph_with_2_routes)
+        assert graph_with_2_routes == copied_graph
+
+    def test_correct_handling_of_undirected_branches(self, graph_with_2_routes: BaseGraphModel):
+        graph = graph_with_2_routes
+        graph.add_node(100)
+        copied_graph = deepcopy(graph)
+
+        # Add the same branch, but with different order of from/to
+        graph.add_branch(1, 100)
+        copied_graph.add_branch(100, 1)
+
+        # Should still return True, since the topology is the same.
+        assert graph == copied_graph
+
+    def test_inequality_different_nodes(self, graph_with_2_routes: BaseGraphModel):
+        graph = graph_with_2_routes
+        graph.add_node(100)
+
+        copied_graph = deepcopy(graph)
+        copied_graph.add_node(101)
+
+        assert graph != copied_graph
+
+    def test_inequality_extra_duplicate_branches(self, graph_with_2_routes: BaseGraphModel):
+        graph = graph_with_2_routes
+        copied_graph = deepcopy(graph)
+
+        # This branch already exists, the eq should notice the double branch between 1 and 2
+        # as different to a single connection between 1 and 2 in the copied graph.
+        graph.add_branch(1, 2)
+
+        assert graph != copied_graph
+
+    def test_inequality_active_graph(self, graph_with_2_routes: BaseGraphModel):
+        graph = graph_with_2_routes
+        graph.active_only = True
+
+        copied_graph = deepcopy(graph)
+        copied_graph.active_only = False
+
+        assert graph != copied_graph

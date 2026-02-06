@@ -4,7 +4,7 @@
 
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING, Counter, Generator
 
 from numpy._typing import NDArray
 
@@ -412,3 +412,16 @@ class BaseGraphModel(ABC):
 
     @abstractmethod
     def _all_branches(self) -> Generator[tuple[int, int], None, None]: ...
+
+    def __eq__(self, other: object) -> bool:
+        """Check if two graph models are equal by comparing their branches and nodes."""
+        if not isinstance(other, BaseGraphModel):
+            return NotImplemented
+
+        my_branches = Counter((frozenset(branch) for branch in self.all_branches))
+        other_branches = Counter((frozenset(branch) for branch in other.all_branches))
+        return (
+            my_branches == other_branches
+            and set(self.external_ids) == set(other.external_ids)
+            and self.active_only == other.active_only
+        )
