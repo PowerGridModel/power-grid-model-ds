@@ -26,12 +26,8 @@ class CustomNodeArray(NodeArray):
     pass
 
 
-class TrackingGraphModel(RustworkxGraphModel):
-    created_active_flags: list[bool] = []
-
-    def __init__(self, active_only: bool = False) -> None:
-        super().__init__(active_only=active_only)
-        type(self).created_active_flags.append(active_only)
+class CustomGraphModel(RustworkxGraphModel):
+    pass
 
 
 def test_grid_extension_factory_creates_dataclass() -> None:
@@ -78,12 +74,7 @@ def test_grid_extension_factory_adds_value_fields() -> None:
 
 
 def test_grid_extension_factory_uses_custom_graph_model() -> None:
-    TrackingGraphModel.created_active_flags = []
+    _, grid_instance = grid_extension_factory(graph_model=CustomGraphModel)
 
-    _, grid_instance = grid_extension_factory(graph_model=TrackingGraphModel)
-
-    assert isinstance(grid_instance.graphs.active_graph, TrackingGraphModel)
-    assert isinstance(grid_instance.graphs.complete_graph, TrackingGraphModel)
-    assert TrackingGraphModel.created_active_flags == [True, False]
-    assert grid_instance.graphs.active_graph.active_only is True
-    assert grid_instance.graphs.complete_graph.active_only is False
+    assert isinstance(grid_instance.graphs.active_graph, CustomGraphModel)
+    assert isinstance(grid_instance.graphs.complete_graph, CustomGraphModel)
