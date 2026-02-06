@@ -38,7 +38,12 @@ def display_selected_element(node_data: list[dict[str, Any]], edge_data: list[di
 def _to_data_table(data: dict[str, Any]):
     data["id"] = data[PGM_ID_KEY]
     del data[PGM_ID_KEY]
-    columns = data.keys()
+    columns = list(data.keys())
+
+    # Ensure "id" column is first
+    columns.remove("id")
+    columns.insert(0, "id")
+
     data_table = dash_table.DataTable(  # type: ignore[attr-defined]
         data=[data], columns=[{"name": key, "id": key} for key in columns], editable=False
     )
