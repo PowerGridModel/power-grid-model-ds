@@ -19,7 +19,9 @@ from power_grid_model_ds._core.visualizer.layout.selection_output import (
 def display_selected_element(node_data: list[dict[str, Any]], edge_data: list[dict[str, Any]]):
     """Display the tapped edge data."""
     if node_data:
-        return _to_data_table(node_data.pop())
+        node_data_dict = node_data.pop()
+        del node_data_dict["group"]  # unnecessary information
+        return _to_data_table(node_data_dict)
     if edge_data:
         edge_data_dict = edge_data.pop()
         del edge_data_dict["source"]  # duplicated by from_node
