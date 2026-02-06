@@ -9,6 +9,7 @@ from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray, NodeArray
 
+_LARGE_NODE_ID_THRESHOLD = 10_000_000
 
 class StyleClass(StrEnum):
     """Styling classes used in the visualizer."""
@@ -28,9 +29,15 @@ class StyleClass(StrEnum):
 
 
 def get_node_classification(node_arr: NodeArray) -> str:
-    """Get the space separated string of styling classes for a node."""
+    """Get the space separated string of styling classes for a node.
+
+    Note:
+        Large ID nodes are those with an ID greater than 10,000,000.
+        The style class decreases the font size for better readability.
+
+    """
     classes = [StyleClass.NODE]
-    if node_arr.id > 10000000:
+    if node_arr.id > _LARGE_NODE_ID_THRESHOLD:
         classes.append(StyleClass.LARGE_ID_NODE)
     if node_arr.node_type == 1:
         classes.append(StyleClass.SUBSTATION_NODE)
