@@ -11,6 +11,7 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray, NodeA
 
 _LARGE_NODE_ID_THRESHOLD = 10_000_000
 
+
 class StyleClass(StrEnum):
     """Styling classes used in the visualizer."""
 
