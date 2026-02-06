@@ -23,8 +23,6 @@ def scale_elements(node_scale: float, edge_scale: float, stylesheet: STYLESHEET)
     """Callback to scale the elements of the graph."""
     if stylesheet is None:
         raise PreventUpdate
-    if node_scale == 1 and edge_scale == 1:
-        raise PreventUpdate
     new_stylesheet = stylesheet.copy()
     edge_style = {
         "selector": "edge",

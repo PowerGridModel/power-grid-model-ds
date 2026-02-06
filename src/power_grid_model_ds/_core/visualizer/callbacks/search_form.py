@@ -32,9 +32,9 @@ def search_element(group: str, column: str, operator: str, value: str, styleshee
         style = {"line-color": CYTO_COLORS["highlighted"], "target-arrow-color": CYTO_COLORS["highlighted"]}
 
     if column == "id":
-        selector = f'[{column} {operator} "{value}"]'
+        selector = f'[{column} {operator} "{value}"][group = "{group}"]'
     else:
-        selector = f"[{column} {operator} {value}]"
+        selector = f'[{column} {operator} {value}][group = "{group}"]'
 
     new_style = {
         "selector": selector,
