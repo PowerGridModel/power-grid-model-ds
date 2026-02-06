@@ -32,7 +32,7 @@ def display_selected_element(node_data: list[dict[str, Any]], edge_data: list[di
 
     elm_data = {k: v for k, v in selected_data.items() if k not in VISUALIZATION_KEYS}
 
-    return _to_data_table(elm_data).children
+    return _to_data_table(elm_data)
 
 
 def _to_data_table(data: dict[str, Any]):
