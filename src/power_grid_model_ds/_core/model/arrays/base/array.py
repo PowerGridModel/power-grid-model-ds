@@ -18,7 +18,7 @@ from power_grid_model_ds._core.model.arrays.base._optional import pandas
 from power_grid_model_ds._core.model.arrays.base._string import convert_array_to_string
 from power_grid_model_ds._core.model.arrays.base.errors import ArrayDefinitionError
 from power_grid_model_ds._core.model.constants import EMPTY_ID, empty
-from power_grid_model_ds._core.utils.misc import get_inherited_attrs
+from power_grid_model_ds._core.utils.misc import array_equal_with_nan, get_inherited_attrs
 
 # pylint: disable=missing-function-docstring, too-many-public-methods
 
@@ -196,7 +196,7 @@ class FancyArray(ABC):
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
-        return self.data.__eq__(other.data)
+        return array_equal_with_nan(self._data, other._data)
 
     def __copy__(self):
         return self.__class__(data=copy(self._data))

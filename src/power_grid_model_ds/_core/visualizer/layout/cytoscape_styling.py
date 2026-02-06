@@ -33,8 +33,8 @@ _NODE_STYLE = {
         "text-background-color": CYTO_COLORS[StyleClass.NODE],
         "text-background-opacity": 1,
         "text-background-shape": "round-rectangle",
-        "width": 75,
-        "height": 75,
+        "width": NODE_SIZE,
+        "height": NODE_SIZE,
     },
 }
 _NODE_LARGE_ID_STYLE = {
