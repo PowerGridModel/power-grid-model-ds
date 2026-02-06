@@ -18,7 +18,7 @@ from power_grid_model_ds._core.visualizer.layout.cytoscape_html import get_cytos
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
 from power_grid_model_ds._core.visualizer.layout.header import HEADER_HTML
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
-from power_grid_model_ds._core.visualizer.parsers import parse_branches, parse_node_array
+from power_grid_model_ds._core.visualizer.parsers import parse_element_data
 from power_grid_model_ds.arrays import NodeArray
 
 GOOGLE_FONTS = "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
@@ -74,7 +74,7 @@ def get_app_layout(grid: Grid) -> html.Div:
     """Get the app layout."""
     columns_store = _get_columns_store(grid)
     graph_layout = _get_graph_layout(grid.node)
-    elements = parse_node_array(grid.node) + parse_branches(grid)
+    elements = list(parse_element_data(grid).values())
     cytoscape_html = get_cytoscape_html(graph_layout, elements)
 
     return html.Div(
