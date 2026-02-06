@@ -55,7 +55,7 @@ def test_element_selection_callback():
     result = display_selected_element(node_data, edge_data)
     expected = dash_table.DataTable(  # type: ignore[attr-defined]
         data=[{"u_rated": 100.0, "id": 1}],
-        columns=[{"name": "u_rated", "id": "u_rated"}, {"name": "id", "id": "id"}],
+        columns=[{"name": "id", "id": "id"}, {"name": "u_rated", "id": "u_rated"}],
         editable=False,
     )
     assert result.data == expected.data
