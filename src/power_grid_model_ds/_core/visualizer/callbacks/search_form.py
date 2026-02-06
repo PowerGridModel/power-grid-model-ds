@@ -2,43 +2,88 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+
 from dash import Input, Output, State, callback
 from dash.exceptions import PreventUpdate
+from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
-from power_grid_model_ds._core.visualizer.typing import STYLESHEET
+from power_grid_model_ds._core.visualizer.typing import STYLESHEET, ListArrayData, VizToComponentData
+
+HIGHLIGHT_STYLE = {
+    "background-color": CYTO_COLORS["highlighted"],
+    "text-background-color": CYTO_COLORS["highlighted"],
+    "line-color": CYTO_COLORS["highlighted"],
+    "target-arrow-color": CYTO_COLORS["highlighted"],
+}
+
+NON_VISIBLE_ELMS = [
+    ComponentType.sym_power_sensor.value,
+    ComponentType.sym_voltage_sensor.value,
+    ComponentType.asym_voltage_sensor.value,
+    ComponentType.transformer_tap_regulator.value,
+]
+
+BRANCHES_COMPONENTS = [
+    ComponentType.line.value,
+    ComponentType.link.value,
+    ComponentType.generic_branch.value,
+    ComponentType.transformer.value,
+    ComponentType.asym_line.value,
+]
+
+NON_VISIBLE_ELMS_INCL_APPLIANCES = [ComponentType.sym_load.value, ComponentType.sym_gen.value] + NON_VISIBLE_ELMS
 
 
 @callback(
-    Output("cytoscape-graph", "stylesheet"),
+    Output("cytoscape-graph", "stylesheet", allow_duplicate=True),
     Input("search-form-group-input", "value"),
     Input("search-form-column-input", "value"),
     Input("search-form-operator-input", "value"),
     Input("search-form-value-input", "value"),
+    State("viz-to-comp-store", "data"),
     State("stylesheet-store", "data"),
+    State("show-appliances-store", "data"),
+    prevent_initial_call=True,
 )
-def search_element(group: str, column: str, operator: str, value: str, stylesheet: STYLESHEET) -> STYLESHEET:
+def search_element(  #  pylint: disable=too-many-arguments, disable=too-many-positional-arguments
+    group: str,
+    column: str,
+    operator: str,
+    value: str,
+    viz_to_comp: VizToComponentData,
+    stylesheet: STYLESHEET,
+    show_appliances: bool,
+) -> STYLESHEET:
     """Color the specified element red based on the input values."""
     if not group or not column or not value:
         raise PreventUpdate
 
-    # Determine if we're working with a node or an edge type
-    if group == "node":
-        style = {
-            "background-color": CYTO_COLORS["highlighted"],
-            "text-background-color": CYTO_COLORS["highlighted"],
-        }
-    else:
-        style = {"line-color": CYTO_COLORS["highlighted"], "target-arrow-color": CYTO_COLORS["highlighted"]}
+    # id column was renamed to pgm_id because of cytoscape reserved word
+    search_column = column if column != "id" else "pgm_id"
+    search_query = f"{search_column} {operator} {value}"
 
-    if column == "id":
-        selector = f'[{column} {operator} "{value}"]'
+    non_visible_elms = NON_VISIBLE_ELMS if show_appliances else NON_VISIBLE_ELMS_INCL_APPLIANCES
+    if group == "branches":
+        branches_selector = ", ".join([f"edge[group = '{comp}']" for comp in BRANCHES_COMPONENTS])
+        selector = f"edge[{search_query}]_[{branches_selector}]"
+    elif group in non_visible_elms:
+        found = _search_components(
+            viz_to_comp=viz_to_comp,
+            component_type=ComponentType(group),
+            column=search_column,
+            operator=operator,
+            value=value,
+        )
+        if not found:
+            return stylesheet
+        selector = ", ".join([f'[id = "{node_id}"]' for node_id in found])
     else:
-        selector = f"[{column} {operator} {value}]"
+        selector = f"[{search_query}][group = '{group}']"
 
     new_style = {
         "selector": selector,
-        "style": style,
+        "style": HIGHLIGHT_STYLE,
     }
     updated_stylesheet = stylesheet + [new_style]
     return updated_stylesheet
@@ -60,3 +105,50 @@ def update_column_options(selected_group, store_data):
     default_value = columns[0] if columns else "id"
 
     return columns, default_value
+
+
+def _search_components(
+    viz_to_comp: VizToComponentData, component_type: ComponentType, column: str, operator: str, value: str
+) -> list[str]:
+    """Find node or edge IDs that have components matching the search criteria."""
+    try:
+        numeric_value = float(value)
+    except ValueError:
+        return []
+
+    matching_nodes = []
+    for node_edge_id, node_edge_data in viz_to_comp.items():
+        if _find_components_node_edge(node_edge_data, component_type, column, numeric_value, operator):
+            matching_nodes.append(node_edge_id)
+
+    return matching_nodes
+
+
+def _find_components_node_edge(
+    node_edge_data: dict[ComponentType, ListArrayData],
+    component_type: ComponentType,
+    column: str,
+    numeric_value: float,
+    operator: str,
+) -> bool:
+    if component_type in node_edge_data:
+        for component in node_edge_data[component_type]:
+            if column in component:
+                if _compare_values(numeric_value, component[column], operator):
+                    return True
+    return False
+
+
+def _compare_values(numeric_value: float, component_value: float, operator: str) -> bool:
+    """Compare component value with the numeric value based on the operator."""
+    match operator:
+        case "=":
+            return component_value == numeric_value
+        case ">":
+            return component_value > numeric_value
+        case "<":
+            return component_value < numeric_value
+        case "!=":
+            return component_value != numeric_value
+        case _:
+            return False

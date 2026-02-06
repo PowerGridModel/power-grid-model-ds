@@ -22,6 +22,14 @@ _TRANSFORMER_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": 
 _GENERIC_BRANCH_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["generic_branch"]}
 _ASYM_LINE_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["asym_line"]}
 _OPEN_BRANCH_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["open_branch"]}
+_HEATMAP_STYLE = {
+    "width": "60px",
+    "height": "30px",
+    "margin": _MARGIN,
+    "background": f"linear-gradient(to right, {CYTO_COLORS['heatmap_min']}, {CYTO_COLORS['heatmap_max']})",
+    "border": "2px solid white",
+    "border-radius": "4px",
+}
 LEGENDA_ELEMENTS = [
     html.I(className="fas fa-circle", id="node-icon", style=NODE_ICON_STYLE),
     dbc.Tooltip("Node", target="node-icon", placement="bottom"),
@@ -39,4 +47,6 @@ LEGENDA_ELEMENTS = [
     dbc.Tooltip("Asymmetrical Line", target="asym-line-icon", placement="bottom"),
     html.I(className="fas fa-ellipsis", id="open-branch-icon", style=_OPEN_BRANCH_ICON_STYLE),
     dbc.Tooltip("Open Branch", target="open-branch-icon", placement="bottom"),
+    html.Div(id="heatmap-icon", style=_HEATMAP_STYLE),
+    dbc.Tooltip("Heatmap", target="heatmap-icon", placement="bottom"),
 ]

@@ -1,0 +1,91 @@
+from enum import StrEnum
+from typing import Literal
+
+from power_grid_model import ComponentType
+
+from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray, NodeArray
+
+
+class StyleClass(StrEnum):
+    """Styling classes used in the visualizer."""
+
+    NODE = "node"
+    SUBSTATION_NODE = "substation_node"
+    LARGE_ID_NODE = "large_id_node"
+    BRANCH = "branch"
+    OPEN_BRANCH = "open_branch"
+    OPEN_BRANCH_FROM = "open_branch_from"
+    OPEN_BRANCH_TO = "open_branch_to"
+    LINE = "line"
+    TRANSFORMER = "transformer"
+    LINK = "link"
+    GENERIC_BRANCH = "generic_branch"
+    ASYM_LINE = "asym_line"
+    SOURCE = "source"
+    GENERATING_APPLIANCE = "generating_appliance"
+    LOADING_APPLIANCE = "loading_appliance"
+    OPEN_GENERATING_APPLIANCE = "open_generating_appliance"
+    OPEN_LOADING_APPLIANCE = "open_loading_appliance"
+    APPLIANCE_GHOST_NODE = "appliance_ghost_node"
+
+
+def get_node_classification(node_arr: NodeArray) -> str:
+    """Get the space separated string of styling classes for a node."""
+    classes = [StyleClass.NODE]
+    if node_arr.id > 10000000:
+        classes.append(StyleClass.LARGE_ID_NODE)
+    if node_arr.node_type == 1:
+        classes.append(StyleClass.SUBSTATION_NODE)
+    return " ".join((entry.value for entry in classes))
+
+
+def get_branch_classification(
+    branch_arr: BranchArray,
+    component_type: Literal[
+        ComponentType.transformer,
+        ComponentType.three_winding_transformer,
+        ComponentType.link,
+        ComponentType.generic_branch,
+        ComponentType.line,
+        ComponentType.asym_line,
+    ],
+) -> str:
+    """Get the space separated string of styling classes for a branch."""
+    classes = [StyleClass.BRANCH]
+
+    type_to_vizclass = {
+        ComponentType.transformer: StyleClass.TRANSFORMER,
+        ComponentType.three_winding_transformer: StyleClass.TRANSFORMER,
+        ComponentType.link: StyleClass.LINK,
+        ComponentType.generic_branch: StyleClass.GENERIC_BRANCH,
+        ComponentType.line: StyleClass.LINE,
+        ComponentType.asym_line: StyleClass.ASYM_LINE,
+    }
+    classes.append(type_to_vizclass[component_type])
+
+    if branch_arr.from_status == 0:
+        classes.extend([StyleClass.OPEN_BRANCH, StyleClass.OPEN_BRANCH_FROM])
+    if branch_arr.to_status == 0:
+        classes.extend([StyleClass.OPEN_BRANCH, StyleClass.OPEN_BRANCH_TO])
+
+    return " ".join((entry.value for entry in classes))
+
+
+def get_appliance_edge_classification(
+    appliance_arr, component_type: Literal[ComponentType.sym_load, ComponentType.sym_gen, ComponentType.source]
+) -> str:
+    """Get the space separated string of styling classes for an appliance edge."""
+    type_to_vizclass = {
+        ComponentType.sym_load: StyleClass.LOADING_APPLIANCE,
+        ComponentType.sym_gen: StyleClass.GENERATING_APPLIANCE,
+        ComponentType.source: StyleClass.GENERATING_APPLIANCE,
+    }
+
+    classes = [type_to_vizclass[component_type]]
+    if appliance_arr.status == 0:
+        if type_to_vizclass[component_type] == StyleClass.LOADING_APPLIANCE:
+            classes.append(StyleClass.OPEN_LOADING_APPLIANCE)
+        else:
+            classes.append(StyleClass.OPEN_GENERATING_APPLIANCE)
+
+    return " ".join((entry.value for entry in classes))
