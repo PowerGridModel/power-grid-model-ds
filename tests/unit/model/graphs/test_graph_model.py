@@ -420,3 +420,7 @@ class TestEq:
         copied_graph.active_only = False
 
         assert graph != copied_graph
+
+    def test_inequality_different_type(self, graph_with_2_routes: BaseGraphModel):
+        graph = graph_with_2_routes
+        assert graph != "not a graph"
