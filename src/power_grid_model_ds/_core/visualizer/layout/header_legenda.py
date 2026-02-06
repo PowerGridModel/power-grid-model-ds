@@ -6,6 +6,7 @@ import dash_bootstrap_components as dbc
 from dash import html
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
+from power_grid_model_ds._core.visualizer.styling_classification import StyleClass
 
 _BOOTSTRAP_ARROW_ICON_CLASS = "fas fa-arrow-right-long"
 _MARGIN = "0 10px"
@@ -14,14 +15,18 @@ LEGENDA_STYLE = {"margin": _MARGIN, "text-shadow": "0 0 5px #000", "justify-cont
 
 _FONT_SIZE = "2.5em"
 
-NODE_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["node"]}
-_SUBSTATION_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["substation_node"]}
-_LINE_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["line"]}
-_LINK_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["link"]}
-_TRANSFORMER_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["transformer"]}
-_GENERIC_BRANCH_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["generic_branch"]}
-_ASYM_LINE_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["asym_line"]}
-_OPEN_BRANCH_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS["open_branch"]}
+NODE_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.NODE]}
+_SUBSTATION_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.SUBSTATION_NODE]}
+_LINE_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.BRANCH]}
+_LINK_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.LINK]}
+_TRANSFORMER_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.TRANSFORMER]}
+_GENERIC_BRANCH_ICON_STYLE = {
+    "font-size": _FONT_SIZE,
+    "margin": _MARGIN,
+    "color": CYTO_COLORS[StyleClass.GENERIC_BRANCH],
+}
+_ASYM_LINE_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.ASYM_LINE]}
+_OPEN_BRANCH_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.OPEN_BRANCH]}
 LEGENDA_ELEMENTS = [
     html.I(className="fas fa-circle", id="node-icon", style=NODE_ICON_STYLE),
     dbc.Tooltip("Node", target="node-icon", placement="bottom"),

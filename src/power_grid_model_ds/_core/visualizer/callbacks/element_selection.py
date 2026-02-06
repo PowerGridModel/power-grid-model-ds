@@ -9,6 +9,10 @@ from dash import Input, Output, callback, dash_table
 from power_grid_model_ds._core.visualizer.layout.selection_output import (
     SELECTION_OUTPUT_HTML,
 )
+from power_grid_model_ds._core.visualizer.parsing_utils import PGM_ID_KEY
+
+# Keys used in the visualization elements that are not part of the component data
+VISUALIZATION_KEYS = ["id", "label", "group", "position", "parent", "source", "target"]
 
 
 @callback(
@@ -18,22 +22,29 @@ from power_grid_model_ds._core.visualizer.layout.selection_output import (
 )
 def display_selected_element(node_data: list[dict[str, Any]], edge_data: list[dict[str, Any]]):
     """Display the tapped edge data."""
+    # 0th element means data for only a single selection is shown
     if node_data:
-        node_data_dict = node_data.pop()
-        del node_data_dict["group"]  # unnecessary information
-        return _to_data_table(node_data_dict)
-    if edge_data:
-        edge_data_dict = edge_data.pop()
-        del edge_data_dict["source"]  # duplicated by from_node
-        del edge_data_dict["target"]  # duplicated by to_node
-        del edge_data_dict["group"]  # unnecessary information
-        return _to_data_table(edge_data_dict)
-    return SELECTION_OUTPUT_HTML.children
+        selected_data = node_data.pop()
+    elif edge_data:
+        selected_data = edge_data.pop()
+    else:
+        return SELECTION_OUTPUT_HTML.children
+
+    elm_data = {k: v for k, v in selected_data.items() if k not in VISUALIZATION_KEYS}
+
+    return _to_data_table(elm_data)
 
 
 def _to_data_table(data: dict[str, Any]):
-    columns = data.keys()
+    data["id"] = data[PGM_ID_KEY]
+    del data[PGM_ID_KEY]
+    columns = list(data.keys())
+
+    # Ensure "id" column is first
+    columns.remove("id")
+    columns.insert(0, "id")
+
     data_table = dash_table.DataTable(  # type: ignore[attr-defined]
-        data=[data], columns=[{"name": key, "id": key} for key in columns], editable=False, fill_width=True
+        data=[data], columns=[{"name": key, "id": key} for key in columns], editable=False, fill_width=False
     )
     return data_table

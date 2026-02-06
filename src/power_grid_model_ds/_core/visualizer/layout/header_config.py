@@ -7,9 +7,10 @@ import dash_bootstrap_components as dbc
 from dash import dcc, html
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
+from power_grid_model_ds._core.visualizer.styling_classification import StyleClass
 
 NODE_SCALE_HTML = [
-    html.I(className="fas fa-circle", style={"color": CYTO_COLORS["node"], "margin-right": "10px"}),
+    html.I(className="fas fa-circle", style={"color": CYTO_COLORS[StyleClass.NODE], "margin-right": "10px"}),
     dcc.Input(
         id="node-scale-input",
         type="number",
@@ -22,7 +23,9 @@ NODE_SCALE_HTML = [
 ]
 
 EDGE_SCALE_HTML = [
-    html.I(className="fas fa-arrow-right-long", style={"color": CYTO_COLORS["line"], "margin-right": "10px"}),
+    html.I(
+        className="fas fa-arrow-right-long", style={"color": CYTO_COLORS[StyleClass.BRANCH], "margin-right": "10px"}
+    ),
     dcc.Input(
         id="edge-scale-input",
         type="number",

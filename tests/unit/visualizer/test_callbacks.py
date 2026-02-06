@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 import pytest
+from dash import dash_table
 from dash.exceptions import PreventUpdate
 
 from power_grid_model_ds._core.visualizer.callbacks.config import scale_elements, update_arrows, update_layout
@@ -42,6 +43,19 @@ def test_show_arrows():
 def test_hide_arrows():
     stylesheet = update_arrows(False, DEFAULT_STYLESHEET)
     assert stylesheet[_EDGE_INDEX]["style"]["target-arrow-shape"] == "none"
+
+
+def test_element_selection_callback():
+    node_data = [{"pgm_id": 1, "u_rated": 100.0, "group": "node"}]
+    edge_data = []
+    result = display_selected_element(node_data, edge_data)
+    expected = dash_table.DataTable(  # type: ignore[attr-defined]
+        data=[{"u_rated": 100.0, "id": 1}],
+        columns=[{"name": "id", "id": "id"}, {"name": "u_rated", "id": "u_rated"}],
+        editable=False,
+    )
+    assert result.data == expected.data
+    assert result.columns == expected.columns
 
 
 def test_display_selected_element_none():
