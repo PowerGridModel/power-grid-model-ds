@@ -35,11 +35,15 @@ def test_initialize_empty_grid(grid: Grid):
         "sym_current_sensor",
         "sym_gen",
         "sym_load",
+        "asym_gen",
+        "asym_load",
+        "shunt",
         "sym_power_sensor",
         "sym_voltage_sensor",
         "three_winding_transformer",
         "transformer",
         "transformer_tap_regulator",
+        "voltage_regulator",
     } == set(fields)
 
 

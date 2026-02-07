@@ -4,7 +4,9 @@
 
 from power_grid_model_ds._core.model.arrays import (
     AsymCurrentSensorArray,
+    AsymGenArray,
     AsymLineArray,
+    AsymLoadArray,
     AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
@@ -13,6 +15,7 @@ from power_grid_model_ds._core.model.arrays import (
     LineArray,
     LinkArray,
     NodeArray,
+    ShuntArray,
     SourceArray,
     SymCurrentSensorArray,
     SymGenArray,
@@ -22,6 +25,7 @@ from power_grid_model_ds._core.model.arrays import (
     ThreeWindingTransformerArray,
     TransformerArray,
     TransformerTapRegulatorArray,
+    VoltageRegulatorArray,
 )
 
 __all__ = [
@@ -38,7 +42,11 @@ __all__ = [
     "SourceArray",
     "SymGenArray",
     "SymLoadArray",
+    "AsymGenArray",
+    "AsymLoadArray",
+    "ShuntArray",
     "TransformerTapRegulatorArray",
+    "VoltageRegulatorArray",
     "AsymVoltageSensorArray",
     "AsymCurrentSensorArray",
     "SymPowerSensorArray",

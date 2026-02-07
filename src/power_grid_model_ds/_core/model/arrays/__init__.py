@@ -8,7 +8,9 @@ from power_grid_model_ds._core.model.arrays import MyArray
 
 from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     AsymCurrentSensorArray,
+    AsymGenArray,
     AsymLineArray,
+    AsymLoadArray,
     AsymPowerSensorArray,
     AsymVoltageSensorArray,
     Branch3Array,
@@ -18,6 +20,7 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     LineArray,
     LinkArray,
     NodeArray,
+    ShuntArray,
     SourceArray,
     SymCurrentSensorArray,
     SymGenArray,
@@ -27,6 +30,7 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     ThreeWindingTransformerArray,
     TransformerArray,
     TransformerTapRegulatorArray,
+    VoltageRegulatorArray,
 )
 
 __all__ = [
@@ -41,8 +45,11 @@ __all__ = [
     "LinkArray",
     "NodeArray",
     "SourceArray",
+    "ShuntArray",
     "SymLoadArray",
     "SymGenArray",
+    "AsymGenArray",
+    "AsymLoadArray",
     "SymCurrentSensorArray",
     "SymPowerSensorArray",
     "SymVoltageSensorArray",
@@ -50,4 +57,5 @@ __all__ = [
     "ThreeWindingTransformerArray",
     "TransformerArray",
     "TransformerTapRegulatorArray",
+    "VoltageRegulatorArray",
 ]

@@ -11,7 +11,7 @@ from numpy.typing import NDArray
 
 from power_grid_model_ds._core.fancypy import concatenate
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
-from power_grid_model_ds._core.model.dtypes.appliances import Source, SymGen, SymLoad
+from power_grid_model_ds._core.model.dtypes.appliances import AsymGen, AsymLoad, Shunt, Source, SymGen, SymLoad
 from power_grid_model_ds._core.model.dtypes.branches import (
     AsymLine,
     Branch,
@@ -24,7 +24,7 @@ from power_grid_model_ds._core.model.dtypes.branches import (
 )
 from power_grid_model_ds._core.model.dtypes.id import Id
 from power_grid_model_ds._core.model.dtypes.nodes import Node
-from power_grid_model_ds._core.model.dtypes.regulators import TransformerTapRegulator
+from power_grid_model_ds._core.model.dtypes.regulators import TransformerTapRegulator, VoltageRegulator
 from power_grid_model_ds._core.model.dtypes.sensors import (
     AsymCurrentSensor,
     AsymPowerSensor,
@@ -49,7 +49,19 @@ class SymGenArray(IdArray, SymGen):
     pass
 
 
+class AsymLoadArray(IdArray, AsymLoad):
+    pass
+
+
+class AsymGenArray(IdArray, AsymGen):
+    pass
+
+
 class SourceArray(IdArray, Source):
+    pass
+
+
+class ShuntArray(IdArray, Shunt):
     pass
 
 
@@ -140,6 +152,10 @@ class Branch3Array(IdArray, Branch3):
 
 
 class ThreeWindingTransformerArray(Branch3Array, ThreeWindingTransformer):
+    pass
+
+
+class VoltageRegulatorArray(IdArray, VoltageRegulator):
     pass
 
 

@@ -14,7 +14,9 @@ import numpy.typing as npt
 
 from power_grid_model_ds._core.model.arrays import (
     AsymCurrentSensorArray,
+    AsymGenArray,
     AsymLineArray,
+    AsymLoadArray,
     AsymPowerSensorArray,
     AsymVoltageSensorArray,
     Branch3Array,
@@ -23,6 +25,7 @@ from power_grid_model_ds._core.model.arrays import (
     LineArray,
     LinkArray,
     NodeArray,
+    ShuntArray,
     SourceArray,
     SymCurrentSensorArray,
     SymGenArray,
@@ -32,6 +35,7 @@ from power_grid_model_ds._core.model.arrays import (
     ThreeWindingTransformerArray,
     TransformerArray,
     TransformerTapRegulatorArray,
+    VoltageRegulatorArray,
 )
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
@@ -104,9 +108,13 @@ class Grid(FancyArrayContainer):
     source: SourceArray
     sym_load: SymLoadArray
     sym_gen: SymGenArray
+    asym_load: AsymLoadArray
+    asym_gen: AsymGenArray
+    shunt: ShuntArray
 
     # regulators
     transformer_tap_regulator: TransformerTapRegulatorArray
+    voltage_regulator: VoltageRegulatorArray
 
     # sensors
     sym_power_sensor: SymPowerSensorArray
