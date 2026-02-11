@@ -5,7 +5,7 @@
 """Base grid classes"""
 
 import warnings
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Literal, Self, Type, TypeVar
 
@@ -121,6 +121,17 @@ class Grid(FancyArrayContainer):
         Compatible with https://csacademy.com/app/graph_editor/
         """
         return serialize_to_str(self)
+
+    def __repr__(self) -> str:
+        """Expose non-empty arrays with their field names for debugging."""
+        array_reprs: list[str] = []
+        for field in fields(self):
+            value = getattr(self, field.name)
+            if isinstance(value, FancyArray) and len(value):
+                array_reprs.append(f"\n{field.name}=\n{value.as_table(rows=2)}")
+        if not array_reprs:
+            return f"{self.__class__.__name__}()"
+        return f"{self.__class__.__name__}({', '.join(array_reprs)})"
 
     @classmethod
     def empty(cls: Type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
