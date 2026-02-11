@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import dataclasses
-from typing import TYPE_CHECKING
+from collections import defaultdict
+from typing import TYPE_CHECKING, Iterator
 
 import numpy as np
 import numpy.typing as npt
@@ -12,6 +13,7 @@ from power_grid_model_ds._core import fancypy as fp
 from power_grid_model_ds._core.model.arrays import BranchArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.enums.nodes import NodeType
+from power_grid_model_ds._core.model.graphs.errors import MissingBranchError
 
 if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import Grid
@@ -71,3 +73,34 @@ def get_downstream_nodes(grid: "Grid", node_id: int, inclusive: bool = False):
     return grid.graphs.active_graph.get_downstream_nodes(
         node_id=node_id, start_node_ids=list(substation_nodes.id), inclusive=inclusive
     )
+
+
+def _active_branches(grid: "Grid") -> tuple[BranchArray, dict[tuple[int, int], list[int]]]:
+    """Return active branch records plus an index keyed on their node pairs."""
+
+    active = grid.branches.filter(from_status=1, to_status=1)
+    if grid.three_winding_transformer.size:
+        three_winding_active = grid.three_winding_transformer.as_branches().filter(from_status=1, to_status=1)
+        if three_winding_active.size:
+            active = fp.concatenate(active, three_winding_active)
+
+    index: dict[tuple[int, int], list[int]] = defaultdict(list)
+    for position, (source, target) in enumerate(zip(active.from_node, active.to_node)):
+        index[(int(source), int(target))].append(position)
+
+    return active, index
+
+
+def iter_branches_in_shortest_path(grid: "Grid", from_node_id: int, to_node_id: int) -> Iterator[BranchArray]:
+    """See Grid.iter_branches_in_shortest_path()."""
+
+    path, _ = grid.graphs.active_graph.get_shortest_path(from_node_id, to_node_id)
+    active_branches, index = _active_branches(grid)
+
+    for current_node, next_node in zip(path[:-1], path[1:]):
+        positions = index.get((current_node, next_node))
+        if not positions:
+            raise MissingBranchError(
+                f"No active branch connects nodes {current_node} -> {next_node} even though a path exists."
+            )
+        yield active_branches[positions]

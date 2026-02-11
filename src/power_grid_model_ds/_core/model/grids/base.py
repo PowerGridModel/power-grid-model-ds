@@ -12,7 +12,6 @@ from typing import Iterator, Literal, Self, Type, TypeVar
 import numpy as np
 import numpy.typing as npt
 
-from power_grid_model_ds._core.fancypy import concatenate
 from power_grid_model_ds._core.model.arrays import (
     AsymCurrentSensorArray,
     AsymLineArray,
@@ -37,7 +36,6 @@ from power_grid_model_ds._core.model.arrays import (
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
-from power_grid_model_ds._core.model.graphs.errors import MissingBranchError
 from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.grids._feeders import set_feeder_ids
@@ -63,6 +61,9 @@ from power_grid_model_ds._core.model.grids._search import (
     get_downstream_nodes,
     get_nearest_substation_node,
     get_typed_branches,
+)
+from power_grid_model_ds._core.model.grids._search import (
+    iter_branches_in_shortest_path as _iter_branches_in_shortest_path,
 )
 from power_grid_model_ds._core.model.grids.serialization.json import deserialize_from_json, serialize_to_json
 from power_grid_model_ds._core.model.grids.serialization.pickle import load_grid_from_pickle, save_grid_to_pickle
@@ -313,19 +314,6 @@ class Grid(FancyArrayContainer):
         """Reverse the direction of the branches."""
         return reverse_branches(self, branches)
 
-    def _active_branches(self) -> BranchArray:
-        """Collection of active branch records including converted three-winding transformer edges."""
-
-        active = self.branches.filter(from_status=1, to_status=1)
-        if not self.three_winding_transformer.size:
-            return active
-
-        three_winding_active = self.three_winding_transformer.as_branches().filter(from_status=1, to_status=1)
-        if not three_winding_active.size:
-            return active
-
-        return concatenate(active, three_winding_active)
-
     def get_branches_in_path(self, nodes_in_path: list[int]) -> BranchArray:
         """Returns all branches within a path of nodes
 
@@ -338,18 +326,9 @@ class Grid(FancyArrayContainer):
         return self.branches.filter(from_node=nodes_in_path, to_node=nodes_in_path, from_status=1, to_status=1)
 
     def iter_branches_in_shortest_path(self, from_node_id: int, to_node_id: int) -> Iterator[BranchArray]:
-        """Yield the active branches that connect two nodes via the shortest path."""
+        """Yield all active branches on the shortest path connecting ``from_node_id`` to ``to_node_id``."""
 
-        path, _ = self.graphs.active_graph.get_shortest_path(from_node_id, to_node_id)
-        active_branches = self._active_branches()
-
-        for current_node, next_node in zip(path[:-1], path[1:]):
-            branch = active_branches.filter(from_node=[current_node], to_node=[next_node])
-            if not len(branch):
-                raise MissingBranchError(
-                    f"No active branch connects nodes {current_node} -> {next_node} even though a path exists."
-                )
-            yield branch
+        return _iter_branches_in_shortest_path(self, from_node_id, to_node_id)
 
     def get_nearest_substation_node(self, node_id: int):
         """Find the nearest substation node.
