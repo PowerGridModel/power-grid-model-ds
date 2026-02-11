@@ -30,6 +30,16 @@ class GraphContainer:
     complete_graph: BaseGraphModel
     """The graph containing all branches."""
 
+    def __repr__(self) -> str:
+        """Summarize graphs with counts that can be shown in a Grid repr."""
+        graph_infos = []
+        for field in dataclasses.fields(self):
+            graph = getattr(self, field.name)
+            graph_infos.append(
+                f"{field.name}(nodes={graph.nr_nodes}, branches={graph.nr_branches}, active_only={graph.active_only})"
+            )
+        return f"{self.__class__.__name__}({', '.join(graph_infos)})"
+
     @property
     def graph_attributes(self) -> Generator:
         """Get all graph attributes of the container.
