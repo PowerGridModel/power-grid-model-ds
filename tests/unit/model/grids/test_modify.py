@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
+import pytest
+
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays import (
     LineArray,
@@ -34,6 +36,33 @@ def test_grid_delete_node(basic_grid: Grid):
     grid.delete_node(node=target_node)
 
     assert 5 == len(grid.node)
+    assert target_node.id not in grid.node.id
+
+
+@pytest.mark.parametrize(
+    "three_winding_node_id,expected_length_three_winding_transformers",
+    [
+        pytest.param(101, 0, id="Three winding transformer connected to node to delete"),
+        pytest.param(102, 1, id="Three winding transformer not connected to node to delete"),
+    ],
+)
+def test_grid_delete_node_with_three_winding_transformer(
+    three_winding_node_id: int, expected_length_three_winding_transformers: int, basic_grid: Grid
+):
+    grid = basic_grid
+
+    new_three_winding_transformer = ThreeWindingTransformerArray.empty(1)
+    new_three_winding_transformer.id = 701
+    new_three_winding_transformer.node_1 = three_winding_node_id
+    new_three_winding_transformer.node_2 = 103
+    new_three_winding_transformer.node_3 = 104
+    grid.append(new_three_winding_transformer)
+
+    target_node = grid.node.get(101)
+    grid.delete_node(node=target_node)
+
+    assert 5 == len(grid.node)
+    assert expected_length_three_winding_transformers == len(grid.three_winding_transformer)
     assert target_node.id not in grid.node.id
 
 
