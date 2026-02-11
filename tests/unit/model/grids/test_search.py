@@ -56,6 +56,23 @@ class TestGetBranchesInPath:
         assert 0 == branches.size
 
 
+class TestIterBranchesInShortestPath:
+    def test_iter_branches_in_shortest_path_returns_branch_arrays(self, basic_grid):
+        branches = list(basic_grid.iter_branches_in_shortest_path(101, 106))
+        assert len(branches) == 2
+        branch_nodes = [(branch.from_node.item(), branch.to_node.item()) for branch in branches]
+        assert branch_nodes == [(101, 102), (102, 106)]
+
+    def test_iter_branches_in_shortest_path_three_winding_transformer(self, grid_with_3wt):
+        branches = list(grid_with_3wt.iter_branches_in_shortest_path(101, 104))
+        assert len(branches) == 2
+        branch_nodes = [(branch.from_node.item(), branch.to_node.item()) for branch in branches]
+        assert branch_nodes == [(101, 102), (102, 104)]
+
+    def test_iter_branches_same_node_returns_empty(self, basic_grid):
+        assert [] == list(basic_grid.iter_branches_in_shortest_path(101, 101))
+
+
 def test_component_three_winding_transformer(grid_with_3wt):
     substation_nodes = grid_with_3wt.node.filter(node_type=NodeType.SUBSTATION_NODE.value).id
     with grid_with_3wt.graphs.active_graph.tmp_remove_nodes(substation_nodes):
