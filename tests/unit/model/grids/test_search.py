@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from power_grid_model_ds import Grid
+from power_grid_model_ds._core.model.arrays import LineArray, TransformerArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.enums.nodes import NodeType
 
@@ -71,6 +72,13 @@ class TestIterBranchesInShortestPath:
 
     def test_iter_branches_same_node_returns_empty(self, basic_grid):
         assert [] == list(basic_grid.iter_branches_in_shortest_path(101, 101))
+
+    def test_iter_branches_in_shortest_path_typed(self, basic_grid):
+        branches = list(basic_grid.iter_branches_in_shortest_path(101, 106, typed=True))
+        assert len(branches) == 2
+        assert isinstance(branches[0], LineArray)
+        assert isinstance(branches[1], TransformerArray)
+        assert [branch.id.item() for branch in branches] == [201, 301]
 
 
 def test_component_three_winding_transformer(grid_with_3wt):

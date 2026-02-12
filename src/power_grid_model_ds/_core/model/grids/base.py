@@ -325,12 +325,16 @@ class Grid(FancyArrayContainer):
         """
         return self.branches.filter(from_node=nodes_in_path, to_node=nodes_in_path, from_status=1, to_status=1)
 
-    def iter_branches_in_shortest_path(self, from_node_id: int, to_node_id: int) -> Iterator[BranchArray]:
+    def iter_branches_in_shortest_path(
+        self, from_node_id: int, to_node_id: int, typed: bool = False
+    ) -> Iterator[BranchArray]:
         """Returns the ordered active branches that form the shortest path between two nodes.
 
         Args:
             from_node_id (int): External id of the path start node.
             to_node_id (int): External id of the path end node.
+            typed (bool): If True, each yielded branch is converted to its typed array via
+                ``get_typed_branches``.
 
         Yields:
             BranchArray: Single-row branch arrays for each active branch on the path.
@@ -339,7 +343,7 @@ class Grid(FancyArrayContainer):
             MissingBranchError: If the graph reports an edge on the shortest path but no active branch is found.
         """
 
-        return _iter_branches_in_shortest_path(self, from_node_id, to_node_id)
+        return _iter_branches_in_shortest_path(self, from_node_id, to_node_id, typed=typed)
 
     def get_nearest_substation_node(self, node_id: int):
         """Find the nearest substation node.
