@@ -337,7 +337,7 @@ class Grid(FancyArrayContainer):
                 ``get_typed_branches``.
 
         Yields:
-            BranchArray: Single-row branch arrays for each active branch on the path.
+            BranchArray: branch arrays for each active branch on the path.
 
         Raises:
             MissingBranchError: If the graph reports an edge on the shortest path but no active branch is found.
