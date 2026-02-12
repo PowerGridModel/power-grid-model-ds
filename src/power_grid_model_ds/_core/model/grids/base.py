@@ -116,12 +116,6 @@ class Grid(FancyArrayContainer):
     asym_voltage_sensor: AsymVoltageSensorArray
     asym_current_sensor: AsymCurrentSensorArray
 
-    def __str__(self) -> str:
-        """Serialize grid to a string.
-        Compatible with https://csacademy.com/app/graph_editor/
-        """
-        return serialize_to_str(self)
-
     def __repr__(self) -> str:
         """Display relevant information about the grid."""
         array_reprs: list[str] = []
@@ -133,6 +127,12 @@ class Grid(FancyArrayContainer):
         graph_repr = f"graphs={self.graphs!r}"
         inner = ",\n".join([graph_repr, *array_reprs])
         return f"{self.__class__.__name__}(\n{inner}\n)"
+
+    def to_txt(self) -> str:
+        """Serialize grid to a txt format.
+        Compatible with https://csacademy.com/app/graph_editor/
+        """
+        return serialize_to_str(self)
 
     @classmethod
     def empty(cls: Type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:

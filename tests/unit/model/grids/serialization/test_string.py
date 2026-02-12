@@ -9,10 +9,10 @@ import pytest
 from power_grid_model_ds import Grid
 
 
-def test_grid_as_str(basic_grid: Grid):
+def test_grid_to_txt(basic_grid: Grid):
     grid = basic_grid
 
-    grid_as_string = str(grid)
+    grid_as_string = grid.to_txt()
 
     assert "102 106 301,transformer" in grid_as_string
     assert "103 104 203,open" in grid_as_string
