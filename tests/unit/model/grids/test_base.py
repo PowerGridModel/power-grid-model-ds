@@ -94,6 +94,24 @@ def test_basic_grid_fixture(basic_grid: Grid):
     assert len(grid.line) + len(grid.transformer) + len(grid.link) == grid.graphs.complete_graph.nr_branches
 
 
+def test_repr_includes_graph_and_arrays(basic_grid: Grid):
+    repr_str = repr(basic_grid)
+
+    assert "graphs=GraphContainer(" in repr_str
+    assert "active_graph(" in repr_str
+    assert "complete_graph(" in repr_str
+
+    assert "node=" in repr_str
+    assert "line=" in repr_str
+    assert "link=" in repr_str
+    assert "transformer=" in repr_str
+    assert "sym_load=" in repr_str
+    assert "source=" in repr_str
+
+    assert "generic_branch=" not in repr_str
+    assert "asym_line=" not in repr_str
+
+
 class TestGridEquality:
     def test_grids_equal(self, basic_grid: Grid):
         grid1 = basic_grid
