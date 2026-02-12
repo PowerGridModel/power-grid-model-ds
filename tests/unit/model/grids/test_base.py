@@ -98,8 +98,8 @@ def test_repr_includes_graph_and_arrays(basic_grid: Grid):
     repr_str = repr(basic_grid)
 
     assert "graphs=GraphContainer(" in repr_str
-    assert "active_graph(" in repr_str
-    assert "complete_graph(" in repr_str
+    assert "active_graph=" in repr_str
+    assert "complete_graph=" in repr_str
 
     assert "node=" in repr_str
     assert "line=" in repr_str
@@ -107,6 +107,7 @@ def test_repr_includes_graph_and_arrays(basic_grid: Grid):
     assert "transformer=" in repr_str
     assert "sym_load=" in repr_str
     assert "source=" in repr_str
+
     # arrays without data should not be included in repr()
     assert "generic_branch=" not in repr_str
     assert "asym_line=" not in repr_str
@@ -125,6 +126,16 @@ class TestGridEquality:
         grid2.node.u_rated[0] += 1000.0
 
         assert grid1 != grid2
+
+
+def test_grid_repr_includes_graph_and_array_info(basic_grid: Grid):
+    repr_str = repr(basic_grid)
+
+    assert "graphs=GraphContainer(" in repr_str
+    assert "node=" in repr_str
+    assert "line=" in repr_str
+    assert "RustworkxGraphModel(nodes=6, branches=5, active_only=True)" in repr_str
+    assert "RustworkxGraphModel(nodes=6, branches=6, active_only=False)" in repr_str
 
     def test_different_lines(self, basic_grid: Grid):
         grid1 = basic_grid

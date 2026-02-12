@@ -31,13 +31,8 @@ class GraphContainer:
     """The graph containing all branches."""
 
     def __repr__(self) -> str:
-        """Summarize graphs with counts that can be shown in a Grid repr."""
-        graph_infos = []
-        for field in dataclasses.fields(self):
-            graph = getattr(self, field.name)
-            graph_infos.append(
-                f"{field.name}(nodes={graph.nr_nodes}, branches={graph.nr_branches}, active_only={graph.active_only})"
-            )
+        """Summarize graphs with repr outputs from each graph."""
+        graph_infos = [f"{field.name}={getattr(self, field.name)!r}" for field in dataclasses.fields(self)]
         return f"{self.__class__.__name__}({', '.join(graph_infos)})"
 
     @property
