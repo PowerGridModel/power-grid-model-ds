@@ -326,7 +326,18 @@ class Grid(FancyArrayContainer):
         return self.branches.filter(from_node=nodes_in_path, to_node=nodes_in_path, from_status=1, to_status=1)
 
     def iter_branches_in_shortest_path(self, from_node_id: int, to_node_id: int) -> Iterator[BranchArray]:
-        """Yield all active branches on the shortest path connecting ``from_node_id`` to ``to_node_id``."""
+        """Returns the ordered active branches that form the shortest path between two nodes.
+
+        Args:
+            from_node_id (int): External id of the path start node.
+            to_node_id (int): External id of the path end node.
+
+        Yields:
+            BranchArray: Single-row branch arrays for each active branch on the path.
+
+        Raises:
+            MissingBranchError: If the graph reports an edge on the shortest path but no active branch is found.
+        """
 
         return _iter_branches_in_shortest_path(self, from_node_id, to_node_id)
 
