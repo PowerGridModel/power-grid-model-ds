@@ -123,7 +123,7 @@ class Grid(FancyArrayContainer):
         return serialize_to_str(self)
 
     def __repr__(self) -> str:
-        """Expose the grids and non-empty arrays with their field names for debugging."""
+        """Display relevant information about the grid."""
         array_reprs: list[str] = []
         for field in fields(self):
             value = getattr(self, field.name)
