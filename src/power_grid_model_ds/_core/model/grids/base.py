@@ -128,8 +128,8 @@ class Grid(FancyArrayContainer):
         inner = ",\n".join([graph_repr, *array_reprs])
         return f"{self.__class__.__name__}(\n{inner}\n)"
 
-    def to_txt(self) -> str:
-        """Serialize grid to a txt format.
+    def __str__(self) -> str:
+        """Serialize grid to a string.
         Compatible with https://csacademy.com/app/graph_editor/
         """
         return serialize_to_str(self)
