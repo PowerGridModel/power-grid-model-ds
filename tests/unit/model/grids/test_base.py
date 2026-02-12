@@ -107,7 +107,7 @@ def test_repr_includes_graph_and_arrays(basic_grid: Grid):
     assert "transformer=" in repr_str
     assert "sym_load=" in repr_str
     assert "source=" in repr_str
-
+    # arrays without data should not be included in repr()
     assert "generic_branch=" not in repr_str
     assert "asym_line=" not in repr_str
 
