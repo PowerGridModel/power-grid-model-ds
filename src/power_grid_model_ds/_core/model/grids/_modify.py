@@ -132,6 +132,12 @@ def delete_node(grid: "Grid", node: NodeArray) -> None:
         for branch in matching_branches:
             grid.delete_branch(branch)
 
+    matching_three_winding_transformers = grid.three_winding_transformer.filter(
+        node_1=node.id, node_2=node.id, node_3=node.id, mode_="OR"
+    )
+    for three_winding_transformer in matching_three_winding_transformers:
+        grid.delete_branch3(three_winding_transformer)
+
     grid.graphs.delete_node(node=node)
     logging.debug(f"deleted rail {node.id}")
 
