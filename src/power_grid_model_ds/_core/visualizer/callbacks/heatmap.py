@@ -6,6 +6,7 @@
 from dash import Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 
+from power_grid_model_ds._core.visualizer.callbacks.common import BRANCHES_COMPONENTS
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
 from power_grid_model_ds._core.visualizer.typing import STYLESHEET
 
@@ -47,7 +48,7 @@ def apply_heatmap_selection(
         raise PreventUpdate
 
     if group == "branches":
-        selector = "edge[group = 'line'], edge[group = 'link'], edge[group = 'transformer']"
+        selector = ", ".join([f"edge[group = '{comp}']" for comp in BRANCHES_COMPONENTS])
     else:
         selector = f"[group = '{group}']"
 

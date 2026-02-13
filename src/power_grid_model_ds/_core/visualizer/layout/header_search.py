@@ -5,31 +5,14 @@
 import dash_bootstrap_components as dbc
 from dash import html
 
+from power_grid_model_ds._core.visualizer.callbacks.common import HEADER_SEARCH_OPTIONS
+
 SPAN_TEXT_STYLE = {"color": "white", "margin-right": "8px", "font-weight": "bold", "text-shadow": "0 0 5px #000"}
 _INPUT_STYLE = {"width": "150px", "display": "inline-block"}
 # Create your form components
 GROUP_INPUT = dbc.Select(
     id="search-form-group-input",
-    options=[
-        {"label": "node", "value": "node"},
-        {"label": "line", "value": "line"},
-        {"label": "link", "value": "link"},
-        {"label": "transformer", "value": "transformer"},
-        {"label": "three_winding_transformer", "value": "three_winding_transformer"},
-        {"label": "asym_line", "value": "asym_line"},
-        {"label": "generic_branch", "value": "generic_branch"},
-        {"label": "sym_load", "value": "sym_load"},
-        {"label": "sym_gen", "value": "sym_gen"},
-        {"label": "source", "value": "source"},
-        {"label": "sym_power_sensor", "value": "sym_power_sensor"},
-        {"label": "asym_power_sensor", "value": "asym_power_sensor"},
-        {"label": "sym_voltage_sensor", "value": "sym_voltage_sensor"},
-        {"label": "asym_voltage_sensor", "value": "asym_voltage_sensor"},
-        {"label": "sym_current_sensor", "value": "sym_current_sensor"},
-        {"label": "asym_current_sensor", "value": "asym_current_sensor"},
-        {"label": "transformer_tap_regulator", "value": "transformer_tap_regulator"},
-        {"label": "branches", "value": "branches"},
-    ],
+    options=HEADER_SEARCH_OPTIONS,
     value="node",  # Default value
     style=_INPUT_STYLE,
 )

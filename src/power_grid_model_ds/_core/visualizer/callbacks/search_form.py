@@ -7,6 +7,7 @@ from dash import Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 from power_grid_model import ComponentType
 
+from power_grid_model_ds._core.visualizer.callbacks.common import BRANCHES_COMPONENTS
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
 from power_grid_model_ds._core.visualizer.typing import STYLESHEET, ListArrayData, VizToComponentData
 
@@ -22,14 +23,6 @@ NON_VISIBLE_ELMS = [
     ComponentType.sym_voltage_sensor.value,
     ComponentType.asym_voltage_sensor.value,
     ComponentType.transformer_tap_regulator.value,
-]
-
-BRANCHES_COMPONENTS = [
-    ComponentType.line.value,
-    ComponentType.link.value,
-    ComponentType.generic_branch.value,
-    ComponentType.transformer.value,
-    ComponentType.asym_line.value,
 ]
 
 NON_VISIBLE_ELMS_INCL_APPLIANCES = [ComponentType.sym_load.value, ComponentType.sym_gen.value] + NON_VISIBLE_ELMS

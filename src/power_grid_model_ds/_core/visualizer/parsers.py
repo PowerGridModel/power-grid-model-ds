@@ -45,6 +45,7 @@ _APPLIANCE_TERMINAL_TYPE = [
     MeasuredTerminalType.load,
     MeasuredTerminalType.generator,
     MeasuredTerminalType.source,
+    MeasuredTerminalType.shunt,
 ]
 _BRANCH3_TERMINAL_TYPE = [
     MeasuredTerminalType.branch3_1,
@@ -250,7 +251,8 @@ def _parse_flow_sensors(
         elif measured_terminal_type in _APPLIANCE_TERMINAL_TYPE:
             append_component_list(viz_to_comp, sensor_dict, measured_object_id_str, group)
             # Map appliance to both appliance and its node as both can be unvisualized
-            append_component_list(viz_to_comp, sensor_dict, appliance_to_node[measured_object_id_str], group)
+            if measured_object_id_str in appliance_to_node:
+                append_component_list(viz_to_comp, sensor_dict, appliance_to_node[measured_object_id_str], group)
         else:
             raise ValueError(f"Unknown measured_terminal_type: {measured_terminal_type}")
 
