@@ -108,7 +108,7 @@ def _increment_grid_ids_by_offset(all_arrays: list[FancyArray], offset: int) -> 
                 | AsymPowerSensorArray()
                 | AsymCurrentSensorArray()
             ):
-                columns = []
+                columns = ["measured_object"]
             case NodeArray():
                 columns = ["feeder_node_id", "feeder_branch_id"]
             case TransformerTapRegulatorArray() | VoltageRegulatorArray():
