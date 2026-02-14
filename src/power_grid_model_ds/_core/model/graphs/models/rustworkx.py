@@ -37,6 +37,9 @@ class RustworkxGraphModel(BaseGraphModel):
     def external_ids(self) -> list[int]:
         return list(self._external_to_internal.keys())
 
+    def has_parallel_edges(self) -> bool:
+        return self._graph.has_parallel_edges()
+
     # pylint: disable=duplicate-code
     def external_to_internal(self, ext_node_id: int):
         try:
