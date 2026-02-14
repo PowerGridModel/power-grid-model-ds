@@ -1,9 +1,11 @@
+"""Contains utility functions for PGM-DS"""
+
 from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray, SourceArray
 from power_grid_model_ds._core.model.grids.base import Grid
-from rustworkx.visit import BFSVisitor, PruneSearch, StopSearch
 
 
 def fix_branch_orientations(grid: Grid) -> BranchArray:
+    """ToDo"""
     cycles = grid.graphs.active_graph.find_fundamental_cycles()
 
     if any(cycles):
@@ -22,7 +24,9 @@ def fix_branch_orientations(grid: Grid) -> BranchArray:
 def _get_reverted_branches_for_source(grid: Grid, source: SourceArray) -> list[int]:
 
     nodes_in_order = grid.graphs.active_graph.get_connected(source.node.item(), inclusive=True)
-    connected_branches = grid.branches.filter(from_status=1, to_status=1, from_node=nodes_in_order, to_node=nodes_in_order)
+    connected_branches = grid.branches.filter(
+        from_status=1, to_status=1, from_node=nodes_in_order, to_node=nodes_in_order
+    )
 
     reverted_branch_ids = []
     for branch in connected_branches:
