@@ -424,3 +424,21 @@ class TestEq:
     def test_inequality_different_type(self, graph_with_2_routes: BaseGraphModel):
         graph = graph_with_2_routes
         assert graph != "not a graph"
+
+
+    def test_has_parallel_edges(self, graph: BaseGraphModel):
+        graph.add_node(1)
+        graph.add_node(2)
+        graph.add_branch(1, 2)
+        assert not graph.has_parallel_edges()
+        graph.add_branch(1, 2)
+        assert graph.has_parallel_edges()
+
+
+    def test_has_parallel_edges_reversed(self, graph: BaseGraphModel):
+        graph.add_node(1)
+        graph.add_node(2)
+        graph.add_branch(1, 2)
+        assert not graph.has_parallel_edges()
+        graph.add_branch(2, 1)
+        assert graph.has_parallel_edges()
