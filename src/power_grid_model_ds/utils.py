@@ -1,29 +1,45 @@
+# SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
+#
+# SPDX-License-Identifier: MPL-2.0
 """Contains utility functions for PGM-DS"""
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray, SourceArray
+from power_grid_model_ds._core.model.arrays.pgm_arrays import SourceArray
+from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.grids.base import Grid
 
 
-def fix_branch_orientations(grid: Grid) -> BranchArray:
-    """ToDo"""
-    cycles = grid.graphs.active_graph.find_fundamental_cycles()
+def fix_branch_orientations(grid: Grid, dry_run: bool = False) -> list[int]:
+    """
+    Fix branch orientations in the grid so that all branches are oriented away from the sources.
 
-    if any(cycles):
-        # ToDo: support parallel lines.
+    Args:
+        grid (Grid): The grid to fix branch orientations for.
+        dry_run (bool): If True, do not actually modify the grid, just return the branch IDs that would be reverted
+            (default: False).
+
+    Returns:
+        list[int]: A list of branch IDs that were reverted (or would be reverted in case of ``dry_run=True``).
+    """
+
+    if _contains_cycle(grid.graphs.active_graph):
         raise NotImplementedError("Cannot fix branch orientations on graph with cycles")
-    # ToDo: check that source is not connected to other sources.
 
     reverted_branch_ids = []
     for source in grid.source:
         reverted_branch_ids += _get_reverted_branches_for_source(grid, source)
 
-    _revert_branches(grid, reverted_branch_ids)
-    return grid.branches.filter(reverted_branch_ids)
+    if not dry_run:
+        _revert_branches(grid, reverted_branch_ids)
+    return grid.branches.filter(reverted_branch_ids).id.tolist()
 
 
 def _get_reverted_branches_for_source(grid: Grid, source: SourceArray) -> list[int]:
 
     nodes_in_order = grid.graphs.active_graph.get_connected(source.node.item(), inclusive=True)
+
+    if set(nodes_in_order).intersection(set(grid.source.exclude(source.id).node.tolist())):
+        raise ValueError("Cannot fix branch orientations if source is connected to other sources")
+
     connected_branches = grid.branches.filter(
         from_status=1, to_status=1, from_node=nodes_in_order, to_node=nodes_in_order
     )
@@ -47,3 +63,14 @@ def _revert_branches(grid: Grid, branch_ids: list[int]):
         branch.from_node = branch.to_node.item()
         branch.to_node = from_node
         grid.append(branch, check_max_id=False)
+
+
+def _contains_cycle(graph: BaseGraphModel) -> bool:
+    if not graph.has_parallel_edges():
+        return any(graph.find_fundamental_cycles())
+
+    cycles = graph.find_fundamental_cycles()
+    cycles = [
+        cycle for cycle in cycles if len(set(cycle)) > 2
+    ]  # Filter out parallel edges which create "cycles" of length 2
+    return any(cycles)
