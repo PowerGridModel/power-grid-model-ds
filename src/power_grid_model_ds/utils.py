@@ -39,7 +39,7 @@ def fix_branch_orientations(grid: Grid, dry_run: bool = False) -> list[int]:
 
     if not dry_run:
         _revert_branches(grid, reverted_branch_ids)
-    return grid.branches.filter(reverted_branch_ids).id.tolist()
+    return reverted_branch_ids
 
 
 def _get_reverted_branches_for_source(grid: Grid, source: SourceArray) -> list[int]:
