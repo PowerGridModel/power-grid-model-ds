@@ -33,13 +33,13 @@ def fix_branch_orientations(grid: Grid, dry_run: bool = False) -> list[int]:
     if _contains_cycle(grid.graphs.active_graph):
         raise GraphError("Cannot fix branch orientations on graph with cycles")
 
-    reverted_branch_ids = []
+    reverse_branch_ids = []
     for source in grid.source:
-        reverted_branch_ids += _get_reverted_branches_for_source(grid, source)
+        reverse_branch_ids += _get_reverted_branches_for_source(grid, source)
 
     if not dry_run:
-        _revert_branches(grid, reverted_branch_ids)
-    return reverted_branch_ids
+        grid.reverse_branches(grid.branches.filter(id=reverse_branch_ids))
+    return reverse_branch_ids
 
 
 def _get_reverted_branches_for_source(grid: Grid, source: SourceArray) -> list[int]:
@@ -63,16 +63,6 @@ def _get_reverted_branches_for_source(grid: Grid, source: SourceArray) -> list[i
         if from_index > to_index:
             reverted_branch_ids.append(branch.id.item())
     return reverted_branch_ids
-
-
-def _revert_branches(grid: Grid, branch_ids: list[int]):
-    for branch_id in branch_ids:
-        branch = grid.get_typed_branches([branch_id])
-        grid.delete_branch(branch)
-        from_node = branch.from_node.item()
-        branch.from_node = branch.to_node.item()
-        branch.to_node = from_node
-        grid.append(branch, check_max_id=False)
 
 
 def _contains_cycle(graph: BaseGraphModel) -> bool:
