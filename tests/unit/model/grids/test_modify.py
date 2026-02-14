@@ -5,12 +5,23 @@ import pytest
 
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays import (
+    AsymGenArray,
+    AsymLoadArray,
+    AsymPowerSensorArray,
+    AsymVoltageSensorArray,
+    FaultArray,
     LineArray,
     LinkArray,
     NodeArray,
+    ShuntArray,
+    SourceArray,
+    SymLoadArray,
+    SymPowerSensorArray,
+    SymVoltageSensorArray,
     ThreeWindingTransformerArray,
     TransformerArray,
     TransformerTapRegulatorArray,
+    VoltageRegulatorArray,
 )
 from power_grid_model_ds._core.model.constants import EMPTY_ID
 from tests.fixtures.arrays import DefaultedCustomLineArray, DefaultedCustomNodeArray
@@ -64,6 +75,153 @@ def test_grid_delete_node_with_three_winding_transformer(
     assert 5 == len(grid.node)
     assert expected_length_three_winding_transformers == len(grid.three_winding_transformer)
     assert target_node.id not in grid.node.id
+
+
+def test_grid_delete_node_all():
+    grid = Grid.empty()
+
+    nodes = NodeArray.zeros(3)
+    nodes.id = [99, 100, 101]
+    grid.append(nodes)
+
+    sym_loads = SymLoadArray.zeros(2)
+    sym_loads.id = [200, 201]
+    sym_loads.node = [99, 100]
+    grid.append(sym_loads)
+
+    asym_loads = AsymLoadArray.zeros(2)
+    asym_loads.id = [210, 211]
+    asym_loads.node = [99, 100]
+    grid.append(asym_loads)
+
+    sources = SourceArray.zeros(2)
+    sources.id = [220, 221]
+    sources.node = [99, 100]
+    grid.append(sources)
+
+    asym_gens = AsymGenArray.zeros(2)
+    asym_gens.id = [230, 231]
+    asym_gens.node = [99, 100]
+    grid.append(asym_gens)
+
+    shunts = ShuntArray.zeros(2)
+    shunts.id = [240, 241]
+    shunts.node = [99, 100]
+    grid.append(shunts)
+
+    lines = LineArray.zeros(2)
+    lines.id = [300, 301]
+    lines.from_node = [99, 100]
+    lines.to_node = [100, 101]
+    grid.append(lines)
+
+    transformers = TransformerArray.zeros(2)
+    transformers.id = [310, 311]
+    transformers.from_node = [99, 100]
+    transformers.to_node = [100, 101]
+    grid.append(transformers)
+
+    links = LinkArray.zeros(2)
+    links.id = [320, 321]
+    links.from_node = [99, 100]
+    links.to_node = [100, 101]
+    grid.append(links)
+
+    three_wts = ThreeWindingTransformerArray.zeros(2)
+    three_wts.id = [330, 331]
+    three_wts.node_1 = [99, 101]
+    three_wts.node_2 = [100, 100]
+    three_wts.node_3 = [101, 101]
+    grid.append(three_wts)
+
+    sym_power_sensors = SymPowerSensorArray.zeros(2)
+    sym_power_sensors.id = [400, 401]
+    sym_power_sensors.measured_object = [200, 201]
+    grid.append(sym_power_sensors)
+
+    asym_power_sensors = AsymPowerSensorArray.zeros(2)
+    asym_power_sensors.id = [410, 411]
+    asym_power_sensors.measured_object = [210, 211]
+    grid.append(asym_power_sensors)
+
+    voltage_regulators = VoltageRegulatorArray.zeros(2)
+    voltage_regulators.id = [420, 421]
+    voltage_regulators.regulated_object = [200, 201]
+    grid.append(voltage_regulators)
+
+    sym_voltage_sensors = SymVoltageSensorArray.zeros(2)
+    sym_voltage_sensors.id = [430, 431]
+    sym_voltage_sensors.measured_object = [99, 100]
+    grid.append(sym_voltage_sensors)
+
+    asym_voltage_sensors = AsymVoltageSensorArray.zeros(2)
+    asym_voltage_sensors.id = [440, 441]
+    asym_voltage_sensors.measured_object = [99, 100]
+    grid.append(asym_voltage_sensors)
+
+    faults = FaultArray.zeros(2)
+    faults.id = [500, 501]
+    faults.fault_object = [99, 100]
+    grid.append(faults)
+
+    tap_regulators = TransformerTapRegulatorArray.zeros(2)
+    tap_regulators.id = [600, 601]
+    tap_regulators.regulated_object = [310, 311]
+    grid.append(tap_regulators)
+
+    target_node = grid.node.get(99)
+    grid.delete_node(node=target_node)
+
+    assert 99 not in grid.node.id
+    assert 100 in grid.node.id
+
+    assert 200 not in grid.sym_load.id
+    assert 201 in grid.sym_load.id
+
+    assert 210 not in grid.asym_load.id
+    assert 211 in grid.asym_load.id
+
+    assert 220 not in grid.source.id
+    assert 221 in grid.source.id
+
+    assert 230 not in grid.asym_gen.id
+    assert 231 in grid.asym_gen.id
+
+    assert 240 not in grid.shunt.id
+    assert 241 in grid.shunt.id
+
+    assert 300 not in grid.line.id
+    assert 301 in grid.line.id
+
+    assert 310 not in grid.transformer.id
+    assert 311 in grid.transformer.id
+
+    assert 320 not in grid.link.id
+    assert 321 in grid.link.id
+
+    assert 330 not in grid.three_winding_transformer.id
+    assert 331 in grid.three_winding_transformer.id
+
+    assert 400 not in grid.sym_power_sensor.id
+    assert 401 in grid.sym_power_sensor.id
+
+    assert 410 not in grid.asym_power_sensor.id
+    assert 411 in grid.asym_power_sensor.id
+
+    assert 420 not in grid.voltage_regulator.id
+    assert 421 in grid.voltage_regulator.id
+
+    assert 430 not in grid.sym_voltage_sensor.id
+    assert 431 in grid.sym_voltage_sensor.id
+
+    assert 440 not in grid.asym_voltage_sensor.id
+    assert 441 in grid.asym_voltage_sensor.id
+
+    assert 500 not in grid.fault.id
+    assert 501 in grid.fault.id
+
+    assert 600 not in grid.transformer_tap_regulator.id
+    assert 601 in grid.transformer_tap_regulator.id
 
 
 # pylint: disable=no-member
