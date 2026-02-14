@@ -22,6 +22,7 @@ from power_grid_model_ds._core.model.dtypes.branches import (
     ThreeWindingTransformer,
     Transformer,
 )
+from power_grid_model_ds._core.model.dtypes.faults import Fault
 from power_grid_model_ds._core.model.dtypes.id import Id
 from power_grid_model_ds._core.model.dtypes.nodes import Node
 from power_grid_model_ds._core.model.dtypes.regulators import TransformerTapRegulator, VoltageRegulator
@@ -184,4 +185,8 @@ class AsymVoltageSensorArray(IdArray, AsymVoltageSensor):
 
 
 class AsymCurrentSensorArray(IdArray, AsymCurrentSensor):
+    pass
+
+
+class FaultArray(IdArray, Fault):
     pass

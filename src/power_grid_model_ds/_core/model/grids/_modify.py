@@ -6,9 +6,13 @@ import logging
 import warnings
 from typing import TYPE_CHECKING
 
+import numpy as np
+
 from power_grid_model_ds._core.model.arrays import (
+    AsymLineArray,
     Branch3Array,
     BranchArray,
+    GenericBranchArray,
     LineArray,
     LinkArray,
     NodeArray,
@@ -60,7 +64,7 @@ def reverse_branches(grid: "Grid", branches: BranchArray) -> None:
     """See Grid.reverse_branches()"""
     if not branches.size:
         return
-    if not isinstance(branches, (LineArray, LinkArray, TransformerArray)):
+    if not isinstance(branches, (LineArray, LinkArray, TransformerArray, GenericBranchArray, AsymLineArray)):
         try:
             branches = grid.get_typed_branches(branches.id)
         except ValueError:
@@ -107,25 +111,30 @@ def delete_node(grid: "Grid", node: NodeArray) -> None:
     """See Grid.delete_node()"""
     grid.node = grid.node.exclude(id=node.id)
 
-    appliance_ids = (
-        grid.sym_load.filter(node=node.id).id
-        + grid.asym_load.filter(node=node.id).id
-        + grid.source.filter(node=node.id).id
-        + grid.asym_gen.filter(node=node.id).id
-        + grid.shunt.filter(node=node.id).id
+    ids_to_exclude = np.concatenate(
+        [
+            grid.sym_load.filter(node=node.id).id,
+            grid.asym_load.filter(node=node.id).id,
+            grid.source.filter(node=node.id).id,
+            grid.asym_gen.filter(node=node.id).id,
+            grid.shunt.filter(node=node.id).id,
+            node.id,
+        ]
     )
-    ids_to_exclude = appliance_ids.tolist() + [node.id]
     grid.sym_power_sensor = grid.sym_power_sensor.exclude(measured_object=ids_to_exclude)
     grid.asym_power_sensor = grid.asym_power_sensor.exclude(measured_object=ids_to_exclude)
     grid.voltage_regulator = grid.voltage_regulator.exclude(regulated_object=ids_to_exclude)
 
     grid.sym_voltage_sensor = grid.sym_voltage_sensor.exclude(measured_object=node.id)
     grid.asym_voltage_sensor = grid.asym_voltage_sensor.exclude(measured_object=node.id)
+
     grid.sym_load = grid.sym_load.exclude(node=node.id)
     grid.source = grid.source.exclude(node=node.id)
     grid.asym_load = grid.asym_load.exclude(node=node.id)
     grid.asym_gen = grid.asym_gen.exclude(node=node.id)
     grid.shunt = grid.shunt.exclude(node=node.id)
+
+    grid.fault = grid.fault.exclude(fault_object=node.id)
 
     for branch_array in grid.branch_arrays:
         matching_branches = branch_array.filter(from_node=node.id, to_node=node.id, mode_="OR")

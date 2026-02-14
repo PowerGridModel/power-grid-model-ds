@@ -14,6 +14,7 @@ from power_grid_model_ds._core.model.arrays import (
     AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
+    FaultArray,
     IdArray,
     NodeArray,
     ShuntArray,
@@ -119,6 +120,8 @@ def _increment_grid_ids_by_offset(all_arrays: list[FancyArray], offset: int) -> 
                 columns = ["node_1", "node_2", "node_3"]
             case SymGenArray() | SymLoadArray() | SourceArray() | AsymLoadArray() | AsymGenArray() | ShuntArray():
                 columns = ["node"]
+            case FaultArray():
+                columns = ["fault_object"]
             case _:
                 raise NotImplementedError(
                     f"The array of type {type(array)} is not implemented for appending. "

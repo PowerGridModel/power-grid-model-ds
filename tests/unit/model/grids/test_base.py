@@ -28,6 +28,7 @@ def test_initialize_empty_grid(grid: Grid):
         "asym_voltage_sensor",
         "generic_branch",
         "graphs",
+        "fault",
         "line",
         "link",
         "node",

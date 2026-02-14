@@ -21,6 +21,7 @@ from power_grid_model_ds._core.model.arrays import (
     AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
+    FaultArray,
     GenericBranchArray,
     LineArray,
     LinkArray,
@@ -123,6 +124,8 @@ class Grid(FancyArrayContainer):
     asym_power_sensor: AsymPowerSensorArray
     asym_voltage_sensor: AsymVoltageSensorArray
     asym_current_sensor: AsymCurrentSensorArray
+
+    fault: FaultArray
 
     def __str__(self) -> str:
         """Serialize grid to a string.
