@@ -4,6 +4,7 @@
 import pytest
 
 from power_grid_model_ds._core.model.arrays.pgm_arrays import LineArray, SourceArray
+from power_grid_model_ds._core.model.graphs.errors import GraphError
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds.utils import fix_branch_orientations
 
@@ -54,7 +55,7 @@ class TestFixBranchOrientations:
         source.node = 1
         grid.append(source)
 
-        with pytest.raises(NotImplementedError, match="Cannot fix branch orientations on graph with cycles"):
+        with pytest.raises(GraphError, match="Cannot fix branch orientations on graph with cycles"):
             fix_branch_orientations(grid)
 
     def test_fix_branch_orientations_connected_sources(self):
@@ -66,7 +67,7 @@ class TestFixBranchOrientations:
         grid.append(source1)
         grid.append(source2)
 
-        with pytest.raises(ValueError, match="Cannot fix branch orientations if source is connected to other sources"):
+        with pytest.raises(GraphError, match="Cannot fix branch orientations if source is connected to other sources"):
             fix_branch_orientations(grid)
 
     @pytest.mark.parametrize(

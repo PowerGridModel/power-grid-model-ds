@@ -4,13 +4,22 @@
 """Contains utility functions for PGM-DS"""
 
 from power_grid_model_ds._core.model.arrays.pgm_arrays import SourceArray
+from power_grid_model_ds._core.model.graphs.errors import GraphError
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.grids.base import Grid
 
 
 def fix_branch_orientations(grid: Grid, dry_run: bool = False) -> list[int]:
     """
-    Fix branch orientations in the grid so that all branches are oriented away from the sources.
+    Fix branch orientations in the grid so that all branches are oriented away from the sources
+
+    Notes:
+    - The graph must not contain cycles. If the graph contains cycles, a GraphError is raised,
+      as fixing branch orientations in a graph with cycles is not straightforward.
+    - Sources must not be connected to other sources. If a source is connected to another source,
+      a ValueError is raised, as it is not clear how to orient branches in that case.
+    - Parallel edges (multiple edges between the same two nodes) are allowed.
+      They are not considered cycles for the purpose of this function.
 
     Args:
         grid (Grid): The grid to fix branch orientations for.
@@ -22,7 +31,7 @@ def fix_branch_orientations(grid: Grid, dry_run: bool = False) -> list[int]:
     """
 
     if _contains_cycle(grid.graphs.active_graph):
-        raise NotImplementedError("Cannot fix branch orientations on graph with cycles")
+        raise GraphError("Cannot fix branch orientations on graph with cycles")
 
     reverted_branch_ids = []
     for source in grid.source:
@@ -37,8 +46,9 @@ def _get_reverted_branches_for_source(grid: Grid, source: SourceArray) -> list[i
 
     nodes_in_order = grid.graphs.active_graph.get_connected(source.node.item(), inclusive=True)
 
-    if set(nodes_in_order).intersection(set(grid.source.exclude(source.id).node.tolist())):
-        raise ValueError("Cannot fix branch orientations if source is connected to other sources")
+    other_source_nodes = grid.source.exclude(source.id).node.tolist()
+    if set(nodes_in_order) & set(other_source_nodes):
+        raise GraphError("Cannot fix branch orientations if source is connected to other sources")
 
     connected_branches = grid.branches.filter(
         from_status=1, to_status=1, from_node=nodes_in_order, to_node=nodes_in_order
