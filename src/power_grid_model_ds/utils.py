@@ -17,7 +17,7 @@ def fix_branch_orientations(grid: Grid, dry_run: bool = False) -> list[int]:
     - The graph must not contain cycles. If the graph contains cycles, a GraphError is raised,
       as fixing branch orientations in a graph with cycles is not straightforward.
     - Sources must not be connected to other sources. If a source is connected to another source,
-      a ValueError is raised, as it is not clear how to orient branches in that case.
+      a GraphError is raised, as it is not clear how to orient branches in that case.
     - Parallel edges (multiple edges between the same two nodes) are allowed.
       They are not considered cycles for the purpose of this function.
 
