@@ -108,6 +108,7 @@ def iter_branches_in_shortest_path(
         branch_records = active_branches[positions]
         if typed:
             branch_ids = branch_records.id.tolist()
+            # TODO: This does now not work for three winding transformers
             yield grid.get_typed_branches(branch_ids)
         else:
             yield branch_records
