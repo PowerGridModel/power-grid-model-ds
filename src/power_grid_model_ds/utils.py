@@ -11,15 +11,16 @@ from power_grid_model_ds._core.model.grids.base import Grid
 
 def fix_branch_orientations(grid: Grid, dry_run: bool = False) -> list[int]:
     """
-    Fix branch orientations in the grid so that all branches are oriented away from the sources
+    Fix branch orientations in the grid so that all branches are oriented away from the sources.
 
-    Notes:
-    - The graph must not contain cycles. If the graph contains cycles, a GraphError is raised,
-      as fixing branch orientations in a graph with cycles is not straightforward.
-    - Sources must not be connected to other sources. If a source is connected to another source,
-      a GraphError is raised, as it is not clear how to orient branches in that case.
-    - Parallel edges (multiple edges between the same two nodes) are allowed.
-      They are not considered cycles for the purpose of this function.
+    Orientation is determined by the distance of the branch's from_node and to_node to the source node.
+    The node that is closer to the source is considered the "from_node".
+    Note that this might not reflect the actual power flow direction in the grid.
+
+    Other notes:
+    - Sources should not be connected to other sources. If a source is connected to another source,
+      a GraphError is raised.
+    - Parallel edges (multiple edges between the same two nodes) and cycles are supported.
 
     Args:
         grid (Grid): The grid to fix branch orientations for.
@@ -29,10 +30,6 @@ def fix_branch_orientations(grid: Grid, dry_run: bool = False) -> list[int]:
     Returns:
         list[int]: A list of branch IDs that were reverted (or would be reverted in case of ``dry_run=True``).
     """
-
-    if _contains_cycle(grid.graphs.active_graph):
-        raise GraphError("Cannot fix branch orientations on graph with cycles")
-
     reverse_branch_ids = []
     for source in grid.source:
         reverse_branch_ids += _get_reverted_branches_for_source(grid, source)
@@ -63,14 +60,3 @@ def _get_reverted_branches_for_source(grid: Grid, source: SourceArray) -> list[i
         if from_index > to_index:
             reverted_branch_ids.append(branch.id.item())
     return reverted_branch_ids
-
-
-def _contains_cycle(graph: BaseGraphModel) -> bool:
-    if not graph.has_parallel_edges():
-        return any(graph.find_fundamental_cycles())
-
-    cycles = graph.find_fundamental_cycles()
-    cycles = [
-        cycle for cycle in cycles if len(set(cycle)) > 2
-    ]  # Filter out parallel edges which create "cycles" of length 2
-    return any(cycles)
