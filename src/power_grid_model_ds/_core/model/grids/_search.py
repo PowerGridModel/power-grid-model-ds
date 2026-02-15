@@ -97,7 +97,7 @@ def _lookup_three_winding_branch(grid: "Grid", node_a: int, node_b: int) -> Thre
                 node_col_b: [node_a, node_b],
                 status_col_a: 1,
                 status_col_b: 1,
-            }
+            }  # type: ignore[arg-type]
         )
         if transformer.size:
             return transformer
