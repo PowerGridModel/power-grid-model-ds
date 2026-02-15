@@ -162,6 +162,7 @@ def delete_branch3(grid: "Grid", branch: Branch3Array) -> None:
     """See Grid.delete_branch3()"""
     _delete_branch_array(branch=branch, grid=grid)
     grid.graphs.delete_branch3(branch=branch)
+    logging.debug(f"deleted branch3 {branch.id}")
 
 
 def _delete_branch_array(branch: BranchArray | Branch3Array, grid: "Grid"):
@@ -170,4 +171,21 @@ def _delete_branch_array(branch: BranchArray | Branch3Array, grid: "Grid"):
     array_attr = getattr(grid, array_field.name)
     setattr(grid, array_field.name, array_attr.exclude(id=branch.id))
 
+    grid.sym_power_sensor = grid.sym_power_sensor.exclude(measured_object=branch.id)
+    grid.asym_power_sensor = grid.asym_power_sensor.exclude(measured_object=branch.id)
+    grid.sym_current_sensor = grid.sym_current_sensor.exclude(measured_object=branch.id)
+    grid.asym_current_sensor = grid.asym_current_sensor.exclude(measured_object=branch.id)
     grid.transformer_tap_regulator = grid.transformer_tap_regulator.exclude(regulated_object=branch.id)
+
+
+def delete_appliance(grid: "Grid", appliance) -> None:
+    """See Grid.delete_appliance()"""
+    # Delete a branch or branch3 array from the grid.
+    array_field = grid.find_array_field(appliance.__class__)
+    array_attr = getattr(grid, array_field.name)
+    setattr(grid, array_field.name, array_attr.exclude(id=appliance.id))
+
+    grid.sym_power_sensor = grid.sym_power_sensor.exclude(measured_object=appliance.id)
+    grid.asym_power_sensor = grid.asym_power_sensor.exclude(measured_object=appliance.id)
+    grid.voltage_regulator = grid.voltage_regulator.exclude(regulated_object=appliance.id)
+    logging.debug(f"deleted appliance {appliance.id}")
