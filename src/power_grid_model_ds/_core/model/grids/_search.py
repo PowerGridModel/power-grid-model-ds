@@ -110,13 +110,13 @@ def _active_branches_for_path(
     """Return active branch records and an index filtered to the requested path nodes."""
 
     active = grid.branches.filter(from_status=1, to_status=1).filter(
-        from_node=path_nodes, to_node=path_nodes, mode_="OR"
+        from_node=path_nodes, to_node=path_nodes, mode_="AND"
     )
     if grid.three_winding_transformer.size:
         three_winding_active = (
             grid.three_winding_transformer.as_branches()
             .filter(from_status=1, to_status=1)
-            .filter(from_node=path_nodes, to_node=path_nodes, mode_="OR")
+            .filter(from_node=path_nodes, to_node=path_nodes, mode_="AND")
         )
         if three_winding_active.size:
             active = fp.concatenate(active, three_winding_active)
