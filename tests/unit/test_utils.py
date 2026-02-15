@@ -3,11 +3,11 @@
 # SPDX-License-Identifier: MPL-2.0
 import pytest
 
+import power_grid_model_ds.fancypy as fp
 from power_grid_model_ds._core.model.arrays.pgm_arrays import LineArray, SourceArray
 from power_grid_model_ds._core.model.graphs.errors import GraphError
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds.utils import fix_branch_orientations
-import power_grid_model_ds.fancypy as fp
 
 
 class TestFixBranchOrientations:
@@ -48,7 +48,7 @@ class TestFixBranchOrientations:
             (["1 2", "3 2", "3 1"], ["1 2", "2 3", "1 3"]),
             (["1 2", "2 3", "3 4", "4 1"], ["1 2", "2 3", "4 3", "1 4"]),
             (["2 1", "2 3", "1 3"], ["1 2", "3 2", "1 3"]),
-            (["1 2", "2 3", "3 4", "4 2"], ["1 2", "2 3", "3 4", "2 4"])
+            (["1 2", "2 3", "3 4", "4 2"], ["1 2", "2 3", "3 4", "2 4"]),
         ],
     )
     def test_fix_branch_orientations_cycle(self, txt_grid, expected_txt_grid):
@@ -61,7 +61,6 @@ class TestFixBranchOrientations:
 
         expected_grid = Grid.from_txt(*expected_txt_grid)
         assert fp.array_equal(grid.branches, expected_grid.branches)
-
 
     def test_fix_branch_orientations_connected_sources(self):
         grid = Grid.from_txt("1 2", "2 3")

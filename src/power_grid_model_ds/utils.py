@@ -5,7 +5,6 @@
 
 from power_grid_model_ds._core.model.arrays.pgm_arrays import SourceArray
 from power_grid_model_ds._core.model.graphs.errors import GraphError
-from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.grids.base import Grid
 
 
