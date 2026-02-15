@@ -328,7 +328,8 @@ class Grid(FancyArrayContainer):
     def iter_branches_in_shortest_path(
         self, from_node_id: int, to_node_id: int, typed: bool = False
     ) -> Iterator[BranchArray]:
-        """Returns the ordered active branches that form the shortest path between two nodes.
+        """Returns the ordered active branches that form the shortest path between two nodes. When parallel active edges
+        are in the path all these branches will be returned for the same from_node and to_node.
 
         Args:
             from_node_id (int): External id of the path start node.
