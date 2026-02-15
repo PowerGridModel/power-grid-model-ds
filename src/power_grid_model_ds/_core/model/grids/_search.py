@@ -104,12 +104,20 @@ def _lookup_three_winding_branch(grid: "Grid", node_a: int, node_b: int) -> Thre
     raise MissingBranchError(error_message)
 
 
-def _active_branches(grid: "Grid") -> tuple[BranchArray, dict[tuple[int, int], list[int]]]:
-    """Return active branch records plus an index keyed on their node pairs."""
+def _active_branches_for_path(
+    grid: "Grid", path_nodes: list[int]
+) -> tuple[BranchArray, dict[tuple[int, int], list[int]]]:
+    """Return active branch records and an index filtered to the requested path nodes."""
 
-    active = grid.branches.filter(from_status=1, to_status=1)
+    active = grid.branches.filter(from_status=1, to_status=1).filter(
+        from_node=path_nodes, to_node=path_nodes, mode_="OR"
+    )
     if grid.three_winding_transformer.size:
-        three_winding_active = grid.three_winding_transformer.as_branches().filter(from_status=1, to_status=1)
+        three_winding_active = (
+            grid.three_winding_transformer.as_branches()
+            .filter(from_status=1, to_status=1)
+            .filter(from_node=path_nodes, to_node=path_nodes, mode_="OR")
+        )
         if three_winding_active.size:
             active = fp.concatenate(active, three_winding_active)
 
@@ -126,7 +134,7 @@ def iter_branches_in_shortest_path(
     """See Grid.iter_branches_in_shortest_path()."""
 
     path, _ = grid.graphs.active_graph.get_shortest_path(from_node_id, to_node_id)
-    active_branches, index = _active_branches(grid)
+    active_branches, index = _active_branches_for_path(grid, path)
 
     for current_node, next_node in zip(path[:-1], path[1:]):
         positions = index.get((current_node, next_node))
