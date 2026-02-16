@@ -71,7 +71,7 @@ class TestFixBranchOrientations:
         grid.append(source1)
         grid.append(source2)
 
-        with pytest.raises(GraphError, match="Cannot fix branch orientations if source is connected to other sources"):
+        with pytest.raises(GraphError, match="Cannot set branch orientations if source is connected to other sources"):
             set_branch_orientations(grid)
 
     @pytest.mark.parametrize(
