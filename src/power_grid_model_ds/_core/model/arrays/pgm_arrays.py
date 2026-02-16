@@ -120,18 +120,21 @@ class Branch3Array(IdArray, Branch3):
     def as_branches(self) -> BranchArray:
         """Convert Branch3Array to BranchArray."""
         branches_1_2 = BranchArray.empty(self.size)
+        branches_1_2.id = self.id
         branches_1_2.from_node = self.node_1
         branches_1_2.to_node = self.node_2
         branches_1_2.from_status = self.status_1
         branches_1_2.to_status = self.status_2
 
         branches_1_3 = BranchArray.empty(self.size)
+        branches_1_3.id = self.id
         branches_1_3.from_node = self.node_1
         branches_1_3.to_node = self.node_3
         branches_1_3.from_status = self.status_1
         branches_1_3.to_status = self.status_3
 
         branches_2_3 = BranchArray.empty(self.size)
+        branches_2_3.id = self.id
         branches_2_3.from_node = self.node_2
         branches_2_3.to_node = self.node_3
         branches_2_3.from_status = self.status_2

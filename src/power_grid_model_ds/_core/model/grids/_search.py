@@ -10,7 +10,7 @@ import numpy as np
 import numpy.typing as npt
 
 from power_grid_model_ds._core import fancypy as fp
-from power_grid_model_ds._core.model.arrays import BranchArray, ThreeWindingTransformerArray
+from power_grid_model_ds._core.model.arrays import BranchArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.enums.nodes import NodeType
 from power_grid_model_ds._core.model.graphs.errors import MissingBranchError
@@ -82,28 +82,6 @@ _THREE_WINDING_BRANCH_CONFIGS = (
 )
 
 
-def _lookup_three_winding_branch(grid: "Grid", node_a: int, node_b: int) -> ThreeWindingTransformerArray:
-    """Return the first active transformer that connects the node pair or raise if none exist."""
-
-    three_winding_array = grid.three_winding_transformer
-    error_message = f"No active three-winding transformer connects nodes {node_a} -> {node_b}."
-    if not three_winding_array.size:
-        raise MissingBranchError(error_message)
-
-    for node_col_a, node_col_b, status_col_a, status_col_b in _THREE_WINDING_BRANCH_CONFIGS:
-        transformer = three_winding_array.filter(
-            **{
-                node_col_a: [node_a, node_b],
-                node_col_b: [node_a, node_b],
-                status_col_a: 1,
-                status_col_b: 1,
-            }  # type: ignore[arg-type]
-        )
-        if transformer.size:
-            return transformer
-    raise MissingBranchError(error_message)
-
-
 def _active_branches_for_path(
     grid: "Grid", path_nodes: list[int]
 ) -> tuple[BranchArray, dict[tuple[int, int], list[int]]]:
@@ -148,7 +126,7 @@ def iter_branches_in_shortest_path(
             try:
                 typed_branches = grid.get_typed_branches(branch_ids)
             except RecordDoesNotExist:
-                typed_branches = _lookup_three_winding_branch(grid, current_node, next_node)
+                typed_branches = grid.three_winding_transformer.filter(branch_ids)
             yield typed_branches
         else:
             yield branch_records
