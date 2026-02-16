@@ -6,7 +6,7 @@ import pytest
 from power_grid_model import BranchSide, LoadGenType, WindingType
 
 from power_grid_model_ds import Grid
-from power_grid_model_ds._core.model.arrays import (
+from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     LineArray,
     LinkArray,
     NodeArray,

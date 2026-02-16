@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from power_grid_model_ds._core.model.arrays import (
+from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     AsymCurrentSensorArray,
     AsymLineArray,
     AsymPowerSensorArray,

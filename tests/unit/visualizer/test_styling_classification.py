@@ -5,11 +5,12 @@
 import pytest
 from power_grid_model import ComponentType
 
-from power_grid_model_ds._core.model.arrays import LineArray, NodeArray
 from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     AsymLineArray,
     GenericBranchArray,
+    LineArray,
     LinkArray,
+    NodeArray,
     TransformerArray,
 )
 from power_grid_model_ds._core.visualizer.styling_classification import (

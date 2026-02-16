@@ -10,7 +10,7 @@ from tests.performance._helpers import do_performance_test
 def perf_test_add_nodes():
     setup_code = {
         "grid": "from power_grid_model_ds import Grid;"
-        + "from power_grid_model_ds._core.model.arrays import NodeArray;"
+        + "from power_grid_model_ds._core.model.arrays.pgm_arrays import NodeArray;"
         + "grid = Grid.empty();"
         + "nodes = NodeArray.zeros({size});"
     }
@@ -23,7 +23,7 @@ def perf_test_add_nodes():
 def perf_test_add_lines():
     setup_code = {
         "grid": "from power_grid_model_ds import Grid;"
-        + "from power_grid_model_ds._core.model.arrays import NodeArray, LineArray;"
+        + "from power_grid_model_ds._core.model.arrays.pgm_arrays import NodeArray, LineArray;"
         + "grid = Grid.empty();"
         + "nodes = NodeArray.zeros({size});"
         + "grid.append(nodes);"
