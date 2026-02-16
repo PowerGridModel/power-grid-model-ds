@@ -5,7 +5,7 @@
 """Base grid classes"""
 
 import warnings
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Literal, Self, Type, TypeVar
 
@@ -115,6 +115,18 @@ class Grid(FancyArrayContainer):
     asym_power_sensor: AsymPowerSensorArray
     asym_voltage_sensor: AsymVoltageSensorArray
     asym_current_sensor: AsymCurrentSensorArray
+
+    def __repr__(self) -> str:
+        """Display relevant information about the grid."""
+        array_reprs: list[str] = []
+        for field in fields(self):
+            value = getattr(self, field.name)
+            if isinstance(value, FancyArray) and len(value):
+                array_reprs.append(f"{field.name}=\n{value.as_table(rows=2)}")
+
+        graph_repr = f"graphs={self.graphs!r}"
+        inner = ",\n".join([graph_repr, *array_reprs])
+        return f"{self.__class__.__name__}(\n{inner}\n)"
 
     def __str__(self) -> str:
         """Serialize grid to a string.
