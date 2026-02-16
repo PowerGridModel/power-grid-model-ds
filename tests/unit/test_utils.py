@@ -7,7 +7,7 @@ import power_grid_model_ds.fancypy as fp
 from power_grid_model_ds._core.model.arrays.pgm_arrays import LineArray, SourceArray
 from power_grid_model_ds._core.model.graphs.errors import GraphError
 from power_grid_model_ds._core.model.grids.base import Grid
-from power_grid_model_ds.utils import set_branch_orientations
+from power_grid_model_ds._core.utils.grid import set_branch_orientations
 
 
 class TestFixBranchOrientations:
