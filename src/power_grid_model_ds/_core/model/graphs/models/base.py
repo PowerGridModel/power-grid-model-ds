@@ -27,6 +27,12 @@ class BaseGraphModel(ABC):
     def __init__(self, active_only=False) -> None:
         self.active_only = active_only
 
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}(nodes={self.nr_nodes}, "
+            f"branches={self.nr_branches}, active_only={self.active_only})"
+        )
+
     @property
     @abstractmethod
     def nr_nodes(self) -> int:
