@@ -8,9 +8,9 @@ from power_grid_model_ds._core.model.graphs.errors import GraphError
 from power_grid_model_ds._core.model.grids.base import Grid
 
 
-def fix_branch_orientations(grid: Grid, dry_run: bool = False) -> list[int]:
+def set_branch_orientations(grid: Grid, dry_run: bool = False) -> list[int]:
     """
-    Fix branch orientations in the grid so that all branches are oriented away from the sources.
+    Set branch orientations in the grid so that all branches are oriented away from the sources.
 
     Orientation is determined by the distance of the branch's from_node and to_node to the source node.
     The node that is closer to the source is considered the "from_node".
@@ -44,7 +44,7 @@ def _get_reverted_branches_for_source(grid: Grid, source: SourceArray) -> list[i
 
     other_source_nodes = grid.source.exclude(source.id).node.tolist()
     if set(nodes_in_order) & set(other_source_nodes):
-        raise GraphError("Cannot fix branch orientations if source is connected to other sources")
+        raise GraphError("Cannot set branch orientations if source is connected to other sources")
 
     connected_branches = grid.branches.filter(
         from_status=1, to_status=1, from_node=nodes_in_order, to_node=nodes_in_order

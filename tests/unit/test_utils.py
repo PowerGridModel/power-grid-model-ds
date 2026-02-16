@@ -7,7 +7,7 @@ import power_grid_model_ds.fancypy as fp
 from power_grid_model_ds._core.model.arrays.pgm_arrays import LineArray, SourceArray
 from power_grid_model_ds._core.model.graphs.errors import GraphError
 from power_grid_model_ds._core.model.grids.base import Grid
-from power_grid_model_ds.utils import fix_branch_orientations
+from power_grid_model_ds.utils import set_branch_orientations
 
 
 class TestFixBranchOrientations:
@@ -21,7 +21,7 @@ class TestFixBranchOrientations:
         assert grid.branches.from_node.tolist() == [2, 3]
         assert grid.branches.to_node.tolist() == [1, 2]
 
-        reversed_branches = fix_branch_orientations(grid)
+        reversed_branches = set_branch_orientations(grid)
         assert reversed_branches == [4, 5]
 
         assert grid.branches.from_node.tolist() == [1, 2]
@@ -36,7 +36,7 @@ class TestFixBranchOrientations:
         assert grid.branches.from_node.tolist() == [2, 3]
         assert grid.branches.to_node.tolist() == [1, 2]
 
-        reversed_branches = fix_branch_orientations(grid, dry_run=True)
+        reversed_branches = set_branch_orientations(grid, dry_run=True)
 
         assert reversed_branches == [4, 5]
         assert grid.branches.from_node.tolist() == [2, 3]
@@ -57,7 +57,7 @@ class TestFixBranchOrientations:
         source.node = 1
         grid.append(source)
 
-        fix_branch_orientations(grid)
+        set_branch_orientations(grid)
 
         expected_grid = Grid.from_txt(*expected_txt_grid)
         assert fp.array_equal(grid.branches, expected_grid.branches)
@@ -72,7 +72,7 @@ class TestFixBranchOrientations:
         grid.append(source2)
 
         with pytest.raises(GraphError, match="Cannot fix branch orientations if source is connected to other sources"):
-            fix_branch_orientations(grid)
+            set_branch_orientations(grid)
 
     @pytest.mark.parametrize(
         "txt_grid,n_reversed",
@@ -104,5 +104,5 @@ class TestFixBranchOrientations:
         source.node = 1
         grid.append(source)
 
-        reversed_branches = fix_branch_orientations(grid)
+        reversed_branches = set_branch_orientations(grid)
         assert len(reversed_branches) == n_reversed
