@@ -115,9 +115,10 @@ def delete_node(grid: "Grid", node: NodeArray) -> None:
     ids_to_exclude = np.concatenate(
         [
             grid.sym_load.filter(node=node.id).id,
+            grid.sym_gen.filter(node=node.id).id,
             grid.asym_load.filter(node=node.id).id,
-            grid.source.filter(node=node.id).id,
             grid.asym_gen.filter(node=node.id).id,
+            grid.source.filter(node=node.id).id,
             grid.shunt.filter(node=node.id).id,
             node.id,
         ]
@@ -130,9 +131,10 @@ def delete_node(grid: "Grid", node: NodeArray) -> None:
     grid.asym_voltage_sensor = grid.asym_voltage_sensor.exclude(measured_object=node.id)
 
     grid.sym_load = grid.sym_load.exclude(node=node.id)
-    grid.source = grid.source.exclude(node=node.id)
+    grid.sym_gen = grid.sym_gen.exclude(node=node.id)
     grid.asym_load = grid.asym_load.exclude(node=node.id)
     grid.asym_gen = grid.asym_gen.exclude(node=node.id)
+    grid.source = grid.source.exclude(node=node.id)
     grid.shunt = grid.shunt.exclude(node=node.id)
 
     grid.fault = grid.fault.exclude(fault_object=node.id)

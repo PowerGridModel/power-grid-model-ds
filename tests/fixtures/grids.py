@@ -333,7 +333,7 @@ def build_topologically_full_grid(grid: T) -> T:
     # Faults
     faults = grid.fault.__class__.zeros(2)
     faults["id"] = [11007, 21007]
-    faults["node"] = [1001, 2001]
+    faults["fault_object"] = [1001, 2001]
     grid.append(faults, check_max_id=False)
 
     # Sym Voltage Sensors
