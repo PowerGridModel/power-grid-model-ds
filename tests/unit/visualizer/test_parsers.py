@@ -7,8 +7,12 @@ import pytest
 from numpy.typing import NDArray
 from power_grid_model import ComponentType
 
-from power_grid_model_ds._core.model.arrays import LineArray, NodeArray
-from power_grid_model_ds._core.model.arrays.pgm_arrays import Branch3Array, ThreeWindingTransformerArray
+from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+    Branch3Array,
+    LineArray,
+    NodeArray,
+    ThreeWindingTransformerArray,
+)
 from power_grid_model_ds._core.visualizer.parsers import (
     parse_branch3_array,
     parse_branch_array,

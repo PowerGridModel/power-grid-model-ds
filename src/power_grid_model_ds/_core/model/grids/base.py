@@ -12,7 +12,8 @@ from typing import Literal, Self, Type, TypeVar
 import numpy as np
 import numpy.typing as npt
 
-from power_grid_model_ds._core.model.arrays import (
+from power_grid_model_ds._core.model.arrays.base.array import FancyArray
+from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     AsymCurrentSensorArray,
     AsymLineArray,
     AsymPowerSensorArray,
@@ -33,7 +34,6 @@ from power_grid_model_ds._core.model.arrays import (
     TransformerArray,
     TransformerTapRegulatorArray,
 )
-from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
