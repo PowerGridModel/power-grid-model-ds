@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from power_grid_model_ds._core.model.arrays import (
+    ApplianceArray,
     AsymLineArray,
     Branch3Array,
     BranchArray,
@@ -178,7 +179,7 @@ def _delete_branch_array(branch: BranchArray | Branch3Array, grid: "Grid"):
     grid.transformer_tap_regulator = grid.transformer_tap_regulator.exclude(regulated_object=branch.id)
 
 
-def delete_appliance(grid: "Grid", appliance) -> None:
+def delete_appliance(grid: "Grid", appliance: ApplianceArray) -> None:
     """See Grid.delete_appliance()"""
     # Delete a branch or branch3 array from the grid.
     array_field = grid.find_array_field(appliance.__class__)

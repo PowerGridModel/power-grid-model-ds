@@ -13,6 +13,7 @@ import numpy as np
 import numpy.typing as npt
 
 from power_grid_model_ds._core.model.arrays import (
+    ApplianceArray,
     AsymCurrentSensorArray,
     AsymGenArray,
     AsymLineArray,
@@ -53,6 +54,7 @@ from power_grid_model_ds._core.model.grids._modify import (
     add_array_to_grid,
     add_branch,
     add_node,
+    delete_appliance,
     delete_branch,
     delete_branch3,
     delete_node,
@@ -126,7 +128,7 @@ class Grid(FancyArrayContainer):
     asym_current_sensor: AsymCurrentSensorArray
 
     fault: FaultArray
-      
+
     def __repr__(self) -> str:
         """Display relevant information about the grid."""
         array_reprs: list[str] = []
@@ -268,6 +270,14 @@ class Grid(FancyArrayContainer):
             node (NodeArray): The node to remove
         """
         return delete_node(self, node=node)
+
+    def delete_appliance(self, appliance: ApplianceArray) -> None:
+        """Remove an appliance from the grid
+
+        Args:
+            appliance (ApplianceArray): The appliance to remove
+        """
+        return delete_appliance(self, appliance=appliance)
 
     def make_active(self, branch: BranchArray) -> None:
         """Make a branch active

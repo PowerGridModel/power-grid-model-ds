@@ -11,7 +11,15 @@ from numpy.typing import NDArray
 
 from power_grid_model_ds._core.fancypy import concatenate
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
-from power_grid_model_ds._core.model.dtypes.appliances import AsymGen, AsymLoad, Shunt, Source, SymGen, SymLoad
+from power_grid_model_ds._core.model.dtypes.appliances import (
+    Appliance,
+    AsymGen,
+    AsymLoad,
+    Shunt,
+    Source,
+    SymGen,
+    SymLoad,
+)
 from power_grid_model_ds._core.model.dtypes.branches import (
     AsymLine,
     Branch,
@@ -42,27 +50,31 @@ class IdArray(Id, FancyArray):
     pass
 
 
-class SymLoadArray(IdArray, SymLoad):
+class ApplianceArray(IdArray, Appliance):
     pass
 
 
-class SymGenArray(IdArray, SymGen):
+class SymLoadArray(ApplianceArray, SymLoad):
     pass
 
 
-class AsymLoadArray(IdArray, AsymLoad):
+class SymGenArray(ApplianceArray, SymGen):
     pass
 
 
-class AsymGenArray(IdArray, AsymGen):
+class AsymLoadArray(ApplianceArray, AsymLoad):
     pass
 
 
-class SourceArray(IdArray, Source):
+class AsymGenArray(ApplianceArray, AsymGen):
     pass
 
 
-class ShuntArray(IdArray, Shunt):
+class SourceArray(ApplianceArray, Source):
+    pass
+
+
+class ShuntArray(ApplianceArray, Shunt):
     pass
 
 
