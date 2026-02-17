@@ -23,6 +23,13 @@ from power_grid_model_ds._core.model.arrays import (
     TransformerTapRegulatorArray,
     VoltageRegulatorArray,
 )
+from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+    AsymCurrentSensorArray,
+    AsymLineArray,
+    GenericBranchArray,
+    SymCurrentSensorArray,
+    SymGenArray,
+)
 from power_grid_model_ds._core.model.constants import EMPTY_ID
 from tests.fixtures.arrays import DefaultedCustomLineArray, DefaultedCustomNodeArray
 from tests.fixtures.grid_classes import ExtendedGrid
@@ -222,6 +229,209 @@ def test_grid_delete_node_all():
 
     assert 600 not in grid.transformer_tap_regulator.id
     assert 601 in grid.transformer_tap_regulator.id
+
+
+@pytest.mark.parametrize(
+    "branch_array_class",
+    [LineArray, LinkArray, TransformerArray, GenericBranchArray, AsymLineArray],
+)
+def test_grid_delete_branch_all(branch_array_class):
+    grid = Grid.empty()
+
+    nodes = NodeArray.zeros(3)
+    nodes.id = [10, 11, 12]
+    grid.append(nodes)
+
+    branch = branch_array_class.zeros(2)
+    branch.id = [99, 101]
+    branch.from_node = [10, 11]
+    branch.to_node = [11, 12]
+    grid.append(branch)
+
+    sym_power_sensors = SymPowerSensorArray.zeros(2)
+    sym_power_sensors.id = [200, 201]
+    sym_power_sensors.measured_object = [99, 101]
+    grid.append(sym_power_sensors)
+
+    asym_power_sensors = AsymPowerSensorArray.zeros(2)
+    asym_power_sensors.id = [300, 301]
+    asym_power_sensors.measured_object = [99, 101]
+    grid.append(asym_power_sensors)
+
+    sym_current_sensors = SymCurrentSensorArray.zeros(2)
+    sym_current_sensors.id = [400, 401]
+    sym_current_sensors.measured_object = [99, 101]
+    grid.append(sym_current_sensors)
+
+    asym_current_sensors = AsymCurrentSensorArray.zeros(2)
+    asym_current_sensors.id = [500, 501]
+    asym_current_sensors.measured_object = [99, 101]
+    grid.append(asym_current_sensors)
+
+    transformer_regulators = TransformerTapRegulatorArray.zeros(2)
+    transformer_regulators.id = [600, 601]
+    transformer_regulators.regulated_object = [99, 101]
+    grid.append(transformer_regulators)
+
+    # Verify
+    assert grid.graphs.complete_graph.has_branch(10, 11)
+    assert grid.graphs.complete_graph.has_branch(11, 12)
+
+    # Act
+    branch_name = grid.find_array_field(branch_array_class).name
+    target_branch = getattr(grid, branch_name).get(99)
+    grid.delete_branch(branch=target_branch)
+
+    # Assert
+    assert 99 not in getattr(grid, branch_name).id
+    assert 101 in getattr(grid, branch_name).id
+
+    assert 200 not in grid.sym_power_sensor.id
+    assert 201 in grid.sym_power_sensor.id
+
+    assert 300 not in grid.asym_power_sensor.id
+    assert 301 in grid.asym_power_sensor.id
+
+    assert 400 not in grid.sym_current_sensor.id
+    assert 401 in grid.sym_current_sensor.id
+
+    assert 500 not in grid.asym_current_sensor.id
+    assert 501 in grid.asym_current_sensor.id
+
+    assert 600 not in grid.transformer_tap_regulator.id
+    assert 601 in grid.transformer_tap_regulator.id
+
+    assert not grid.graphs.complete_graph.has_branch(10, 11)
+    assert grid.graphs.complete_graph.has_branch(11, 12)
+
+
+def test_grid_delete_branch3_all():
+    grid = Grid.empty()
+
+    nodes = NodeArray.zeros(5)
+    nodes.id = [10, 11, 12, 13, 14]
+    grid.append(nodes)
+
+    branch3 = ThreeWindingTransformerArray.zeros(2)
+    branch3.id = [99, 101]
+    branch3.node_1 = [10, 12]
+    branch3.node_2 = [11, 13]
+    branch3.node_3 = [12, 14]
+    grid.append(branch3)
+
+    sym_power_sensors = SymPowerSensorArray.zeros(2)
+    sym_power_sensors.id = [200, 201]
+    sym_power_sensors.measured_object = [99, 101]
+    grid.append(sym_power_sensors)
+
+    asym_power_sensors = AsymPowerSensorArray.zeros(2)
+    asym_power_sensors.id = [300, 301]
+    asym_power_sensors.measured_object = [99, 101]
+    grid.append(asym_power_sensors)
+
+    sym_current_sensors = SymCurrentSensorArray.zeros(2)
+    sym_current_sensors.id = [400, 401]
+    sym_current_sensors.measured_object = [99, 101]
+    grid.append(sym_current_sensors)
+
+    asym_current_sensors = AsymCurrentSensorArray.zeros(2)
+    asym_current_sensors.id = [500, 501]
+    asym_current_sensors.measured_object = [99, 101]
+    grid.append(asym_current_sensors)
+
+    transformer_regulators = TransformerTapRegulatorArray.zeros(2)
+    transformer_regulators.id = [600, 601]
+    transformer_regulators.regulated_object = [99, 101]
+    grid.append(transformer_regulators)
+
+    # Verify
+    assert grid.graphs.complete_graph.has_branch(10, 11)
+    assert grid.graphs.complete_graph.has_branch(11, 12)
+    assert grid.graphs.complete_graph.has_branch(12, 10)
+    assert grid.graphs.complete_graph.has_branch(12, 13)
+    assert grid.graphs.complete_graph.has_branch(13, 14)
+    assert grid.graphs.complete_graph.has_branch(14, 12)
+
+    # Act
+    grid.delete_branch3(branch=branch3.get(99))
+
+    # Assert
+    assert 99 not in grid.three_winding_transformer.id
+    assert 101 in grid.three_winding_transformer.id
+
+    assert 200 not in grid.sym_power_sensor.id
+    assert 201 in grid.sym_power_sensor.id
+
+    assert 300 not in grid.asym_power_sensor.id
+    assert 301 in grid.asym_power_sensor.id
+
+    assert 400 not in grid.sym_current_sensor.id
+    assert 401 in grid.sym_current_sensor.id
+
+    assert 500 not in grid.asym_current_sensor.id
+    assert 501 in grid.asym_current_sensor.id
+
+    assert 600 not in grid.transformer_tap_regulator.id
+    assert 601 in grid.transformer_tap_regulator.id
+
+    assert not grid.graphs.complete_graph.has_branch(10, 11)
+    assert not grid.graphs.complete_graph.has_branch(11, 12)
+    assert not grid.graphs.complete_graph.has_branch(12, 10)
+    assert grid.graphs.complete_graph.has_branch(12, 13)
+    assert grid.graphs.complete_graph.has_branch(13, 14)
+    assert grid.graphs.complete_graph.has_branch(14, 12)
+
+
+@pytest.mark.parametrize(
+    "appliance_array_class",
+    [SymLoadArray, AsymLoadArray, AsymGenArray, SourceArray, ShuntArray, SymGenArray],
+)
+def test_grid_delete_appliance_all(appliance_array_class):
+    grid = Grid.empty()
+
+    nodes = NodeArray.zeros(2)
+    nodes.id = [99, 100]
+    grid.append(nodes)
+
+    appliance = appliance_array_class.zeros(2)
+    appliance.id = [200, 201]
+    appliance.node = [99, 100]
+    grid.append(appliance)
+
+    sym_power_sensors = SymPowerSensorArray.zeros(2)
+    sym_power_sensors.id = [300, 301]
+    sym_power_sensors.measured_object = [200, 201]
+    grid.append(sym_power_sensors)
+
+    asym_power_sensors = AsymPowerSensorArray.zeros(2)
+    asym_power_sensors.id = [400, 401]
+    asym_power_sensors.measured_object = [200, 201]
+    grid.append(asym_power_sensors)
+
+    if appliance_array_class in [SymGenArray, SymLoadArray, AsymLoadArray, AsymGenArray]:
+        voltage_regulator_array = VoltageRegulatorArray.zeros(2)
+        voltage_regulator_array.id = [500, 501]
+        voltage_regulator_array.regulated_object = [200, 201]
+        grid.append(voltage_regulator_array)
+
+    # Act
+    appliance_name = grid.find_array_field(appliance_array_class).name
+    target_appliance = getattr(grid, appliance_name).get(200)
+    grid.delete_appliance(target_appliance)
+
+    # Assert
+    assert 200 not in getattr(grid, appliance_name).id
+    assert 201 in getattr(grid, appliance_name).id
+
+    assert 300 not in grid.sym_power_sensor.id
+    assert 301 in grid.sym_power_sensor.id
+
+    assert 400 not in grid.asym_power_sensor.id
+    assert 401 in grid.asym_power_sensor.id
+
+    if appliance_array_class in [SymGenArray, SymLoadArray, AsymLoadArray, AsymGenArray]:
+        assert 500 not in grid.voltage_regulator.id
+        assert 501 in grid.voltage_regulator.id
 
 
 # pylint: disable=no-member
