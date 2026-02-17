@@ -15,6 +15,7 @@ These example explain the PGM-DS interface and how to use it.
    model/array_examples
    model/graph_examples
    model/grid_examples
+   model/feeder_ids_examples
    pgm/basic_pgm_examples
    model/grid_extensions_examples
    utils/grid_from_txt_examples
