@@ -6,7 +6,7 @@ import logging
 import warnings
 from typing import TYPE_CHECKING
 
-from power_grid_model_ds._core.model.arrays import (
+from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     Branch3Array,
     BranchArray,
     LineArray,

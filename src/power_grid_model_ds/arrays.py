@@ -2,9 +2,10 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from power_grid_model_ds._core.model.arrays import (
+from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     AsymCurrentSensorArray,
     AsymLineArray,
+    AsymPowerSensorArray,
     AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
@@ -25,23 +26,24 @@ from power_grid_model_ds._core.model.arrays import (
 )
 
 __all__ = [
-    "IdArray",
-    "NodeArray",
-    "BranchArray",
-    "LinkArray",
-    "LineArray",
-    "GenericBranchArray",
+    "AsymCurrentSensorArray",
     "AsymLineArray",
-    "TransformerArray",
+    "AsymPowerSensorArray",
+    "AsymVoltageSensorArray",
     "Branch3Array",
-    "ThreeWindingTransformerArray",
+    "BranchArray",
+    "GenericBranchArray",
+    "IdArray",
+    "LineArray",
+    "LinkArray",
+    "NodeArray",
     "SourceArray",
+    "SymCurrentSensorArray",
     "SymGenArray",
     "SymLoadArray",
-    "TransformerTapRegulatorArray",
-    "AsymVoltageSensorArray",
-    "AsymCurrentSensorArray",
     "SymPowerSensorArray",
     "SymVoltageSensorArray",
-    "SymCurrentSensorArray",
+    "ThreeWindingTransformerArray",
+    "TransformerArray",
+    "TransformerTapRegulatorArray",
 ]

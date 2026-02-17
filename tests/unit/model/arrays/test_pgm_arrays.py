@@ -5,7 +5,7 @@
 import pytest
 from numpy.testing import assert_array_equal
 
-from power_grid_model_ds._core.model.arrays import Branch3Array, BranchArray
+from power_grid_model_ds._core.model.arrays.pgm_arrays import Branch3Array, BranchArray
 
 # pylint: disable=missing-function-docstring
 

@@ -8,7 +8,7 @@ import numpy as np
 
 from power_grid_model_ds._core import fancypy as fp
 from power_grid_model_ds._core.data_source.generator.arrays.base import BaseGenerator
-from power_grid_model_ds._core.model.arrays import LineArray, TransformerArray
+from power_grid_model_ds._core.model.arrays.pgm_arrays import LineArray, TransformerArray
 from power_grid_model_ds._core.model.grids.base import Grid
 
 AVERAGE_ROUTE_SIZE = 20

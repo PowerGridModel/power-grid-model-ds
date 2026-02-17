@@ -6,7 +6,7 @@
 
 from typing import TypeVar
 
-from power_grid_model_ds._core.model.arrays import (
+from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     LineArray,
     NodeArray,
     SourceArray,
