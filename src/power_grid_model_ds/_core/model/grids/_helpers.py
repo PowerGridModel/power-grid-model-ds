@@ -6,7 +6,8 @@ import logging
 from dataclasses import fields
 from typing import TYPE_CHECKING, Literal, Type, TypeVar
 
-from power_grid_model_ds._core.model.arrays import (
+from power_grid_model_ds._core.model.arrays.base.array import FancyArray
+from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     AsymCurrentSensorArray,
     AsymGenArray,
     AsymLoadArray,
@@ -27,7 +28,6 @@ from power_grid_model_ds._core.model.arrays import (
     TransformerTapRegulatorArray,
     VoltageRegulatorArray,
 )
-from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.graphs.models.rustworkx import RustworkxGraphModel
