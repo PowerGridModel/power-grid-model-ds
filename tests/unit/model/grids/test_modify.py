@@ -146,8 +146,19 @@ def test_grid_delete_node_all(topologically_full_grid: Grid):
     assert 13005 not in grid.transformer_tap_regulator.id
     assert all(id in grid.transformer_tap_regulator.id for id in [23005, 23006])
 
-    for branch in [(1001, 1002), (1001, 1003), (1001, 1004), (1001, 1005), (1001, 1006), (1001, 1007), (1001, 1008)]:
+    remaining_branches = [
+        (1001, 1002),
+        (1001, 1003),
+        (1001, 1004),
+        (1001, 1005),
+        (1001, 1006),
+        (1001, 1007),
+        (1001, 1008),
+        (1007, 1008),
+    ]
+    for branch in remaining_branches:
         assert not grid.graphs.complete_graph.has_branch(*branch), f"Branch {branch} present"
+    assert grid.graphs.complete_graph.nr_branches == len(remaining_branches)
 
 
 @pytest.mark.parametrize(
@@ -217,6 +228,7 @@ def test_grid_delete_branch_all(
         assert len(grid.transformer_tap_regulator) == 4
 
     assert not grid.graphs.complete_graph.has_branch(target_branch.from_node.item(), target_branch.to_node.item())
+    assert grid.graphs.complete_graph.nr_branches == 15
 
 
 def test_grid_delete_branch3_all(topologically_full_grid: Grid):
@@ -239,6 +251,14 @@ def test_grid_delete_branch3_all(topologically_full_grid: Grid):
     assert len(grid.sym_current_sensor) == 11
     assert len(grid.asym_current_sensor) == 11
     assert len(grid.transformer_tap_regulator) == 3
+
+    for branch in [
+        (target_branch.node_1.item(), target_branch.node_2.item()),
+        (target_branch.node_2.item(), target_branch.node_3.item()),
+        (target_branch.node_3.item(), target_branch.node_1.item()),
+    ]:
+        assert not grid.graphs.complete_graph.has_branch(*branch), f"Branch {branch} present"
+    assert grid.graphs.complete_graph.nr_branches == 13
 
 
 @pytest.mark.parametrize(
