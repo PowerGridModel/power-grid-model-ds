@@ -14,16 +14,21 @@ import numpy.typing as npt
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+    ApplianceArray,
     AsymCurrentSensorArray,
+    AsymGenArray,
     AsymLineArray,
+    AsymLoadArray,
     AsymPowerSensorArray,
     AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
+    FaultArray,
     GenericBranchArray,
     LineArray,
     LinkArray,
     NodeArray,
+    ShuntArray,
     SourceArray,
     SymCurrentSensorArray,
     SymGenArray,
@@ -33,6 +38,7 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     ThreeWindingTransformerArray,
     TransformerArray,
     TransformerTapRegulatorArray,
+    VoltageRegulatorArray,
 )
 from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
@@ -48,6 +54,7 @@ from power_grid_model_ds._core.model.grids._modify import (
     add_array_to_grid,
     add_branch,
     add_node,
+    delete_appliance,
     delete_branch,
     delete_branch3,
     delete_node,
@@ -104,9 +111,13 @@ class Grid(FancyArrayContainer):
     source: SourceArray
     sym_load: SymLoadArray
     sym_gen: SymGenArray
+    asym_load: AsymLoadArray
+    asym_gen: AsymGenArray
+    shunt: ShuntArray
 
     # regulators
     transformer_tap_regulator: TransformerTapRegulatorArray
+    voltage_regulator: VoltageRegulatorArray
 
     # sensors
     sym_power_sensor: SymPowerSensorArray
@@ -115,6 +126,8 @@ class Grid(FancyArrayContainer):
     asym_power_sensor: AsymPowerSensorArray
     asym_voltage_sensor: AsymVoltageSensorArray
     asym_current_sensor: AsymCurrentSensorArray
+
+    fault: FaultArray
 
     def __repr__(self) -> str:
         """Display relevant information about the grid."""
@@ -257,6 +270,14 @@ class Grid(FancyArrayContainer):
             node (NodeArray): The node to remove
         """
         return delete_node(self, node=node)
+
+    def delete_appliance(self, appliance: ApplianceArray) -> None:
+        """Remove an appliance from the grid
+
+        Args:
+            appliance (ApplianceArray): The appliance to remove
+        """
+        return delete_appliance(self, appliance=appliance)
 
     def make_active(self, branch: BranchArray) -> None:
         """Make a branch active

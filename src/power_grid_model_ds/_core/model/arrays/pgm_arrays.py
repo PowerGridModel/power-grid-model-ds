@@ -11,7 +11,15 @@ from numpy.typing import NDArray
 
 from power_grid_model_ds._core.fancypy import concatenate
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
-from power_grid_model_ds._core.model.dtypes.appliances import Source, SymGen, SymLoad
+from power_grid_model_ds._core.model.dtypes.appliances import (
+    Appliance,
+    AsymGen,
+    AsymLoad,
+    Shunt,
+    Source,
+    SymGen,
+    SymLoad,
+)
 from power_grid_model_ds._core.model.dtypes.branches import (
     AsymLine,
     Branch,
@@ -22,9 +30,10 @@ from power_grid_model_ds._core.model.dtypes.branches import (
     ThreeWindingTransformer,
     Transformer,
 )
+from power_grid_model_ds._core.model.dtypes.faults import Fault
 from power_grid_model_ds._core.model.dtypes.id import Id
 from power_grid_model_ds._core.model.dtypes.nodes import Node
-from power_grid_model_ds._core.model.dtypes.regulators import TransformerTapRegulator
+from power_grid_model_ds._core.model.dtypes.regulators import TransformerTapRegulator, VoltageRegulator
 from power_grid_model_ds._core.model.dtypes.sensors import (
     AsymCurrentSensor,
     AsymPowerSensor,
@@ -41,15 +50,31 @@ class IdArray(Id, FancyArray):
     pass
 
 
-class SymLoadArray(IdArray, SymLoad):
+class ApplianceArray(IdArray, Appliance):
     pass
 
 
-class SymGenArray(IdArray, SymGen):
+class SymLoadArray(ApplianceArray, SymLoad):
     pass
 
 
-class SourceArray(IdArray, Source):
+class SymGenArray(ApplianceArray, SymGen):
+    pass
+
+
+class AsymLoadArray(ApplianceArray, AsymLoad):
+    pass
+
+
+class AsymGenArray(ApplianceArray, AsymGen):
+    pass
+
+
+class SourceArray(ApplianceArray, Source):
+    pass
+
+
+class ShuntArray(ApplianceArray, Shunt):
     pass
 
 
@@ -143,6 +168,10 @@ class ThreeWindingTransformerArray(Branch3Array, ThreeWindingTransformer):
     pass
 
 
+class VoltageRegulatorArray(IdArray, VoltageRegulator):
+    pass
+
+
 class TransformerTapRegulatorArray(IdArray, TransformerTapRegulator):
     pass
 
@@ -168,4 +197,8 @@ class AsymVoltageSensorArray(IdArray, AsymVoltageSensor):
 
 
 class AsymCurrentSensorArray(IdArray, AsymCurrentSensor):
+    pass
+
+
+class FaultArray(IdArray, Fault):
     pass
