@@ -12,3 +12,8 @@ SELECTION_OUTPUT_HTML = html.Div(
     id="selection-output",
     style=_SELECTION_OUTPUT_STYLE,
 )
+
+SELECTION_GRAPH_HTML = html.Div(
+    dcc.Graph(id="selection-graph", style={"display": "none"}),
+    style={"margin": "10px"},
+)
