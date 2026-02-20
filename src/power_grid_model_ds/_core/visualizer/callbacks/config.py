@@ -73,7 +73,7 @@ def update_arrows(show_arrows, current_stylesheet):
     Output("show-appliances-store", "data"),
     Input("show-appliances", "value"),
     State("parsed-elements-store", "data"),
-    prevent_initial_call=True,
+    prevent_initial_call=False,  # allow appliances to be hidden by default based on the initial value of the checkbox
 )
 def update_appliances(show_appliances, parsed_elements):
     """Callback to add or remove appliances in the graph."""

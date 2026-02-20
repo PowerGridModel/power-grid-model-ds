@@ -66,7 +66,7 @@ _ARROWS_CHECKBOX = dbc.Checkbox(
 _SHOW_APPLIANCES_CHECKBOX = dbc.Checkbox(
     id="show-appliances",
     label="Show appliances",
-    value=True,
+    value=False,
     label_style={"color": "white"},
     style={"margin-top": "10px"},
 )

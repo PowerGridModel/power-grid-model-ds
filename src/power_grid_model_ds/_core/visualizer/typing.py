@@ -18,26 +18,25 @@ Purpose is to link unvisualized elements data to visualized elements id they are
 For example:
     {
         "node_id_1": {
-            "node": [ {"id": 0, "u_rated": 100}, {...} ],
-            "sym_voltage_sensor": [ {..sensor data..}, {...}],
+            "sym_voltage_sensor": [ sensor id, ...],
             ...
         },
         "edge_id_1": {
-            "ComponentType.line": [ {..line data..}, {...} ],
-            "ComponentType.sym_power_sensor": [ {..sensor data..}, {...}],
+            "ComponentType.sym_power_sensor": [ sensor id, ...],
+            "ComponentType.sym_current_sensor": [ sensor id, ...],
             ...
         },
         "branch3_id_0": {
-            "ComponentType.three_winding_transformer": [ {..three_winding_transformer data..}, {...} ],
+            "ComponentType.transformer_tap_regulator": [ regulator id, ...],
             ...
         },
         "branch3_id_1": {
-            "ComponentType.three_winding_transformer": [ {..same three_winding_transformer data..}, {...} ],
+            "ComponentType.transformer_tap_regulator": [ regulator id, ...],
             ...
         },
         {
             "source_id_str": {
-                "ComponentType.sym_power_sensor": [ {..sensor data..}, {...}],
+                "ComponentType.sym_power_sensor": [ sensor id, ...],
         }
         ...
     }

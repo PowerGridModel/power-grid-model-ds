@@ -24,7 +24,6 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import (
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.parsing_utils import (
     append_component_list,
-    array_to_dict,
     map_appliance_to_nodes,
     merge_viz_to_comp,
 )
@@ -127,7 +126,6 @@ def parse_node_array(nodes: NodeArray) -> VizToComponentElements:
             "data": {"id": node_id_str, "group": "node"},
             "classes": get_node_classification(node),
         }
-        parsed_nodes[node_id_str]["data"].update(array_to_dict(node, nodes.columns))
 
         if with_coords:
             parsed_nodes[node_id_str]["position"] = {
@@ -143,7 +141,6 @@ def parse_branch3_array(
     """Parse the three-winding transformer array. Fills branch3 data to viz_to_comp."""
     parsed_branches: VizToComponentElements = {}
     for branch3 in branches:
-        branch3_component_data = array_to_dict(branch3, branches.columns)  # Same for all three branches
         for count, branch in enumerate(branch3.as_branches()):
             branch_id_str = f"{branch3.id.item()}_{count}"
             parsed_branches[branch_id_str] = {
@@ -156,7 +153,6 @@ def parse_branch3_array(
                 },
                 "classes": get_branch_classification(branch, group),
             }
-            parsed_branches[branch_id_str]["data"].update(branch3_component_data)
     return parsed_branches
 
 
@@ -183,7 +179,6 @@ def parse_branch_array(
             },
             "classes": get_branch_classification(branch, group),
         }
-        parsed_branches[branch_id_str]["data"].update(array_to_dict(branch, branches.columns))
     return parsed_branches
 
 
@@ -220,8 +215,7 @@ def _parse_appliances(
             },
             "classes": get_appliance_edge_classification(appliance, group),
         }
-        parsed_appliances[appliance_id_str]["data"].update(array_to_dict(appliance, appliances.columns))
-        append_component_list(viz_to_comp_appliance, array_to_dict(appliance, appliances.columns), node_id_str, group)
+        append_component_list(viz_to_comp_appliance, appliance.id.item(), node_id_str, group)
     return parsed_appliances, viz_to_comp_appliance
 
 
@@ -240,21 +234,21 @@ def _parse_flow_sensors(
     for power_sensor in sensors:
         measured_object_id_str = str(power_sensor.measured_object.item())
         measured_terminal_type = power_sensor.measured_terminal_type.item()
-        sensor_dict = array_to_dict(power_sensor, sensors.columns)
 
         if measured_terminal_type in _NODE_BRANCH_TERMINAL_TYPE:
-            append_component_list(viz_to_comp, sensor_dict, measured_object_id_str, group)
+            mapping_id_strs = [measured_object_id_str]
         elif measured_terminal_type in _BRANCH3_TERMINAL_TYPE:
-            for count in range(3):
-                branch1_id = f"{measured_object_id_str}_{count}"
-                append_component_list(viz_to_comp, sensor_dict, branch1_id, group)
+            mapping_id_strs = [f"{measured_object_id_str}_{count}" for count in range(3)]
         elif measured_terminal_type in _APPLIANCE_TERMINAL_TYPE:
-            append_component_list(viz_to_comp, sensor_dict, measured_object_id_str, group)
+            mapping_id_strs = [measured_object_id_str]
             # Map appliance to both appliance and its node as both can be unvisualized
             if measured_object_id_str in appliance_to_node:
-                append_component_list(viz_to_comp, sensor_dict, appliance_to_node[measured_object_id_str], group)
+                mapping_id_strs.append(appliance_to_node[measured_object_id_str])
         else:
             raise ValueError(f"Unknown measured_terminal_type: {measured_terminal_type}")
+
+        for id_str in mapping_id_strs:
+            append_component_list(viz_to_comp, power_sensor.id.item(), id_str, group)
 
     return viz_to_comp
 
@@ -267,8 +261,7 @@ def _parse_voltage_sensors(
     viz_to_comp: VizToComponentData = {}
     for voltage_sensor in voltage_sensors:
         node_id_str = str(voltage_sensor.measured_object.item())
-        sym_voltage_sensor_data = array_to_dict(voltage_sensor, voltage_sensors.columns)
-        append_component_list(viz_to_comp, sym_voltage_sensor_data, node_id_str, sensor_type)
+        append_component_list(viz_to_comp, voltage_sensor.id.item(), node_id_str, sensor_type)
     return viz_to_comp
 
 
@@ -279,16 +272,14 @@ def _parse_transformer_tap_regulators(
     viz_to_comp: VizToComponentData = {}
     for tap_regulator in transformer_tap_regulators:
         regulated_object_str = str(tap_regulator.regulated_object.item())
-        tap_regulator_data = array_to_dict(tap_regulator, transformer_tap_regulators.columns)
         if regulated_object_str in elements:
-            append_component_list(
-                viz_to_comp, tap_regulator_data, regulated_object_str, ComponentType.transformer_tap_regulator
-            )
+            mapping_id_strs = [regulated_object_str]
         else:
-            for count in range(3):
-                branch3_id_str = f"{regulated_object_str}_{count}"
-                if branch3_id_str in elements:
-                    append_component_list(
-                        viz_to_comp, tap_regulator_data, branch3_id_str, ComponentType.transformer_tap_regulator
-                    )
+            mapping_id_strs = [
+                f"{regulated_object_str}_{count}" for count in range(3) if f"{regulated_object_str}_{count}" in elements
+            ]
+
+        for id_str in mapping_id_strs:
+            append_component_list(viz_to_comp, tap_regulator.id.item(), id_str, ComponentType.transformer_tap_regulator)
+
     return viz_to_comp

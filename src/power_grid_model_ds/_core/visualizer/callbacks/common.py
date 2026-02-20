@@ -37,3 +37,15 @@ HEADER_SEARCH_OPTIONS = _HEADER_COMMON_OPTIONS + [
     {"label": ComponentType.asym_current_sensor.value, "value": ComponentType.asym_current_sensor.value},
     {"label": ComponentType.transformer_tap_regulator.value, "value": ComponentType.transformer_tap_regulator.value},
 ]
+
+
+def _update_column_options(selected_group, columns):
+    """Update the column dropdown options based on the selected group."""
+    if not selected_group or not columns:
+        return [], None
+
+    # Get columns for the selected group (node, line, link, or transformer)
+    columns = columns.get(selected_group, [])
+    default_value = columns[0] if columns else "id"
+
+    return columns, default_value
