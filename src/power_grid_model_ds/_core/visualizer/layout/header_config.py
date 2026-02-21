@@ -71,4 +71,19 @@ _SHOW_APPLIANCES_CHECKBOX = dbc.Checkbox(
     style={"margin-top": "10px"},
 )
 
-CONFIG_ELEMENTS = [_LAYOUT_DROPDOWN, _ARROWS_CHECKBOX, _SHOW_APPLIANCES_CHECKBOX, _SCALING_DIV]
+_SCENARIO_INPUT = html.Div(
+    [
+        html.Span("Scenario ", style={"color": "white", "margin-right": "5px"}),
+        dcc.Input(
+            id="scenario-input",
+            type="number",
+            value=0,
+            min=0,
+            step=1,
+            style={"width": "60px", "margin-right": "5px"},
+        ),
+    ],
+    style={"display": "flex", "align-items": "center", "margin": "0 20px 0 10px"},
+)
+
+CONFIG_ELEMENTS = [_SCENARIO_INPUT, _LAYOUT_DROPDOWN, _ARROWS_CHECKBOX, _SHOW_APPLIANCES_CHECKBOX, _SCALING_DIV]

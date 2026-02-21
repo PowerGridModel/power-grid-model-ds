@@ -14,6 +14,7 @@ from power_grid_model_ds._core.visualizer.callbacks import (  # noqa: F401  # py
     element_selection,
     header,
     heatmap,
+    scenario,
     search_form,
 )
 from power_grid_model_ds._core.visualizer.layout.cytoscape_html import get_cytoscape_html
