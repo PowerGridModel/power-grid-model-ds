@@ -5,7 +5,7 @@
 
 import numpy as np
 import plotly.graph_objects as go
-from dash import ALL, Input, Output, State, callback, callback_context, dash_table, html
+from dash import ALL, Input, Output, State, callback, dash_table, html
 from power_grid_model import ComponentType, attribute_empty_value
 from power_grid_model._core.dataset_definitions import DatasetType
 
@@ -82,8 +82,6 @@ def _array_to_data_tables(array_data, group: str) -> html.Div:
 
 
 @callback(
-    Output({"type": "selection-table", "group": ALL}, "active_cell"),
-    Output({"type": "selection-table", "group": ALL}, "selected_cells"),
     Output("selection-graph", "figure"),
     Output("selection-graph", "style"),
     Input({"type": "selection-table", "group": ALL}, "active_cell"),
@@ -91,36 +89,25 @@ def _array_to_data_tables(array_data, group: str) -> html.Div:
     prevent_initial_call=True,
 )
 def handle_cell_selection(active_cells, table_ids):
-    """Clear other selections and update graph when a cell is clicked."""
-    ctx = callback_context
-    triggered_table_id = ctx.triggered_id
+    """Update graph when a cell is clicked."""
+    active_cell = None
+    group = None
 
-    # Find triggered table index
-    cell_number = table_ids.index(triggered_table_id)
-    active_cell = active_cells[cell_number]
+    for i, cell in enumerate(active_cells):
+        if cell is not None and "row_id" in cell and "column_id" in cell:
+            active_cell = cell
+            group = table_ids[i]["group"]
+            break
 
-    # Clear other selections
-    active_output = [None] * len(table_ids)
-    active_output[cell_number] = active_cell
-
-    selected_output = [[] for _ in table_ids]
-    if active_cell:
-        selected_output[cell_number] = [active_cell]
-
-    empty_return = (active_output, selected_output, go.Figure(), {"display": "none"})
-
-    if active_cell is None or "row_id" not in active_cell or "column_id" not in active_cell:
-        return empty_return
-
-    group = table_ids[cell_number]["group"]
+    if active_cell is None:
+        return go.Figure(), {"display": "none"}
     element_id = active_cell["row_id"]
-    column_id = active_cell["column_id"]
+    column = active_cell["column_id"]
 
-    y_data, data_type = _get_y_data_for_cell_selection(group, element_id, column_id)
+    y_data, data_type = _get_y_data_for_cell_selection(group, element_id, column)
     if y_data is None or data_type is None:
-        return empty_return
+        return go.Figure(), {"display": "none"}
 
-    # Create the graph
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
@@ -132,34 +119,32 @@ def handle_cell_selection(active_cells, table_ids):
     )
 
     fig.update_layout(
-        title=f"{data_type.value} - {group} - {column_id} - id={element_id}",
+        title=f"{data_type.value} - {group} - {column} - id={element_id}",
         xaxis_title="Scenario Index",
-        yaxis_title=column_id,
+        yaxis_title=column,
         template="plotly_white",
         hovermode="x unified",
         showlegend=False,
     )
 
-    return active_output, selected_output, fig, {"display": "block"}
+    return fig, {"display": "block"}
 
 
-def _get_y_data_for_cell_selection(
-    group: str, element_id: int, column_id: str
-) -> tuple[list | None, DatasetType | None]:
+def _get_y_data_for_cell_selection(group: str, element_id: int, column: str) -> tuple[list | None, DatasetType | None]:
     # Extract data from update_data or output_data
     update_data = safe_get_update_data()
     output_data = safe_get_output_data()
 
-    if update_data is not None and group in update_data and column_id in update_data[group].dtype.names:
+    if update_data is not None and group in update_data and column in update_data[group].dtype.names:
         data_type = DatasetType.update
-        empty_val = attribute_empty_value(DatasetType.update, ComponentType(group), column_id)
+        empty_val = attribute_empty_value(DatasetType.update, ComponentType(group), column)
         id_column = update_data[group]["id"]
-        column_data = update_data[group][column_id]
-    elif output_data is not None and group in output_data and column_id in output_data[group].dtype.names:
+        column_data = update_data[group][column]
+    elif output_data is not None and group in output_data and column in output_data[group].dtype.names:
         data_type = DatasetType.sym_output
-        empty_val = attribute_empty_value(DatasetType.sym_output, ComponentType(group), column_id)
+        empty_val = attribute_empty_value(DatasetType.sym_output, ComponentType(group), column)
         id_column = output_data[group]["id"]
-        column_data = output_data[group][column_id]
+        column_data = output_data[group][column]
     else:
         return None, None
 
