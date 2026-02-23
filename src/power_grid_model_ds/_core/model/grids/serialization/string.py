@@ -96,11 +96,11 @@ class _TextSource(Generic[G]):
         return self.grid
 
     @staticmethod
-    def read_txt(txt_lines: list[str]) -> tuple[set, dict]:
+    def read_txt(txt_lines: list[str]) -> tuple[set, list[tuple[str, str, list[str]]]]:
         """Extract assets from text"""
 
         txt_nodes = set()
-        txt_branches = {}
+        txt_branches: list[tuple[str, str, list[str]]] = []
         for text_line in txt_lines:
             if not text_line.strip() or text_line.startswith("#"):
                 continue  # skip empty lines and comments
@@ -111,7 +111,7 @@ class _TextSource(Generic[G]):
             comments = comments[0].split(",") if comments else []
 
             txt_nodes |= {from_node_str, to_node_str}
-            txt_branches[(from_node_str, to_node_str)] = comments
+            txt_branches.append((from_node_str, to_node_str, comments))
         return txt_nodes, txt_branches
 
     def add_nodes(self, nodes: set[str]):
@@ -133,10 +133,10 @@ class _TextSource(Generic[G]):
             new_node.id = node_id
             self.grid.append(new_node, check_max_id=False)
 
-    def add_branches(self, branches: dict[tuple[str, str], list[str]]):
+    def add_branches(self, branches: list[tuple[str, str, list[str]]]):
         """Add branches to the grid"""
-        for branch, comments in branches.items():
-            self.add_branch(branch, comments)
+        for from_node_str, to_node_str, comments in branches:
+            self.add_branch((from_node_str, to_node_str), comments)
 
     def add_branch(self, branch: tuple[str, str], comments: list[str]):
         """Add a branch to the grid"""
