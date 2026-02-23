@@ -21,6 +21,7 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     TransformerTapRegulatorArray,
 )
 from power_grid_model_ds._core.model.constants import EMPTY_ID
+from power_grid_model_ds._core.model.grids._modify import delete_appliance
 from tests.fixtures.arrays import DefaultedCustomLineArray, DefaultedCustomNodeArray
 from tests.fixtures.grid_classes import ExtendedGrid
 
@@ -310,7 +311,9 @@ def test_grid_delete_appliance_all(
     # Act
     appliance_name = grid.find_array_field(appliance_array_class).name
     target_appliance = getattr(grid, appliance_name).get(appliance_id_to_delete)
-    grid.delete_appliance(target_appliance)
+
+    # TODO - change test to grid.remove once implemented
+    delete_appliance(grid, target_appliance)
 
     for deleted_id in deleted_ids:
         assert deleted_id not in grid.sym_power_sensor.id
