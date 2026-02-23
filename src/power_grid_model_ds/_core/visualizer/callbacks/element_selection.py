@@ -19,20 +19,19 @@ from power_grid_model_ds._core.visualizer.server_state import (
 )
 from power_grid_model_ds._core.visualizer.typing import ListArrayData, VizToComponentData
 
-# Keys used in the visualization elements that are not part of the component data
-VISUALIZATION_KEYS = ["id", "label", "group", "position", "parent", "source", "target"]
-
 
 @callback(
     Output("selection-output", "children"),
     Input("cytoscape-graph", "selectedNodeData"),
     Input("cytoscape-graph", "selectedEdgeData"),
     State("viz-to-comp-store", "data"),
+    Input("cytoscape-graph", "elements"),
 )
 def display_selected_element(
     node_data: ListArrayData,
     edge_data: ListArrayData,
     viz_to_comp: VizToComponentData,
+    _,
 ):
     """Display the tapped edge data."""
     # 0th element means data for only a single selection is shown
