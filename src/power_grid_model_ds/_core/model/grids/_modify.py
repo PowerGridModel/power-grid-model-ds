@@ -6,9 +6,14 @@ import logging
 import warnings
 from typing import TYPE_CHECKING
 
-from power_grid_model_ds._core.model.arrays import (
+import numpy as np
+
+from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+    ApplianceArray,
+    AsymLineArray,
     Branch3Array,
     BranchArray,
+    GenericBranchArray,
     LineArray,
     LinkArray,
     NodeArray,
@@ -60,7 +65,7 @@ def reverse_branches(grid: "Grid", branches: BranchArray) -> None:
     """See Grid.reverse_branches()"""
     if not branches.size:
         return
-    if not isinstance(branches, (LineArray, LinkArray, TransformerArray)):
+    if not isinstance(branches, (LineArray, LinkArray, TransformerArray, GenericBranchArray, AsymLineArray)):
         try:
             branches = grid.get_typed_branches(branches.id)
         except ValueError:
@@ -70,11 +75,16 @@ def reverse_branches(grid: "Grid", branches: BranchArray) -> None:
             return
 
     from_nodes = branches.from_node
+    from_states = branches.from_status
     to_nodes = branches.to_node
+    to_states = branches.to_status
 
     array_field = grid.find_array_field(branches.__class__)
     array = getattr(grid, array_field.name)
     array.update_by_id(branches.id, from_node=to_nodes, to_node=from_nodes)
+    array.update_by_id(
+        branches.id, from_node=to_nodes, from_status=to_states, to_node=from_nodes, to_status=from_states
+    )
 
 
 def make_active(grid: "Grid", branch: BranchArray) -> None:
@@ -106,8 +116,33 @@ def make_inactive(grid, branch: BranchArray, at_to_side: bool = True) -> None:
 def delete_node(grid: "Grid", node: NodeArray) -> None:
     """See Grid.delete_node()"""
     grid.node = grid.node.exclude(id=node.id)
+
+    ids_to_exclude = np.concatenate(
+        [
+            grid.sym_load.filter(node=node.id).id,
+            grid.sym_gen.filter(node=node.id).id,
+            grid.asym_load.filter(node=node.id).id,
+            grid.asym_gen.filter(node=node.id).id,
+            grid.source.filter(node=node.id).id,
+            grid.shunt.filter(node=node.id).id,
+            node.id,
+        ]
+    )
+    grid.sym_power_sensor = grid.sym_power_sensor.exclude(measured_object=ids_to_exclude)
+    grid.asym_power_sensor = grid.asym_power_sensor.exclude(measured_object=ids_to_exclude)
+    grid.voltage_regulator = grid.voltage_regulator.exclude(regulated_object=ids_to_exclude)
+
+    grid.sym_voltage_sensor = grid.sym_voltage_sensor.exclude(measured_object=node.id)
+    grid.asym_voltage_sensor = grid.asym_voltage_sensor.exclude(measured_object=node.id)
+
     grid.sym_load = grid.sym_load.exclude(node=node.id)
+    grid.sym_gen = grid.sym_gen.exclude(node=node.id)
+    grid.asym_load = grid.asym_load.exclude(node=node.id)
+    grid.asym_gen = grid.asym_gen.exclude(node=node.id)
     grid.source = grid.source.exclude(node=node.id)
+    grid.shunt = grid.shunt.exclude(node=node.id)
+
+    grid.fault = grid.fault.exclude(fault_object=node.id)
 
     for branch_array in grid.branch_arrays:
         matching_branches = branch_array.filter(from_node=node.id, to_node=node.id, mode_="OR")
@@ -135,6 +170,7 @@ def delete_branch3(grid: "Grid", branch: Branch3Array) -> None:
     """See Grid.delete_branch3()"""
     _delete_branch_array(branch=branch, grid=grid)
     grid.graphs.delete_branch3(branch=branch)
+    logging.debug(f"deleted branch3 {branch.id}")
 
 
 def _delete_branch_array(branch: BranchArray | Branch3Array, grid: "Grid"):
@@ -143,4 +179,21 @@ def _delete_branch_array(branch: BranchArray | Branch3Array, grid: "Grid"):
     array_attr = getattr(grid, array_field.name)
     setattr(grid, array_field.name, array_attr.exclude(id=branch.id))
 
+    grid.sym_power_sensor = grid.sym_power_sensor.exclude(measured_object=branch.id)
+    grid.asym_power_sensor = grid.asym_power_sensor.exclude(measured_object=branch.id)
+    grid.sym_current_sensor = grid.sym_current_sensor.exclude(measured_object=branch.id)
+    grid.asym_current_sensor = grid.asym_current_sensor.exclude(measured_object=branch.id)
     grid.transformer_tap_regulator = grid.transformer_tap_regulator.exclude(regulated_object=branch.id)
+
+
+def delete_appliance(grid: "Grid", appliance: ApplianceArray) -> None:
+    """See Grid.delete_appliance()"""
+    # Delete a branch or branch3 array from the grid.
+    array_field = grid.find_array_field(appliance.__class__)
+    array_attr = getattr(grid, array_field.name)
+    setattr(grid, array_field.name, array_attr.exclude(id=appliance.id))
+
+    grid.sym_power_sensor = grid.sym_power_sensor.exclude(measured_object=appliance.id)
+    grid.asym_power_sensor = grid.asym_power_sensor.exclude(measured_object=appliance.id)
+    grid.voltage_regulator = grid.voltage_regulator.exclude(regulated_object=appliance.id)
+    logging.debug(f"deleted appliance {appliance.id}")

@@ -11,7 +11,7 @@ import pytest
 from power_grid_model import ComponentType, TapChangingStrategy, initialize_array
 
 from power_grid_model_ds._core.data_source.generator.grid_generators import RadialGridGenerator
-from power_grid_model_ds._core.model.arrays import (
+from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     LineArray,
     NodeArray,
     SourceArray,
