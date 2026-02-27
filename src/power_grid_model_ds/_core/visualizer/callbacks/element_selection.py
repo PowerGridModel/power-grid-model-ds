@@ -53,7 +53,7 @@ def display_selected_element(
     grid = safe_get_grid()
 
     data = getattr(grid, group).get(id=pgm_id)
-    
+
     tables: list[html.H5 | html.Div] = []
     tables.append(html.H5(group, style={"marginTop": "15px", "textAlign": "left"}))
     tables.append(_array_to_data_tables(data, group))
@@ -72,7 +72,8 @@ def _array_to_data_tables(array_data: IdArray, group: str) -> html.Div:
     list_array_data = []
     for entry in array_data:
         entry_dict = {
-            col: entry[col].item() if entry[col].ndim == 1 else f"{entry[col].tolist()[0]}" for col in array_data.columns
+            col: entry[col].item() if entry[col].ndim == 1 else f"{entry[col].tolist()[0]}"
+            for col in array_data.columns
         }
         list_array_data.append(entry_dict)
 

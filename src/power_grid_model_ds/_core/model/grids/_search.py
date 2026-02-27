@@ -9,8 +9,8 @@ import numpy as np
 import numpy.typing as npt
 
 from power_grid_model_ds._core import fancypy as fp
-from power_grid_model_ds._core.model.arrays import BranchArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
+from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray
 from power_grid_model_ds._core.model.enums.nodes import NodeType
 
 if TYPE_CHECKING:

@@ -7,7 +7,7 @@
 import numpy as np
 
 from power_grid_model_ds._core.data_source.generator.arrays.base import BaseGenerator
-from power_grid_model_ds._core.model.arrays import TransformerArray
+from power_grid_model_ds._core.model.arrays.pgm_arrays import TransformerArray
 
 
 class TransformerGenerator(BaseGenerator):

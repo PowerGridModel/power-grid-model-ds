@@ -19,11 +19,10 @@ from power_grid_model_ds._core.visualizer.callbacks import (  # noqa: F401  # py
 )
 from power_grid_model_ds._core.visualizer.layout.cytoscape_html import get_cytoscape_html
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
-from power_grid_model_ds._core.visualizer.layout.graph_layout import LayoutOptions
 from power_grid_model_ds._core.visualizer.layout.header import HEADER_HTML
+from power_grid_model_ds._core.visualizer.layout.layout_config import get_default_graph_layout
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_GRAPH_HTML, SELECTION_OUTPUT_HTML
 from power_grid_model_ds._core.visualizer.parsers import parse_element_data
-from power_grid_model_ds.arrays import NodeArray
 
 GOOGLE_FONTS = "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
 MDBOOTSTRAP = "https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/8.2.0/mdb.min.css"
@@ -93,14 +92,14 @@ def _get_columns_store(grid: Grid) -> dcc.Store:
 def get_app_layout(grid: Grid) -> html.Div:
     """Get the app layout."""
     columns_store = _get_columns_store(grid)
-    layout = _get_graph_layout(grid.node)
+    layout = get_default_graph_layout(grid.node)
     viz_elements_dict, viz_to_comp_data = parse_element_data(grid)
     elements = [
         element
         for element in viz_elements_dict.values()
         if element["data"]["group"] not in ["sym_load", "sym_gen", "sym_load_ghost_node", "sym_gen_ghost_node"]
     ]
-    cytoscape_html = get_cytoscape_html(layout, elements)
+    cytoscape_html = get_cytoscape_html(layout, elements, grid.source.node.tolist())
 
     return html.Div(
         [
@@ -109,6 +108,7 @@ def get_app_layout(grid: Grid) -> html.Div:
             dcc.Store(id="viz-to-comp-store", data=viz_to_comp_data),
             dcc.Store(id="stylesheet-store", data=DEFAULT_STYLESHEET),
             dcc.Store(id="show-appliances-store", data=False, storage_type="session"),
+            dcc.Store(id="source-nodes-store", data=grid.source.node.tolist()),
             HEADER_HTML,
             html.Hr(style={"border-color": "white", "margin": "0"}),
             cytoscape_html,
@@ -116,10 +116,3 @@ def get_app_layout(grid: Grid) -> html.Div:
             SELECTION_GRAPH_HTML,
         ],
     )
-
-
-def _get_graph_layout(nodes: NodeArray) -> LayoutOptions:
-    """Determine the graph layout"""
-    if "x" in nodes.columns and "y" in nodes.columns:
-        return LayoutOptions.PRESET
-    return LayoutOptions.BREADTHFIRST

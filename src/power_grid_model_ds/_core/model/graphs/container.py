@@ -10,9 +10,9 @@ from typing import TYPE_CHECKING, Generator
 
 import numpy as np
 
-from power_grid_model_ds._core.model.arrays import Branch3Array, BranchArray, NodeArray
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
+from power_grid_model_ds._core.model.arrays.pgm_arrays import Branch3Array, BranchArray, NodeArray
 from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 
@@ -29,6 +29,11 @@ class GraphContainer:
 
     complete_graph: BaseGraphModel
     """The graph containing all branches."""
+
+    def __repr__(self) -> str:
+        """Summarize graphs with repr outputs from each graph."""
+        graph_infos = [f"{field.name}={getattr(self, field.name)!r}" for field in dataclasses.fields(self)]
+        return f"{self.__class__.__name__}({', '.join(graph_infos)})"
 
     @property
     def graph_attributes(self) -> Generator:

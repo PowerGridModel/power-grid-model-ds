@@ -6,11 +6,8 @@
 from dash import Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 
-from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import (
-    BRANCH_WIDTH,
-    NODE_SIZE,
-)
-from power_grid_model_ds._core.visualizer.layout.graph_layout import LayoutOptions
+from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import BRANCH_WIDTH, NODE_SIZE
+from power_grid_model_ds._core.visualizer.layout.layout_config import layout_with_config
 from power_grid_model_ds._core.visualizer.styling_classification import StyleClass
 from power_grid_model_ds._core.visualizer.typing import STYLESHEET
 
@@ -34,20 +31,25 @@ def scale_elements(node_scale: float, edge_scale: float, stylesheet: STYLESHEET)
         (f".{StyleClass.NODE.value}", {"height": NODE_SIZE * node_scale, "width": NODE_SIZE * node_scale}),
         (
             f".{StyleClass.APPLIANCE_GHOST_NODE.value}",
-            {"height": NODE_SIZE * 0.25 * node_scale, "width": NODE_SIZE * 0.25 * node_scale},
+            {"height": NODE_SIZE * node_scale, "width": NODE_SIZE * node_scale},
         ),
-        (f".{StyleClass.GENERATING_APPLIANCE.value}", {"width": BRANCH_WIDTH * 0.5 * edge_scale}),
-        (f".{StyleClass.LOADING_APPLIANCE.value}", {"width": BRANCH_WIDTH * 0.5 * edge_scale}),
+        (f".{StyleClass.GENERATING_APPLIANCE.value}", {"width": BRANCH_WIDTH * edge_scale}),
+        (f".{StyleClass.LOADING_APPLIANCE.value}", {"width": BRANCH_WIDTH * edge_scale}),
     ]:
         new_stylesheet.append({"selector": selector, "style": new_style})
 
     return new_stylesheet, new_stylesheet
 
 
-@callback(Output("cytoscape-graph", "layout"), Input("dropdown-update-layout", "value"), prevent_initial_call=True)
-def update_layout(layout_config):
+@callback(
+    Output("cytoscape-graph", "layout"),
+    Input("dropdown-update-layout", "value"),
+    State("source-nodes-store", "data"),
+    prevent_initial_call=True,
+)
+def update_layout(layout, source_nodes):
     """Callback to update the layout of the graph."""
-    layout_config = LayoutOptions(layout_config).layout_with_config()
+    layout_config = layout_with_config(layout, source_nodes)
     layout_config.update({"animate": True})
     return layout_config
 

@@ -3,11 +3,23 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import numpy as np
+import pytest
 from numpy.typing import NDArray
+from power_grid_model import ComponentType
 
-from power_grid_model_ds._core.model.arrays import LineArray, NodeArray
-from power_grid_model_ds._core.model.arrays.pgm_arrays import Branch3Array
-from power_grid_model_ds._core.visualizer.parsers import parse_branch3_array, parse_branch_array, parse_node_array
+from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+    Branch3Array,
+    LineArray,
+    NodeArray,
+    ThreeWindingTransformerArray,
+)
+from power_grid_model_ds._core.visualizer.parsers import (
+    parse_branch3_array,
+    parse_branch_array,
+    parse_node_array,
+)
+from power_grid_model_ds._core.visualizer.styling_classification import StyleClass
+from power_grid_model_ds._core.visualizer.typing import VizToComponentElements
 
 
 class CoordinatedNodeArray(NodeArray):
@@ -15,78 +27,130 @@ class CoordinatedNodeArray(NodeArray):
     y: NDArray[np.float64]
 
 
-class TestParseNodeArray:
-    def test_parse_node_array(self):
-        nodes = NodeArray.zeros(3)
-        nodes["id"] = [1, 2, 3]
-        nodes["u_rated"] = [10, 20.4, 30.99]
+@pytest.fixture
+def node_array() -> tuple[NodeArray, VizToComponentElements]:
+    nodes = NodeArray.zeros(4)
+    nodes[:] = 99
+    nodes["id"] = [1, 2, 3, 4]
 
-        parsed = parse_node_array(nodes)
-        assert len(parsed) == 3
+    expected_elements = {
+        str(nodes["id"][i]): {
+            "data": {
+                "id": str(nodes["id"][i]),
+                "group": "node",
+            },
+            "classes": f"{StyleClass.NODE.value}",
+        }
+        for i in range(4)
+    }
 
-        node_1_data = parsed[0]["data"]
-        node_2_data = parsed[1]["data"]
-        node_3_data = parsed[2]["data"]
-
-        assert node_1_data["group"] == "node"
-        assert parsed[0].get("position") is None  # no coordinates
-
-        assert node_1_data["id"] == "1"  # ids are converted to strings
-        assert node_2_data["id"] == "2"
-        assert node_3_data["id"] == "3"
-
-        assert node_1_data["u_rated"] == 10
-        assert node_2_data["u_rated"] == 20.4
-        assert node_3_data["u_rated"] == 30.99
-
-    def test_parse_coordinated_node_array(self):
-        nodes = CoordinatedNodeArray.zeros(3)
-        nodes["id"] = [1, 2, 3]
-        nodes["x"] = [10, 20, 30]
-        nodes["y"] = [99, 88, 77]
-
-        parsed = parse_node_array(nodes)
-        position = parsed[0].get("position")
-        assert position is not None
-        assert position["x"] == 10
-        assert position["y"] == -99  # coordinates are inverted on y-axis
+    return nodes, expected_elements
 
 
-class TestParseBranches:
-    def test_parse_line_array(self):
-        lines = LineArray.zeros(3)
-        lines["id"] = [100, 101, 102]
-        lines["from_node"] = [1, 2, 3]
-        lines["to_node"] = [4, 5, 6]
-        parsed = parse_branch_array(lines, "line")
+@pytest.fixture
+def node_array_with_coordinates() -> tuple[CoordinatedNodeArray, VizToComponentElements]:
+    nodes = CoordinatedNodeArray.zeros(4)
+    nodes[:] = 99
+    nodes["id"] = [1, 2, 3, 4]
+    nodes["x"] = [10.0, 20.0, 30.0, 40.0]
+    nodes["y"] = [10.0, 20.0, 30.0, 40.0]
 
-        assert len(parsed) == 3
-        assert parsed[0]["data"]["id"] == "100"
-        assert parsed[0]["data"]["source"] == "1"
-        assert parsed[0]["data"]["target"] == "4"
-        assert parsed[0]["data"]["group"] == "line"
+    expected_elements = {
+        str(nodes["id"][i]): {
+            "data": {
+                "id": str(nodes["id"][i]),
+                "group": "node",
+            },
+            "position": {
+                "x": nodes["x"][i].item(),
+                "y": -nodes["y"][i].item(),
+            },
+            "classes": f"{StyleClass.NODE.value}",
+        }
+        for i in range(4)
+    }
 
-    def test_parse_branch3_array(self):
-        branch3 = Branch3Array.zeros(1)
-        branch3["id"] = [200]
-        branch3["node_1"] = [1]
-        branch3["node_2"] = [2]
-        branch3["node_3"] = [3]
-        branch3["status_1"] = [1]
-        branch3["status_2"] = [1]
-        branch3["status_3"] = [1]
+    return nodes, expected_elements
 
-        parsed = parse_branch3_array(branch3, "transformer")
-        assert len(parsed) == 3
-        assert parsed[0]["data"]["id"] == "200_1_2"
-        assert parsed[0]["data"]["source"] == "1"
-        assert parsed[0]["data"]["target"] == "2"
-        assert parsed[0]["data"]["group"] == "transformer"
-        assert parsed[1]["data"]["id"] == "200_1_3"
-        assert parsed[1]["data"]["source"] == "1"
-        assert parsed[1]["data"]["target"] == "3"
-        assert parsed[1]["data"]["group"] == "transformer"
-        assert parsed[2]["data"]["id"] == "200_2_3"
-        assert parsed[2]["data"]["source"] == "2"
-        assert parsed[2]["data"]["target"] == "3"
-        assert parsed[2]["data"]["group"] == "transformer"
+
+@pytest.fixture
+def line_array() -> tuple[LineArray, VizToComponentElements]:
+    lines = LineArray.zeros(3)
+    lines[:] = 99
+    lines["id"] = [100, 101, 102]
+    lines["from_node"] = [1, 2, 3]
+    lines["to_node"] = [4, 5, 6]
+
+    expected_elements = {
+        str(lines["id"][i]): {
+            "data": {
+                "id": str(lines["id"][i]),
+                "group": "line",
+                "source": str(lines["from_node"][i]),
+                "target": str(lines["to_node"][i]),
+            },
+            "classes": f"{StyleClass.BRANCH.value}",
+        }
+        for i in range(3)
+    }
+
+    return lines, expected_elements
+
+
+@pytest.fixture
+def branch3_array() -> tuple[Branch3Array, VizToComponentElements]:
+    branch3 = ThreeWindingTransformerArray.zeros(1)
+    branch3[:] = 99
+    branch3["id"] = [200]
+    branch3["node_1"] = [1]
+    branch3["node_2"] = [2]
+    branch3["node_3"] = [3]
+
+    expected_elements = {
+        "200_0": {
+            "data": {
+                "id": "200_0",
+                "group": "three_winding_transformer",
+                "source": "1",
+                "target": "2",
+            },
+            "classes": f"{StyleClass.BRANCH.value} {StyleClass.TRANSFORMER.value}",
+        },
+        "200_1": {
+            "data": {
+                "id": "200_1",
+                "group": "three_winding_transformer",
+                "source": "1",
+                "target": "3",
+            },
+            "classes": f"{StyleClass.BRANCH.value} {StyleClass.TRANSFORMER.value}",
+        },
+        "200_2": {
+            "data": {
+                "id": "200_2",
+                "group": "three_winding_transformer",
+                "source": "2",
+                "target": "3",
+            },
+            "classes": f"{StyleClass.BRANCH.value} {StyleClass.TRANSFORMER.value}",
+        },
+    }
+    return branch3, expected_elements
+
+
+@pytest.mark.parametrize(
+    "func, test_data, kwargs",
+    [
+        (parse_node_array, "node_array", {}),
+        (parse_node_array, "node_array_with_coordinates", {}),
+        (parse_branch_array, "line_array", {"group": ComponentType.line}),
+        (parse_branch3_array, "branch3_array", {"group": ComponentType.three_winding_transformer}),
+    ],
+)
+def test_parsing(func, request, test_data, kwargs):
+    array, expected_elements = request.getfixturevalue(test_data)
+
+    result = func(array, **kwargs)
+
+    assert len(result) == len(expected_elements)
+    assert result == expected_elements

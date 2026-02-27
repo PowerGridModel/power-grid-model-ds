@@ -58,8 +58,9 @@ def search_element(  #  pylint: disable=too-many-arguments, disable=too-many-pos
     if not group or not column or not value:
         raise PreventUpdate
 
+    sanitized_value = str(value).strip().replace("\\", "\\\\").replace('"', '\\"')
     try:
-        numeric_value = float(value)
+        numeric_value = float(sanitized_value)
     except ValueError as e:
         raise PreventUpdate from e
 

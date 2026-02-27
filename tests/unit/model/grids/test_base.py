@@ -28,6 +28,7 @@ def test_initialize_empty_grid(grid: Grid):
         "asym_voltage_sensor",
         "generic_branch",
         "graphs",
+        "fault",
         "line",
         "link",
         "node",
@@ -35,11 +36,15 @@ def test_initialize_empty_grid(grid: Grid):
         "sym_current_sensor",
         "sym_gen",
         "sym_load",
+        "asym_gen",
+        "asym_load",
+        "shunt",
         "sym_power_sensor",
         "sym_voltage_sensor",
         "three_winding_transformer",
         "transformer",
         "transformer_tap_regulator",
+        "voltage_regulator",
     } == set(fields)
 
 
@@ -94,6 +99,25 @@ def test_basic_grid_fixture(basic_grid: Grid):
     assert len(grid.line) + len(grid.transformer) + len(grid.link) == grid.graphs.complete_graph.nr_branches
 
 
+def test_repr_includes_graph_and_arrays(basic_grid: Grid):
+    repr_str = repr(basic_grid)
+
+    assert "graphs=GraphContainer(" in repr_str
+    assert "active_graph=" in repr_str
+    assert "complete_graph=" in repr_str
+
+    assert "node=" in repr_str
+    assert "line=" in repr_str
+    assert "link=" in repr_str
+    assert "transformer=" in repr_str
+    assert "sym_load=" in repr_str
+    assert "source=" in repr_str
+
+    # arrays without data should not be included in repr()
+    assert "generic_branch=" not in repr_str
+    assert "asym_line=" not in repr_str
+
+
 class TestGridEquality:
     def test_grids_equal(self, basic_grid: Grid):
         grid1 = basic_grid
@@ -105,7 +129,18 @@ class TestGridEquality:
         grid2 = deepcopy(grid1)
         # modify a node
         grid2.node.u_rated[0] += 1000.0
+
         assert grid1 != grid2
+
+
+def test_grid_repr_includes_graph_and_array_info(basic_grid: Grid):
+    repr_str = repr(basic_grid)
+
+    assert "graphs=GraphContainer(" in repr_str
+    assert "node=" in repr_str
+    assert "line=" in repr_str
+    assert "RustworkxGraphModel(nodes=6, branches=5, active_only=True)" in repr_str
+    assert "RustworkxGraphModel(nodes=6, branches=6, active_only=False)" in repr_str
 
     def test_different_lines(self, basic_grid: Grid):
         grid1 = basic_grid
@@ -117,5 +152,24 @@ class TestGridEquality:
     def test_different_type(self):
         grid1 = build_basic_grid(ExtendedGrid.empty())
         grid2 = Grid.from_extended(grid1)
+
+        assert grid1 != grid2
+
+    def test_extended_grid_equality(self):
+        """Extended grids get the default __eq__ from dataclasses.
+        Make sure it works, since we had a bug in our original implementation where it failed for extended grids.
+        """
+        grid1 = build_basic_grid(ExtendedGrid.empty())
+        grid2 = deepcopy(grid1)
+
+        assert grid1 == grid2
+
+    def test_extended_grid_inequality(self):
+        """Extended grids get the default __eq__ from dataclasses.
+        Make sure it works, since we had a bug in our original implementation where it failed for extended grids.
+        """
+        grid1 = build_basic_grid(ExtendedGrid.empty())
+        grid2 = deepcopy(grid1)
+        grid2.node.u_rated[0] += 1000.0
 
         assert grid1 != grid2

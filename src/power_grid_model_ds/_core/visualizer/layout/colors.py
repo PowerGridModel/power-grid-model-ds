@@ -2,17 +2,18 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-
 import numpy as np
+
+from power_grid_model_ds._core.visualizer.styling_classification import StyleClass
 
 YELLOW = "#facc37"
 CYTO_COLORS = {
-    "line": YELLOW,
-    "link": "#008000",
-    "transformer": "#4290f5",
-    "node": YELLOW,
-    "generic_branch": "#dddddd",
-    "asym_line": "#2de2ca",
+    StyleClass.BRANCH.value: YELLOW,
+    StyleClass.LINK.value: "#008000",
+    StyleClass.TRANSFORMER.value: "#4290f5",
+    StyleClass.NODE.value: YELLOW,
+    StyleClass.GENERIC_BRANCH.value: "#dddddd",
+    StyleClass.ASYM_LINE.value: "#2de2ca",
     "selected": "#e28743",
     "selected_transformer": "#0349a3",
     "selected_link": "#004000",

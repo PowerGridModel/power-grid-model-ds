@@ -4,8 +4,6 @@
 
 """Contains selectors for the Cytoscape stylesheet."""
 
-from power_grid_model import ComponentType
-
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
 from power_grid_model_ds._core.visualizer.styling_classification import StyleClass
 
@@ -15,8 +13,8 @@ BRANCH_WIDTH = 10
 _BRANCH_STYLE = {
     "selector": f".{StyleClass.BRANCH.value}",
     "style": {
-        "line-color": CYTO_COLORS[ComponentType.line],
-        "target-arrow-color": CYTO_COLORS[ComponentType.line],
+        "line-color": CYTO_COLORS[StyleClass.BRANCH],
+        "target-arrow-color": CYTO_COLORS[StyleClass.BRANCH],
         "curve-style": "bezier",
         "target-arrow-shape": "triangle",
         "width": BRANCH_WIDTH,
@@ -31,8 +29,8 @@ _NODE_STYLE = {
         "font-size": 25,
         "text-halign": "center",
         "text-valign": "center",
-        "background-color": CYTO_COLORS["node"],
-        "text-background-color": CYTO_COLORS["node"],
+        "background-color": CYTO_COLORS[StyleClass.NODE],
+        "text-background-color": CYTO_COLORS[StyleClass.NODE],
         "text-background-opacity": 1,
         "text-background-shape": "round-rectangle",
         "width": NODE_SIZE,
@@ -44,7 +42,7 @@ _NODE_LARGE_ID_STYLE = {
     "style": {"font-size": 15},
 }
 _SELECTED_NODE_STYLE = {
-    "selector": "node:selected, node:active",
+    "selector": f".{StyleClass.NODE.value}:selected, .{StyleClass.NODE.value}:active",
     "style": {"border-width": 5, "border-color": CYTO_COLORS["selected"]},
 }
 
@@ -70,9 +68,9 @@ _APPLIANCE_GHOST_NODE_STYLE = {
 _GENERATING_EDGE_STYLE = {
     "selector": f".{StyleClass.GENERATING_APPLIANCE.value}",
     "style": {
-        "line-color": CYTO_COLORS["line"],
+        "line-color": StyleClass.BRANCH,
         "curve-style": "bezier",
-        "source-arrow-color": CYTO_COLORS["line"],
+        "source-arrow-color": StyleClass.BRANCH,
         "source-arrow-shape": "vee",
         "arrow-scale": 3.0,
         "width": BRANCH_WIDTH * 0.5,
@@ -88,9 +86,9 @@ _SOURCE_EDGE_STYLE = {
 _LOADING_EDGE_STYLE = {
     "selector": f".{StyleClass.LOADING_APPLIANCE.value}",
     "style": {
-        "line-color": CYTO_COLORS["line"],
+        "line-color": StyleClass.BRANCH,
         "curve-style": "bezier",
-        "target-arrow-color": CYTO_COLORS["line"],
+        "target-arrow-color": StyleClass.BRANCH,
         "target-arrow-shape": "vee",
         "arrow-scale": 3.0,
         "width": BRANCH_WIDTH * 0.5,
@@ -98,12 +96,8 @@ _LOADING_EDGE_STYLE = {
 }
 
 _SELECTED_BRANCH_STYLE = {
-    "selector": "edge:selected, edge:active",
-    "style": {
-        "line-color": CYTO_COLORS["selected"],
-        "target-arrow-color": CYTO_COLORS["selected"],
-        "width": 10,
-    },
+    "selector": f".{StyleClass.BRANCH.value}:selected, .{StyleClass.BRANCH.value}:active",
+    "style": {"line-color": CYTO_COLORS["selected"], "target-arrow-color": CYTO_COLORS["selected"], "width": 10},
 }
 
 
@@ -112,8 +106,8 @@ _SUBSTATION_NODE_STYLE = {
     "style": {
         "label": "data(id)",
         "shape": "diamond",
-        "background-color": CYTO_COLORS["substation_node"],
-        "text-background-color": CYTO_COLORS["substation_node"],
+        "background-color": CYTO_COLORS[StyleClass.SUBSTATION_NODE],
+        "text-background-color": CYTO_COLORS[StyleClass.SUBSTATION_NODE],
         "width": NODE_SIZE * 1.2,
         "height": NODE_SIZE * 1.2,
         "color": "white",
@@ -121,15 +115,14 @@ _SUBSTATION_NODE_STYLE = {
 }
 _TRANSFORMER_STYLE = {
     "selector": f".{StyleClass.TRANSFORMER.value}",
-    "style": {"line-color": CYTO_COLORS["transformer"], "target-arrow-color": CYTO_COLORS["transformer"]},
+    "style": {
+        "line-color": CYTO_COLORS[StyleClass.TRANSFORMER],
+        "target-arrow-color": CYTO_COLORS[StyleClass.TRANSFORMER],
+    },
 }
+
 _SELECTED_TRANSFORMER_STYLE = {
-    "selector": (
-        f".{StyleClass.TRANSFORMER.value}:selected, "
-        f".{StyleClass.TRANSFORMER.value}:active, "
-        f".{StyleClass.TRANSFORMER.value}:selected, "
-        f".{StyleClass.TRANSFORMER.value}:active"
-    ),
+    "selector": f".{StyleClass.TRANSFORMER.value}:selected, .{StyleClass.TRANSFORMER.value}:active",
     "style": {
         "line-color": CYTO_COLORS["selected_transformer"],
         "target-arrow-color": CYTO_COLORS["selected_transformer"],
@@ -138,7 +131,7 @@ _SELECTED_TRANSFORMER_STYLE = {
 
 _LINK_STYLE = {
     "selector": f".{StyleClass.LINK.value}",
-    "style": {"line-color": CYTO_COLORS["link"], "target-arrow-color": CYTO_COLORS["link"]},
+    "style": {"line-color": CYTO_COLORS[StyleClass.LINK], "target-arrow-color": CYTO_COLORS[StyleClass.LINK]},
 }
 
 _SELECTED_LINK_STYLE = {
@@ -148,7 +141,10 @@ _SELECTED_LINK_STYLE = {
 
 _GENERIC_BRANCH_STYLE = {
     "selector": f".{StyleClass.GENERIC_BRANCH.value}",
-    "style": {"line-color": CYTO_COLORS["generic_branch"], "target-arrow-color": CYTO_COLORS["generic_branch"]},
+    "style": {
+        "line-color": CYTO_COLORS[StyleClass.GENERIC_BRANCH],
+        "target-arrow-color": CYTO_COLORS[StyleClass.GENERIC_BRANCH],
+    },
 }
 _SELECTED_GENERIC_BRANCH_STYLE = {
     "selector": f".{StyleClass.GENERIC_BRANCH.value}:selected, .{StyleClass.GENERIC_BRANCH.value}:active",
@@ -160,7 +156,7 @@ _SELECTED_GENERIC_BRANCH_STYLE = {
 
 _ASYM_LINE_STYLE = {
     "selector": f".{StyleClass.ASYM_LINE.value}",
-    "style": {"line-color": CYTO_COLORS["asym_line"], "target-arrow-color": CYTO_COLORS["asym_line"]},
+    "style": {"line-color": CYTO_COLORS[StyleClass.ASYM_LINE], "target-arrow-color": CYTO_COLORS[StyleClass.ASYM_LINE]},
 }
 
 _SELECTED_ASYM_LINE_STYLE = {
@@ -171,11 +167,11 @@ _SELECTED_ASYM_LINE_STYLE = {
     },
 }
 _OPEN_BRANCH_STYLE = {
-    "selector": (f".{StyleClass.OPEN_BRANCH.value}"),
+    "selector": f".{StyleClass.OPEN_BRANCH.value}",
     "style": {
         "line-style": "dashed",
-        "target-arrow-color": CYTO_COLORS["open_branch"],
-        "source-arrow-color": CYTO_COLORS["open_branch"],
+        "target-arrow-color": CYTO_COLORS[StyleClass.OPEN_BRANCH],
+        "source-arrow-color": CYTO_COLORS[StyleClass.OPEN_BRANCH],
     },
 }
 _OPEN_FROM_SIDE_BRANCH_STYLE = {
