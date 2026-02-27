@@ -88,7 +88,6 @@ def test_component_three_winding_transformer(grid_with_3wt):
     assert distance_2 == 2
 
 
-
 class TestGetTypedBranches:
     def test_get_typed_branches_transformer(self, basic_grid: Grid):
         grid = basic_grid

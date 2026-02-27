@@ -7,12 +7,10 @@
 from copy import deepcopy
 from dataclasses import dataclass
 
-import numpy as np
 import pytest
 
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.arrays.pgm_arrays import (
-    BranchArray,
     IdArray,
     LineArray,
     LinkArray,
@@ -47,7 +45,6 @@ def test_id_counter():
     # pylint: disable=protected-access
     container._id_counter = 42
     assert 42 == container.id_counter
-
 
 
 def test_deepcopy():

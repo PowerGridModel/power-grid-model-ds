@@ -547,7 +547,6 @@ def test_add_active_branch_to_extended_grid():
 
 
 class TestDeleteNodes:
-
     def test_delete_node_without_additional_properties(self, basic_grid: Grid):
         assert 106 in basic_grid.node.id
         assert 106 in basic_grid.transformer["to_node"]
@@ -634,7 +633,6 @@ class TestReverseBranches:
         assert grid.branches.from_status.tolist() == [1, 1]
         assert grid.branches.to_node.tolist() == [102, 104]
         assert grid.branches.to_status.tolist() == [0, 1]
-
 
         grid.reverse_branches(grid.branches)
 
