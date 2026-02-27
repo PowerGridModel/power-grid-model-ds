@@ -7,7 +7,7 @@
 import warnings
 from dataclasses import dataclass, fields
 from pathlib import Path
-from typing import Literal, Self, Type, TypeVar
+from typing import Iterator, Literal, Self, Type, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -66,6 +66,7 @@ from power_grid_model_ds._core.model.grids._search import (
     get_downstream_nodes,
     get_nearest_substation_node,
     get_typed_branches,
+    iter_branches_in_shortest_path,
 )
 from power_grid_model_ds._core.model.grids.serialization.json import deserialize_from_json, serialize_to_json
 from power_grid_model_ds._core.model.grids.serialization.pickle import load_grid_from_pickle, save_grid_to_pickle
@@ -344,6 +345,27 @@ class Grid(FancyArrayContainer):
             BranchArray: The branches in the path
         """
         return self.branches.filter(from_node=nodes_in_path, to_node=nodes_in_path, from_status=1, to_status=1)
+
+    def iter_branches_in_shortest_path(
+        self, from_node_id: int, to_node_id: int, typed: bool = False
+    ) -> Iterator[BranchArray] | Iterator[BranchArray | Branch3Array]:
+        """Returns the ordered active branches that form the shortest path between two nodes. When parallel active edges
+        are in the path all these branches will be returned for the same from_node and to_node.
+
+        Args:
+            from_node_id (int): External id of the path start node.
+            to_node_id (int): External id of the path end node.
+            typed (bool): If True, each yielded branch is converted to its typed array via
+                ``get_typed_branches``.
+
+        Yields:
+            BranchArray: branch arrays for each active branch on the path.
+
+        Raises:
+            MissingBranchError: If the graph reports an edge on the shortest path but no active branch is found.
+        """
+
+        return iter_branches_in_shortest_path(self, from_node_id, to_node_id, typed=typed)
 
     def get_nearest_substation_node(self, node_id: int):
         """Find the nearest substation node.
