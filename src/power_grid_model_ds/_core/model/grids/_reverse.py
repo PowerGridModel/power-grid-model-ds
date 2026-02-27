@@ -72,13 +72,13 @@ def _get_reverted_branches_for_source(grid: "Grid", source: SourceArray) -> list
     connected_branches = grid.branches.filter(
         from_status=1, to_status=1, from_node=nodes_in_order, to_node=nodes_in_order
     )
+
     reverted_branch_ids = []
+    node_rank = {node: index for index, node in enumerate(nodes_in_order)}
     for branch in connected_branches:
         from_node = branch.from_node.item()
         to_node = branch.to_node.item()
-        from_index = nodes_in_order.index(from_node)
-        to_index = nodes_in_order.index(to_node)
-        if from_index > to_index:
+        if node_rank[from_node] > node_rank[to_node]:
             reverted_branch_ids.append(branch.id.item())
 
     # also add for reversed open_branches
