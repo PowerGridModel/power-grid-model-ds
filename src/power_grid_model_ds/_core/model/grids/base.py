@@ -15,15 +15,19 @@ import numpy.typing as npt
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     AsymCurrentSensorArray,
+    AsymGenArray,
     AsymLineArray,
+    AsymLoadArray,
     AsymPowerSensorArray,
     AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
+    FaultArray,
     GenericBranchArray,
     LineArray,
     LinkArray,
     NodeArray,
+    ShuntArray,
     SourceArray,
     SymCurrentSensorArray,
     SymGenArray,
@@ -33,6 +37,7 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     ThreeWindingTransformerArray,
     TransformerArray,
     TransformerTapRegulatorArray,
+    VoltageRegulatorArray,
 )
 from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
@@ -104,9 +109,13 @@ class Grid(FancyArrayContainer):
     source: SourceArray
     sym_load: SymLoadArray
     sym_gen: SymGenArray
+    asym_load: AsymLoadArray
+    asym_gen: AsymGenArray
+    shunt: ShuntArray
 
     # regulators
     transformer_tap_regulator: TransformerTapRegulatorArray
+    voltage_regulator: VoltageRegulatorArray
 
     # sensors
     sym_power_sensor: SymPowerSensorArray
@@ -115,6 +124,8 @@ class Grid(FancyArrayContainer):
     asym_power_sensor: AsymPowerSensorArray
     asym_voltage_sensor: AsymVoltageSensorArray
     asym_current_sensor: AsymCurrentSensorArray
+
+    fault: FaultArray
 
     def __repr__(self) -> str:
         """Display relevant information about the grid."""

@@ -13,7 +13,7 @@ from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.grids.base import Grid
 from tests.fixtures.arrays import FancyTestArray
-from tests.fixtures.grids import build_basic_grid, build_basic_grid_with_three_winding
+from tests.fixtures.grids import build_basic_grid, build_basic_grid_with_three_winding, build_topologically_full_grid
 
 # pylint: disable=missing-function-docstring
 
@@ -64,6 +64,11 @@ def basic_grid(grid: Grid):
 @pytest.fixture
 def grid_with_3wt(grid: Grid):
     yield build_basic_grid_with_three_winding(grid)
+
+
+@pytest.fixture
+def topologically_full_grid(grid: Grid):
+    yield build_topologically_full_grid(grid)
 
 
 @pytest.fixture
