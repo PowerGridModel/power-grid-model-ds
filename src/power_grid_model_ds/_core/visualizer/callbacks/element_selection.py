@@ -9,6 +9,7 @@ from dash import ALL, Input, Output, State, callback, dash_table, html
 from power_grid_model import ComponentType, attribute_empty_value
 from power_grid_model._core.dataset_definitions import DatasetType
 
+from power_grid_model_ds._core.model.arrays.pgm_arrays import IdArray
 from power_grid_model_ds._core.visualizer.layout.selection_output import (
     SELECTION_OUTPUT_HTML,
 )
@@ -52,6 +53,7 @@ def display_selected_element(
     grid = safe_get_grid()
 
     data = getattr(grid, group).get(id=pgm_id)
+    
     tables: list[html.H5 | html.Div] = []
     tables.append(html.H5(group, style={"marginTop": "15px", "textAlign": "left"}))
     tables.append(_array_to_data_tables(data, group))
@@ -65,15 +67,21 @@ def display_selected_element(
     return html.Div(children=tables, style={"overflowX": "scroll", "margin": "10px"}).children
 
 
-def _array_to_data_tables(array_data, group: str) -> html.Div:
+def _array_to_data_tables(array_data: IdArray, group: str) -> html.Div:
     """Convert array data to a Dash DataTable."""
-    list_array_data = [{col: entry[col].item() for col in array_data.columns} for entry in array_data]
-    columns = [{"name": key, "id": key} for key in array_data.columns]
+    list_array_data = []
+    for entry in array_data:
+        entry_dict = {
+            col: entry[col].item() if entry[col].ndim == 1 else f"{entry[col].tolist()[0]}" for col in array_data.columns
+        }
+        list_array_data.append(entry_dict)
+
+    data_table_headers = [{"name": key, "id": key} for key in array_data.columns]
 
     data_table = dash_table.DataTable(  # type: ignore[attr-defined]
         id={"type": "selection-table", "group": group},
         data=list_array_data,
-        columns=columns,
+        columns=data_table_headers,
         editable=False,
         fill_width=False,
     )
