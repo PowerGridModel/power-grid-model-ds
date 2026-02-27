@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import dataclasses
-from collections import defaultdict
+from itertools import pairwise
 from typing import TYPE_CHECKING, Iterator
 
 import numpy as np
@@ -12,6 +12,7 @@ import numpy.typing as npt
 from power_grid_model_ds._core import fancypy as fp
 from power_grid_model_ds._core.model.arrays import BranchArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
+from power_grid_model_ds._core.model.arrays.pgm_arrays import Branch3Array
 from power_grid_model_ds._core.model.enums.nodes import NodeType
 from power_grid_model_ds._core.model.graphs.errors import MissingBranchError
 
@@ -75,58 +76,41 @@ def get_downstream_nodes(grid: "Grid", node_id: int, inclusive: bool = False):
     )
 
 
-_THREE_WINDING_BRANCH_CONFIGS = (
-    ("node_1", "node_2", "status_1", "status_2"),
-    ("node_1", "node_3", "status_1", "status_3"),
-    ("node_2", "node_3", "status_2", "status_3"),
-)
-
-
-def _active_branches_for_path(
-    grid: "Grid", path_nodes: list[int]
-) -> tuple[BranchArray, dict[tuple[int, int], list[int]]]:
+def _get_branch(grid: "Grid", from_node: int, to_node: int) -> BranchArray:
     """Return active branch records and an index filtered to the requested path nodes."""
 
-    active = grid.branches.filter(from_status=1, to_status=1).filter(
-        from_node=path_nodes, to_node=path_nodes, mode_="AND"
+    active_branches = grid.branches.filter(from_status=1, to_status=1).filter(
+        from_node=from_node, to_node=to_node, mode_="AND"
     )
     if grid.three_winding_transformer.size:
-        three_winding_active = (
-            grid.three_winding_transformer.as_branches()
-            .filter(from_status=1, to_status=1)
-            .filter(from_node=path_nodes, to_node=path_nodes, mode_="AND")
+        three_winding_active = grid.three_winding_transformer.as_branches().filter(
+            from_status=1, to_status=1, from_node=from_node, to_node=to_node, mode_="AND"
         )
         if three_winding_active.size:
-            active = fp.concatenate(active, three_winding_active)
+            active_branches = fp.concatenate(active_branches, three_winding_active)
 
-    index: dict[tuple[int, int], list[int]] = defaultdict(list)
-    for position, (source, target) in enumerate(zip(active.from_node, active.to_node)):
-        index[(int(source), int(target))].append(position)
-
-    return active, index
+    return active_branches
 
 
 def iter_branches_in_shortest_path(
     grid: "Grid", from_node_id: int, to_node_id: int, typed: bool = False
-) -> Iterator[BranchArray]:
+) -> Iterator[BranchArray] | Iterator[BranchArray | Branch3Array]:
     """See Grid.iter_branches_in_shortest_path()."""
 
     path, _ = grid.graphs.active_graph.get_shortest_path(from_node_id, to_node_id)
-    active_branches, index = _active_branches_for_path(grid, path)
 
-    for current_node, next_node in zip(path[:-1], path[1:]):
-        positions = index.get((current_node, next_node))
-        if not positions:
+    for current_node, next_node in pairwise(path):
+        branches = _get_branch(grid, current_node, next_node)
+        if branches.size == 0:
             raise MissingBranchError(
                 f"No active branch connects nodes {current_node} -> {next_node} even though a path exists."
             )
-        branch_records = active_branches[positions]
         if typed:
-            branch_ids = branch_records.id.tolist()
+            branch_ids = branches.id.tolist()
             try:
                 typed_branches = grid.get_typed_branches(branch_ids)
             except RecordDoesNotExist:
                 typed_branches = grid.three_winding_transformer.filter(branch_ids)
             yield typed_branches
         else:
-            yield branch_records
+            yield branches

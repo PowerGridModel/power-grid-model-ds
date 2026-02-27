@@ -61,9 +61,7 @@ from power_grid_model_ds._core.model.grids._search import (
     get_downstream_nodes,
     get_nearest_substation_node,
     get_typed_branches,
-)
-from power_grid_model_ds._core.model.grids._search import (
-    iter_branches_in_shortest_path as _iter_branches_in_shortest_path,
+    iter_branches_in_shortest_path,
 )
 from power_grid_model_ds._core.model.grids.serialization.json import deserialize_from_json, serialize_to_json
 from power_grid_model_ds._core.model.grids.serialization.pickle import load_grid_from_pickle, save_grid_to_pickle
@@ -327,7 +325,7 @@ class Grid(FancyArrayContainer):
 
     def iter_branches_in_shortest_path(
         self, from_node_id: int, to_node_id: int, typed: bool = False
-    ) -> Iterator[BranchArray]:
+    ) -> Iterator[BranchArray] | Iterator[BranchArray | Branch3Array]:
         """Returns the ordered active branches that form the shortest path between two nodes. When parallel active edges
         are in the path all these branches will be returned for the same from_node and to_node.
 
@@ -344,7 +342,7 @@ class Grid(FancyArrayContainer):
             MissingBranchError: If the graph reports an edge on the shortest path but no active branch is found.
         """
 
-        return _iter_branches_in_shortest_path(self, from_node_id, to_node_id, typed=typed)
+        return iter_branches_in_shortest_path(self, from_node_id, to_node_id, typed=typed)
 
     def get_nearest_substation_node(self, node_id: int):
         """Find the nearest substation node.

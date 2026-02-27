@@ -6,7 +6,6 @@ import numpy as np
 import pytest
 
 from power_grid_model_ds import Grid
-from power_grid_model_ds._core.model.arrays import LineArray, ThreeWindingTransformerArray, TransformerArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.enums.nodes import NodeType
 
@@ -60,31 +59,26 @@ class TestGetBranchesInPath:
 class TestIterBranchesInShortestPath:
     def test_iter_branches_in_shortest_path_returns_branch_arrays(self, basic_grid):
         branches = list(basic_grid.iter_branches_in_shortest_path(101, 106))
-        assert len(branches) == 2
-        branch_nodes = [(branch.from_node.item(), branch.to_node.item()) for branch in branches]
-        assert branch_nodes == [(101, 102), (102, 106)]
+        assert branches == [basic_grid.branches.filter(id=201), basic_grid.branches.filter(id=301)]
 
     def test_iter_branches_in_shortest_path_three_winding_transformer(self, grid_with_3wt):
         branches = list(grid_with_3wt.iter_branches_in_shortest_path(101, 104))
         assert len(branches) == 2
-        branch_nodes = [(branch.from_node.item(), branch.to_node.item()) for branch in branches]
-        assert branch_nodes == [(101, 102), (102, 104)]
+        assert branches[0].id.item() == 301
+        assert branches[0].from_node.item() == 101
+        assert branches[0].to_node.item() == 102
+        assert branches[1] == grid_with_3wt.branches.filter(id=201)
 
     def test_iter_branches_same_node_returns_empty(self, basic_grid):
         assert [] == list(basic_grid.iter_branches_in_shortest_path(101, 101))
 
     def test_iter_branches_in_shortest_path_typed(self, basic_grid):
         branches = list(basic_grid.iter_branches_in_shortest_path(101, 106, typed=True))
-        assert len(branches) == 2
-        assert isinstance(branches[0], LineArray)
-        assert isinstance(branches[1], TransformerArray)
-        assert [branch.id.item() for branch in branches] == [201, 301]
+        assert branches == [basic_grid.line.filter(id=201), basic_grid.transformer.filter(id=301)]
 
     def test_iter_branches_in_shortest_path_three_winding_transformer_typed(self, grid_with_3wt):
         branches = list(grid_with_3wt.iter_branches_in_shortest_path(101, 104, typed=True))
-        assert len(branches) == 2
-        assert isinstance(branches[0], ThreeWindingTransformerArray)
-        assert isinstance(branches[1], LineArray)
+        assert branches == [grid_with_3wt.three_winding_transformer.filter(id=301), grid_with_3wt.line.filter(id=201)]
 
 
 def test_component_three_winding_transformer(grid_with_3wt):
