@@ -72,6 +72,18 @@ class TestFromTxt:
         with pytest.raises(ValueError):
             Grid.from_txt("S1")
 
+    def test_from_txt_parallel_lines_without_ids(self):
+        grid = Grid.from_txt("S1 2", "S1 2 open")
+        assert grid.line.size == 2
+        assert grid.line.id.tolist() == [3, 4]
+        assert grid.line.from_status.tolist() == [1, 1]
+        assert grid.line.to_status.tolist() == [1, 0]
+
+    def test_from_txt_parallel_lines_with_ids(self):
+        grid = Grid.from_txt("S1 2 12", "S1 2 120")
+        assert grid.line.size == 2
+        assert grid.line.id.tolist() == [12, 120]
+
     def test_from_txt_with_unordered_node_ids(self):
         grid = Grid.from_txt("S1 2", "S1 10", "10 11", "2 5", "5 6", "3 4", "3 7")
         assert 9 == grid.node.size
