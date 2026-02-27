@@ -59,6 +59,7 @@ dev = [
   "dash>=3.0.0",
   "dash-bootstrap-components>=2.0.0",
   "dash-cytoscape>=1.0.2",
+  "nb-clean>=4.0.1",
 ]
 
 doc = [
@@ -141,10 +142,10 @@ control.expr = "check"
 args = [{name = "check", type="boolean", help= "Does not correct files, only warns"}]
   [[tool.poe.tasks.all.switch]]
   case     = "True"
-  sequence = ["format --check", "lint --check", "lock", "type", "cover", "report"]
+  sequence = ["format --check", "lint --check", "lock", "type", "cover", "report", "clean_notebook --check"]
 
   [[tool.poe.tasks.all.switch]]
-  sequence = ["format", "lint", "lock", "type", "cover", "report"]
+  sequence = ["format", "lint", "lock", "type", "cover", "report", "clean_notebook"]
 
 
 [tool.poe.tasks.lint]
@@ -189,3 +190,16 @@ cmd = "coverage report"
 [tool.poe.tasks.coverage]
 help = "Run coverage *and* generate report"
 sequence = ["cover", "report"]
+
+[tool.poe.tasks.clean_notebook]
+help = "Clear all metadata from notebooks"
+args=[{name = "check", type="boolean", help= "Does not correct files, only warns"}]
+control.expr = "check"
+
+  [[tool.poe.tasks.clean_notebook.switch]]
+  case = "True"
+  cmd = 'nb-clean check docs/'
+
+  [[tool.poe.tasks.clean_notebook.switch]]
+  cmd = 'nb-clean clean docs/'
+
