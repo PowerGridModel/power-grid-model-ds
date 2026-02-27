@@ -75,11 +75,16 @@ def reverse_branches(grid: "Grid", branches: BranchArray) -> None:
             return
 
     from_nodes = branches.from_node
+    from_states = branches.from_status
     to_nodes = branches.to_node
+    to_states = branches.to_status
 
     array_field = grid.find_array_field(branches.__class__)
     array = getattr(grid, array_field.name)
     array.update_by_id(branches.id, from_node=to_nodes, to_node=from_nodes)
+    array.update_by_id(
+        branches.id, from_node=to_nodes, from_status=to_states, to_node=from_nodes, to_status=from_states
+    )
 
 
 def make_active(grid: "Grid", branch: BranchArray) -> None:

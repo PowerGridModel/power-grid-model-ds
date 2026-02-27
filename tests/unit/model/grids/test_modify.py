@@ -1,13 +1,18 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
+from copy import deepcopy
+
+import numpy as np
 import pytest
 
 from power_grid_model_ds import Grid
+from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     AsymGenArray,
     AsymLineArray,
     AsymLoadArray,
+    BranchArray,
     GenericBranchArray,
     LineArray,
     LinkArray,
@@ -544,3 +549,99 @@ def test_add_active_branch_to_extended_grid():
     grid.append(line)
     assert 1 == grid.line.size
     assert 2 == len(grid.graphs.active_graph.external_ids)
+
+
+class TestDeleteNodes:
+    def test_delete_node_without_additional_properties(self, basic_grid: Grid):
+        assert 106 in basic_grid.node.id
+        assert 106 in basic_grid.transformer["to_node"]
+
+        original_grid = deepcopy(basic_grid)
+        node = basic_grid.node.get(id=106)
+        basic_grid.delete_node(node)
+
+        assert 106 not in basic_grid.transformer["to_node"]
+        assert 106 not in basic_grid.node.id
+        assert len(original_grid.node) == len(basic_grid.node) + 1
+        assert len(original_grid.transformer) == len(basic_grid.transformer) + 1
+
+    def test_delete_node_with_source(self, basic_grid: Grid):
+        assert 101 in basic_grid.node.id
+        assert 101 in basic_grid.source.node
+
+        original_grid = deepcopy(basic_grid)
+        node = basic_grid.node.get(id=101)
+        basic_grid.delete_node(node)
+
+        assert 101 not in basic_grid.node.id
+        assert 101 not in basic_grid.source.node
+        assert len(original_grid.node) == len(basic_grid.node) + 1
+        assert len(original_grid.source) == len(basic_grid.source) + 1
+
+    def test_delete_node_with_load(self, basic_grid: Grid):
+        assert 102 in basic_grid.node.id
+        assert 102 in basic_grid.sym_load.node
+
+        original_grid = deepcopy(basic_grid)
+        node = basic_grid.node.get(id=102)
+        basic_grid.delete_node(node)
+
+        assert 102 not in basic_grid.node.id
+        assert 102 not in basic_grid.sym_load.node
+        assert len(original_grid.node) == len(basic_grid.node) + 1
+        assert len(original_grid.sym_load) == len(basic_grid.sym_load) + 1
+
+
+class TestReverseBranches:
+    def test_reverse_line(self, basic_grid: Grid):
+        line = basic_grid.line.get(from_node=102, to_node=103)
+        basic_grid.reverse_branches(line)
+
+        with pytest.raises(RecordDoesNotExist):
+            basic_grid.line.get(from_node=102, to_node=103)
+
+        new_line = basic_grid.line.get(from_node=103, to_node=102)
+
+        assert new_line.from_node == line.to_node
+        assert new_line.to_node == line.from_node
+        assert new_line.id == line.id
+
+    def test_reverse_branch(self, basic_grid: Grid):
+        branch = basic_grid.branches.get(from_node=101, to_node=102)
+        basic_grid.reverse_branches(branch)
+
+        with pytest.raises(RecordDoesNotExist):
+            basic_grid.line.get(from_node=101, to_node=102)
+
+        new_branch = basic_grid.line.get(from_node=102, to_node=101)
+
+        assert new_branch.from_node == branch.to_node
+        assert new_branch.to_node == branch.from_node
+        assert new_branch.id == branch.id
+
+    def test_reverse_all_branches(self, basic_grid: Grid):
+        from_nodes = basic_grid.branches.from_node
+        to_nodes = basic_grid.branches.to_node
+
+        basic_grid.reverse_branches(basic_grid.branches)
+
+        assert np.all(from_nodes == basic_grid.branches.to_node)
+        assert np.all(to_nodes == basic_grid.branches.from_node)
+
+    def test_reverse_no_branches(self, basic_grid: Grid):
+        basic_grid.reverse_branches(BranchArray())
+
+    def test_reverse_statusses(self):
+        grid = Grid.from_txt("101 102 open", "103 104")
+
+        assert grid.branches.from_node.tolist() == [101, 103]
+        assert grid.branches.from_status.tolist() == [1, 1]
+        assert grid.branches.to_node.tolist() == [102, 104]
+        assert grid.branches.to_status.tolist() == [0, 1]
+
+        grid.reverse_branches(grid.branches)
+
+        assert grid.branches.from_node.tolist() == [102, 104]
+        assert grid.branches.from_status.tolist() == [0, 1]
+        assert grid.branches.to_node.tolist() == [101, 103]
+        assert grid.branches.to_status.tolist() == [1, 1]
