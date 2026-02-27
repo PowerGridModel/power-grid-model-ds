@@ -7,19 +7,19 @@ from typing import Literal
 from power_grid_model import ComponentType, MeasuredTerminalType
 
 from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+    ApplianceArray,
     AsymCurrentSensorArray,
     AsymPowerSensorArray,
     AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
+    FaultArray,
     NodeArray,
-    SourceArray,
     SymCurrentSensorArray,
-    SymGenArray,
-    SymLoadArray,
     SymPowerSensorArray,
     SymVoltageSensorArray,
     TransformerTapRegulatorArray,
+    VoltageRegulatorArray,
 )
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.parsing_utils import (
@@ -33,7 +33,13 @@ from power_grid_model_ds._core.visualizer.styling_classification import (
     get_branch_classification,
     get_node_classification,
 )
-from power_grid_model_ds._core.visualizer.typing import VizToComponentData, VizToComponentElements
+from power_grid_model_ds._core.visualizer.typing import (
+    ComponentTypeAppliance,
+    ComponentTypeBranch,
+    ComponentTypeFlowSensor,
+    VizToComponentData,
+    VizToComponentElements,
+)
 
 _NODE_BRANCH_TERMINAL_TYPE = [
     MeasuredTerminalType.branch_from,
@@ -81,7 +87,15 @@ def parse_element_data(grid: Grid) -> tuple[VizToComponentElements, VizToCompone
     elements.update(parse_branch3_array(grid.three_winding_transformer, ComponentType.three_winding_transformer))
 
     # Parse appliances
-    for appliance_name in (ComponentType.sym_load, ComponentType.sym_gen, ComponentType.source):
+    all_appliances: list[ComponentTypeAppliance] = [
+        ComponentType.sym_load,
+        ComponentType.sym_gen,
+        ComponentType.source,
+        ComponentType.asym_load,
+        ComponentType.asym_gen,
+        ComponentType.shunt,
+    ]
+    for appliance_name in all_appliances:
         parsed, viz_to_comp_appliance = _parse_appliances(
             getattr(grid, appliance_name),
             appliance_name,
@@ -106,6 +120,8 @@ def parse_element_data(grid: Grid) -> tuple[VizToComponentElements, VizToCompone
     )
     merge_viz_to_comp(viz_to_comp, _parse_voltage_sensors(grid.sym_voltage_sensor, ComponentType.sym_voltage_sensor))
     merge_viz_to_comp(viz_to_comp, _parse_voltage_sensors(grid.asym_voltage_sensor, ComponentType.asym_voltage_sensor))
+    merge_viz_to_comp(viz_to_comp, _parse_voltage_regulators(grid.voltage_regulator))
+    merge_viz_to_comp(viz_to_comp, _parse_faults(grid.fault))
 
     # Parse regulators
     merge_viz_to_comp(viz_to_comp, _parse_transformer_tap_regulators(grid.transformer_tap_regulator, elements))
@@ -156,16 +172,7 @@ def parse_branch3_array(
     return parsed_branches
 
 
-def parse_branch_array(
-    branches: BranchArray,
-    group: Literal[
-        ComponentType.line,
-        ComponentType.asym_line,
-        ComponentType.generic_branch,
-        ComponentType.link,
-        ComponentType.transformer,
-    ],
-) -> VizToComponentElements:
+def parse_branch_array(branches: BranchArray, group: ComponentTypeBranch) -> VizToComponentElements:
     """Parse the branch array. Fills branch data to viz_to_comp."""
     parsed_branches: VizToComponentElements = {}
     for branch in branches:
@@ -183,8 +190,8 @@ def parse_branch_array(
 
 
 def _parse_appliances(
-    appliances: SymLoadArray | SymGenArray | SourceArray,
-    group: Literal[ComponentType.sym_load, ComponentType.sym_gen, ComponentType.source],
+    appliances: ApplianceArray,
+    group: ComponentTypeAppliance,
 ) -> tuple[VizToComponentElements, VizToComponentData]:
     """Parse appliances and associate them with nodes."""
     parsed_appliances: VizToComponentElements = {}
@@ -221,12 +228,7 @@ def _parse_appliances(
 
 def _parse_flow_sensors(
     sensors: SymPowerSensorArray | SymCurrentSensorArray | AsymPowerSensorArray | AsymCurrentSensorArray,
-    group: Literal[
-        ComponentType.sym_power_sensor,
-        ComponentType.sym_current_sensor,
-        ComponentType.asym_power_sensor,
-        ComponentType.asym_current_sensor,
-    ],
+    group: ComponentTypeFlowSensor,
     appliance_to_node: dict[str, str],
 ) -> VizToComponentData:
     """Parse power sensors and return appliance-to-power-sensor mapping."""
@@ -282,4 +284,24 @@ def _parse_transformer_tap_regulators(
         for id_str in mapping_id_strs:
             append_component_list(viz_to_comp, tap_regulator.id.item(), id_str, ComponentType.transformer_tap_regulator)
 
+    return viz_to_comp
+
+
+def _parse_voltage_regulators(voltage_regulators: VoltageRegulatorArray) -> VizToComponentData:
+    """Parse voltage regulators and associate them with nodes."""
+    viz_to_comp: VizToComponentData = {}
+    for voltage_regulator in voltage_regulators:
+        regulated_object_str = str(voltage_regulator.regulated_object.item())
+        append_component_list(
+            viz_to_comp, voltage_regulator.id.item(), regulated_object_str, ComponentType.voltage_regulator
+        )
+    return viz_to_comp
+
+
+def _parse_faults(faults: FaultArray) -> VizToComponentData:
+    """Parse faults and associate them with nodes."""
+    viz_to_comp: VizToComponentData = {}
+    for fault in faults:
+        fault_object_str = str(fault.fault_object.item())
+        append_component_list(viz_to_comp, fault.id.item(), fault_object_str, ComponentType.fault)
     return viz_to_comp

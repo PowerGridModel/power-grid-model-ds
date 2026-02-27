@@ -31,10 +31,10 @@ def scale_elements(node_scale: float, edge_scale: float, stylesheet: STYLESHEET)
         (f".{StyleClass.NODE.value}", {"height": NODE_SIZE * node_scale, "width": NODE_SIZE * node_scale}),
         (
             f".{StyleClass.APPLIANCE_GHOST_NODE.value}",
-            {"height": NODE_SIZE * node_scale, "width": NODE_SIZE * node_scale},
+            {"height": NODE_SIZE * node_scale * 0.25, "width": NODE_SIZE * node_scale * 0.25},
         ),
-        (f".{StyleClass.GENERATING_APPLIANCE.value}", {"width": BRANCH_WIDTH * edge_scale}),
-        (f".{StyleClass.LOADING_APPLIANCE.value}", {"width": BRANCH_WIDTH * edge_scale}),
+        (f".{StyleClass.GENERATING_APPLIANCE.value}", {"width": BRANCH_WIDTH * edge_scale * 0.5}),
+        (f".{StyleClass.LOADING_APPLIANCE.value}", {"width": BRANCH_WIDTH * edge_scale * 0.5}),
     ]:
         new_stylesheet.append({"selector": selector, "style": new_style})
 
@@ -75,7 +75,7 @@ def update_arrows(show_arrows, current_stylesheet):
     Output("show-appliances-store", "data"),
     Input("show-appliances", "value"),
     State("parsed-elements-store", "data"),
-    prevent_initial_call=False,  # allow appliances to be hidden by default based on the initial value of the checkbox
+    prevent_initial_call=True,  # allow appliances to be hidden by default based on the initial value of the checkbox
 )
 def update_appliances(show_appliances, parsed_elements):
     """Callback to add or remove appliances in the graph."""

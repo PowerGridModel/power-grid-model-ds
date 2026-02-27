@@ -8,6 +8,7 @@ from typing import Literal
 from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray, NodeArray
+from power_grid_model_ds._core.visualizer.typing import ComponentTypeAppliance, ComponentTypeBranch
 
 _LARGE_NODE_ID_THRESHOLD = 10_000_000
 
@@ -53,14 +54,7 @@ def get_node_classification(node_arr: NodeArray) -> str:
 
 def get_branch_classification(
     branch_arr: BranchArray,
-    component_type: Literal[
-        ComponentType.transformer,
-        ComponentType.three_winding_transformer,
-        ComponentType.link,
-        ComponentType.generic_branch,
-        ComponentType.line,
-        ComponentType.asym_line,
-    ],
+    component_type: ComponentTypeBranch | Literal[ComponentType.three_winding_transformer],
 ) -> str:
     """Get the space separated string of styling classes for a branch."""
     classes = [StyleClass.BRANCH]
@@ -86,7 +80,8 @@ def get_branch_classification(
 
 
 def get_appliance_edge_classification(
-    appliance_arr, component_type: Literal[ComponentType.sym_load, ComponentType.sym_gen, ComponentType.source]
+    appliance_arr,
+    component_type: ComponentTypeAppliance,
 ) -> str:
     """Get the space separated string of styling classes for an appliance edge."""
     type_to_vizclass = {
