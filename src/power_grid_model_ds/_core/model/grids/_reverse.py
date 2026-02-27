@@ -3,51 +3,65 @@
 # SPDX-License-Identifier: MPL-2.0
 """Contains utility functions for PGM-DS"""
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import SourceArray, BranchArray
+from typing import TYPE_CHECKING
+
+from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+    AsymLineArray,
+    BranchArray,
+    GenericBranchArray,
+    LineArray,
+    LinkArray,
+    SourceArray,
+    TransformerArray,
+)
 from power_grid_model_ds._core.model.graphs.errors import GraphError
-from power_grid_model_ds._core.model.grids.base import Grid
+
+if TYPE_CHECKING:
+    from .base import Grid
 
 
-def set_branch_orientations(grid: Grid) -> BranchArray:
-    """
-    Set branch orientations in the grid so that all branches are oriented away from the sources.
+def reverse_branches(grid: "Grid", branches: BranchArray) -> None:
+    """See Grid.reverse_branches()"""
+    if not branches.size:
+        return
+    if not isinstance(branches, (LineArray, LinkArray, TransformerArray, GenericBranchArray, AsymLineArray)):
+        try:
+            branches = grid.get_typed_branches(branches.id)
+        except ValueError:
+            # If the branches are not of the same type, reverse them per type (though this is slower)
+            for array in grid.branch_arrays:
+                grid.reverse_branches(array.filter(branches.id))
+            return
 
-    Args:
-        grid (Grid): The grid to set branch orientations for.
+    from_nodes = branches.from_node
+    from_states = branches.from_status
+    to_nodes = branches.to_node
+    to_states = branches.to_status
 
-    Returns:
-        BranchArray: All branches that were reversed.
-    """
+    array_field = grid.find_array_field(branches.__class__)
+    array = getattr(grid, array_field.name)
+    array.update_by_id(branches.id, from_node=to_nodes, to_node=from_nodes)
+    array.update_by_id(
+        branches.id, from_node=to_nodes, from_status=to_states, to_node=from_nodes, to_status=from_states
+    )
+
+
+def set_branch_orientations(grid: "Grid") -> BranchArray:
+    """See grid.set_branch_orientations()."""
     reversed_branches = get_reversed_branches(grid)
     grid.reverse_branches(reversed_branches)
     return reversed_branches
 
 
-def get_reversed_branches(grid: Grid) -> BranchArray:
-    """
-    Get the branch IDs of branches that are oriented towards the source(s).
-
-    Orientation is determined by the distance of the branch's from_node and to_node to the source node.
-    The node that is closer to the source is considered the "from_node".
-    Note that this might not reflect the actual power flow direction in the grid.
-
-    - Sources should not be connected to other sources. If a source is connected to another source,
-      a GraphError is raised.
-    - Parallel edges (multiple edges between the same two nodes) and cycles are supported.
-
-    Args:
-        grid (Grid): The grid to check for branch orientations.
-
-    Returns:
-        BranchArray: All branches that are oriented towards the source(s)
-    """
+def get_reversed_branches(grid: "Grid") -> BranchArray:
+    """See grid.get_reversed_branches()."""
     reverse_branch_ids = []
     for source in grid.source:
         reverse_branch_ids += _get_reverted_branches_for_source(grid, source)
     return grid.branches.filter(reverse_branch_ids)
 
 
-def _get_reverted_branches_for_source(grid: Grid, source: SourceArray) -> list[int]:
+def _get_reverted_branches_for_source(grid: "Grid", source: SourceArray) -> list[int]:
 
     nodes_in_order = grid.graphs.active_graph.get_connected(source.node.item(), inclusive=True)
 
