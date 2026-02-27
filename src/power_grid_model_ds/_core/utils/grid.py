@@ -49,7 +49,6 @@ def _get_reverted_branches_for_source(grid: Grid, source: SourceArray) -> list[i
     connected_branches = grid.branches.filter(
         from_status=1, to_status=1, from_node=nodes_in_order, to_node=nodes_in_order
     )
-
     reverted_branch_ids = []
     for branch in connected_branches:
         from_node = branch.from_node.item()
@@ -58,4 +57,9 @@ def _get_reverted_branches_for_source(grid: Grid, source: SourceArray) -> list[i
         to_index = nodes_in_order.index(to_node)
         if from_index > to_index:
             reverted_branch_ids.append(branch.id.item())
+
+    # also add for reversed open_branches
+    reversed_open_branches = grid.branches.filter(from_status=0, to_status=1, to_node=nodes_in_order).exclude(from_node=nodes_in_order)
+    reverted_branch_ids += reversed_open_branches.id.tolist()
+
     return reverted_branch_ids

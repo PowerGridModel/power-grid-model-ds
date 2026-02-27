@@ -99,3 +99,37 @@ class TestSetBranchOrientations:
 
         reversed_branches = set_branch_orientations(grid)
         assert len(reversed_branches) == n_reversed
+
+
+    def test_set_branch_orientations_open_line(self):
+        grid = Grid.from_txt("1 2 11", "3 2 12")
+        source = SourceArray.empty(1)
+        source.node = 1
+        grid.append(source)
+
+        # Open the line from 3 to 2.
+        grid.make_inactive(grid.line.get(12), at_to_side=False)
+        reversed_branches = set_branch_orientations(grid)
+        assert len(reversed_branches) == 1
+
+        assert grid.branches.from_node.tolist() == [1, 2]
+        assert grid.branches.to_node.tolist() == [2, 3]
+
+
+    def test_set_branch_orientations_open_line_different_side(self):
+        # A branch should not be reversed if the open side is already on the to side
+        grid = Grid.from_txt("1 2 11", "3 2 12,open")
+        source = SourceArray.empty(1)
+        source["node"] = 1
+        grid.append(source)
+
+        source2 = SourceArray.empty(1)
+        source2["node"] = 3
+        grid.append(source2)
+
+        # Open the line from 3 to 2.
+        reversed_branches = set_branch_orientations(grid)
+        assert len(reversed_branches) == 0
+
+        assert grid.branches.from_node.tolist() == [1, 3]
+        assert grid.branches.to_node.tolist() == [2, 2]
