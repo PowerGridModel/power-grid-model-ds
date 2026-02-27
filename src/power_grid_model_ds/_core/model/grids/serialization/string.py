@@ -122,13 +122,13 @@ class _TextSource(Generic[G]):
         if source_nodes.intersection(regular_nodes):
             raise ValueError("Source nodes and regular nodes have overlapping ids")
 
-        for node_id in source_nodes:
+        for node_id in sorted(source_nodes):
             new_node = self.grid.node.empty(1)
             new_node.id = node_id
             new_node.node_type = NodeType.SUBSTATION_NODE
             self.grid.append(new_node, check_max_id=False)
 
-        for node_id in regular_nodes:
+        for node_id in sorted(regular_nodes):
             new_node = self.grid.node.empty(1)
             new_node.id = node_id
             self.grid.append(new_node, check_max_id=False)
