@@ -34,5 +34,3 @@ class VoltageRegulator(Regulator):
     """Voltage regulator data type"""
 
     u_ref: NDArray[np.float64]  # the voltage setpoint
-    q_max: NDArray[np.float64]  # the width of the voltage band
-    q_min: NDArray[np.float64]  # compensation for voltage drop due to resistance during transport
