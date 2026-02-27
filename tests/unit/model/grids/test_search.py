@@ -25,6 +25,20 @@ def test_grid_get_nearest_substation_node_no_substation(basic_grid):
         basic_grid.get_nearest_substation_node(node_id=103)
 
 
+def test_branches(grid: Grid):
+    nodes = NodeArray.zeros(10)
+    grid.append(nodes)
+
+    for branch_class in (LineArray, TransformerArray, LinkArray):
+        branches = branch_class.zeros(10)
+        branches.from_node = nodes.id
+        branches.to_node = list(reversed(nodes.id.tolist()))
+        grid.append(branches)
+
+    expected_ids = np.concatenate((grid.line.id, grid.transformer.id, grid.link.id))
+    assert set(expected_ids) == set(grid.branches.id)
+
+
 class TestGetDownstreamNodes:
     def test_get_downstream_nodes(self):
         grid = Grid.from_txt("S1 11", "S1 2", "2 3", "3 5", "5 6", "2 4", "4 99", "99 100")
@@ -72,3 +86,45 @@ def test_component_three_winding_transformer(grid_with_3wt):
     assert path_2 == [101, 103, 107]
     assert distance_1 == 2
     assert distance_2 == 2
+
+
+
+class TestGetTypedBranches:
+    def test_get_typed_branches_transformer(self, basic_grid: Grid):
+        grid = basic_grid
+
+        transformer = grid.get_typed_branches([301])
+        assert isinstance(transformer, TransformerArray)
+
+    def test_get_typed_branches_line(self, basic_grid: Grid):
+        grid = basic_grid
+
+        line = grid.get_typed_branches([201])
+        assert isinstance(line, LineArray)
+
+    def test_get_typed_branches_link(self, basic_grid: Grid):
+        grid = basic_grid
+
+        link = grid.get_typed_branches([601])
+        assert isinstance(link, LinkArray)
+
+    def test_get_typed_branches_no_record(self, basic_grid: Grid):
+        grid = basic_grid
+
+        with pytest.raises(RecordDoesNotExist):
+            grid.get_typed_branches([101])  # 101 is a node
+
+    def test_get_typed_branches_no_input(self, basic_grid: Grid):
+        grid = basic_grid
+
+        with pytest.raises(ValueError):
+            grid.get_typed_branches([])  # 101 is a node
+
+    def test_get_typed_branches_array_input(self, basic_grid: Grid):
+        lines = basic_grid.get_typed_branches(np.array([201, 202]))
+        assert 2 == lines.size
+        assert isinstance(lines, LineArray)
+
+    def test_get_typed_branches_no_array_input(self, basic_grid: Grid):
+        with pytest.raises(ValueError):
+            basic_grid.get_typed_branches(np.array([]))

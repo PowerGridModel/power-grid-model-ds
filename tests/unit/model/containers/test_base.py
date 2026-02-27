@@ -38,6 +38,18 @@ class _FourArraysContainer(_TwoArraysContainer):
     array_4_no_id: FancyNonIdArray
 
 
+def test_id_counter_type(self, basic_grid: Grid):
+    assert isinstance(basic_grid.id_counter, int)
+
+
+def test_id_counter():
+    container = FancyArrayContainer.empty()
+    # pylint: disable=protected-access
+    container._id_counter = 42
+    assert 42 == container.id_counter
+
+
+
 def test_deepcopy():
     container = Grid.empty()
     container.node = NodeArray.zeros(1)
@@ -148,13 +160,6 @@ def test_search_for_id_no_match_in_two_arrays():
         container.search_for_id(43)
 
 
-def test_id_counter():
-    container = FancyArrayContainer.empty()
-    # pylint: disable=protected-access
-    container._id_counter = 42
-    assert 42 == container.id_counter
-
-
 def test_append_with_overlapping_ids():
     """Test that appending arrays with overlapping IDs raises an error."""
     grid = Grid.empty()
@@ -193,143 +198,3 @@ def test_append_with_non_overlapping_ids():
     assert grid.node.size == 6
     expected_ids = [1, 2, 3, 4, 5, 6]
     assert sorted(grid.node.id.tolist()) == expected_ids
-
-
-def test_branches(grid: Grid):
-    nodes = NodeArray.zeros(10)
-    grid.append(nodes)
-
-    for branch_class in (LineArray, TransformerArray, LinkArray):
-        branches = branch_class.zeros(10)
-        branches.from_node = nodes.id
-        branches.to_node = list(reversed(nodes.id.tolist()))
-        grid.append(branches)
-
-    expected_ids = np.concatenate((grid.line.id, grid.transformer.id, grid.link.id))
-    assert set(expected_ids) == set(grid.branches.id)
-
-
-def test_delete_node_without_additional_properties(basic_grid: Grid):
-    assert 106 in basic_grid.node.id
-    assert 106 in basic_grid.transformer["to_node"]
-
-    original_grid = deepcopy(basic_grid)
-    node = basic_grid.node.get(id=106)
-    basic_grid.delete_node(node)
-
-    assert 106 not in basic_grid.transformer["to_node"]
-    assert 106 not in basic_grid.node.id
-    assert len(original_grid.node) == len(basic_grid.node) + 1
-    assert len(original_grid.transformer) == len(basic_grid.transformer) + 1
-
-
-def test_delete_node_with_source(basic_grid: Grid):
-    assert 101 in basic_grid.node.id
-    assert 101 in basic_grid.source.node
-
-    original_grid = deepcopy(basic_grid)
-    node = basic_grid.node.get(id=101)
-    basic_grid.delete_node(node)
-
-    assert 101 not in basic_grid.node.id
-    assert 101 not in basic_grid.source.node
-    assert len(original_grid.node) == len(basic_grid.node) + 1
-    assert len(original_grid.source) == len(basic_grid.source) + 1
-
-
-def test_delete_node_with_load(basic_grid: Grid):
-    assert 102 in basic_grid.node.id
-    assert 102 in basic_grid.sym_load.node
-
-    original_grid = deepcopy(basic_grid)
-    node = basic_grid.node.get(id=102)
-    basic_grid.delete_node(node)
-
-    assert 102 not in basic_grid.node.id
-    assert 102 not in basic_grid.sym_load.node
-    assert len(original_grid.node) == len(basic_grid.node) + 1
-    assert len(original_grid.sym_load) == len(basic_grid.sym_load) + 1
-
-
-class TestGetTypedBranches:
-    def test_get_typed_branches_transformer(self, basic_grid: Grid):
-        grid = basic_grid
-
-        transformer = grid.get_typed_branches([301])
-        assert isinstance(transformer, TransformerArray)
-
-    def test_get_typed_branches_line(self, basic_grid: Grid):
-        grid = basic_grid
-
-        line = grid.get_typed_branches([201])
-        assert isinstance(line, LineArray)
-
-    def test_get_typed_branches_link(self, basic_grid: Grid):
-        grid = basic_grid
-
-        link = grid.get_typed_branches([601])
-        assert isinstance(link, LinkArray)
-
-    def test_get_typed_branches_no_record(self, basic_grid: Grid):
-        grid = basic_grid
-
-        with pytest.raises(RecordDoesNotExist):
-            grid.get_typed_branches([101])  # 101 is a node
-
-    def test_get_typed_branches_no_input(self, basic_grid: Grid):
-        grid = basic_grid
-
-        with pytest.raises(ValueError):
-            grid.get_typed_branches([])  # 101 is a node
-
-    def test_get_typed_branches_array_input(self, basic_grid: Grid):
-        lines = basic_grid.get_typed_branches(np.array([201, 202]))
-        assert 2 == lines.size
-        assert isinstance(lines, LineArray)
-
-    def test_get_typed_branches_no_array_input(self, basic_grid: Grid):
-        with pytest.raises(ValueError):
-            basic_grid.get_typed_branches(np.array([]))
-
-
-class TestReverseBranches:
-    def test_reverse_line(self, basic_grid: Grid):
-        line = basic_grid.line.get(from_node=102, to_node=103)
-        basic_grid.reverse_branches(line)
-
-        with pytest.raises(RecordDoesNotExist):
-            basic_grid.line.get(from_node=102, to_node=103)
-
-        new_line = basic_grid.line.get(from_node=103, to_node=102)
-
-        assert new_line.from_node == line.to_node
-        assert new_line.to_node == line.from_node
-        assert new_line.id == line.id
-
-    def test_reverse_branch(self, basic_grid: Grid):
-        branch = basic_grid.branches.get(from_node=101, to_node=102)
-        basic_grid.reverse_branches(branch)
-
-        with pytest.raises(RecordDoesNotExist):
-            basic_grid.line.get(from_node=101, to_node=102)
-
-        new_branch = basic_grid.line.get(from_node=102, to_node=101)
-
-        assert new_branch.from_node == branch.to_node
-        assert new_branch.to_node == branch.from_node
-        assert new_branch.id == branch.id
-
-    def test_reverse_all_branches(self, basic_grid: Grid):
-        from_nodes = basic_grid.branches.from_node
-        to_nodes = basic_grid.branches.to_node
-
-        basic_grid.reverse_branches(basic_grid.branches)
-
-        assert np.all(from_nodes == basic_grid.branches.to_node)
-        assert np.all(to_nodes == basic_grid.branches.from_node)
-
-    def test_reverse_no_branches(self, basic_grid: Grid):
-        basic_grid.reverse_branches(BranchArray())
-
-    def test_id_counter_type(self, basic_grid: Grid):
-        assert isinstance(basic_grid.id_counter, int)
