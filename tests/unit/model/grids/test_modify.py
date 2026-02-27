@@ -1,13 +1,18 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
+from copy import deepcopy
+
+import numpy as np
 import pytest
 
 from power_grid_model_ds import Grid
+from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     AsymGenArray,
     AsymLineArray,
     AsymLoadArray,
+    BranchArray,
     GenericBranchArray,
     LineArray,
     LinkArray,
