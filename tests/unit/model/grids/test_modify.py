@@ -631,7 +631,7 @@ class TestReverseBranches:
     def test_reverse_no_branches(self, basic_grid: Grid):
         basic_grid.reverse_branches(BranchArray())
 
-    def test_reverse_statuses(self):
+    def test_reverse_statusses(self):
         grid = Grid.from_txt("101 102 open", "103 104")
 
         assert grid.branches.from_node.tolist() == [101, 103]
