@@ -78,28 +78,21 @@ class TestFixBranchOrientations:
         "txt_grid,n_reversed",
         [
             (
-                ["1 2", "2 3"],
+                ["1 2", "2 3", "2 3"],
                 0,
             ),
             (
-                ["2 1", "2 3"],
+                ["2 1", "2 3", "2 3"],
                 1,
             ),
             (
-                ["2 1", "3 2"],
+                ["2 1", "3 2", "2 3"],
                 2,
             ),
         ],
     )
     def test_fix_branch_orientations_parallel_lines(self, txt_grid: list[str], n_reversed: int):
         grid = Grid.from_txt(*txt_grid)
-        parallel_line = LineArray.empty(1)
-        parallel_line.from_node = 2
-        parallel_line.to_node = 3
-        parallel_line.from_status = 1
-        parallel_line.to_status = 1
-        grid.append(parallel_line)
-
         source = SourceArray.empty(1)
         source.node = 1
         grid.append(source)
