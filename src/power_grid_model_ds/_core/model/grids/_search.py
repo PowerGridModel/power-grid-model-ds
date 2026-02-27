@@ -75,7 +75,7 @@ def get_downstream_nodes(grid: "Grid", node_id: int, inclusive: bool = False):
     )
 
 
-def _get_branch(grid: "Grid", from_node: int, to_node: int) -> BranchArray:
+def _get_branches(grid: "Grid", from_node: int, to_node: int) -> BranchArray:
     """Return active branch records and an index filtered to the requested path nodes."""
 
     active_branches = grid.branches.filter(from_status=1, to_status=1).filter(
@@ -99,7 +99,7 @@ def iter_branches_in_shortest_path(
     path, _ = grid.graphs.active_graph.get_shortest_path(from_node_id, to_node_id)
 
     for current_node, next_node in pairwise(path):
-        branches = _get_branch(grid, current_node, next_node)
+        branches = _get_branches(grid, current_node, next_node)
         if branches.size == 0:
             raise MissingBranchError(
                 f"No active branch connects nodes {current_node} -> {next_node} even though a path exists."
