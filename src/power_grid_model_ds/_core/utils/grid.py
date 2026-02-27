@@ -3,39 +3,48 @@
 # SPDX-License-Identifier: MPL-2.0
 """Contains utility functions for PGM-DS"""
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import SourceArray
+from power_grid_model_ds._core.model.arrays.pgm_arrays import SourceArray, BranchArray
 from power_grid_model_ds._core.model.graphs.errors import GraphError
 from power_grid_model_ds._core.model.grids.base import Grid
 
 
-def set_branch_orientations(grid: Grid, dry_run: bool = False) -> list[int]:
+def set_branch_orientations(grid: Grid) -> BranchArray:
     """
     Set branch orientations in the grid so that all branches are oriented away from the sources.
+
+    Args:
+        grid (Grid): The grid to set branch orientations for.
+
+    Returns:
+        BranchArray: All branches that were reversed.
+    """
+    reversed_branches = get_reversed_branches(grid)
+    grid.reverse_branches(reversed_branches)
+    return reversed_branches
+
+
+def get_reversed_branches(grid: Grid) -> BranchArray:
+    """
+    Get the branch IDs of branches that are oriented towards the source(s).
 
     Orientation is determined by the distance of the branch's from_node and to_node to the source node.
     The node that is closer to the source is considered the "from_node".
     Note that this might not reflect the actual power flow direction in the grid.
 
-    Other notes:
     - Sources should not be connected to other sources. If a source is connected to another source,
       a GraphError is raised.
     - Parallel edges (multiple edges between the same two nodes) and cycles are supported.
 
     Args:
-        grid (Grid): The grid to fix branch orientations for.
-        dry_run (bool): If True, do not actually modify the grid, just return the branch IDs that would be reverted
-            (default: False).
+        grid (Grid): The grid to check for branch orientations.
 
     Returns:
-        list[int]: A list of branch IDs that were reverted (or would be reverted in case of ``dry_run=True``).
+        BranchArray: All branches that are oriented towards the source(s)
     """
     reverse_branch_ids = []
     for source in grid.source:
         reverse_branch_ids += _get_reverted_branches_for_source(grid, source)
-
-    if not dry_run:
-        grid.reverse_branches(grid.branches.filter(id=reverse_branch_ids))
-    return reverse_branch_ids
+    return grid.branches.filter(reverse_branch_ids)
 
 
 def _get_reverted_branches_for_source(grid: Grid, source: SourceArray) -> list[int]:
@@ -63,5 +72,4 @@ def _get_reverted_branches_for_source(grid: Grid, source: SourceArray) -> list[i
         from_node=nodes_in_order
     )
     reverted_branch_ids += reversed_open_branches.id.tolist()
-
     return reverted_branch_ids

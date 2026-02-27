@@ -11,6 +11,8 @@ from power_grid_model_ds._core.utils.grid import set_branch_orientations
 
 
 class TestSetBranchOrientations:
+    """Implicitly tests get_reversed_branches too."""
+
     def test_set_branch_orientations(self):
         grid = Grid.from_txt("2 1 4", "3 2 5")
         source = SourceArray.empty(1)
