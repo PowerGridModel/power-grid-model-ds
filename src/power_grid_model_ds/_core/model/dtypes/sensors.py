@@ -8,17 +8,11 @@ Based on the sensors defined in power grid model:
 https://power-grid-model.readthedocs.io/en/v1.9.13/user_manual/components.html#sensor
 """
 
-from typing import Annotated, Literal, TypeVar
-
 import numpy as np
 from numpy.typing import NDArray
 
 from power_grid_model_ds._core.model.dtypes.id import Id
-
-# define structural arrays with 3 values for 3-phase variables
-# based on https://stackoverflow.com/a/72585748
-_DT = TypeVar("_DT", bound=np.generic)
-NDArray3 = Annotated[NDArray[_DT], Literal[3]]
+from power_grid_model_ds._core.model.dtypes.typing import NDArray3
 
 
 class Sensor(Id):

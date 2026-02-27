@@ -28,3 +28,9 @@ class TransformerTapRegulator(Regulator):
         "line_drop_compensation_r": 0,
         "line_drop_compensation_x": 0,
     }
+
+
+class VoltageRegulator(Regulator):
+    """Voltage regulator data type"""
+
+    u_ref: NDArray[np.float64]  # the voltage setpoint

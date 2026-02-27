@@ -5,14 +5,23 @@ import pytest
 
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+    AsymGenArray,
+    AsymLineArray,
+    AsymLoadArray,
+    GenericBranchArray,
     LineArray,
     LinkArray,
     NodeArray,
+    ShuntArray,
+    SourceArray,
+    SymGenArray,
+    SymLoadArray,
     ThreeWindingTransformerArray,
     TransformerArray,
     TransformerTapRegulatorArray,
 )
 from power_grid_model_ds._core.model.constants import EMPTY_ID
+from power_grid_model_ds._core.model.grids._modify import delete_appliance
 from tests.fixtures.arrays import DefaultedCustomLineArray, DefaultedCustomNodeArray
 from tests.fixtures.grid_classes import ExtendedGrid
 
@@ -64,6 +73,261 @@ def test_grid_delete_node_with_three_winding_transformer(
     assert 5 == len(grid.node)
     assert expected_length_three_winding_transformers == len(grid.three_winding_transformer)
     assert target_node.id not in grid.node.id
+
+
+def test_grid_delete_node_all(topologically_full_grid: Grid):
+    grid = topologically_full_grid
+
+    target_node = grid.node.get(1001)
+    grid.delete_node(node=target_node)
+
+    assert 1001 not in grid.node.id
+    assert all(id in grid.node.id for id in (list(range(1002, 1009)) + list(range(2001, 2009))))
+
+    assert 10001 not in grid.line.id
+    assert 20001 in grid.line.id
+
+    assert 10002 not in grid.link.id
+    assert 20002 in grid.link.id
+
+    assert 10003 not in grid.asym_line.id
+    assert 20003 in grid.asym_line.id
+
+    assert 10004 not in grid.generic_branch.id
+    assert 20004 in grid.generic_branch.id
+
+    assert 10005 not in grid.transformer.id
+    assert 20005 in grid.transformer.id
+
+    assert 10006 not in grid.three_winding_transformer.id
+    assert 20006 in grid.three_winding_transformer.id
+
+    assert 11001 not in grid.source.id
+    assert 21001 in grid.source.id
+
+    assert 11002 not in grid.shunt.id
+    assert 21002 in grid.shunt.id
+
+    assert 11003 not in grid.sym_load.id
+    assert 21003 in grid.sym_load.id
+
+    assert 11004 not in grid.sym_gen.id
+    assert 21004 in grid.sym_gen.id
+
+    assert 11005 not in grid.asym_load.id
+    assert 21005 in grid.asym_load.id
+
+    assert 11006 not in grid.asym_gen.id
+    assert 21006 in grid.asym_gen.id
+
+    assert 11007 not in grid.fault.id
+    assert 21007 in grid.fault.id
+
+    assert 12001 not in grid.sym_voltage_sensor.id
+    assert 22001 in grid.sym_voltage_sensor.id
+
+    assert 12002 not in grid.asym_voltage_sensor.id
+    assert 22002 in grid.asym_voltage_sensor.id
+
+    assert 12003 not in grid.sym_power_sensor.id
+    assert all(id in grid.sym_power_sensor.id for id in range(22003, 22016))
+
+    assert 12016 not in grid.asym_power_sensor.id
+    assert all(id in grid.asym_power_sensor.id for id in range(22016, 22029))
+
+    assert 12029 not in grid.sym_current_sensor.id
+    assert all(id in grid.sym_current_sensor.id for id in range(22029, 22035))
+
+    assert 12035 not in grid.asym_current_sensor.id
+    assert all(id in grid.asym_current_sensor.id for id in range(22035, 22041))
+
+    assert 13001 not in grid.voltage_regulator.id
+    assert all(id in grid.voltage_regulator.id for id in range(23001, 23005))
+
+    assert 13005 not in grid.transformer_tap_regulator.id
+    assert all(id in grid.transformer_tap_regulator.id for id in [23005, 23006])
+
+    remaining_branches = [
+        (1001, 1002),
+        (1001, 1003),
+        (1001, 1004),
+        (1001, 1005),
+        (1001, 1006),
+        (1001, 1007),
+        (1001, 1008),
+        (1007, 1008),
+    ]
+    for branch in remaining_branches:
+        assert not grid.graphs.complete_graph.has_branch(*branch), f"Branch {branch} present"
+    assert grid.graphs.complete_graph.nr_branches == len(remaining_branches)
+
+
+@pytest.mark.parametrize(
+    "branch_array_class,branch_id_to_delete,deleted_ids",
+    [
+        pytest.param(
+            LineArray,
+            10001,
+            [10001, 12004, 12017, 12029, 12035],
+            id="line",
+        ),
+        pytest.param(
+            LinkArray,
+            10002,
+            [10002, 12005, 12018, 12030, 12036],
+            id="link",
+        ),
+        pytest.param(
+            AsymLineArray,
+            10003,
+            [10003, 12006, 12019, 12031, 12037],
+            id="asym_line",
+        ),
+        pytest.param(
+            GenericBranchArray,
+            10004,
+            [10004, 12007, 12020, 12032, 12038],
+            id="generic_branch",
+        ),
+        pytest.param(
+            TransformerArray,
+            10005,
+            [10005, 12008, 12021, 12033, 12039, 13005],
+            id="transformer",
+        ),
+    ],
+)
+def test_grid_delete_branch_all(
+    topologically_full_grid: Grid,
+    branch_array_class,
+    branch_id_to_delete: int,
+    deleted_ids: list[int],
+):
+    grid = topologically_full_grid
+
+    # Act
+    branch_name = grid.find_array_field(branch_array_class).name
+    target_branch = getattr(grid, branch_name).get(branch_id_to_delete)
+    grid.delete_branch(branch=target_branch)
+
+    # Check that none of the deleted IDs are present in any arrays
+    for deleted_id in deleted_ids:
+        assert deleted_id not in grid.sym_power_sensor.id
+        assert deleted_id not in grid.asym_power_sensor.id
+        assert deleted_id not in grid.sym_current_sensor.id
+        assert deleted_id not in grid.asym_current_sensor.id
+        assert deleted_id not in grid.transformer_tap_regulator.id
+        assert deleted_id not in getattr(grid, branch_name).id
+
+    assert len(grid.sym_power_sensor) == 25
+    assert len(grid.asym_power_sensor) == 25
+    assert len(grid.sym_current_sensor) == 11
+    assert len(grid.asym_current_sensor) == 11
+    if branch_array_class == TransformerArray:
+        assert len(grid.transformer_tap_regulator) == 3
+    else:
+        assert len(grid.transformer_tap_regulator) == 4
+
+    assert not grid.graphs.complete_graph.has_branch(target_branch.from_node.item(), target_branch.to_node.item())
+    assert grid.graphs.complete_graph.nr_branches == 15
+
+
+def test_grid_delete_branch3_all(topologically_full_grid: Grid):
+    grid = topologically_full_grid
+    deleted_ids = [10006, 12009, 12022, 12034, 12040, 13006]
+
+    target_branch = grid.three_winding_transformer.get(10006)
+    grid.delete_branch3(branch=target_branch)
+
+    for deleted_id in deleted_ids:
+        assert deleted_id not in grid.sym_power_sensor.id
+        assert deleted_id not in grid.asym_power_sensor.id
+        assert deleted_id not in grid.sym_current_sensor.id
+        assert deleted_id not in grid.asym_current_sensor.id
+        assert deleted_id not in grid.transformer_tap_regulator.id
+        assert deleted_id not in grid.three_winding_transformer.id
+
+    assert len(grid.sym_power_sensor) == 25
+    assert len(grid.asym_power_sensor) == 25
+    assert len(grid.sym_current_sensor) == 11
+    assert len(grid.asym_current_sensor) == 11
+    assert len(grid.transformer_tap_regulator) == 3
+
+    for branch in [
+        (target_branch.node_1.item(), target_branch.node_2.item()),
+        (target_branch.node_2.item(), target_branch.node_3.item()),
+        (target_branch.node_3.item(), target_branch.node_1.item()),
+    ]:
+        assert not grid.graphs.complete_graph.has_branch(*branch), f"Branch {branch} present"
+    assert grid.graphs.complete_graph.nr_branches == 13
+
+
+@pytest.mark.parametrize(
+    "appliance_array_class,appliance_id_to_delete,deleted_ids",
+    [
+        pytest.param(
+            SourceArray,
+            11001,
+            [11001, 12010, 12023],
+            id="source",
+        ),
+        pytest.param(
+            ShuntArray,
+            11002,
+            [11002, 12011, 12024],
+            id="shunt",
+        ),
+        pytest.param(
+            SymLoadArray,
+            11003,
+            [11003, 12012, 12025, 13001],
+            id="sym_load",
+        ),
+        pytest.param(
+            SymGenArray,
+            11004,
+            [11004, 12013, 12026, 13002],
+            id="sym_gen",
+        ),
+        pytest.param(
+            AsymLoadArray,
+            11005,
+            [11005, 12014, 12027, 13003],
+            id="asym_load",
+        ),
+        pytest.param(
+            AsymGenArray,
+            11006,
+            [11006, 12015, 12028, 13004],
+            id="asym_gen",
+        ),
+    ],
+)
+def test_grid_delete_appliance_all(
+    topologically_full_grid: Grid, appliance_array_class, appliance_id_to_delete: int, deleted_ids: list[int]
+):
+    grid = topologically_full_grid
+
+    # Act
+    appliance_name = grid.find_array_field(appliance_array_class).name
+    target_appliance = getattr(grid, appliance_name).get(appliance_id_to_delete)
+
+    # TODO - change test to grid.remove once implemented
+    delete_appliance(grid, target_appliance)
+
+    for deleted_id in deleted_ids:
+        assert deleted_id not in grid.sym_power_sensor.id
+        assert deleted_id not in grid.asym_power_sensor.id
+        assert deleted_id not in grid.voltage_regulator.id
+        assert deleted_id not in getattr(grid, appliance_name).id
+
+    assert len(getattr(grid, appliance_name)) == 1
+    assert len(grid.sym_power_sensor) == 25
+    assert len(grid.asym_power_sensor) == 25
+    if appliance_array_class in [SymLoadArray, SymGenArray, AsymLoadArray, AsymGenArray]:
+        assert len(grid.voltage_regulator) == 7
+    else:
+        assert len(grid.voltage_regulator) == 8
 
 
 # pylint: disable=no-member
