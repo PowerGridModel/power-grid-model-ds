@@ -4,7 +4,7 @@
 import pytest
 
 import power_grid_model_ds.fancypy as fp
-from power_grid_model_ds._core.model.arrays.pgm_arrays import LineArray, SourceArray
+from power_grid_model_ds._core.model.arrays.pgm_arrays import SourceArray
 from power_grid_model_ds._core.model.graphs.errors import GraphError
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.utils.grid import set_branch_orientations
@@ -100,7 +100,6 @@ class TestSetBranchOrientations:
         reversed_branches = set_branch_orientations(grid)
         assert len(reversed_branches) == n_reversed
 
-
     def test_set_branch_orientations_open_line(self):
         grid = Grid.from_txt("1 2 11", "3 2 12")
         source = SourceArray.empty(1)
@@ -114,7 +113,6 @@ class TestSetBranchOrientations:
 
         assert grid.branches.from_node.tolist() == [1, 2]
         assert grid.branches.to_node.tolist() == [2, 3]
-
 
     def test_set_branch_orientations_open_line_different_side(self):
         # A branch should not be reversed if the open side is already on the to side
