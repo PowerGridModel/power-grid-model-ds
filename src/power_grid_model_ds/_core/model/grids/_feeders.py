@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from power_grid_model_ds._core.model.arrays import BranchArray
+from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray
 from power_grid_model_ds._core.model.enums.nodes import NodeType
 
 if TYPE_CHECKING:
@@ -31,7 +31,7 @@ def set_feeder_ids(grid: "Grid"):
                          ***
 
          Substation ID | Feeder ID
-    101 | -1           | -1
+    101 | -2147483648  | -2147483648
     102 | 101          | 201
     103 | 101          | 201
     104 | 101          | 204
@@ -39,7 +39,7 @@ def set_feeder_ids(grid: "Grid"):
     106 | 101          | 201
     201 | 101          | 201
     202 | 101          | 201
-    203 | 101          | -1
+    203 | 101          | -2147483648
     204 | 101          | 204
     301 | 101          | 201
     601 | 101          | 204

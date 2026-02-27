@@ -5,24 +5,29 @@
 """Base grid classes"""
 
 import warnings
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Iterator, Literal, Self, Type, TypeVar
 
 import numpy as np
 import numpy.typing as npt
 
-from power_grid_model_ds._core.model.arrays import (
+from power_grid_model_ds._core.model.arrays.base.array import FancyArray
+from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     AsymCurrentSensorArray,
+    AsymGenArray,
     AsymLineArray,
+    AsymLoadArray,
     AsymPowerSensorArray,
     AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
+    FaultArray,
     GenericBranchArray,
     LineArray,
     LinkArray,
     NodeArray,
+    ShuntArray,
     SourceArray,
     SymCurrentSensorArray,
     SymGenArray,
@@ -32,8 +37,8 @@ from power_grid_model_ds._core.model.arrays import (
     ThreeWindingTransformerArray,
     TransformerArray,
     TransformerTapRegulatorArray,
+    VoltageRegulatorArray,
 )
-from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
@@ -105,9 +110,13 @@ class Grid(FancyArrayContainer):
     source: SourceArray
     sym_load: SymLoadArray
     sym_gen: SymGenArray
+    asym_load: AsymLoadArray
+    asym_gen: AsymGenArray
+    shunt: ShuntArray
 
     # regulators
     transformer_tap_regulator: TransformerTapRegulatorArray
+    voltage_regulator: VoltageRegulatorArray
 
     # sensors
     sym_power_sensor: SymPowerSensorArray
@@ -116,6 +125,20 @@ class Grid(FancyArrayContainer):
     asym_power_sensor: AsymPowerSensorArray
     asym_voltage_sensor: AsymVoltageSensorArray
     asym_current_sensor: AsymCurrentSensorArray
+
+    fault: FaultArray
+
+    def __repr__(self) -> str:
+        """Display relevant information about the grid."""
+        array_reprs: list[str] = []
+        for field in fields(self):
+            value = getattr(self, field.name)
+            if isinstance(value, FancyArray) and len(value):
+                array_reprs.append(f"{field.name}=\n{value.as_table(rows=2)}")
+
+        graph_repr = f"graphs={self.graphs!r}"
+        inner = ",\n".join([graph_repr, *array_reprs])
+        return f"{self.__class__.__name__}(\n{inner}\n)"
 
     def __str__(self) -> str:
         """Serialize grid to a string.

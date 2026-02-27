@@ -6,14 +6,19 @@ import logging
 from dataclasses import fields
 from typing import TYPE_CHECKING, Literal, Type, TypeVar
 
-from power_grid_model_ds._core.model.arrays import (
+from power_grid_model_ds._core.model.arrays.base.array import FancyArray
+from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     AsymCurrentSensorArray,
+    AsymGenArray,
+    AsymLoadArray,
     AsymPowerSensorArray,
     AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
+    FaultArray,
     IdArray,
     NodeArray,
+    ShuntArray,
     SourceArray,
     SymCurrentSensorArray,
     SymGenArray,
@@ -21,8 +26,8 @@ from power_grid_model_ds._core.model.arrays import (
     SymPowerSensorArray,
     SymVoltageSensorArray,
     TransformerTapRegulatorArray,
+    VoltageRegulatorArray,
 )
-from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.graphs.models.rustworkx import RustworkxGraphModel
@@ -104,17 +109,19 @@ def _increment_grid_ids_by_offset(all_arrays: list[FancyArray], offset: int) -> 
                 | AsymPowerSensorArray()
                 | AsymCurrentSensorArray()
             ):
-                columns = []
+                columns = ["measured_object"]
             case NodeArray():
                 columns = ["feeder_node_id", "feeder_branch_id"]
-            case TransformerTapRegulatorArray():
+            case TransformerTapRegulatorArray() | VoltageRegulatorArray():
                 columns = ["regulated_object"]
             case BranchArray():
                 columns = ["from_node", "to_node", "feeder_node_id", "feeder_branch_id"]
             case Branch3Array():
                 columns = ["node_1", "node_2", "node_3"]
-            case SymGenArray() | SymLoadArray() | SourceArray():
+            case SymGenArray() | SymLoadArray() | SourceArray() | AsymLoadArray() | AsymGenArray() | ShuntArray():
                 columns = ["node"]
+            case FaultArray():
+                columns = ["fault_object"]
             case _:
                 raise NotImplementedError(
                     f"The array of type {type(array)} is not implemented for appending. "
