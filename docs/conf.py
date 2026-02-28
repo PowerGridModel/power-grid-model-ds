@@ -26,6 +26,11 @@ extensions = [
 templates_path = ["_templates"]
 exclude_patterns: list[str] = []
 
+# -- Options for myst_nb (Jupyter notebook execution) ---
+# Fail the build if notebook cells have errors
+nb_execution_allow_errors = False
+nb_execution_raise_on_error = True
+
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 source_suffix = {
