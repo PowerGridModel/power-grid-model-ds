@@ -71,9 +71,7 @@ def _get_reverted_branches_for_source(grid: "Grid", source: SourceArray, branche
     if set(nodes_in_order) & set(other_source_nodes):
         raise GraphError("Cannot set branch orientations if source is connected to other sources")
 
-    connected_branches = branches.filter(
-        from_status=1, to_status=1, from_node=nodes_in_order, to_node=nodes_in_order
-    )
+    connected_branches = branches.filter(from_status=1, to_status=1, from_node=nodes_in_order, to_node=nodes_in_order)
     reverted_branch_ids = []
     node_rank = {node: index for index, node in enumerate(nodes_in_order)}
     for branch in connected_branches:
