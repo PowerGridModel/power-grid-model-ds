@@ -348,6 +348,7 @@ class Grid(FancyArrayContainer):
         - Sources should not be connected to other sources. If a source is connected to another source,
           a GraphError is raised.
         - Parallel edges (multiple edges between the same two nodes) and cycles are supported.
+        - Open branches will be corrected so that the from_status is 1 and the to_status is 0.
 
         Returns:
             BranchArray: All branches that are oriented towards the source(s)
