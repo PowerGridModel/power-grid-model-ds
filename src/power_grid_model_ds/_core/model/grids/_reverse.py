@@ -56,12 +56,14 @@ def set_branch_orientations(grid: "Grid") -> BranchArray:
 def get_reversed_branches(grid: "Grid") -> BranchArray:
     """See grid.get_reversed_branches()."""
     reverse_branch_ids = []
+    branches = grid.branches
     for source in grid.source:
-        reverse_branch_ids += _get_reverted_branches_for_source(grid, source)
+        reverse_branch_ids += _get_reverted_branches_for_source(grid=grid, source=source, branches=branches)
+
     return grid.branches.filter(reverse_branch_ids)
 
 
-def _get_reverted_branches_for_source(grid: "Grid", source: SourceArray) -> list[int]:
+def _get_reverted_branches_for_source(grid: "Grid", source: SourceArray, branches: BranchArray) -> list[int]:
 
     nodes_in_order = grid.graphs.active_graph.get_connected(source.node.item(), inclusive=True)
 
@@ -69,10 +71,9 @@ def _get_reverted_branches_for_source(grid: "Grid", source: SourceArray) -> list
     if set(nodes_in_order) & set(other_source_nodes):
         raise GraphError("Cannot set branch orientations if source is connected to other sources")
 
-    connected_branches = grid.branches.filter(
+    connected_branches = branches.filter(
         from_status=1, to_status=1, from_node=nodes_in_order, to_node=nodes_in_order
     )
-
     reverted_branch_ids = []
     node_rank = {node: index for index, node in enumerate(nodes_in_order)}
     for branch in connected_branches:
@@ -82,7 +83,7 @@ def _get_reverted_branches_for_source(grid: "Grid", source: SourceArray) -> list
             reverted_branch_ids.append(branch.id.item())
 
     # also add for reversed open_branches
-    reversed_open_branches = grid.branches.filter(from_status=0, to_status=1, to_node=nodes_in_order).exclude(
+    reversed_open_branches = branches.filter(from_status=0, to_status=1, to_node=nodes_in_order).exclude(
         from_node=nodes_in_order
     )
     reverted_branch_ids += reversed_open_branches.id.tolist()
