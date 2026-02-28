@@ -58,7 +58,11 @@ from power_grid_model_ds._core.model.grids._modify import (
     delete_node,
     make_active,
     make_inactive,
+)
+from power_grid_model_ds._core.model.grids._reverse import (
+    get_reversed_branches,
     reverse_branches,
+    set_branch_orientations,
 )
 from power_grid_model_ds._core.model.grids._search import (
     get_branch_arrays,
@@ -333,6 +337,33 @@ class Grid(FancyArrayContainer):
     def reverse_branches(self, branches: BranchArray):
         """Reverse the direction of the branches."""
         return reverse_branches(self, branches)
+
+    def get_reversed_branches(self) -> BranchArray:
+        """Get the branch IDs of branches that are oriented towards the source(s).
+
+        Orientation is determined by the distance of the branch's from_node and to_node to the source node.
+        The node that is closer to the source is considered the "from_node".
+        Note that this might not reflect the actual power flow direction in the grid.
+
+        - Sources should not be connected to other sources. If a source is connected to another source,
+          a GraphError is raised.
+        - Parallel edges (multiple edges between the same two nodes) and cycles are supported.
+        - Open branches will be corrected so that the from_status is 1 and the to_status is 0.
+
+        Returns:
+            BranchArray: All branches that are oriented towards the source(s)
+        """
+        return get_reversed_branches(self)
+
+    def set_branch_orientations(self) -> BranchArray:
+        """Set branch orientations in the grid so that all branches are oriented away from the sources.
+
+        See also get_reversed_branches() for how the branches to reverse are determined.
+
+        Returns:
+            BranchArray: All branches that were reversed.
+        """
+        return set_branch_orientations(self)
 
     def get_branches_in_path(self, nodes_in_path: list[int]) -> BranchArray:
         """Returns all branches within a path of nodes
