@@ -339,7 +339,7 @@ class Grid(FancyArrayContainer):
         return reverse_branches(self, branches)
 
     def get_reversed_branches(self) -> BranchArray:
-        """Get the branch IDs of branches that are oriented towards the source(s).
+        """Get the branch array of branches that are oriented towards the source(s).
 
         Orientation is determined by the distance of the branch's from_node and to_node to the source node.
         The node that is closer to the source is considered the "from_node".
