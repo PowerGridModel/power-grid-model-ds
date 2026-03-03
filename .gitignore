@@ -59,3 +59,6 @@ _build/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+
+tmp.py  # tmp test file
+*.json  # serialized grids
