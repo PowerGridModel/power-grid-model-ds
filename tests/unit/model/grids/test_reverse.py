@@ -101,16 +101,14 @@ class TestSetBranchOrientations:
     @pytest.mark.parametrize(
         "txt_grid,expected_txt_grid",
         [
-            (["1 2", "3 2", "3 1"], ["1 2", "2 3", "1 3"]),
-            (["2 1", "2 3", "1 3"], ["1 2", "3 2", "1 3"]),
-            (["1 2", "2 3", "3 4", "4 1"], ["1 2", "2 3", "4 3", "1 4"]),
-            (["1 2", "2 3", "3 4", "4 2"], ["1 2", "2 3", "3 4", "2 4"]),
-        ],
-        ids=[
-            "simple cycle",
-            "simple cycle v2 (internal get_connected ID order depends on the original from and to nodes)",
-            "bigger cycle",
-            "cycle below feeder branch",
+            pytest.param(["1 2", "3 2", "3 1"], ["1 2", "2 3", "1 3"], id="simple cycle"),
+            pytest.param(
+                ["2 1", "2 3", "1 3"],
+                ["1 2", "3 2", "1 3"],
+                id="simple cycle v2 (internal get_connected ID order depends on the original from and to nodes)",
+            ),
+            pytest.param(["1 2", "2 3", "3 4", "4 1"], ["1 2", "2 3", "4 3", "1 4"], id="bigger cycle"),
+            pytest.param(["1 2", "2 3", "3 4", "4 2"], ["1 2", "2 3", "3 4", "2 4"], id="cycle below feeder branch"),
         ],
     )
     def test_set_branch_orientations_cycle(self, txt_grid, expected_txt_grid):
@@ -127,14 +125,9 @@ class TestSetBranchOrientations:
     @pytest.mark.parametrize(
         "txt_grid,expected_txt_grid",
         [
-            (["2 1", "3 2"], ["1 2", "2 3"]),
-            (["1 2", "3 2", "3 1"], ["1 2", "2 3", "1 3"]),
-            (["2 1", "3 2", "4 3"], ["1 2", "2 3", "3 4"]),
-        ],
-        ids=[
-            "simple path",
-            "simple path with extra node",
-            "simple cycle",
+            pytest.param(["2 1", "3 2"], ["1 2", "2 3"], id="simple path"),
+            pytest.param(["1 2", "3 2", "3 1"], ["1 2", "2 3", "1 3"], id="simple path with extra node"),
+            pytest.param(["2 1", "3 2", "4 3"], ["1 2", "2 3", "3 4"], id="simple cycle"),
         ],
     )
     def test_set_branch_orientations_connected_sources(self, txt_grid, expected_txt_grid):
@@ -156,28 +149,10 @@ class TestSetBranchOrientations:
     @pytest.mark.parametrize(
         "txt_grid,n_reversed",
         [
-            (
-                ["1 2", "2 3", "2 3"],
-                0,
-            ),
-            (
-                ["2 1", "2 3", "2 3"],
-                1,
-            ),
-            (
-                ["2 1", "3 2", "2 3"],
-                2,
-            ),
-            (
-                ["1 2", "3 2", "3 2"],
-                2,
-            ),
-        ],
-        ids=[
-            "no parallel lines",
-            "reversed non-parallel",
-            "reversed normal + reversed parallel",
-            "two reversed parallel",
+            pytest.param(["1 2", "2 3", "2 3"], 0, id="no parallel lines"),
+            pytest.param(["2 1", "2 3", "2 3"], 1, id="reversed non-parallel"),
+            pytest.param(["2 1", "3 2", "2 3"], 2, id="reversed normal + reversed parallel"),
+            pytest.param(["1 2", "3 2", "3 2"], 2, id="two reversed parallel"),
         ],
     )
     def test_set_branch_orientations_parallel_lines(self, txt_grid: list[str], n_reversed: int):
