@@ -357,7 +357,6 @@ class Grid(FancyArrayContainer):
 
     def set_branch_orientations(self) -> BranchArray:
         """Set branch orientations in the grid so that all branches are oriented away from the sources.
-
         See also get_reversed_branches() for how the branches to reverse are determined.
 
         Returns:
