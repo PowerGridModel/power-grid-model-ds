@@ -10,14 +10,9 @@ import numpy as np
 
 from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     ApplianceArray,
-    AsymLineArray,
     Branch3Array,
     BranchArray,
-    GenericBranchArray,
-    LineArray,
-    LinkArray,
     NodeArray,
-    TransformerArray,
 )
 
 from ..arrays.base.array import FancyArray
@@ -59,32 +54,6 @@ def add_branch(grid: "Grid", branch: BranchArray) -> None:
     grid.graphs.add_branch_array(branch_array=branch)
 
     logging.debug(f"added branch {branch.id} from {branch.from_node} to {branch.to_node}")
-
-
-def reverse_branches(grid: "Grid", branches: BranchArray) -> None:
-    """See Grid.reverse_branches()"""
-    if not branches.size:
-        return
-    if not isinstance(branches, (LineArray, LinkArray, TransformerArray, GenericBranchArray, AsymLineArray)):
-        try:
-            branches = grid.get_typed_branches(branches.id)
-        except ValueError:
-            # If the branches are not of the same type, reverse them per type (though this is slower)
-            for array in grid.branch_arrays:
-                grid.reverse_branches(array.filter(branches.id))
-            return
-
-    from_nodes = branches.from_node
-    from_states = branches.from_status
-    to_nodes = branches.to_node
-    to_states = branches.to_status
-
-    array_field = grid.find_array_field(branches.__class__)
-    array = getattr(grid, array_field.name)
-    array.update_by_id(branches.id, from_node=to_nodes, to_node=from_nodes)
-    array.update_by_id(
-        branches.id, from_node=to_nodes, from_status=to_states, to_node=from_nodes, to_status=from_states
-    )
 
 
 def make_active(grid: "Grid", branch: BranchArray) -> None:

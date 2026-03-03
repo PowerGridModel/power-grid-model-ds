@@ -43,6 +43,10 @@ class BaseGraphModel(ABC):
     def nr_branches(self) -> int:
         """Returns the number of branches in the graph"""
 
+    @abstractmethod
+    def has_parallel_edges(self) -> bool:
+        """Check if the graph has parallel edges (multiple edges between the same two nodes)"""
+
     @property
     def all_branches(self) -> Generator[tuple[int, int], None, None]:
         """Returns all branches in the graph."""
