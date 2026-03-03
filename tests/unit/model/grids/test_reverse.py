@@ -9,7 +9,7 @@ from power_grid_model_ds import fancypy as fp
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray, SourceArray
 from power_grid_model_ds._core.model.graphs.errors import GraphError
-from power_grid_model_ds._core.model.grids._reverse import get_reversed_branches, set_branch_orientations
+from power_grid_model_ds._core.model.grids._reverse import set_branch_orientations
 
 
 class TestGetReversedBranches:
@@ -22,7 +22,7 @@ class TestGetReversedBranches:
         assert grid.branches.from_node.tolist() == [2, 3]
         assert grid.branches.to_node.tolist() == [1, 2]
 
-        reversed_branches = get_reversed_branches(grid)
+        reversed_branches = grid.get_reversed_branches()
         assert reversed_branches.id.tolist() == [4, 5]
 
 
@@ -94,7 +94,7 @@ class TestSetBranchOrientations:
         assert grid.branches.from_node.tolist() == [2, 3]
         assert grid.branches.to_node.tolist() == [1, 2]
 
-        reversed_branches = set_branch_orientations(grid)
+        reversed_branches = grid.set_branch_orientations()
         assert reversed_branches.id.tolist() == [4, 5]
 
         assert grid.branches.from_node.tolist() == [1, 2]
@@ -104,9 +104,15 @@ class TestSetBranchOrientations:
         "txt_grid,expected_txt_grid",
         [
             (["1 2", "3 2", "3 1"], ["1 2", "2 3", "1 3"]),
-            (["1 2", "2 3", "3 4", "4 1"], ["1 2", "2 3", "4 3", "1 4"]),
             (["2 1", "2 3", "1 3"], ["1 2", "3 2", "1 3"]),
+            (["1 2", "2 3", "3 4", "4 1"], ["1 2", "2 3", "4 3", "1 4"]),
             (["1 2", "2 3", "3 4", "4 2"], ["1 2", "2 3", "3 4", "2 4"]),
+        ],
+        ids=[
+            "simple cycle",
+            "simple cycle v2 (internal get_connected ID order depends on the original from and to nodes)",
+            "bigger cycle",
+            "cycle below feeder branch",
         ],
     )
     def test_set_branch_orientations_cycle(self, txt_grid, expected_txt_grid):
@@ -115,13 +121,27 @@ class TestSetBranchOrientations:
         source.node = 1
         grid.append(source)
 
-        set_branch_orientations(grid)
+        grid.set_branch_orientations()
 
         expected_grid = Grid.from_txt(*expected_txt_grid)
         assert fp.array_equal(grid.branches, expected_grid.branches)
 
-    def test_set_branch_orientations_connected_sources(self):
-        grid = Grid.from_txt("1 2", "2 3")
+    @pytest.mark.parametrize(
+        "txt_grid,expected_txt_grid",
+        [
+            (["2 1", "3 2"], ["1 2", "2 3"]),
+            (["1 2", "3 2", "3 1"], ["1 2", "2 3", "1 3"]),
+            (["2 1", "3 2", "4 3"], ["1 2", "2 3", "3 4"]),
+        ],
+        ids=[
+            "simple path",
+            "simple path with extra node",
+            "simple cycle",
+        ],
+    )
+    def test_set_branch_orientations_connected_sources(self, txt_grid, expected_txt_grid):
+        # expected grid should always be from perspective of source with lowest node id.
+        grid = Grid.from_txt(*txt_grid)
         source1 = SourceArray.empty(1)
         source1.node = 1
         source2 = SourceArray.empty(1)
@@ -129,8 +149,11 @@ class TestSetBranchOrientations:
         grid.append(source1)
         grid.append(source2)
 
-        with pytest.raises(GraphError, match="Cannot set branch orientations if source is connected to other sources"):
-            set_branch_orientations(grid)
+        grid.set_branch_orientations()
+
+        expected_grid = Grid.from_txt(*expected_txt_grid)
+        expected_grid.append(grid.source)  # append for comparison
+        assert grid == expected_grid
 
     @pytest.mark.parametrize(
         "txt_grid,n_reversed",
@@ -147,6 +170,16 @@ class TestSetBranchOrientations:
                 ["2 1", "3 2", "2 3"],
                 2,
             ),
+            (
+                ["1 2", "3 2", "3 2"],
+                2,
+            ),
+        ],
+        ids=[
+            "no parallel lines",
+            "reversed non-parallel",
+            "reversed normal + reversed parallel",
+            "two reversed parallel",
         ],
     )
     def test_set_branch_orientations_parallel_lines(self, txt_grid: list[str], n_reversed: int):
@@ -155,7 +188,7 @@ class TestSetBranchOrientations:
         source.node = 1
         grid.append(source)
 
-        reversed_branches = set_branch_orientations(grid)
+        reversed_branches = grid.set_branch_orientations()
         assert len(reversed_branches) == n_reversed
 
     def test_set_branch_orientations_open_line(self):
@@ -166,7 +199,7 @@ class TestSetBranchOrientations:
 
         # Open the line from 3 to 2.
         grid.make_inactive(grid.line.get(12), at_to_side=False)
-        reversed_branches = set_branch_orientations(grid)
+        reversed_branches = grid.set_branch_orientations()
         assert len(reversed_branches) == 1
 
         assert grid.branches.from_node.tolist() == [1, 2]
@@ -184,7 +217,7 @@ class TestSetBranchOrientations:
         grid.append(source2)
 
         # Open the line from 3 to 2.
-        reversed_branches = set_branch_orientations(grid)
+        reversed_branches = grid.set_branch_orientations()
         assert len(reversed_branches) == 0
 
         assert grid.branches.from_node.tolist() == [1, 3]
