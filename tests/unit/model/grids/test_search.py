@@ -159,12 +159,8 @@ class TestGridDiff:
         assert "node" in diff_dict
 
     def test_get_grid_diff_extra_records(self):
-        grid1 = Grid.from_txt("1 2", "2 3")
-        grid2 = Grid.from_txt("1 2", "2 3", "3 4")
-
-        # artificially make all line ids the same so these differences can be ignored for purpose of this test
-        grid1.line.id = 42
-        grid2.line.id = 42
+        grid1 = Grid.from_txt("1 2 10", "2 3 11")
+        grid2 = Grid.from_txt("1 2 10", "2 3 11", "3 4 12")
 
         diff_dict = find_differences_between_grids(grid1, grid2)
         assert len(diff_dict) == 4
