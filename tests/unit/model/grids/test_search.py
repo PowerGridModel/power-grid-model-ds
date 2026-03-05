@@ -133,14 +133,14 @@ class TestGetTypedBranches:
 
 class TestGridDiff:
     def test_no_differences(self):
-        grid1 = Grid.from_txt("1 2", "2 4")
-        grid2 = Grid.from_txt("1 2", "2 4")
+        grid1 = Grid.from_txt("1 2 10", "2 4 11")
+        grid2 = Grid.from_txt("1 2 10", "2 4 11")
         diff_dict = find_differences_between_grids(grid1, grid2)
         assert not diff_dict
 
     def test_different_line(self):
-        grid1 = Grid.from_txt("1 2", "3 2")
-        grid2 = Grid.from_txt("1 2", "2 3")
+        grid1 = Grid.from_txt("1 2 10", "3 2 11")
+        grid2 = Grid.from_txt("1 2 10", "2 3 11")
         diff_dict = find_differences_between_grids(grid1, grid2)
         assert len(diff_dict) == 1
         assert "line" in diff_dict
@@ -148,10 +148,10 @@ class TestGridDiff:
         assert diff_dict["line"]["grid2"][["from_node", "to_node"]].tolist() == [(2, 3)]
 
     def test_different_node_and_line(self):
-        grid1 = Grid.from_txt("1 2", "2 3")
-        grid2 = Grid.from_txt("1 2", "2 4")
+        grid1 = Grid.from_txt("1 2 10", "2 3 11")
+        grid2 = Grid.from_txt("1 2 10", "2 4 11")
         diff_dict = find_differences_between_grids(grid1, grid2)
-        assert len(diff_dict) == 4
+        assert len(diff_dict) == 3
         assert "line" in diff_dict
         assert diff_dict["line"]["grid1"].size
         assert diff_dict["line"]["grid2"].size
