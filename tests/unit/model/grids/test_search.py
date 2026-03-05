@@ -10,6 +10,7 @@ from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExis
 from power_grid_model_ds._core.model.arrays.pgm_arrays import LineArray, LinkArray, NodeArray, TransformerArray
 from power_grid_model_ds._core.model.enums.nodes import NodeType
 from power_grid_model_ds._core.model.grids._search import find_differences_between_grids
+from tests.fixtures.grid_classes import ExtendedGrid
 
 # pylint: disable=missing-function-docstring
 
@@ -155,10 +156,9 @@ class TestGridDiff:
         assert "line" in diff_dict
         assert diff_dict["line"]["grid1"].size
         assert diff_dict["line"]["grid2"].size
-
         assert "node" in diff_dict
 
-    def test_get_grid_diff_extra_records(self):
+    def test_extra_records(self):
         grid1 = Grid.from_txt("1 2 10", "2 3 11")
         grid2 = Grid.from_txt("1 2 10", "2 3 11", "3 4 12")
 
@@ -167,3 +167,9 @@ class TestGridDiff:
         assert "line" in diff_dict
         assert not diff_dict["line"]["grid1"].size
         assert diff_dict["line"]["grid2"].size
+
+    def test_different_grid_types(self):
+        grid1 = Grid.from_txt("1 2 10", "2 4 11")
+        grid2 = ExtendedGrid.from_txt("1 2 10", "2 4 11")
+        with pytest.raises(TypeError):
+            grid1.diff(grid2)
