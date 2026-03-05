@@ -9,6 +9,7 @@ from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.arrays.pgm_arrays import LineArray, LinkArray, NodeArray, TransformerArray
 from power_grid_model_ds._core.model.enums.nodes import NodeType
+from power_grid_model_ds._core.model.grids._search import find_differences_between_grids
 
 # pylint: disable=missing-function-docstring
 
@@ -128,3 +129,45 @@ class TestGetTypedBranches:
     def test_get_typed_branches_no_array_input(self, basic_grid: Grid):
         with pytest.raises(ValueError):
             basic_grid.get_typed_branches(np.array([]))
+
+
+class TestGridDiff:
+    def test_no_differences(self):
+        grid1 = Grid.from_txt("1 2", "2 4")
+        grid2 = Grid.from_txt("1 2", "2 4")
+        diff_dict = find_differences_between_grids(grid1, grid2)
+        assert not diff_dict
+
+    def test_different_line(self):
+        grid1 = Grid.from_txt("1 2", "3 2")
+        grid2 = Grid.from_txt("1 2", "2 3")
+        diff_dict = find_differences_between_grids(grid1, grid2)
+        assert len(diff_dict) == 1
+        assert "line" in diff_dict
+        assert diff_dict["line"]["grid1"][["from_node", "to_node"]].tolist() == [(3, 2)]
+        assert diff_dict["line"]["grid2"][["from_node", "to_node"]].tolist() == [(2, 3)]
+
+    def test_different_node_and_line(self):
+        grid1 = Grid.from_txt("1 2", "2 3")
+        grid2 = Grid.from_txt("1 2", "2 4")
+        diff_dict = find_differences_between_grids(grid1, grid2)
+        assert len(diff_dict) == 4
+        assert "line" in diff_dict
+        assert diff_dict["line"]["grid1"].size
+        assert diff_dict["line"]["grid2"].size
+
+        assert "node" in diff_dict
+
+    def test_get_grid_diff_extra_records(self):
+        grid1 = Grid.from_txt("1 2", "2 3")
+        grid2 = Grid.from_txt("1 2", "2 3", "3 4")
+
+        # artificially make all line ids the same so these differences can be ignored for purpose of this test
+        grid1.line.id = 42
+        grid2.line.id = 42
+
+        diff_dict = find_differences_between_grids(grid1, grid2)
+        assert len(diff_dict) == 4
+        assert "line" in diff_dict
+        assert not diff_dict["line"]["grid1"].size
+        assert diff_dict["line"]["grid2"].size
