@@ -462,4 +462,4 @@ class Grid(FancyArrayContainer):
 
     def rebuild_graphs(self) -> None:
         """(Re)build the graphs in the grid."""
-        self.graphs = GraphContainer._from_grid(self)  # pylint: disable=protected-access
+        self.graphs = GraphContainer.from_grid(self)  # pylint: disable=protected-access

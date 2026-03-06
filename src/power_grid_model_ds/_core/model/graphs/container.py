@@ -122,22 +122,22 @@ class GraphContainer:
     def from_arrays(cls, arrays: "Grid") -> "GraphContainer":
         """Build from arrays"""
         warnings.warn(
-            "GraphContainer.from_arrays is deprecated and will be removed in a future release. "
-            "Use Grid.rebuild_graphs() instead.",
+            f"{cls.__name__}.from_arrays is deprecated and will be removed in a future release. "
+            f"Use grid.rebuild_graphs() or {cls.__name__}.from_grid(grid) instead.",
             DeprecationWarning,
             stacklevel=2,
         )
-        return cls._from_grid(arrays)
+        return cls.from_grid(arrays)
 
     @classmethod
-    def _from_grid(cls, grid: "Grid") -> "GraphContainer":
+    def from_grid(cls, grid: "Grid") -> "GraphContainer":
         """Build from grid"""
         cls._validate_branches(arrays=grid)
 
         new_container = cls.empty()
         for graph_field in new_container.graph_attributes:
             graph: BaseGraphModel = getattr(new_container, graph_field.name)
-            new_graph = graph._from_grid(grid, active_only=graph.active_only)  # pylint: disable=protected-access
+            new_graph = graph.from_grid(grid, active_only=graph.active_only)
             setattr(new_container, graph_field.name, new_graph)
 
         return new_container
