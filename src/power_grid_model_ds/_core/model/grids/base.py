@@ -461,7 +461,7 @@ class Grid(FancyArrayContainer):
         """Deserialize the grid."""
         return deserialize_from_json(path=path, target_grid_class=cls)
 
-    def diff(self, other_grid: Self):
+    def diff(self, other_grid: Self) -> None:
         """Print the differences between two grids
 
         Intended for debugging.
