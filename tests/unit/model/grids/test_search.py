@@ -177,7 +177,7 @@ class TestGridDiff:
     def test_print_diff(self, capsys):
         grid1 = Grid.from_txt("1 2 10", "2 3 11")
         grid2 = Grid.from_txt("1 2 10", "2 4 11")
-        find_differences_between_grids(grid1, grid2, print_diff=True)
+        grid1.diff(grid2)
         captured = capsys.readouterr()
         assert "Difference in 'grid.node'" in captured.out
         assert "Difference in 'grid.line'" in captured.out
