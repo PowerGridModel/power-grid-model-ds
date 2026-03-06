@@ -97,12 +97,11 @@ def find_differences_between_grids(
                     "grid1": attr1[mask1],
                     "grid2": attr2[mask2],
                 }
-        else:
-            if attr1 != attr2:
-                differences[field.name] = {
-                    "grid1": attr1,
-                    "grid2": attr2,
-                }
+        elif attr1 != attr2:
+            differences[field.name] = {
+                "grid1": attr1,
+                "grid2": attr2,
+            }
 
     if print_diff and differences:
         for attr, diff in differences.items():
