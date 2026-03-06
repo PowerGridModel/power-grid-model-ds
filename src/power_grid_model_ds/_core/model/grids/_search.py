@@ -88,33 +88,37 @@ def find_differences_between_grids(
         attr1 = getattr(grid1, field.name)
         attr2 = getattr(grid2, field.name)
 
-        if isinstance(attr1, FancyArray):
-            if array_equal(attr1, attr2):
-                continue
-            mask1, mask2 = find_diff_masks_with_equal_nan(attr1.data, attr2.data)
-            if mask1.any() or mask2.any():
-                differences[field.name] = {
-                    "grid1": attr1[mask1],
-                    "grid2": attr2[mask2],
-                }
-        elif attr1 != attr2:
-            differences[field.name] = {
-                "grid1": attr1,
-                "grid2": attr2,
-            }
+        if attr_diff := _compare_attr(attr1, attr2):
+            differences[field.name] = attr_diff
 
-    if print_diff and differences:
-        for attr, diff in differences.items():
-            title = f"Difference in 'grid.{attr}':"
-            print(f"\n{title}")
-            print("-" * len(title))
-            print(diff["grid1"])
-            print("\nvs.\n")
-            print(diff["grid2"])
-
-            if attr == "graphs":
-                print(
-                    "\n*** Note: Differences in graphs may not be visible in the representations above. "
-                    "Check the branch arrays below for actual differences. ***"
-                )
+    if print_diff:
+        _print_differences(differences)
     return differences
+
+
+def _compare_attr(attr1: object, attr2: object) -> dict[str, object]:
+    if isinstance(attr1, FancyArray) and isinstance(attr2, FancyArray):
+        if array_equal(attr1, attr2):
+            return {}
+        mask1, mask2 = find_diff_masks_with_equal_nan(attr1.data, attr2.data)
+        if mask1.any() or mask2.any():
+            return {"grid1": attr1[mask1], "grid2": attr2[mask2]}
+    if attr1 != attr2:
+        return {"grid1": attr1, "grid2": attr2}
+    return {}
+
+
+def _print_differences(differences: dict[str, dict[str, object]]) -> None:
+    for attr, diff in differences.items():
+        title = f"Difference in 'grid.{attr}':"
+        print(f"\n{title}")
+        print("-" * len(title))
+        print(diff["grid1"])
+        print("\nvs.\n")
+        print(diff["grid2"])
+
+        if attr == "graphs":
+            print(
+                "\n*** Note: Differences in graphs may not be visible in the representations above. "
+                "Check the branch arrays below for actual differences. ***"
+            )
