@@ -64,7 +64,7 @@ def array_equal_with_nan(array1: np.ndarray, array2: np.ndarray) -> bool:
 
 def find_diff_masks_with_equal_nan(array1: np.ndarray, array2: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """Return the rows in array1 that are not in array2, treating NaN values as equal."""
-    if not array1.dtype == array2.dtype:
+    if array1.dtype != array2.dtype:
         raise TypeError("Cannot find differences. Arrays must have the same dtypes.")
 
     if array1.size == 0 and array2.size == 0:
