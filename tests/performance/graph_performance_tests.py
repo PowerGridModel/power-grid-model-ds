@@ -33,8 +33,8 @@ def perftest_delete_node():
     do_performance_test(code_to_test, GRAPH_SIZES, 100, setup_codes=GRAPH_SETUP_CODES)
 
 
-def perftest_from_arrays():
-    code_to_test = "grid.graphs.complete_graph.__class__.from_arrays(grid);"
+def perftest_rebuild_graphs():
+    code_to_test = "grid.rebuild_graphs()"
     do_performance_test(code_to_test, GRAPH_SIZES, 100, setup_codes=GRAPH_SETUP_CODES)
 
 
@@ -53,4 +53,4 @@ if __name__ == "__main__":
     perftest_get_components()
     perftest_delete_node()
     perftest_add_node()
-    perftest_from_arrays()
+    perftest_rebuild_graphs()

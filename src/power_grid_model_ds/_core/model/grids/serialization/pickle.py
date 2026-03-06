@@ -6,7 +6,6 @@ from copy import copy
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.utils.pickle import get_pickle_path, load_from_pickle, save_to_pickle
 from power_grid_model_ds._core.utils.zip import file2gzip
 
@@ -22,7 +21,7 @@ def load_grid_from_pickle(grid_class: type["Grid"], cache_path: Path, load_graph
         raise TypeError(f"{pickle_path.name} is not a valid {grid_class.__name__} cache.")
 
     if load_graphs:
-        grid.graphs = GraphContainer.from_arrays(grid)
+        grid.rebuild_graphs()
     return grid
 
 

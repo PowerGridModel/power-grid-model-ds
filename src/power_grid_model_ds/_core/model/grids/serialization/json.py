@@ -76,8 +76,7 @@ def deserialize_from_json(path: Path, target_grid_class: type[G]) -> G:
 
     grid = target_grid_class.empty()
     _restore_grid_values(grid, json_data["data"])
-    graph_class = grid.graphs.__class__
-    grid.graphs = graph_class.from_arrays(grid)
+    grid.rebuild_graphs()
     return grid
 
 
