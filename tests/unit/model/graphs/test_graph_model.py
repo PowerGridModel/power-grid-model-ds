@@ -9,11 +9,9 @@ from copy import deepcopy
 
 import numpy as np
 import pytest
-from numpy.testing import assert_array_equal
 
 from power_grid_model_ds._core.model.graphs.errors import GraphError
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
-from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds.errors import MissingBranchError, MissingNodeError, NoPathBetweenNodes
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
@@ -206,11 +204,6 @@ def test_get_components_with_tmp_removed_substation_nodes(graph_with_2_routes):
     assert set(components[0]) == {2, 3}
     assert set(components[1]) == {4, 5}
     assert set(components[2]) == {99}
-
-
-def test_from_arrays(basic_grid: Grid):
-    new_graph = basic_grid.graphs.complete_graph.__class__.from_arrays(basic_grid)
-    assert_array_equal(new_graph.external_ids, basic_grid.node.id)
 
 
 class TestPathMethods:

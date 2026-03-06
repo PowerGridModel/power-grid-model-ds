@@ -459,3 +459,7 @@ class Grid(FancyArrayContainer):
     def deserialize(cls: Type[Self], path: Path) -> Self:
         """Deserialize the grid."""
         return deserialize_from_json(path=path, target_grid_class=cls)
+
+    def rebuild_graphs(self) -> None:
+        """(Re)build the graphs in the grid."""
+        self.graphs = GraphContainer.from_grid(self)  # pylint: disable=protected-access
