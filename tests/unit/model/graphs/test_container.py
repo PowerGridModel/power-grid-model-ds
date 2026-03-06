@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
+from copy import deepcopy
 
 import pytest
 
@@ -12,18 +13,13 @@ from power_grid_model_ds._core.model.grids.base import Grid
 # pylint: disable=missing-function-docstring
 
 
-def test_from_arrays(basic_grid: Grid):
-    graphs = GraphContainer.from_arrays(basic_grid)
+def test_rebuild_graphs(basic_grid: Grid):
+    orig_graphs = deepcopy(basic_grid.graphs)
 
-    assert isinstance(graphs, GraphContainer)
-    assert basic_grid.graphs.complete_graph.nr_nodes == graphs.complete_graph.nr_nodes
-    assert basic_grid.graphs.complete_graph.nr_branches == 6
-
-    assert basic_grid.graphs.active_graph.nr_nodes == graphs.active_graph.nr_nodes
-    assert basic_grid.graphs.active_graph.nr_branches == 5
-
-    assert set(basic_grid.node.id) == set(graphs.active_graph.external_ids)
-    assert set(basic_grid.node.id) == set(graphs.complete_graph.external_ids)
+    basic_grid.graphs = GraphContainer.empty()
+    assert basic_grid.graphs != orig_graphs
+    basic_grid.rebuild_graphs()
+    assert orig_graphs == basic_grid.graphs
 
 
 @pytest.fixture
