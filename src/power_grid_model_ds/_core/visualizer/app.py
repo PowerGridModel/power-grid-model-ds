@@ -94,17 +94,17 @@ def get_app_layout(grid: Grid) -> html.Div:
     columns_store = _get_columns_store(grid)
     layout = get_default_graph_layout(grid.node)
     viz_elements_dict, viz_to_comp_data = parse_element_data(grid)
-    elements = [
+    initial_elements = [
         element
         for element in viz_elements_dict.values()
         if element["data"]["group"] not in ["sym_load", "sym_gen", "sym_load_ghost_node", "sym_gen_ghost_node"]
     ]
-    cytoscape_html = get_cytoscape_html(layout, elements, grid.source.node.tolist())
+    cytoscape_html = get_cytoscape_html(layout, initial_elements, grid.source.node.tolist())
 
     return html.Div(
         [
             columns_store,
-            dcc.Store(id="parsed-elements-store", data=list(viz_elements_dict.values())),
+            dcc.Store(id="parsed-elements-store", data=viz_elements_dict),
             dcc.Store(id="viz-to-comp-store", data=viz_to_comp_data),
             dcc.Store(id="stylesheet-store", data=DEFAULT_STYLESHEET),
             dcc.Store(id="show-appliances-store", data=False, storage_type="session"),

@@ -80,9 +80,9 @@ def update_arrows(show_arrows, current_stylesheet):
 def update_appliances(show_appliances, parsed_elements):
     """Callback to add or remove appliances in the graph."""
     if show_appliances:
-        return parsed_elements, True
+        return list(parsed_elements.values()), True
     return [
         element
-        for element in parsed_elements
+        for element in parsed_elements.values()
         if element["data"]["group"] not in ["sym_load", "sym_gen", "sym_load_ghost_node", "sym_gen_ghost_node"]
     ], False

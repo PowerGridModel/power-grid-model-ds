@@ -45,8 +45,8 @@ def display_selected_element(
 
     group = selected_data["group"]
     elm_id_str = selected_data["id"]
-    to_strip = ["_0", "_1", "_2"]
-    for suffix in to_strip:
+    
+    for suffix in ["_0", "_1", "_2"]:
         elm_id_str = elm_id_str.replace(suffix, "")
     pgm_id = np.int32(elm_id_str)
 
