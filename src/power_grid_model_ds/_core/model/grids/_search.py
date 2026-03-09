@@ -97,15 +97,13 @@ def find_differences_between_grids(
 
 
 def _compare_attr(attr1: object, attr2: object) -> dict[str, object]:
+    if attr1 == attr2:
+        return {}
     if isinstance(attr1, FancyArray) and isinstance(attr2, FancyArray):
-        if array_equal(attr1, attr2):
-            return {}
         mask1, mask2 = find_diff_masks_with_equal_nan(attr1.data, attr2.data)
         if mask1.any() or mask2.any():
             return {"grid1": attr1[mask1], "grid2": attr2[mask2]}
-    if attr1 != attr2:
-        return {"grid1": attr1, "grid2": attr2}
-    return {}
+    return {"grid1": attr1, "grid2": attr2}
 
 
 def _print_differences(differences: dict[str, dict[str, object]]) -> None:

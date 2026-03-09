@@ -469,4 +469,6 @@ class Grid(FancyArrayContainer):
         Args:
             other_grid (Grid): The grid to compare with.
         """
-        find_differences_between_grids(grid1=self, grid2=other_grid, print_diff=True)
+        diffs = find_differences_between_grids(grid1=self, grid2=other_grid, print_diff=True)
+        if not diffs:
+            print("Grids are identical")
