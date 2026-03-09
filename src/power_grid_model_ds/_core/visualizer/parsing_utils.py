@@ -4,6 +4,7 @@
 
 from typing import Any
 
+import numpy as np
 from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
@@ -50,3 +51,10 @@ def map_appliance_to_nodes(grid: Grid) -> dict[str, str]:
         appliance_array = getattr(grid, appliance_name)
         appliance_to_node.update(dict(zip(map(str, appliance_array.id), map(str, appliance_array.node))))
     return appliance_to_node
+
+
+def viz_id_to_pgm_id(id_str: str) -> np.int32:
+    """Convert a viz element ID string to a PGM ID integer."""
+    for suffix in ["_0", "_1", "_2"]:
+        id_str = id_str.replace(suffix, "")
+    return np.int32(id_str)

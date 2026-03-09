@@ -17,6 +17,7 @@ from power_grid_model_ds._core.visualizer.callbacks import (  # noqa: F401  # py
     scenario,
     search_form,
 )
+from power_grid_model_ds._core.visualizer.grid_utils import dynamic_grid_obj_from_grid, extend_grid_dynamically
 from power_grid_model_ds._core.visualizer.layout.cytoscape_html import get_cytoscape_html
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
 from power_grid_model_ds._core.visualizer.layout.header import HEADER_HTML
@@ -51,15 +52,19 @@ def visualize(
             - "grid": A layout that places the nodes in a grid matrix.
             - "cose": A layout that uses the CompoundSpring Embedder algorithm (force-directed layout)
     """
+    dynamic_class_update = extend_grid_dynamically(grid, extra_dataset=update_data)
+    dynamic_class_update_output = extend_grid_dynamically(dynamic_class_update.empty(), extra_dataset=output_data)
+    dynamic_grid_obj = dynamic_grid_obj_from_grid(dynamic_class_update_output, grid)
+
     # Store Grid object on server side (thread-safe)
-    server_state.safe_set_grid(grid)
+    server_state.safe_set_grid(dynamic_grid_obj)
     server_state.safe_set_update_data(update_data)
     server_state.safe_set_output_data(output_data)
 
     app = Dash(
         external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, MDBOOTSTRAP, FONT_AWESOME, GOOGLE_FONTS]
     )
-    app.layout = get_app_layout(grid)
+    app.layout = get_app_layout(dynamic_grid_obj)
     app.run(debug=debug, port=port)
 
 

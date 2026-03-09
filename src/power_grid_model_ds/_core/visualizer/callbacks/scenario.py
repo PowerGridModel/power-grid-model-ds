@@ -60,19 +60,19 @@ def _update_grid_for_scenario(scenario_idx: int, grid, update_data, output_data)
         update_data: The update data for the scenarios
         output_data: The output data for the scenarios
     """
+    if scenario_idx is None or scenario_idx < 0:
+        raise PreventUpdate
 
-    if update_data is not None:
-        first_array = next(iter(update_data.values()))
-        if scenario_idx is None or scenario_idx < 0 or scenario_idx >= first_array.shape[0]:
-            raise PreventUpdate
-
+    if update_data is not None and next(iter(update_data.values())).shape[0] <= scenario_idx:
         for arr_name, update_arr in update_data.items():
             grid_arr = getattr(grid, arr_name)
 
+            # Find indices in the grid array that correspond to the update ids for the current scenario
             update_ids = update_arr[scenario_idx, :]["id"]
-            indices = np.searchsorted(grid_arr.id, update_ids)
+            sorter = np.argsort(grid_arr.id)
+            indices = sorter[np.searchsorted(grid_arr.id, update_ids, sorter=sorter)]
 
-            valid = (indices < len(grid_arr.id)) & (grid_arr.id[indices] == update_ids)
+            valid = grid_arr.id[indices] == update_ids
             if not np.all(valid):
                 raise ValueError(f"IDs {update_ids[~valid]} not found in base input data for array {arr_name}")
 
@@ -80,14 +80,11 @@ def _update_grid_for_scenario(scenario_idx: int, grid, update_data, output_data)
                 if attr in grid_arr.dtype.names and attr != "id":
                     grid_arr[attr][indices] = update_arr[scenario_idx, :][attr]
 
-    if output_data is not None:
-        first_array = next(iter(output_data.values()))
-        if scenario_idx is None or scenario_idx < 0 or scenario_idx >= first_array.shape[0]:
-            raise PreventUpdate
-
+    if output_data is not None and next(iter(output_data.values())).shape[0] <= scenario_idx:
         for arr_name, output_arr in output_data.items():
             grid_arr = getattr(grid, arr_name)
-
+            # grid and output_data have the same ids and order,
+            # so we can directly assign without searching for indices
             for attr in output_arr[scenario_idx, :].dtype.names:
                 if attr in grid_arr.dtype.names and attr != "id":
                     grid_arr[attr][:] = output_arr[scenario_idx, :][attr]

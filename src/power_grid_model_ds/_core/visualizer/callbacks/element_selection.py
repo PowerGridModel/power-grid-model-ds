@@ -5,14 +5,15 @@
 
 import numpy as np
 import plotly.graph_objects as go
-from dash import ALL, Input, Output, State, callback, dash_table, html
-from power_grid_model import ComponentType, attribute_empty_value
-from power_grid_model._core.dataset_definitions import DatasetType
+from dash import ALL, Input, Output, State, callback, callback_context, dash_table, html
+from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.arrays.pgm_arrays import IdArray
+from power_grid_model_ds._core.visualizer.grid_utils import get_attr_data_from_dataset
 from power_grid_model_ds._core.visualizer.layout.selection_output import (
     SELECTION_OUTPUT_HTML,
 )
+from power_grid_model_ds._core.visualizer.parsing_utils import viz_id_to_pgm_id
 from power_grid_model_ds._core.visualizer.server_state import (
     safe_get_grid,
     safe_get_output_data,
@@ -45,11 +46,7 @@ def display_selected_element(
 
     group = selected_data["group"]
     elm_id_str = selected_data["id"]
-    
-    for suffix in ["_0", "_1", "_2"]:
-        elm_id_str = elm_id_str.replace(suffix, "")
-    pgm_id = np.int32(elm_id_str)
-
+    pgm_id = viz_id_to_pgm_id(elm_id_str)
     grid = safe_get_grid()
 
     data = getattr(grid, group).get(id=pgm_id)
@@ -68,16 +65,28 @@ def display_selected_element(
 
 
 def _array_to_data_tables(array_data: IdArray, group: str) -> html.Div:
-    """Convert array data to a Dash DataTable."""
+    """Convert array data to a Dash DataTable.
+    Makes 3 phase data into separate columns with suffix _a, _b, _c"""
     list_array_data = []
     for entry in array_data:
-        entry_dict = {
-            col: entry[col].item() if entry[col].ndim == 1 else f"{entry[col].tolist()[0]}"
-            for col in array_data.columns
-        }
-        list_array_data.append(entry_dict)
+        record_dict = {}
+        for col in array_data.columns:
+            if entry[col].ndim == 1:
+                record_dict[col] = entry[col].item()
+            else:
+                for phase_idx, phase in enumerate(["a", "b", "c"]):
+                    col_name = f"{col}_{phase}"
+                    record_dict[col_name] = entry[col][0, phase_idx]
+        list_array_data.append(record_dict)
 
-    data_table_headers = [{"name": key, "id": key} for key in array_data.columns]
+    data_table_headers = []
+    for col in array_data.columns:
+        if array_data[col].ndim == 1:
+            data_table_headers.append({"name": col, "id": col})
+        else:
+            for phase in ["a", "b", "c"]:
+                col_name = f"{col}_{phase}"
+                data_table_headers.append({"name": col_name, "id": col_name})
 
     data_table = dash_table.DataTable(  # type: ignore[attr-defined]
         id={"type": "selection-table", "group": group},
@@ -92,29 +101,39 @@ def _array_to_data_tables(array_data: IdArray, group: str) -> html.Div:
 @callback(
     Output("selection-graph", "figure"),
     Output("selection-graph", "style"),
-    Input({"type": "selection-table", "group": ALL}, "active_cell"),
-    State({"type": "selection-table", "group": ALL}, "id"),
+    Input({"type": "selection-table", "group": ALL}, "active_cell"),  # Capture change
     prevent_initial_call=True,
 )
-def handle_cell_selection(active_cells, table_ids):
+def handle_cell_selection(_):
     """Update graph when a cell is clicked."""
-    active_cell = None
-    group = None
-
-    for i, cell in enumerate(active_cells):
-        if cell is not None and "row_id" in cell and "column_id" in cell:
-            active_cell = cell
-            group = table_ids[i]["group"]
-            break
-
-    if active_cell is None:
+    # Search last triggered objectect with active_cell value
+    triggered_ctx = callback_context.triggered[0]
+    if not (
+        "selection-table" in triggered_ctx["prop_id"]
+        and "active_cell" in triggered_ctx["prop_id"]
+        and triggered_ctx["value"] is not None
+    ):
         return go.Figure(), {"display": "none"}
-    element_id = active_cell["row_id"]
-    column = active_cell["column_id"]
 
-    y_data, data_type = _get_y_data_for_cell_selection(group, element_id, column)
-    if y_data is None or data_type is None:
+    group = callback_context.triggered_id["group"]
+    pgm_id = triggered_ctx["value"]["row_id"]
+    column_id = triggered_ctx["value"]["column_id"]
+
+    # Address the case where column_id ends with a phase suffix (e.g. "_a", "_b", "_c")
+    if any(column_id.endswith(phase_suffix) for phase_suffix in ["_a", "_b", "_c"]):
+        base_column = column_id[:-2]
+        phase_text = column_id[-1:]
+        phase_idx = {"a": 0, "b": 1, "c": 2}[phase_text]
+    else:
+        base_column = column_id
+        phase_text = ""
+        phase_idx = None
+
+    attr_data, data_type = _get_y_data_for_cell_selection(ComponentType(group), pgm_id, base_column)
+    if attr_data is None or data_type is None:
         return go.Figure(), {"display": "none"}
+
+    y_data = attr_data[phase_idx].tolist() if phase_idx is not None else attr_data.tolist()
 
     fig = go.Figure()
     fig.add_trace(
@@ -127,9 +146,9 @@ def handle_cell_selection(active_cells, table_ids):
     )
 
     fig.update_layout(
-        title=f"{data_type.value} - {group} - {column} - id={element_id}",
+        title=f"{data_type} - {group} - {base_column} {phase_text} - id={pgm_id}",
         xaxis_title="Scenario Index",
-        yaxis_title=column,
+        yaxis_title=column_id,
         template="plotly_white",
         hovermode="x unified",
         showlegend=False,
@@ -138,27 +157,14 @@ def handle_cell_selection(active_cells, table_ids):
     return fig, {"display": "block"}
 
 
-def _get_y_data_for_cell_selection(group: str, element_id: int, column: str) -> tuple[list | None, DatasetType | None]:
-    # Extract data from update_data or output_data
+def _get_y_data_for_cell_selection(
+    comp_type: ComponentType, pgm_id: int, attr: str
+) -> tuple[np.ndarray | None, str | None]:
+    """Extract data from update_data or output_data"""
     update_data = safe_get_update_data()
+    if update_data is not None and comp_type in update_data and attr in update_data[comp_type].dtype.names:
+        return get_attr_data_from_dataset(update_data, comp_type, attr, pgm_id), "update_data"
     output_data = safe_get_output_data()
-
-    if update_data is not None and group in update_data and column in update_data[group].dtype.names:
-        data_type = DatasetType.update
-        empty_val = attribute_empty_value(DatasetType.update, ComponentType(group), column)
-        id_column = update_data[group]["id"]
-        column_data = update_data[group][column]
-    elif output_data is not None and group in output_data and column in output_data[group].dtype.names:
-        data_type = DatasetType.sym_output
-        empty_val = attribute_empty_value(DatasetType.sym_output, ComponentType(group), column)
-        id_column = output_data[group]["id"]
-        column_data = output_data[group][column]
-    else:
-        return None, None
-
-    if np.all(column_data == empty_val) or element_id not in id_column:
-        return None, None
-
-    element_idx = np.nonzero(id_column[0] == element_id)[0][0]
-    y_data = column_data[:, element_idx].tolist()
-    return y_data, data_type
+    if output_data is not None and comp_type in output_data and attr in output_data[comp_type].dtype.names:
+        return get_attr_data_from_dataset(output_data, comp_type, attr, pgm_id), "output_data"
+    return None, None

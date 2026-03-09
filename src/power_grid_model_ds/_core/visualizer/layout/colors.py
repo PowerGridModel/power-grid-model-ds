@@ -56,10 +56,13 @@ def _map_colors_to_array(values: np.ndarray) -> list[str]:
     rgb_max = _hex_to_rgb(CYTO_COLORS["heatmap_max"])
 
     # Handle case where all values are the same
-    if values.dtype != np.dtype(float):
-        non_empty_loc = np.nonzero(values != np.iinfo(values.dtype).min)[0]
-        min_val = values[non_empty_loc].min()
-        values[~non_empty_loc] = min_val
+    if np.issubdtype(values.dtype, np.integer):
+        empty_mask = values == np.iinfo(values.dtype).min
+        non_empty_mask = ~empty_mask
+        if not np.any(non_empty_mask):
+            return [CYTO_COLORS["heatmap_mid"]] * len(values)
+        min_val = values[non_empty_mask].min()
+        values[empty_mask] = min_val
     else:
         min_val = values.min()
     max_val = values.max()
