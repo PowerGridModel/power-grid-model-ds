@@ -466,6 +466,8 @@ class Grid(FancyArrayContainer):
 
         Intended for debugging.
 
+        Note: Only the content of the arrays is compared. Differences in the ordering within arrays are ignored.
+
         Args:
             other_grid (Grid): The grid to compare with.
         """

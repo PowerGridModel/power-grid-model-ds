@@ -181,3 +181,10 @@ class TestGridDiff:
         captured = capsys.readouterr()
         assert "Difference in 'grid.node'" in captured.out
         assert "Difference in 'grid.line'" in captured.out
+
+    def test_different_order(self, capsys):
+        grid1 = Grid.from_txt("1 2 10", "2 4 11")
+        grid2 = Grid.from_txt("2 4 11", "1 2 10")
+        grid1.diff(grid2)
+        captured = capsys.readouterr()
+        assert "Grids are identical" in captured.out

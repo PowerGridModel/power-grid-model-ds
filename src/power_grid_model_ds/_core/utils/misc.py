@@ -81,11 +81,6 @@ def find_diff_masks_with_equal_nan(array1: np.ndarray, array2: np.ndarray) -> tu
             inf_array1[column][nan_mask_1] = np.inf
             inf_array2[column][nan_mask_2] = np.inf
 
-    if array1.size == array2.size:
-        diff_mask = inf_array1 != inf_array2
-        return diff_mask, diff_mask
-
-    # different sizes
     array1_diff_mask = np.isin(inf_array1, inf_array2, invert=True)
     array2_diff_mask = np.isin(inf_array2, inf_array1, invert=True)
     return array1_diff_mask, array2_diff_mask

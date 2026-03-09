@@ -9,7 +9,6 @@ import numpy as np
 import numpy.typing as npt
 
 from power_grid_model_ds._core import fancypy as fp
-from power_grid_model_ds._core.fancypy import array_equal
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray
@@ -97,13 +96,14 @@ def find_differences_between_grids(
 
 
 def _compare_attr(attr1: object, attr2: object) -> dict[str, object]:
-    if attr1 == attr2:
-        return {}
     if isinstance(attr1, FancyArray) and isinstance(attr2, FancyArray):
         mask1, mask2 = find_diff_masks_with_equal_nan(attr1.data, attr2.data)
         if mask1.any() or mask2.any():
             return {"grid1": attr1[mask1], "grid2": attr2[mask2]}
-    return {"grid1": attr1, "grid2": attr2}
+        return {}
+    if attr1 != attr2:
+        return {"grid1": attr1, "grid2": attr2}
+    return {}
 
 
 def _print_differences(differences: dict[str, dict[str, object]]) -> None:
