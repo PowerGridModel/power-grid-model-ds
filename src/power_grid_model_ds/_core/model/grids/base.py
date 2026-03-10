@@ -464,7 +464,7 @@ class Grid(FancyArrayContainer):
     def rebuild_graphs(self) -> None:
         """(Re)build the graphs in the grid."""
         self.graphs = GraphContainer.from_grid(self)
-    
+
     def diff(self, other_grid: Self) -> None:
         """Print the differences between two grids
 
