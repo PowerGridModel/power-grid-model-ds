@@ -120,7 +120,7 @@ class GraphContainer:
 
     @classmethod
     def from_arrays(cls, arrays: "Grid") -> "GraphContainer":
-        """Build from arrays"""
+        """Build from arrays. DEPRECATED: Use .from_grid instead."""
         warnings.warn(
             f"{cls.__name__}.from_arrays is deprecated and will be removed in a future release. "
             f"Use grid.rebuild_graphs() or {cls.__name__}.from_grid(grid) instead.",

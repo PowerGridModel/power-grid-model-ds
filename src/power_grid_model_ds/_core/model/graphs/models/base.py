@@ -348,7 +348,7 @@ class BaseGraphModel(ABC):
 
     @classmethod
     def from_arrays(cls, arrays: "Grid", active_only=False) -> "BaseGraphModel":
-        """Build from arrays"""
+        """Build from arrays. DEPRECATED: Use .from_grid instead."""
         warnings.warn(
             f"{cls.__name__}.from_arrays is deprecated and will be removed in a future release. "
             f"Use {cls.__name__}.from_grid instead.",
@@ -359,7 +359,7 @@ class BaseGraphModel(ABC):
 
     @classmethod
     def from_grid(cls, grid: "Grid", active_only=False) -> "BaseGraphModel":
-        """Build from arrays"""
+        """Build from grid."""
         new_graph = cls(active_only=active_only)
         new_graph.add_node_array(node_array=grid.node, raise_on_fail=False)
         new_graph.add_branch_array(grid.branches)
