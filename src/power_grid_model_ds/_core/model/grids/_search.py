@@ -9,9 +9,11 @@ import numpy as np
 import numpy.typing as npt
 
 from power_grid_model_ds._core import fancypy as fp
+from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray
 from power_grid_model_ds._core.model.enums.nodes import NodeType
+from power_grid_model_ds._core.utils.misc import find_diff_masks_with_equal_nan
 
 if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import Grid
@@ -71,3 +73,50 @@ def get_downstream_nodes(grid: "Grid", node_id: int, inclusive: bool = False):
     return grid.graphs.active_graph.get_downstream_nodes(
         node_id=node_id, start_node_ids=list(substation_nodes.id), inclusive=inclusive
     )
+
+
+def find_differences_between_grids(
+    grid1: "Grid", grid2: "Grid", print_diff: bool = False
+) -> dict[str, dict[str, object]]:
+    """See Grid.find_differences()"""
+    if not isinstance(grid1, grid2.__class__) or not isinstance(grid2, grid1.__class__):
+        raise TypeError("Both grids should be of the same class (to ensure they have the same attributes)")
+
+    differences = {}
+    for field in dataclasses.fields(grid1):
+        attr1 = getattr(grid1, field.name)
+        attr2 = getattr(grid2, field.name)
+
+        if attr_diff := _compare_attr(attr1, attr2):
+            differences[field.name] = attr_diff
+
+    if print_diff:
+        _print_differences(differences)
+    return differences
+
+
+def _compare_attr(attr1: object, attr2: object) -> dict[str, object]:
+    if isinstance(attr1, FancyArray) and isinstance(attr2, FancyArray):
+        mask1, mask2 = find_diff_masks_with_equal_nan(attr1.data, attr2.data)
+        if mask1.any() or mask2.any():
+            return {"grid1": attr1[mask1], "grid2": attr2[mask2]}
+        return {}
+    if attr1 != attr2:
+        return {"grid1": attr1, "grid2": attr2}
+    return {}
+
+
+def _print_differences(differences: dict[str, dict[str, object]]) -> None:
+    for attr, diff in differences.items():
+        title = f"Difference in 'grid.{attr}':"
+        print(f"\n{title}")
+        print("-" * len(title))
+        print(diff["grid1"])
+        print("\nvs.\n")
+        print(diff["grid2"])
+
+        if attr == "graphs":
+            print(
+                "\n*** Note: Differences in graphs may not be visible in the representations above. "
+                "Check the branch arrays below for actual differences. ***"
+            )

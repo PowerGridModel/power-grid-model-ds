@@ -65,6 +65,7 @@ from power_grid_model_ds._core.model.grids._reverse import (
     set_branch_orientations,
 )
 from power_grid_model_ds._core.model.grids._search import (
+    find_differences_between_grids,
     get_branch_arrays,
     get_branches,
     get_downstream_nodes,
@@ -459,3 +460,17 @@ class Grid(FancyArrayContainer):
     def deserialize(cls: Type[Self], path: Path) -> Self:
         """Deserialize the grid."""
         return deserialize_from_json(path=path, target_grid_class=cls)
+
+    def diff(self, other_grid: Self) -> None:
+        """Print the differences between two grids
+
+        Intended for debugging.
+
+        Note: Only the content of the arrays is compared. Differences in the ordering within arrays are ignored.
+
+        Args:
+            other_grid (Grid): The grid to compare with.
+        """
+        diffs = find_differences_between_grids(grid1=self, grid2=other_grid, print_diff=True)
+        if not diffs:
+            print("Grids are identical")
