@@ -52,19 +52,26 @@ def visualize(
             - "grid": A layout that places the nodes in a grid matrix.
             - "cose": A layout that uses the CompoundSpring Embedder algorithm (force-directed layout)
     """
-    dynamic_class_update = extend_grid_dynamically(grid, extra_dataset=update_data)
-    dynamic_class_update_output = extend_grid_dynamically(dynamic_class_update.empty(), extra_dataset=output_data)
-    dynamic_grid_obj = dynamic_grid_obj_from_grid(dynamic_class_update_output, grid)
+    if update_data is not None and output_data is not None:
+        dynamic_class_update = extend_grid_dynamically(grid, extra_dataset=update_data)
+        dynamic_class_update_output = extend_grid_dynamically(dynamic_class_update.empty(), extra_dataset=output_data)
+        grid_obj = dynamic_grid_obj_from_grid(dynamic_class_update_output, grid)
+    elif update_data is None and output_data is not None:
+        grid_obj = dynamic_grid_obj_from_grid(extend_grid_dynamically(grid, extra_dataset=output_data), grid)
+    elif output_data is None and update_data is not None:
+        grid_obj = dynamic_grid_obj_from_grid(extend_grid_dynamically(grid, extra_dataset=update_data), grid)
+    else:
+        grid_obj = grid
 
     # Store Grid object on server side (thread-safe)
-    server_state.safe_set_grid(dynamic_grid_obj)
+    server_state.safe_set_grid(grid_obj)
     server_state.safe_set_update_data(update_data)
     server_state.safe_set_output_data(output_data)
 
     app = Dash(
         external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, MDBOOTSTRAP, FONT_AWESOME, GOOGLE_FONTS]
     )
-    app.layout = get_app_layout(dynamic_grid_obj)
+    app.layout = get_app_layout(grid_obj)
     app.run(debug=debug, port=port)
 
 
