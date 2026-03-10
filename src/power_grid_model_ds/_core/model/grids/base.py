@@ -461,6 +461,10 @@ class Grid(FancyArrayContainer):
         """Deserialize the grid."""
         return deserialize_from_json(path=path, target_grid_class=cls)
 
+    def rebuild_graphs(self) -> None:
+        """(Re)build the graphs in the grid."""
+        self.graphs = GraphContainer.from_grid(self)
+
     def diff(self, other_grid: Self) -> None:
         """Print the differences between two grids
 

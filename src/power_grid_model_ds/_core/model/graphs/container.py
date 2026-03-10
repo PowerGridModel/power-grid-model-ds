@@ -5,6 +5,7 @@
 """Stores the GraphContainer class"""
 
 import dataclasses
+import warnings
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Generator
 
@@ -36,7 +37,7 @@ class GraphContainer:
         return f"{self.__class__.__name__}({', '.join(graph_infos)})"
 
     @property
-    def graph_attributes(self) -> Generator:
+    def graph_attributes(self) -> Generator[dataclasses.Field, None, None]:
         """Get all graph attributes of the container.
 
         Yield:
@@ -119,13 +120,24 @@ class GraphContainer:
 
     @classmethod
     def from_arrays(cls, arrays: "Grid") -> "GraphContainer":
-        """Build from arrays"""
-        cls._validate_branches(arrays=arrays)
+        """Build from arrays. DEPRECATED: Use .from_grid instead."""
+        warnings.warn(
+            f"{cls.__name__}.from_arrays is deprecated and will be removed in a future release. "
+            f"Use grid.rebuild_graphs() or {cls.__name__}.from_grid(grid) instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return cls.from_grid(arrays)
+
+    @classmethod
+    def from_grid(cls, grid: "Grid") -> "GraphContainer":
+        """Build from grid"""
+        cls._validate_branches(arrays=grid)
 
         new_container = cls.empty()
         for graph_field in new_container.graph_attributes:
-            graph = getattr(new_container, graph_field.name)
-            new_graph = graph.from_arrays(arrays, active_only=graph.active_only)
+            graph: BaseGraphModel = getattr(new_container, graph_field.name)
+            new_graph = graph.from_grid(grid, active_only=graph.active_only)
             setattr(new_container, graph_field.name, new_graph)
 
         return new_container

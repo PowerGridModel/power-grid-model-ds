@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
-
+import warnings
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Counter, Generator
@@ -348,13 +348,22 @@ class BaseGraphModel(ABC):
 
     @classmethod
     def from_arrays(cls, arrays: "Grid", active_only=False) -> "BaseGraphModel":
-        """Build from arrays"""
+        """Build from arrays. DEPRECATED: Use .from_grid instead."""
+        warnings.warn(
+            f"{cls.__name__}.from_arrays is deprecated and will be removed in a future release. "
+            f"Use {cls.__name__}.from_grid instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return cls.from_grid(arrays, active_only=active_only)
+
+    @classmethod
+    def from_grid(cls, grid: "Grid", active_only=False) -> "BaseGraphModel":
+        """Build from grid."""
         new_graph = cls(active_only=active_only)
-
-        new_graph.add_node_array(node_array=arrays.node, raise_on_fail=False)
-        new_graph.add_branch_array(arrays.branches)
-        new_graph.add_branch3_array(arrays.three_winding_transformer)
-
+        new_graph.add_node_array(node_array=grid.node, raise_on_fail=False)
+        new_graph.add_branch_array(grid.branches)
+        new_graph.add_branch3_array(grid.three_winding_transformer)
         return new_graph
 
     def _internals_to_externals(self, internal_nodes: list[int]) -> list[int]:
