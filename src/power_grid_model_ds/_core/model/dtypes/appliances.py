@@ -35,7 +35,7 @@ class SymLoad(Appliance):
 class SymGen(Appliance):
     """SymGen data type"""
 
-    type: NDArray[np.int_]  # load type
+    type: NDArray[np.int8]  # load type
     p_specified: NDArray[np.float64]  # specified active power
     q_specified: NDArray[np.float64]  # specified reactive power
 
@@ -51,7 +51,7 @@ class AsymLoad(Appliance):
 class AsymGen(Appliance):
     """AsymGen data type"""
 
-    type: NDArray[np.int_]  # load type
+    type: NDArray[np.int8]  # load type
     p_specified: NDArray3[np.float64]  # specified active power
     q_specified: NDArray3[np.float64]  # specified reactive power
 
@@ -59,4 +59,5 @@ class AsymGen(Appliance):
 class Shunt(Appliance):
     """Shunt data type"""
 
-    u_ref: NDArray[np.float64]  # reference voltage
+    g1: NDArray[np.float64]  # positive-sequence shunt conductance
+    b1: NDArray[np.float64]  # positive-sequence shunt susceptance
