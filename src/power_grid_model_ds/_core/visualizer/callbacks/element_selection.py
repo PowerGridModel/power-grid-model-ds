@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
+from typing import Any
+
 import numpy as np
 import plotly.graph_objects as go
 from dash import ALL, Input, Output, callback, callback_context, dash_table, html
@@ -19,7 +21,6 @@ from power_grid_model_ds._core.visualizer.server_state import (
     safe_get_output_data,
     safe_get_update_data,
 )
-from power_grid_model_ds._core.visualizer.typing import ListArrayData
 
 
 @callback(
@@ -29,8 +30,8 @@ from power_grid_model_ds._core.visualizer.typing import ListArrayData
     Input("cytoscape-graph", "elements"),
 )
 def display_selected_element(
-    node_data: ListArrayData,
-    edge_data: ListArrayData,
+    node_data: list[dict[str, Any]],
+    edge_data: list[dict[str, Any]],
     _,
 ):
     """Display the tapped edge data."""

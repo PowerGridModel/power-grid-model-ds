@@ -194,7 +194,6 @@ def _parse_appliances(
                 "source": node_id_str,
                 "target": appliance_ghost_id_str,
                 "group": group.value,
-                "status": appliance.status.item(),
                 "associated_ids": {group.value: [appliance.id.item()]},
             },
             "classes": get_appliance_edge_classification(appliance, group),

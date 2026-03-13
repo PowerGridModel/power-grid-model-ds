@@ -30,7 +30,7 @@ MDBOOTSTRAP = "https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/8.2.0/mdb.min.c
 
 
 def visualize(
-    grid: Grid, debug: bool = False, port: int = 8050, update_data: dict = None, output_data: dict = None
+    grid: Grid, debug: bool = False, port: int = 8050, update_data: dict | None = None, output_data: dict | None = None
 ) -> None:
     """Visualize the Grid.
 

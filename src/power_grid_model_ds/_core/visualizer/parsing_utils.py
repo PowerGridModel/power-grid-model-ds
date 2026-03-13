@@ -19,6 +19,8 @@ def append_component_list_parsed_elements(
         and "associated_ids" in elements[connected_to_id_str]["data"]
     ):
         raise ValueError(f"Node ID {connected_to_id_str} or its data not found while parsing")
+    if group not in elements[connected_to_id_str]["data"]["associated_ids"]:
+        elements[connected_to_id_str]["data"]["associated_ids"][group] = []
     elements[connected_to_id_str]["data"]["associated_ids"][group].append(to_append)
 
 
