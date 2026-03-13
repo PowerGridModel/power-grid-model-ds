@@ -6,7 +6,7 @@
 from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.grids.base import Grid
-from power_grid_model_ds._core.visualizer.typing import VizToComponentData, VizToComponentElements
+from power_grid_model_ds._core.visualizer.typing import VizToComponentElements
 
 
 def append_component_list_parsed_elements(
@@ -20,31 +20,6 @@ def append_component_list_parsed_elements(
     ):
         raise ValueError(f"Node ID {connected_to_id_str} or its data not found while parsing")
     elements[connected_to_id_str]["data"]["associated_ids"][group].append(to_append)
-
-
-def append_component_list(
-    viz_to_comp: VizToComponentData, to_append: int, id_str: str, component_type: ComponentType
-) -> None:
-    """Append a component to the VizToComponentData structure."""
-    if id_str not in viz_to_comp:
-        viz_to_comp[id_str] = {}
-    if component_type not in viz_to_comp[id_str]:
-        viz_to_comp[id_str][component_type] = []
-    viz_to_comp[id_str][component_type].append(to_append)
-
-
-def merge_viz_to_comp(viz_to_comp: VizToComponentData, to_merge: VizToComponentData) -> VizToComponentData:
-    """Merge two nested dictionaries of VizToComponentData type."""
-    for id_str, component_data in to_merge.items():
-        if id_str not in viz_to_comp:
-            viz_to_comp[id_str] = component_data
-            continue
-        for comp_type in component_data:
-            if comp_type not in viz_to_comp[id_str]:
-                viz_to_comp[id_str][comp_type] = component_data[comp_type]
-                continue
-            viz_to_comp[id_str][comp_type].extend(component_data[comp_type])
-    return viz_to_comp
 
 
 def map_appliance_to_nodes(grid: Grid) -> dict[str, str]:
@@ -68,22 +43,3 @@ def viz_id_to_pgm_id(id_str: str) -> int:
     for suffix in ["_0", "_1", "_2"]:
         id_str = id_str.replace(suffix, "")
     return int(id_str)
-
-
-def pgm_id_to_viz_ids(pgm_id: int, component_type: ComponentType) -> list[str]:
-    """Convert a PGM ID integer to a viz element ID string."""
-    if component_type == ComponentType.three_winding_transformer:
-        suffixes = ["_0", "_1", "_2"]
-    # TODO Remove applliances if not used
-    elif component_type in [
-        ComponentType.sym_load,
-        ComponentType.sym_gen,
-        ComponentType.source,
-        ComponentType.asym_load,
-        ComponentType.asym_gen,
-        ComponentType.shunt,
-    ]:
-        suffixes = ["", "_ghost_node"]
-    else:
-        suffixes = [""]
-    return [f"{pgm_id}{suffix}" for suffix in suffixes]

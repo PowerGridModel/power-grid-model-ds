@@ -105,7 +105,7 @@ def get_app_layout(grid: Grid) -> html.Div:
     """Get the app layout."""
     columns_store = _get_columns_store(grid)
     layout = get_default_graph_layout(grid.node)
-    viz_elements_dict, viz_to_comp_data = parse_element_data(grid)
+    viz_elements_dict = parse_element_data(grid)
     initial_elements = [
         element
         for element in viz_elements_dict.values()
@@ -117,7 +117,6 @@ def get_app_layout(grid: Grid) -> html.Div:
         [
             columns_store,
             dcc.Store(id="parsed-elements-store", data=viz_elements_dict),
-            dcc.Store(id="viz-to-comp-store", data=viz_to_comp_data),
             dcc.Store(id="stylesheet-store", data=DEFAULT_STYLESHEET),
             dcc.Store(id="show-appliances-store", data=False, storage_type="session"),
             dcc.Store(id="source-nodes-store", data=grid.source.node.tolist()),

@@ -41,7 +41,7 @@ For example:
         ...
     }
 """
-VizToComponentData = dict[str, dict[ComponentType, list[int]]]
+# VizToComponentData = dict[str, dict[ComponentType, list[int]]]
 
 
 ComponentTypeFlowSensor = Literal[
