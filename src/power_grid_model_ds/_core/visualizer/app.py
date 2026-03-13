@@ -53,13 +53,13 @@ def visualize(
             - "cose": A layout that uses the CompoundSpring Embedder algorithm (force-directed layout)
     """
     if update_data is not None and output_data is not None:
-        dynamic_class_update = extend_grid_dynamically(grid, extra_dataset=update_data)
-        dynamic_class_update_output = extend_grid_dynamically(dynamic_class_update.empty(), extra_dataset=output_data)
+        dynamic_class_update = extend_grid_dynamically(type(grid), extra_dataset=update_data)
+        dynamic_class_update_output = extend_grid_dynamically(dynamic_class_update, extra_dataset=output_data)
         grid_obj = dynamic_grid_obj_from_grid(dynamic_class_update_output, grid)
     elif update_data is None and output_data is not None:
-        grid_obj = dynamic_grid_obj_from_grid(extend_grid_dynamically(grid, extra_dataset=output_data), grid)
+        grid_obj = dynamic_grid_obj_from_grid(extend_grid_dynamically(type(grid), extra_dataset=output_data), grid)
     elif output_data is None and update_data is not None:
-        grid_obj = dynamic_grid_obj_from_grid(extend_grid_dynamically(grid, extra_dataset=update_data), grid)
+        grid_obj = dynamic_grid_obj_from_grid(extend_grid_dynamically(type(grid), extra_dataset=update_data), grid)
     else:
         grid_obj = grid
 

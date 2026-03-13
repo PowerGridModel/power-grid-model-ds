@@ -17,14 +17,14 @@ class _VizToComponentElementsValueData(TypedDict):
     associated_ids: Required[dict[str, list[int]]]  # e.g. {"sym_load": [1, 2], "sym_gen": [3]}
 
 
-class _VizToComponentElementsValue(TypedDict):
+class VizToComponentElementsValue(TypedDict):
     data: _VizToComponentElementsValueData
     classes: str
     position: NotRequired[dict[Literal["x", "y"], float]]
     selectable: NotRequired[bool]
 
 
-VizToComponentElements = dict[str, _VizToComponentElementsValue]
+VizToComponentElements = dict[str, VizToComponentElementsValue]
 
 
 ComponentTypeFlowSensor = Literal[

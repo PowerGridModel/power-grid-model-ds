@@ -9,12 +9,11 @@ from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 
 
-def extend_grid_dynamically(base_grid, extra_dataset: dict[str, np.ndarray]) -> Type[Grid]:
+def extend_grid_dynamically(base_grid_class: Type[Grid], extra_dataset: dict[str, np.ndarray]) -> Type[Grid]:
     """Add extra attributes to the grid's component arrays based on the provided dataset,
     and return a new Grid class with the extended schema."""
     grid_annotations = {}
-    for grid_attr in base_grid.__annotations__:
-        base_class = getattr(base_grid, grid_attr).__class__
+    for grid_attr, base_class in base_grid_class.__annotations__.items():
         if issubclass(base_class, FancyArray) and grid_attr in ComponentType and grid_attr in extra_dataset:
             class_dict = _get_class_dict(base_class, grid_attr, extra_dataset)
             grid_annotations[grid_attr] = type(f"Dynamic{base_class.__name__}", (base_class,), class_dict)
@@ -26,7 +25,7 @@ def extend_grid_dynamically(base_grid, extra_dataset: dict[str, np.ndarray]) -> 
     return dataclass(DynamicGridClass)
 
 
-def _get_class_dict(base_class: FancyArray, grid_attr: str, extra_dataset: dict):
+def _get_class_dict(base_class: Type[FancyArray], grid_attr: str, extra_dataset: dict):
     """Get the class dictionary for the dynamically created array class, including new annotations and defaults."""
     extra_array_dtype = extra_dataset[ComponentType(grid_attr)].dtype
     if not extra_array_dtype.fields:
