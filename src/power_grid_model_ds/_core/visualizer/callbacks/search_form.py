@@ -25,7 +25,7 @@ HIGHLIGHT_STYLE = {
     Input("search-form-column-input", "value"),
     Input("search-form-operator-input", "value"),
     Input("search-form-value-input", "value"),
-    Input("cytoscape-graph", "elements"),
+    State("cytoscape-graph", "elements"),
     State("stylesheet-store", "data"),
     prevent_initial_call=True,
 )

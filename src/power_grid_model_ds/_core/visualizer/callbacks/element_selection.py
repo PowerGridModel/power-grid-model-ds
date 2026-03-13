@@ -35,10 +35,10 @@ def display_selected_element(
     _,
 ):
     """Display the tapped edge data."""
-    # 0th element means data for only a single selection is shown
     if not node_data and not edge_data:
         return SELECTION_OUTPUT_HTML.children
 
+    # Extract the associated pgm_ids for all selected nodes and edges, grouped by component type
     selected_data: dict[str, list[int]] = {}
     for data in [node_data, edge_data]:
         if data is None:
@@ -73,6 +73,7 @@ def _array_to_data_tables(array_data: IdArray, group: str) -> html.Div:
             if entry[col].ndim == 1:
                 record_dict[col] = entry[col].item()
             else:
+                assert entry[col].ndim == 2 and entry[col].shape[1] == 3
                 for phase_idx, phase in enumerate(["a", "b", "c"]):
                     col_name = f"{col}_{phase}"
                     record_dict[col_name] = entry[col][0, phase_idx]
@@ -122,18 +123,16 @@ def handle_cell_selection(_):
     # Address the case where column_id ends with a phase suffix (e.g. "_a", "_b", "_c")
     if any(column_id.endswith(phase_suffix) for phase_suffix in ["_a", "_b", "_c"]):
         base_column = column_id[:-2]
-        phase_text = column_id[-1:]
-        phase_idx = {"a": 0, "b": 1, "c": 2}[phase_text]
+        phase_idx = {"_a": 0, "_b": 1, "_c": 2}[column_id[-2:]]
     else:
         base_column = column_id
-        phase_text = ""
         phase_idx = None
 
     attr_data, data_type = _get_y_data_for_cell_selection(ComponentType(group), pgm_id, base_column)
     if attr_data is None or data_type is None:
         return go.Figure(), {"display": "none"}
 
-    y_data = attr_data[phase_idx].tolist() if phase_idx is not None else attr_data.tolist()
+    y_data = attr_data[:, phase_idx].tolist() if phase_idx is not None else attr_data.tolist()
 
     fig = go.Figure()
     fig.add_trace(
@@ -146,7 +145,7 @@ def handle_cell_selection(_):
     )
 
     fig.update_layout(
-        title=f"{data_type} - {group} - {base_column} {phase_text} - id={pgm_id}",
+        title=f"{data_type} - {group} - {column_id} - id={pgm_id}",
         xaxis_title="Scenario Index",
         yaxis_title=column_id,
         template="plotly_white",

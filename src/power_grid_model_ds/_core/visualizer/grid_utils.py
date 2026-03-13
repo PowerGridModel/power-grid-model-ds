@@ -7,6 +7,8 @@ from power_grid_model import ComponentType
 
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
+from power_grid_model_ds._core.model.constants import empty
+from power_grid_model_ds._core.model.dtypes.typing import NDArray3
 
 
 def extend_grid_dynamically(base_grid_class: Type[Grid], extra_dataset: dict[str, np.ndarray]) -> Type[Grid]:
@@ -31,29 +33,20 @@ def _get_class_dict(base_class: Type[FancyArray], grid_attr: str, extra_dataset:
     if not extra_array_dtype.fields:
         raise ValueError(f"Expected a structure numpy array got {extra_array_dtype}")
 
-    extra_array_defaults = {}
     extra_array_types = {}
     for attr in extra_array_dtype.fields:
         if attr in base_class.__annotations__:
             continue
 
         dtype = extra_array_dtype.fields[attr][0]
-        # For 3 phase arrays, the dtype will be something like (f8, (3,))
-        scalar_dtype = dtype.subdtype[0] if dtype.subdtype is not None else dtype
-
-        # Set defaults
-        if np.issubdtype(scalar_dtype, np.floating):
-            extra_array_defaults[attr] = np.nan
-        elif np.issubdtype(scalar_dtype, np.integer):
-            extra_array_defaults[attr] = np.iinfo(scalar_dtype).min
+        if dtype.subdtype is not None and dtype.subdtype[1] == (3,):
+            extra_array_types[attr] = NDArray3[dtype.subdtype[0]]
         else:
-            raise ValueError(f"Unsupported dtype {scalar_dtype} for column {attr} in component {grid_attr}")
-
-        extra_array_types[attr] = NDArray[scalar_dtype]
+            extra_array_types[attr] = NDArray[dtype]
 
     return {
         "__annotations__": {**getattr(base_class, "__annotations__", {}), **extra_array_types},
-        "_defaults": {**getattr(base_class, "_defaults", {}), **extra_array_defaults},
+        "_defaults": getattr(base_class, "_defaults", {}),
     }
 
 
@@ -77,21 +70,13 @@ def get_attr_data_from_dataset(dataset: dict, comp_type: ComponentType, attr: st
     """Find the data for the given component type, attribute, and pgm_id from a batch dataset across all scenarios.
     Only returns if there is valid data (not all empty values) for the given pgm_id for all scenarios of dataset."""
     # Find dataset type, empty value, and column data for the given group and column
-    # TODO fix id lookup to check if all ids are same or for optional ids
     id_data = dataset[comp_type]["id"]
     column_data = dataset[comp_type][attr]
 
     # No batch data found in dataset for this column or id
-    if np.issubdtype(column_data.dtype, np.floating):
-        empty_val = np.nan
-    elif np.issubdtype(column_data.dtype, np.integer):
-        empty_val = np.iinfo(column_data.dtype).min
-    else:
-        raise ValueError(f"Unsupported dtype {column_data.dtype} for column {attr} in component {comp_type}")
-
-    if np.all(column_data == empty_val) or pgm_id not in id_data:
+    element_idx = np.nonzero(id_data[0] == pgm_id)[0][0]
+    if np.any(id_data[:, element_idx] != pgm_id) and np.any(column_data == empty(column_data.dtype)):
         return None
 
     # Find the index of the selected element corresponding to pgm_id
-    element_idx = np.nonzero(id_data[0] == pgm_id)[0][0]
     return column_data[:, element_idx]

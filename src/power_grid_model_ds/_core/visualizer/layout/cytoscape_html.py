@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import Any
 
 import dash_cytoscape as cyto
 from dash import html

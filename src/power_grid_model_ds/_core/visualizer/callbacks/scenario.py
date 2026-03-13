@@ -63,7 +63,8 @@ def _update_grid_for_scenario(scenario_idx: int, grid, update_data, output_data)
     if scenario_idx is None or scenario_idx < 0:
         raise PreventUpdate
 
-    if update_data is not None and next(iter(update_data.values())).shape[0] <= scenario_idx:
+    first_array_n_scenarios = next(iter(update_data.values())).shape[0]
+    if update_data is not None and scenario_idx < first_array_n_scenarios:
         for arr_name, update_arr in update_data.items():
             grid_arr = getattr(grid, arr_name)
 
@@ -80,7 +81,8 @@ def _update_grid_for_scenario(scenario_idx: int, grid, update_data, output_data)
                 if attr in grid_arr.dtype.names and attr != "id":
                     grid_arr[attr][indices] = update_arr[scenario_idx, :][attr]
 
-    if output_data is not None and next(iter(output_data.values())).shape[0] <= scenario_idx:
+    first_array_n_scenarios = next(iter(output_data.values())).shape[0]
+    if output_data is not None and scenario_idx < first_array_n_scenarios:
         for arr_name, output_arr in output_data.items():
             grid_arr = getattr(grid, arr_name)
             # grid and output_data have the same ids and order,

@@ -83,7 +83,7 @@ _SHOW_APPLIANCES_CHECKBOX = dbc.Checkbox(
 _SCENARIO_INPUT = html.Div(
     [
         html.Span("Scenario ", style={"color": "white", "margin-right": "5px"}),
-        dcc.Input(
+        dbc.Input(
             id="scenario-input",
             type="number",
             value=0,
