@@ -37,29 +37,40 @@ def display_selected_element(
 ):
     """Display the tapped edge data."""
     # 0th element means data for only a single selection is shown
-    if node_data:
-        selected_data = node_data.pop()
-    elif edge_data:
-        selected_data = edge_data.pop()
-    else:
+    if not node_data and not edge_data:
         return SELECTION_OUTPUT_HTML.children
 
-    group = selected_data["group"]
-    elm_id_str = selected_data["id"]
-    pgm_id = viz_id_to_pgm_id(elm_id_str)
+    selected_data: list[tuple[str, str]] = []
+    if node_data:
+        selected_data.extend((elm["group"], elm["id"]) for elm in node_data)
+    if edge_data:
+        selected_data.extend((elm["group"], elm["id"]) for elm in edge_data)
+
+    group_to_pgm_ids: dict[str, list[int]] = {}
+    for group, selected_id_str in selected_data:
+        # Convert visualization ID of selected elements to PGM ID
+        if group not in group_to_pgm_ids:
+            group_to_pgm_ids[group] = []
+        pgm_id = viz_id_to_pgm_id(selected_id_str)
+        group_to_pgm_ids[group].append(pgm_id)
+
+        # Check if there are any non-visible components related to the selected element and include them
+        if selected_id_str in viz_to_comp:
+            for comp_type, non_visible_ids in viz_to_comp[selected_id_str].items():
+                if comp_type not in group_to_pgm_ids:
+                    group_to_pgm_ids[comp_type] = []
+                group_to_pgm_ids[comp_type].extend(non_visible_ids)
+
     grid = safe_get_grid()
 
-    data = getattr(grid, group).get(id=pgm_id)
-
     tables: list[html.H5 | html.Div] = []
-    tables.append(html.H5(group, style={"marginTop": "15px", "textAlign": "left"}))
-    tables.append(_array_to_data_tables(data, group))
-
-    if elm_id_str in viz_to_comp:
-        for comp_type, non_visible_ids in viz_to_comp[elm_id_str].items():
-            data = getattr(grid, comp_type).filter(id=non_visible_ids)
-            tables.append(html.H5(comp_type, style={"marginTop": "15px", "textAlign": "left"}))
-            tables.append(_array_to_data_tables(data, comp_type))
+    for comp_type, ids in group_to_pgm_ids.items():
+        # Select unique as multiple selected elements can be connected to the same component
+        # (e.g. appliance and node selected together, branch3 edges selected together)
+        unique_ids = list(set(ids))
+        data = getattr(grid, comp_type).filter(id=unique_ids)
+        tables.append(html.H5(comp_type, style={"marginTop": "15px", "textAlign": "left"}))
+        tables.append(_array_to_data_tables(data, comp_type))
 
     return html.Div(children=tables, style={"overflowX": "scroll", "margin": "10px"}).children
 
@@ -112,6 +123,7 @@ def handle_cell_selection(_):
         "selection-table" in triggered_ctx["prop_id"]
         and "active_cell" in triggered_ctx["prop_id"]
         and triggered_ctx["value"] is not None
+        and callback_context.triggered_id is not None
     ):
         return go.Figure(), {"display": "none"}
 

@@ -7,20 +7,12 @@ from typing import Any
 import numpy as np
 from power_grid_model import ComponentType
 
-from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.typing import VizToComponentData
 
 
-def array_to_dict(array_record: FancyArray, columns: list[str]) -> dict[str, Any]:
-    """Stringify the record (required by Dash)."""
-    return {
-        ("pgm_id" if column == "id" else column): value for column, value in zip(columns, array_record.tolist().pop())
-    }
-
-
 def append_component_list(
-    viz_to_comp: VizToComponentData, to_append: dict[str, Any], id_str: str, component_type: ComponentType
+    viz_to_comp: VizToComponentData, to_append: int, id_str: str, component_type: ComponentType
 ) -> None:
     """Append a component to the VizToComponentData structure."""
     if id_str not in viz_to_comp:
@@ -47,14 +39,39 @@ def merge_viz_to_comp(viz_to_comp: VizToComponentData, to_merge: VizToComponentD
 def map_appliance_to_nodes(grid: Grid) -> dict[str, str]:
     """Map appliance IDs to their associated node IDs."""
     appliance_to_node: dict[str, str] = {}
-    for appliance_name in [ComponentType.sym_load, ComponentType.sym_gen, ComponentType.source]:
+    for appliance_name in [
+        ComponentType.sym_load,
+        ComponentType.sym_gen,
+        ComponentType.source,
+        ComponentType.asym_load,
+        ComponentType.asym_gen,
+        ComponentType.shunt,
+    ]:
         appliance_array = getattr(grid, appliance_name)
         appliance_to_node.update(dict(zip(map(str, appliance_array.id), map(str, appliance_array.node))))
     return appliance_to_node
 
 
-def viz_id_to_pgm_id(id_str: str) -> np.int32:
+def viz_id_to_pgm_id(id_str: str) -> int:
     """Convert a viz element ID string to a PGM ID integer."""
     for suffix in ["_0", "_1", "_2"]:
         id_str = id_str.replace(suffix, "")
-    return np.int32(id_str)
+    return int(id_str)
+
+
+def pgm_id_to_viz_ids(pgm_id: int, component_type: ComponentType) -> list[str]:
+    """Convert a PGM ID integer to a viz element ID string."""
+    if component_type == ComponentType.three_winding_transformer:
+        suffixes = ["_0", "_1", "_2"]
+    elif component_type in [
+        ComponentType.sym_load,
+        ComponentType.sym_gen,
+        ComponentType.source,
+        ComponentType.asym_load,
+        ComponentType.asym_gen,
+        ComponentType.shunt,
+    ]:
+        suffixes = ["", "_ghost_node"]
+    else:
+        suffixes = [""]
+    return [f"{pgm_id}{suffix}" for suffix in suffixes]

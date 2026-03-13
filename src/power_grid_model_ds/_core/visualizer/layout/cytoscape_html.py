@@ -24,6 +24,7 @@ def get_cytoscape_html(layout: str, elements: list[dict[str, Any]], source_nodes
             style=_CYTO_INNER_STYLE,
             elements=elements,
             stylesheet=DEFAULT_STYLESHEET,
+            boxSelectionEnabled=True,
         ),
         style=_CYTO_OUTER_STYLE,
     )
