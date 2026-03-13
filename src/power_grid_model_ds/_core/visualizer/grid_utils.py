@@ -75,8 +75,10 @@ def dynamic_grid_obj_from_grid(dynamic_grid_class: Type[Grid], grid: Grid):
 
 
 def get_attr_data_from_dataset(dataset: dict, comp_type: ComponentType, attr: str, pgm_id: int) -> np.ndarray | None:
-    """Find the data for the given component type, attribute, and pgm_id from the dataset."""
+    """Find the data for the given component type, attribute, and pgm_id from a batch dataset across all scenarios.
+    Only returns if there is valid data (not all empty values) for the given pgm_id for all scenarios of dataset."""
     # Find dataset type, empty value, and column data for the given group and column
+    # TODO fix id lookup to check if all ids are same or for optional ids
     id_data = dataset[comp_type]["id"]
     column_data = dataset[comp_type][attr]
 

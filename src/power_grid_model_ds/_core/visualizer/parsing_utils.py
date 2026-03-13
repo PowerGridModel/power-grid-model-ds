@@ -2,13 +2,24 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import Any
 
-import numpy as np
 from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.grids.base import Grid
-from power_grid_model_ds._core.visualizer.typing import VizToComponentData
+from power_grid_model_ds._core.visualizer.typing import VizToComponentData, VizToComponentElements
+
+
+def append_component_list_parsed_elements(
+    elements: VizToComponentElements, to_append: int, connected_to_id_str: str, group: str
+) -> None:
+    """Append a component to the VizToComponentData structure."""
+    if not (
+        connected_to_id_str in elements
+        and "data" in elements[connected_to_id_str]
+        and "associated_ids" in elements[connected_to_id_str]["data"]
+    ):
+        raise ValueError(f"Node ID {connected_to_id_str} or its data not found while parsing")
+    elements[connected_to_id_str]["data"]["associated_ids"][group].append(to_append)
 
 
 def append_component_list(
@@ -63,6 +74,7 @@ def pgm_id_to_viz_ids(pgm_id: int, component_type: ComponentType) -> list[str]:
     """Convert a PGM ID integer to a viz element ID string."""
     if component_type == ComponentType.three_winding_transformer:
         suffixes = ["_0", "_1", "_2"]
+    # TODO Remove applliances if not used
     elif component_type in [
         ComponentType.sym_load,
         ComponentType.sym_gen,

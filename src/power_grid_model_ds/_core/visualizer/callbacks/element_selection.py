@@ -5,34 +5,32 @@
 
 import numpy as np
 import plotly.graph_objects as go
-from dash import ALL, Input, Output, State, callback, callback_context, dash_table, html
+from dash import ALL, Input, Output, callback, callback_context, dash_table, html
 from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.arrays.pgm_arrays import IdArray
+from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.grid_utils import get_attr_data_from_dataset
 from power_grid_model_ds._core.visualizer.layout.selection_output import (
     SELECTION_OUTPUT_HTML,
 )
-from power_grid_model_ds._core.visualizer.parsing_utils import viz_id_to_pgm_id
 from power_grid_model_ds._core.visualizer.server_state import (
     safe_get_grid,
     safe_get_output_data,
     safe_get_update_data,
 )
-from power_grid_model_ds._core.visualizer.typing import ListArrayData, VizToComponentData
+from power_grid_model_ds._core.visualizer.typing import ListArrayData
 
 
 @callback(
     Output("selection-output", "children"),
     Input("cytoscape-graph", "selectedNodeData"),
     Input("cytoscape-graph", "selectedEdgeData"),
-    State("viz-to-comp-store", "data"),
     Input("cytoscape-graph", "elements"),
 )
 def display_selected_element(
     node_data: ListArrayData,
     edge_data: ListArrayData,
-    viz_to_comp: VizToComponentData,
     _,
 ):
     """Display the tapped edge data."""
@@ -40,31 +38,20 @@ def display_selected_element(
     if not node_data and not edge_data:
         return SELECTION_OUTPUT_HTML.children
 
-    selected_data: list[tuple[str, str]] = []
-    if node_data:
-        selected_data.extend((elm["group"], elm["id"]) for elm in node_data)
-    if edge_data:
-        selected_data.extend((elm["group"], elm["id"]) for elm in edge_data)
+    selected_data: dict[str, list[int]] = {}
+    for data in [node_data, edge_data]:
+        if data is None:
+            continue
+        for elm in data:
+            for group, pgm_ids in elm["associated_ids"].items():
+                if group not in selected_data:
+                    selected_data[group] = []
+                selected_data[group].extend(pgm_ids)
 
-    group_to_pgm_ids: dict[str, list[int]] = {}
-    for group, selected_id_str in selected_data:
-        # Convert visualization ID of selected elements to PGM ID
-        if group not in group_to_pgm_ids:
-            group_to_pgm_ids[group] = []
-        pgm_id = viz_id_to_pgm_id(selected_id_str)
-        group_to_pgm_ids[group].append(pgm_id)
-
-        # Check if there are any non-visible components related to the selected element and include them
-        if selected_id_str in viz_to_comp:
-            for comp_type, non_visible_ids in viz_to_comp[selected_id_str].items():
-                if comp_type not in group_to_pgm_ids:
-                    group_to_pgm_ids[comp_type] = []
-                group_to_pgm_ids[comp_type].extend(non_visible_ids)
-
-    grid = safe_get_grid()
+    grid: Grid = safe_get_grid()
 
     tables: list[html.H5 | html.Div] = []
-    for comp_type, ids in group_to_pgm_ids.items():
+    for comp_type, ids in selected_data.items():
         # Select unique as multiple selected elements can be connected to the same component
         # (e.g. appliance and node selected together, branch3 edges selected together)
         unique_ids = list(set(ids))
