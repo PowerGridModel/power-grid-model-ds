@@ -24,7 +24,12 @@ def get_cytoscape_html(layout: str, elements: list[VizToComponentElementsValue],
             style=_CYTO_INNER_STYLE,
             elements=elements,
             stylesheet=DEFAULT_STYLESHEET,
+            zoom=1.0,  # Default zoom level
+            minZoom=0.05,
+            maxZoom=3.0,
             boxSelectionEnabled=True,
+            wheelSensitivity=0.2,  # Smooth zooming
+            responsive=True,  # Adapt to container size changes
         ),
         style=_CYTO_OUTER_STYLE,
     )
