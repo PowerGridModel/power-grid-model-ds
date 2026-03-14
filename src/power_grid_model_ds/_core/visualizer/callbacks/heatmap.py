@@ -6,7 +6,7 @@
 from dash import Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 
-from power_grid_model_ds._core.visualizer.callbacks.common import _update_column_options
+from power_grid_model_ds._core.visualizer.callbacks.common import _update_column_options, _update_phase_options
 from power_grid_model_ds._core.visualizer.layout.colors import _map_colors_to_array
 from power_grid_model_ds._core.visualizer.server_state import safe_get_grid
 from power_grid_model_ds._core.visualizer.typing import STYLESHEET
@@ -24,15 +24,28 @@ def update_heatmap_column_options(selected_group, columns):
 
 
 @callback(
+    Output("heatmap-phase-input", "options"),
+    Output("heatmap-phase-input", "value"),
+    Input("heatmap-group-input", "value"),
+    Input("heatmap-column-input", "value"),
+)
+def update_heatmap_phase_options(selected_group, selected_column):
+    """Update the phase dropdown options based on the selected group."""
+    return _update_phase_options(selected_group, selected_column)
+
+
+@callback(
     Output("cytoscape-graph", "stylesheet", allow_duplicate=True),
     Input("heatmap-group-input", "value"),
     Input("heatmap-column-input", "value"),
+    Input("heatmap-phase-input", "value"),
     State("stylesheet-store", "data"),
     prevent_initial_call=True,
 )
 def apply_heatmap_selection(
     group: str,
     column: str,
+    phase: str,
     stylesheet: STYLESHEET,
 ) -> STYLESHEET:
     """Apply heatmap coloring to elements based on the selected column and range."""
@@ -43,7 +56,13 @@ def apply_heatmap_selection(
 
     array_ids = getattr(getattr(grid, group), "id")
     array_column = getattr(getattr(grid, group), column)
-    colors = _map_colors_to_array(array_column)
+    if phase == "abc":
+        data = array_column
+    else:
+        phase_idx = {"a": 0, "b": 1, "c": 2}.get(phase)
+        data = array_column[:, phase_idx]
+
+    colors = _map_colors_to_array(data)
 
     new_stylesheets = []
     if group == "three_winding_transformer":

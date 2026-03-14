@@ -4,6 +4,8 @@
 
 from power_grid_model import ComponentType
 
+from power_grid_model_ds._core.visualizer.server_state import safe_get_grid
+
 BRANCHES_COMPONENTS = [
     ComponentType.line.value,
     ComponentType.link.value,
@@ -49,3 +51,17 @@ def _update_column_options(selected_group, columns):
     default_value = columns[0] if columns else "id"
 
     return columns, default_value
+
+
+def _update_phase_options(selected_group, selected_column):
+    """Update the phase dropdown options based on the selected group."""
+    if not selected_group or not selected_column:
+        return [], None
+
+    grid = safe_get_grid()
+
+    # Get columns for the selected group (node, line, link, or transformer)
+    array = getattr(getattr(grid, selected_group), selected_column)
+    if array.ndim == 1:
+        return ["abc"], "abc"
+    return ["a", "b", "c"], "a"

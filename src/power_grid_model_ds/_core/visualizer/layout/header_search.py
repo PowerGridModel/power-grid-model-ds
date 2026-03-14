@@ -24,6 +24,15 @@ COLUMN_INPUT = dbc.Select(
     style=_INPUT_STYLE,
 )
 
+
+PHASE_INPUT = dbc.Select(
+    id="search-form-phase-input",
+    options=[{"label": "abc", "value": "abc"}],
+    value="abc",  # Default value
+    style=_INPUT_STYLE,
+)
+
+
 VALUE_INPUT = dbc.Input(id="search-form-value-input", placeholder="Enter value", type="text", style=_INPUT_STYLE)
 
 OPERATOR_INPUT = dbc.Select(
@@ -49,6 +58,8 @@ SEARCH_ELEMENTS = [
             COLUMN_INPUT,
             OPERATOR_INPUT,
             VALUE_INPUT,
+            html.Span(" for phase ", style=SPAN_TEXT_STYLE),
+            PHASE_INPUT,
         ]
     )
 ]

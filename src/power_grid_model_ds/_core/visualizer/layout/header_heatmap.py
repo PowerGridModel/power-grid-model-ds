@@ -24,6 +24,14 @@ COLUMN_INPUT = dbc.Select(
     style=_INPUT_STYLE,
 )
 
+PHASE_INPUT = dbc.Select(
+    id="heatmap-phase-input",
+    options=[{"label": "abc", "value": "abc"}],
+    value="abc",  # Default value
+    style=_INPUT_STYLE,
+)
+
+
 # Arrange as a sentence
 HEATMAP_ELEMENTS = [
     html.Div(
@@ -32,6 +40,8 @@ HEATMAP_ELEMENTS = [
             GROUP_INPUT,
             html.Span(" with ", style=SPAN_TEXT_STYLE),
             COLUMN_INPUT,
+            html.Span(" for phase ", style=SPAN_TEXT_STYLE),
+            PHASE_INPUT,
         ]
     )
 ]

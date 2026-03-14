@@ -12,7 +12,7 @@ from power_grid_model_ds._core.visualizer.styling_classification import StyleCla
 
 NODE_SCALE_HTML = [
     html.I(className="fas fa-circle", style={"color": CYTO_COLORS[StyleClass.NODE], "margin-right": "10px"}),
-    dcc.Input(
+    dbc.Input(
         id="node-scale-input",
         type="number",
         value=1,
@@ -27,7 +27,7 @@ EDGE_SCALE_HTML = [
     html.I(
         className="fas fa-arrow-right-long", style={"color": CYTO_COLORS[StyleClass.BRANCH], "margin-right": "10px"}
     ),
-    dcc.Input(
+    dbc.Input(
         id="edge-scale-input",
         type="number",
         value=1,
