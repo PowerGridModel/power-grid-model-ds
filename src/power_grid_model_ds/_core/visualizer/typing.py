@@ -10,6 +10,8 @@ STYLESHEET = list[dict[str, Any]]
 
 
 class _VizToComponentElementsValueData(TypedDict):
+    """Sub dictionary for data within VizToComponentElementsValue"""
+
     id: Required[str]
     source: NotRequired[str]
     target: NotRequired[str]
@@ -18,6 +20,9 @@ class _VizToComponentElementsValueData(TypedDict):
 
 
 class VizToComponentElementsValue(TypedDict):
+    """Element data for mapping visualization elements to component types and IDs
+    This is what is needed for cytoscape elements."""
+
     data: _VizToComponentElementsValueData
     classes: str
     position: NotRequired[dict[Literal["x", "y"], float]]

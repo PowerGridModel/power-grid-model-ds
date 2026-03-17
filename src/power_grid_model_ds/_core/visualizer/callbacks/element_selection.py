@@ -129,7 +129,7 @@ def handle_cell_selection(_):
         phase_idx = None
 
     x_array, y_array, data_type = _get_y_data_for_cell_selection(ComponentType(group), pgm_id, base_column)
-    
+
     if x_array is None or y_array is None or data_type is None:
         return go.Figure(), {"display": "none"}
 
