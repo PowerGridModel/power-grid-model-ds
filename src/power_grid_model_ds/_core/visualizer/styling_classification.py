@@ -8,6 +8,7 @@ from typing import Literal
 from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray, NodeArray
+from power_grid_model_ds._core.visualizer.typing import ComponentTypeAppliance, ComponentTypeBranch
 
 _LARGE_NODE_ID_THRESHOLD = 10_000_000
 
@@ -27,6 +28,12 @@ class StyleClass(StrEnum):
     LINK = "link"
     GENERIC_BRANCH = "generic_branch"
     ASYM_LINE = "asym_line"
+    SOURCE = "source"
+    GENERATING_APPLIANCE = "generating_appliance"
+    LOADING_APPLIANCE = "loading_appliance"
+    OPEN_GENERATING_APPLIANCE = "open_generating_appliance"
+    OPEN_LOADING_APPLIANCE = "open_loading_appliance"
+    APPLIANCE_GHOST_NODE = "appliance_ghost_node"
 
 
 def get_node_classification(node_arr: NodeArray) -> str:
@@ -47,14 +54,7 @@ def get_node_classification(node_arr: NodeArray) -> str:
 
 def get_branch_classification(
     branch_arr: BranchArray,
-    component_type: Literal[
-        ComponentType.transformer,
-        ComponentType.three_winding_transformer,
-        ComponentType.link,
-        ComponentType.generic_branch,
-        ComponentType.line,
-        ComponentType.asym_line,
-    ],
+    component_type: ComponentTypeBranch | Literal[ComponentType.three_winding_transformer],
 ) -> str:
     """Get the space separated string of styling classes for a branch."""
     classes = [StyleClass.BRANCH]
@@ -75,5 +75,26 @@ def get_branch_classification(
         classes.extend([StyleClass.OPEN_BRANCH_FROM])
     if branch_arr.to_status == 0:
         classes.extend([StyleClass.OPEN_BRANCH_TO])
+
+    return " ".join((entry.value for entry in classes))
+
+
+def get_appliance_edge_classification(
+    appliance_arr,
+    component_type: ComponentTypeAppliance,
+) -> str:
+    """Get the space separated string of styling classes for an appliance edge."""
+    type_to_vizclass = {
+        ComponentType.sym_load: StyleClass.LOADING_APPLIANCE,
+        ComponentType.sym_gen: StyleClass.GENERATING_APPLIANCE,
+        ComponentType.source: StyleClass.GENERATING_APPLIANCE,
+    }
+
+    classes = [type_to_vizclass[component_type]]
+    if appliance_arr.status == 0:
+        if type_to_vizclass[component_type] == StyleClass.LOADING_APPLIANCE:
+            classes.append(StyleClass.OPEN_LOADING_APPLIANCE)
+        else:
+            classes.append(StyleClass.OPEN_GENERATING_APPLIANCE)
 
     return " ".join((entry.value for entry in classes))

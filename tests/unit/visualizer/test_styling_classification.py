@@ -201,3 +201,6 @@ class TestStyleClass:
         from enum import StrEnum
 
         assert issubclass(StyleClass, StrEnum)
+
+
+# TODO add test for get_appliance_classification
