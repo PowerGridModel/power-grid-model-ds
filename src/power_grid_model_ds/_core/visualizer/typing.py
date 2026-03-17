@@ -29,7 +29,9 @@ class VizToComponentElementsValue(TypedDict):
     selectable: NotRequired[bool]
 
 
-VizToComponentElements = dict[str, VizToComponentElementsValue]
+# TODO Change type to dict[str, VizToComponentElementsValue]
+# after removing extra data from cytoscape elements and using only VizToComponentElementsValue
+VizToComponentElements = dict[str, Any | dict[str, Any]]
 
 
 ComponentTypeFlowSensor = Literal[
