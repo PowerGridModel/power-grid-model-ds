@@ -28,7 +28,6 @@ class StyleClass(StrEnum):
     LINK = "link"
     GENERIC_BRANCH = "generic_branch"
     ASYM_LINE = "asym_line"
-    SOURCE = "source"
     GENERATING_APPLIANCE = "generating_appliance"
     LOADING_APPLIANCE = "loading_appliance"
     OPEN_GENERATING_APPLIANCE = "open_generating_appliance"
@@ -85,9 +84,12 @@ def get_appliance_edge_classification(
 ) -> str:
     """Get the space separated string of styling classes for an appliance edge."""
     type_to_vizclass = {
+        ComponentType.asym_load: StyleClass.LOADING_APPLIANCE,
+        ComponentType.asym_gen: StyleClass.GENERATING_APPLIANCE,
         ComponentType.sym_load: StyleClass.LOADING_APPLIANCE,
         ComponentType.sym_gen: StyleClass.GENERATING_APPLIANCE,
         ComponentType.source: StyleClass.GENERATING_APPLIANCE,
+        ComponentType.shunt: StyleClass.LOADING_APPLIANCE,
     }
 
     classes = [type_to_vizclass[component_type]]
