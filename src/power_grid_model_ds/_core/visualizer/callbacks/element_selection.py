@@ -128,16 +128,17 @@ def handle_cell_selection(_):
         base_column = column_id
         phase_idx = None
 
-    attr_data, data_type = _get_y_data_for_cell_selection(ComponentType(group), pgm_id, base_column)
-    if attr_data is None or data_type is None:
+    x_array, y_array, data_type = _get_y_data_for_cell_selection(ComponentType(group), pgm_id, base_column)
+    
+    if x_array is None or y_array is None or data_type is None:
         return go.Figure(), {"display": "none"}
 
-    y_data = attr_data[:, phase_idx].tolist() if phase_idx is not None else attr_data.tolist()
+    y_data = y_array[:, phase_idx].tolist() if phase_idx is not None else y_array.tolist()
 
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
-            x=list(range(len(y_data))),
+            x=x_array.tolist(),
             y=y_data,
             mode="lines",
             line={"width": 2},
@@ -158,12 +159,14 @@ def handle_cell_selection(_):
 
 def _get_y_data_for_cell_selection(
     comp_type: ComponentType, pgm_id: int, attr: str
-) -> tuple[np.ndarray | None, str | None]:
+) -> tuple[np.ndarray | None, np.ndarray | None, str | None]:
     """Extract data from update_data or output_data"""
     update_data = safe_get_update_data()
     if update_data is not None and comp_type in update_data and attr in update_data[comp_type].dtype.names:
-        return get_attr_data_from_dataset(update_data, comp_type, attr, pgm_id), "update_data"
+        x_data, y_data = get_attr_data_from_dataset(update_data, comp_type, attr, pgm_id)
+        return x_data, y_data, "update_data"
     output_data = safe_get_output_data()
     if output_data is not None and comp_type in output_data and attr in output_data[comp_type].dtype.names:
-        return get_attr_data_from_dataset(output_data, comp_type, attr, pgm_id), "output_data"
-    return None, None
+        x_data, y_data = get_attr_data_from_dataset(output_data, comp_type, attr, pgm_id)
+        return x_data, y_data, "output_data"
+    return None, None, None

@@ -8,9 +8,11 @@ from numpy.typing import NDArray
 from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+    ApplianceArray,
     Branch3Array,
     LineArray,
     NodeArray,
+    SymLoadArray,
     ThreeWindingTransformerArray,
 )
 from power_grid_model_ds._core.visualizer.parsers import (
@@ -38,6 +40,7 @@ def node_array() -> tuple[NodeArray, VizToComponentElements]:
             "data": {
                 "id": str(nodes["id"][i]),
                 "group": "node",
+                "associated_ids": {ComponentType.node.value: [nodes["id"][i].item()]},
             },
             "classes": f"{StyleClass.NODE.value}",
         }
@@ -60,6 +63,7 @@ def node_array_with_coordinates() -> tuple[CoordinatedNodeArray, VizToComponentE
             "data": {
                 "id": str(nodes["id"][i]),
                 "group": "node",
+                "associated_ids": {ComponentType.node.value: [nodes["id"][i].item()]},
             },
             "position": {
                 "x": nodes["x"][i].item(),
@@ -88,6 +92,9 @@ def line_array() -> tuple[LineArray, VizToComponentElements]:
                 "group": "line",
                 "source": str(lines["from_node"][i]),
                 "target": str(lines["to_node"][i]),
+                "associated_ids": {
+                    ComponentType.line.value: [lines["id"][i].item()],
+                },
             },
             "classes": f"{StyleClass.BRANCH.value}",
         }
@@ -113,6 +120,9 @@ def branch3_array() -> tuple[Branch3Array, VizToComponentElements]:
                 "group": "three_winding_transformer",
                 "source": "1",
                 "target": "2",
+                "associated_ids": {
+                    ComponentType.three_winding_transformer.value: [200],
+                },
             },
             "classes": f"{StyleClass.BRANCH.value} {StyleClass.TRANSFORMER.value}",
         },
@@ -122,6 +132,9 @@ def branch3_array() -> tuple[Branch3Array, VizToComponentElements]:
                 "group": "three_winding_transformer",
                 "source": "1",
                 "target": "3",
+                "associated_ids": {
+                    ComponentType.three_winding_transformer.value: [200],
+                },
             },
             "classes": f"{StyleClass.BRANCH.value} {StyleClass.TRANSFORMER.value}",
         },
@@ -131,11 +144,43 @@ def branch3_array() -> tuple[Branch3Array, VizToComponentElements]:
                 "group": "three_winding_transformer",
                 "source": "2",
                 "target": "3",
+                "associated_ids": {
+                    ComponentType.three_winding_transformer.value: [200],
+                },
             },
             "classes": f"{StyleClass.BRANCH.value} {StyleClass.TRANSFORMER.value}",
         },
     }
     return branch3, expected_elements
+
+
+# @pytest.fixture
+# def appliance_array() -> tuple[SymLoadArray, VizToComponentElements]:
+#     sym_loads = SymLoadArray.zeros(3)
+#     sym_loads[:] = 99
+#     sym_loads["id"] = [100, 101, 102]
+#     sym_loads["node"] = [1, 2, 3]
+
+#     starting_elements = {}
+
+
+#     expected_elements = {
+#         str(sym_loads["id"][i]): {
+#             "data": {
+#                 "id": str(sym_loads["id"][i]),
+#                 "group": "appliance",
+#                 "source": str(sym_loads["node"][i]),
+#                 "target": f"{sym_loads['node'][i]}_ghost_node",
+#                 "associated_ids": {
+#                     ComponentType.sym_load.value: [sym_loads["id"][i].item()],
+#                 },
+#             },
+#             "classes": f"{StyleClass.LOADING_APPLIANCE.value}",
+#         }
+#         for i in range(3)
+#     }
+
+#     return sym_loads, starting_elements, expected_elements
 
 
 @pytest.mark.parametrize(

@@ -4,6 +4,7 @@ from typing import Type
 import numpy as np
 from numpy.typing import NDArray
 from power_grid_model import ComponentType
+from power_grid_model.data_types import BatchDataset, DenseBatchArray, SingleArray
 
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
@@ -11,7 +12,7 @@ from power_grid_model_ds._core.model.constants import empty
 from power_grid_model_ds._core.model.dtypes.typing import NDArray3
 
 
-def extend_grid_dynamically(base_grid_class: Type[Grid], extra_dataset: dict[str, np.ndarray]) -> Type[Grid]:
+def extend_grid_dynamically(base_grid_class: Type[Grid], extra_dataset: SingleArray | DenseBatchArray) -> Type[Grid]:
     """Add extra attributes to the grid's component arrays based on the provided dataset,
     and return a new Grid class with the extended schema."""
     grid_annotations = {}
@@ -27,7 +28,7 @@ def extend_grid_dynamically(base_grid_class: Type[Grid], extra_dataset: dict[str
     return dataclass(DynamicGridClass)
 
 
-def _get_class_dict(base_class: Type[FancyArray], grid_attr: str, extra_dataset: dict):
+def _get_class_dict(base_class: Type[FancyArray], grid_attr: str, extra_dataset: SingleArray | DenseBatchArray):
     """Get the class dictionary for the dynamically created array class, including new annotations and defaults."""
     extra_array_dtype = extra_dataset[ComponentType(grid_attr)].dtype
     if not extra_array_dtype.fields:
@@ -58,7 +59,7 @@ def dynamic_grid_obj_from_grid(dynamic_grid_class: Type[Grid], grid: Grid):
         if not isinstance(array, FancyArray):
             continue
 
-        dynamic_grid_array = getattr(dynamic_grid_obj, grid_attr).__class__.zeros(array.shape)
+        dynamic_grid_array = getattr(dynamic_grid_obj, grid_attr).__class__.empty(array.shape)
         for array_attr in array.columns:
             setattr(dynamic_grid_array, array_attr, getattr(array, array_attr))
         setattr(dynamic_grid_obj, grid_attr, dynamic_grid_array)
@@ -66,17 +67,22 @@ def dynamic_grid_obj_from_grid(dynamic_grid_class: Type[Grid], grid: Grid):
     return dynamic_grid_obj
 
 
-def get_attr_data_from_dataset(dataset: dict, comp_type: ComponentType, attr: str, pgm_id: int) -> np.ndarray | None:
+def get_attr_data_from_dataset(
+    dataset: BatchDataset, comp_type: ComponentType, attr: str, pgm_id: int
+) -> tuple[np.ndarray, np.ndarray]:
     """Find the data for the given component type, attribute, and pgm_id from a batch dataset across all scenarios.
     Only returns if there is valid data (not all empty values) for the given pgm_id for all scenarios of dataset."""
-    # Find dataset type, empty value, and column data for the given group and column
     id_data = dataset[comp_type]["id"]
-    column_data = dataset[comp_type][attr]
 
-    # No batch data found in dataset for this column or id
-    element_idx = np.nonzero(id_data[0] == pgm_id)[0][0]
-    if np.any(id_data[:, element_idx] != pgm_id) and np.any(column_data == empty(column_data.dtype)):
-        return None
+    # Create a boolean mask to match id and ignore empty values
+    array_mask = id_data == pgm_id
+    sum_mask_over_scenarios = np.sum(array_mask.astype(int), axis=1)
+    if np.any(sum_mask_over_scenarios > 1):
+        raise ValueError(
+            f"Erraneous dataset. Expected exactly one or zero elements with id {pgm_id} "
+            f"across any scenario for component {comp_type}, but found multiple."
+        )
 
-    # Find the index of the selected element corresponding to pgm_id
-    return column_data[:, element_idx]
+    scenario_indices, _ = np.nonzero(array_mask)
+    match_data = dataset[comp_type][attr][array_mask]
+    return scenario_indices, match_data

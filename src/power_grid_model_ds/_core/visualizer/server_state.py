@@ -7,7 +7,13 @@ Serverside state management for the visualizer.
 
 This module provides thread-safe storage for the Grid object to avoid sending
 large datasets to the client browser. The state is stored in module-level variables
-protected by a lock for concurrent access safety.
+protected by a lock for concurrent access safety to ensure thread-safety in Flask's threaded mode.
+However this is app-scoped state for single-user visualization sessions.
+As such, this state management approach is not suitable for multi-user scenarios or where immutability is required.
+If multi-user support is needed in the future, consider implementing a more robust state management solution.
+
+Note that getters can modify the returned object.
+As such, callers should be careful to avoid unintended side effects on the shared state.
 """
 
 import threading
@@ -25,22 +31,12 @@ class _AppState:
     output_data: dict | None = None
 
 
-# Thread-safe serverside state management
-# Protected by a lock to ensure thread-safety in Flask's threaded mode.
 _STATE_LOCK = threading.Lock()
 _state = _AppState()
 
 
 def safe_set_grid(grid: Grid) -> None:
-    """Set the Grid instance in a thread-safe manner.
-
-    Args:
-        grid: The Grid instance to store.
-
-    Note:
-        This is app-scoped state for single-user visualization sessions.
-        The lock ensures thread-safety for concurrent callback execution.
-    """
+    """Set the Grid instance in a thread-safe manner."""
     with _STATE_LOCK:
         _state.grid = grid
 
@@ -48,11 +44,9 @@ def safe_set_grid(grid: Grid) -> None:
 def safe_get_grid() -> Grid:
     """Get the Grid instance in a thread-safe manner.
 
-    Returns:
-        The Grid instance.
-
     Raises:
         RuntimeError: If state has not been initialized.
+        Visualizer would not function properly if this happens, so we raise an error to catch this unexpected state.
     """
     with _STATE_LOCK:
         if _state.grid is None:
@@ -64,48 +58,24 @@ def safe_get_grid() -> Grid:
 
 
 def safe_set_update_data(update_data: dict | None) -> None:
-    """Set the update data in a thread-safe manner.
-
-    Args:
-        update_data: The update data dictionary to store, or None.
-
-    Note:
-        This is app-scoped state for single-user visualization sessions.
-        The lock ensures thread-safety for concurrent callback execution.
-    """
+    """Set the update data in a thread-safe manner."""
     with _STATE_LOCK:
         _state.update_data = update_data
 
 
 def safe_get_update_data() -> dict | None:
-    """Get the update data in a thread-safe manner.
-
-    Returns:
-        The update data dictionary, or None if not set.
-    """
+    """Get the update data in a thread-safe manner."""
     with _STATE_LOCK:
         return _state.update_data
 
 
 def safe_set_output_data(output_data: dict | None) -> None:
-    """Set the output data in a thread-safe manner.
-
-    Args:
-        output_data: The output data dictionary to store, or None.
-
-    Note:
-        This is app-scoped state for single-user visualization sessions.
-        The lock ensures thread-safety for concurrent callback execution.
-    """
+    """Set the output data in a thread-safe manner."""
     with _STATE_LOCK:
         _state.output_data = output_data
 
 
 def safe_get_output_data() -> dict | None:
-    """Get the output data in a thread-safe manner.
-
-    Returns:
-        The output data dictionary, or None if not set.
-    """
+    """Get the output data in a thread-safe manner."""
     with _STATE_LOCK:
         return _state.output_data
