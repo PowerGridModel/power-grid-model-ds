@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 """
-Serverside state management for the visualizer.
+Server-side state management for the visualizer.
 
 This module provides thread-safe storage for the Grid object to avoid sending
 large datasets to the client browser. The state is stored in module-level variables
