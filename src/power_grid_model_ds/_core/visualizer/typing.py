@@ -29,7 +29,7 @@ class VizToComponentElementsValue(TypedDict):
     selectable: NotRequired[bool]
 
 
-# TODO Change type to dict[str, VizToComponentElementsValue]
+# UPCOMINGPRTODO (nitbharambe) Change type to dict[str, VizToComponentElementsValue]
 # after removing extra data from cytoscape elements and using only VizToComponentElementsValue
 VizToComponentElements = dict[str, Any | dict[str, Any]]
 

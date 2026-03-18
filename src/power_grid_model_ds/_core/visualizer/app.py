@@ -35,7 +35,7 @@ _SHOW_APPLIANCES_GROUPS = [
     "asym_gen_ghost_node",
     "shunt",
     "shunt_ghost_node",
-    # TODO: (nitbharambe) Source appliances to be removed from here
+    # UPCOMINGPRTODO: (nitbharambe) Source appliances to be removed from here
     # when appliances are visualized as we wish to view them even when checked off
     "source",
     "source_ghost_node",
@@ -97,7 +97,7 @@ def get_app_layout(grid: Grid) -> html.Div:
         element for element in viz_elements_dict.values() if element["data"]["group"] not in _SHOW_APPLIANCES_GROUPS
     ]
 
-    # TODO: (nitbharambe) Remove associated_ids from initial element data.
+    # UPCOMINGPRTODO: (nitbharambe) Remove associated_ids from initial element data.
     # They will be added and used after migrating to using grid object for callbacks
     for element in initial_elements:
         element["data"].pop("associated_ids", None)
