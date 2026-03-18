@@ -9,6 +9,7 @@ from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.constants import empty
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.grid_utils import (
+    _get_annotations,
     dynamic_grid_obj_from_grid,
     extend_grid_dynamically,
     get_attr_data_from_dataset,
@@ -45,7 +46,7 @@ def test_extend_grid_dynamically_with_pgm_dataset(dataset_type):
 )
 def test_dynamic_grid_obj_from_grid(dataset_type):
     grid = Grid.empty()
-    for attr in grid.__annotations__:
+    for attr in _get_annotations(Grid):
         if isinstance(getattr(grid, attr), FancyArray):
             grid_array = getattr(grid, attr).__class__.empty(2)
             grid_array[:] = 99
@@ -56,7 +57,7 @@ def test_dynamic_grid_obj_from_grid(dataset_type):
     DynamicGrid = extend_grid_dynamically(Grid, extra_dataset=extra_dataset)
     new_grid_obj = dynamic_grid_obj_from_grid(DynamicGrid, grid)
 
-    for grid_attr in new_grid_obj.__annotations__:
+    for grid_attr in _get_annotations(DynamicGrid):
         grid_array = getattr(grid, grid_attr)
         new_grid_array = getattr(new_grid_obj, grid_attr)
 

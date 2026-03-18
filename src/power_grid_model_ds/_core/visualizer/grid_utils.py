@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+import sys
 from dataclasses import dataclass
 from typing import Any, Type
 
@@ -15,11 +16,21 @@ from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.dtypes.typing import NDArray3
 
 
+def _get_annotations(cls: Type) -> dict[str, Any]:
+    """Helper function to get all annotations of a class"""
+    if sys.version_info >= (3, 14):
+        from annotationlib import get_annotations  # pylint: disable=import-outside-toplevel
+
+        return get_annotations(cls)
+
+    return cls.__annotations__
+
+
 def extend_grid_dynamically(base_grid_class: Type[Grid], extra_dataset: SingleArray | DenseBatchArray) -> Type[Grid]:
     """Add extra attributes to the grid's component arrays based on the provided dataset,
     and return a new Grid class with the extended schema."""
     grid_annotations = {}
-    for grid_attr, base_class in base_grid_class.__annotations__.items():
+    for grid_attr, base_class in _get_annotations(base_grid_class).items():
         if issubclass(base_class, FancyArray) and grid_attr in ComponentType and grid_attr in extra_dataset:
             class_dict = _get_class_dict(base_class, grid_attr, extra_dataset)
             grid_annotations[grid_attr] = type(f"Dynamic{base_class.__name__}", (base_class,), class_dict)
@@ -39,7 +50,7 @@ def _get_class_dict(base_class: Type[FancyArray], grid_attr: str, extra_dataset:
 
     extra_array_types: dict[str, Any] = {}
     for attr in extra_array_dtype.fields:
-        if attr in base_class.__annotations__:
+        if attr in _get_annotations(base_class):
             continue
 
         dtype = extra_array_dtype.fields[attr][0]
@@ -57,7 +68,7 @@ def _get_class_dict(base_class: Type[FancyArray], grid_attr: str, extra_dataset:
 def dynamic_grid_obj_from_grid(dynamic_grid_class: Type[Grid], grid: Grid):
     """Create new object of dynamic_grid_class type using data from grid object."""
     dynamic_grid_obj = dynamic_grid_class.empty()
-    for grid_attr in grid.__annotations__:
+    for grid_attr, _ in _get_annotations(Grid).items():
         array = getattr(grid, grid_attr)
         if not isinstance(array, FancyArray):
             continue
