@@ -19,7 +19,7 @@ from tests.fixtures.grids import build_basic_grid
 
 
 @pytest.mark.parametrize("base_attr", ["_id_counter", "graphs"])
-def test_grid_has_base_attributes(base_attr):
+def test_grid_has_base_attributes(base_attr: str):
     grid = Grid.empty()
     assert isinstance(grid, Grid)
     assert hasattr(grid, base_attr), f"Grid is missing '{base_attr}' attribute"
