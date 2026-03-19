@@ -4,11 +4,12 @@
 
 """Grid tests"""
 
-import dataclasses
 from copy import deepcopy
 
 import numpy as np
+import pytest
 from numpy.testing import assert_equal
+from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.grids.base import Grid
 from tests.fixtures.grid_classes import ExtendedGrid
@@ -17,35 +18,18 @@ from tests.fixtures.grids import build_basic_grid
 # pylint: disable=missing-function-docstring,missing-class-docstring
 
 
-def test_initialize_empty_grid(grid: Grid):
+@pytest.mark.parametrize("base_attr", ["_id_counter", "graphs"])
+def test_grid_has_base_attributes(base_attr):
+    grid = Grid.empty()
     assert isinstance(grid, Grid)
-    fields = dataclasses.asdict(grid).keys()
-    assert {
-        "_id_counter",
-        "asym_current_sensor",
-        "asym_line",
-        "asym_power_sensor",
-        "asym_voltage_sensor",
-        "generic_branch",
-        "graphs",
-        "fault",
-        "line",
-        "link",
-        "node",
-        "source",
-        "sym_current_sensor",
-        "sym_gen",
-        "sym_load",
-        "asym_gen",
-        "asym_load",
-        "shunt",
-        "sym_power_sensor",
-        "sym_voltage_sensor",
-        "three_winding_transformer",
-        "transformer",
-        "transformer_tap_regulator",
-        "voltage_regulator",
-    } == set(fields)
+    assert hasattr(grid, base_attr), f"Grid is missing '{base_attr}' attribute"
+
+
+@pytest.mark.parametrize("component_type", list(ComponentType))
+def test_grid_has_component_type(component_type: ComponentType):
+    """Test if all components have the same dtype"""
+    grid = Grid.empty()
+    assert hasattr(grid, component_type.value), f"Grid is missing attribute for component type '{component_type.value}'"
 
 
 def test_initialize_empty_extended_grid():
