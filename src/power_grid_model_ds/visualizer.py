@@ -2,18 +2,18 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from power_grid_model_ds import Grid
 
 try:
-    from dash import Dash, dcc, html
     import dash_bootstrap_components as dbc
-    from power_grid_model_ds._core.visualizer.app import get_app_layout, MDBOOTSTRAP, GOOGLE_FONTS
+    from dash import Dash
     from dash_bootstrap_components.icons import FONT_AWESOME
+
+    from power_grid_model_ds import Grid
+    from power_grid_model_ds._core.visualizer.app import GOOGLE_FONTS, MDBOOTSTRAP, get_app_layout
 except ImportError as error:
     raise ImportError(
         "Missing dependencies for visualizer: install with 'pip install power-grid-model-ds[visualizer]'"
     ) from error
-
 
 
 def visualize(grid: Grid, debug: bool = False, port: int = 8050) -> None:
