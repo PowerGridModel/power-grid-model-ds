@@ -13,32 +13,6 @@ import numpy as np
 import numpy.typing as npt
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
-    AsymCurrentSensorArray,
-    AsymGenArray,
-    AsymLineArray,
-    AsymLoadArray,
-    AsymPowerSensorArray,
-    AsymVoltageSensorArray,
-    Branch3Array,
-    BranchArray,
-    FaultArray,
-    GenericBranchArray,
-    LineArray,
-    LinkArray,
-    NodeArray,
-    ShuntArray,
-    SourceArray,
-    SymCurrentSensorArray,
-    SymGenArray,
-    SymLoadArray,
-    SymPowerSensorArray,
-    SymVoltageSensorArray,
-    ThreeWindingTransformerArray,
-    TransformerArray,
-    TransformerTapRegulatorArray,
-    VoltageRegulatorArray,
-)
 from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
@@ -78,6 +52,32 @@ from power_grid_model_ds._core.model.grids.serialization.string import (
     deserialize_from_str,
     deserialize_from_txt_file,
     serialize_to_str,
+)
+from power_grid_model_ds.arrays import (
+    AsymCurrentSensorArray,
+    AsymGenArray,
+    AsymLineArray,
+    AsymLoadArray,
+    AsymPowerSensorArray,
+    AsymVoltageSensorArray,
+    Branch3Array,
+    BranchArray,
+    FaultArray,
+    GenericBranchArray,
+    LineArray,
+    LinkArray,
+    NodeArray,
+    ShuntArray,
+    SourceArray,
+    SymCurrentSensorArray,
+    SymGenArray,
+    SymLoadArray,
+    SymPowerSensorArray,
+    SymVoltageSensorArray,
+    ThreeWindingTransformerArray,
+    TransformerArray,
+    TransformerTapRegulatorArray,
+    VoltageRegulatorArray,
 )
 
 G = TypeVar("G", bound="Grid")

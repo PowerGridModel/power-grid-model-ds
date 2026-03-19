@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+from power_grid_model_ds.arrays import (
     ApplianceArray,
     Branch3Array,
     BranchArray,

@@ -5,18 +5,18 @@
 import pytest
 from power_grid_model import ComponentType
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+from power_grid_model_ds._core.visualizer.styling_classification import (
+    StyleClass,
+    get_branch_classification,
+    get_node_classification,
+)
+from power_grid_model_ds.arrays import (
     AsymLineArray,
     GenericBranchArray,
     LineArray,
     LinkArray,
     NodeArray,
     TransformerArray,
-)
-from power_grid_model_ds._core.visualizer.styling_classification import (
-    StyleClass,
-    get_branch_classification,
-    get_node_classification,
 )
 
 
