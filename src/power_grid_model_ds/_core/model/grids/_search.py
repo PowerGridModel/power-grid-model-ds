@@ -108,7 +108,6 @@ def _compare_attr(attr1: object, attr2: object) -> dict[str, object]:
 
 def _print_differences(differences: dict[str, dict[str, object]]) -> None:
     for attr, diff in differences.items():
-
         title = f"There are differences in 'grid.{attr}'"
         print(f"\n{title}")
         print("-" * len(title))

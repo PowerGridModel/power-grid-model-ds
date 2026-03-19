@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 """Various tests for the FancyArrayContainer."""
+
 import re
 from copy import deepcopy
 from dataclasses import dataclass
