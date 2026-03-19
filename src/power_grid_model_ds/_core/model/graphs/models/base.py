@@ -269,7 +269,7 @@ class BaseGraphModel(ABC):
             return []
 
         if self._three_winding_branch_groups:
-            with self.with_tmp_remove_branches([(group[2], group[3]) for group in self._three_winding_branch_groups]):
+            with self.with_tmp_remove_branches([(group[1], group[2]) for group in self._three_winding_branch_groups]):
                 internal_paths = self._get_all_paths(
                     source=self.external_to_internal(ext_start_node_id),
                     target=self.external_to_internal(ext_end_node_id),
@@ -280,14 +280,14 @@ class BaseGraphModel(ABC):
                 target=self.external_to_internal(ext_end_node_id),
             )
 
+        paths = [self._internals_to_externals(path) for path in internal_paths]
+        if not self._three_winding_branch_groups:
+            return paths
+
         replacements = set()
         for group in self._three_winding_branch_groups:
             replacements.add(group)
             replacements.add(reversed(group))
-
-        paths = [self._internals_to_externals(path) for path in internal_paths]
-        if not self._three_winding_branch_groups:
-            return paths
 
         for i in range(len(paths)):
             path = paths[i]
@@ -384,8 +384,8 @@ class BaseGraphModel(ABC):
             list[list[int]]: list of cycles, each cycle is a list of (external) node ids
         """
         if self._three_winding_branch_groups:
-            with self.with_tmp_remove_branches([(group[2], group[3]) for group in self._three_winding_branch_groups]):
-                internal_cycles = self.find_fundamental_cycles()
+            with self.with_tmp_remove_branches([(group[1], group[2]) for group in self._three_winding_branch_groups]):
+                internal_cycles = self._find_fundamental_cycles()
         else:
             internal_cycles = self._find_fundamental_cycles()
         return [self._internals_to_externals(nodes) for nodes in internal_cycles]
