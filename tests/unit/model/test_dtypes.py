@@ -19,6 +19,7 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     LinkArray,
     NodeArray,
     ShuntArray,
+    SourceArray,
     SymCurrentSensorArray,
     SymGenArray,
     SymLoadArray,
@@ -30,46 +31,46 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     VoltageRegulatorArray,
 )
 
+_COMPONENT_TYPE_TO_ARRAY_CLASS = {
+    ComponentType.node: NodeArray,
+    ComponentType.shunt: ShuntArray,
+    ComponentType.line: LineArray,
+    ComponentType.link: LinkArray,
+    ComponentType.fault: FaultArray,
+    ComponentType.generic_branch: GenericBranchArray,
+    ComponentType.asym_line: AsymLineArray,
+    ComponentType.asym_load: AsymLoadArray,
+    ComponentType.asym_power_sensor: AsymPowerSensorArray,
+    ComponentType.asym_current_sensor: AsymCurrentSensorArray,
+    ComponentType.asym_voltage_sensor: AsymVoltageSensorArray,
+    ComponentType.transformer: TransformerArray,
+    ComponentType.transformer_tap_regulator: TransformerTapRegulatorArray,
+    ComponentType.voltage_regulator: VoltageRegulatorArray,
+    ComponentType.asym_gen: AsymGenArray,
+    ComponentType.sym_current_sensor: SymCurrentSensorArray,
+    ComponentType.sym_power_sensor: SymPowerSensorArray,
+    ComponentType.sym_voltage_sensor: SymVoltageSensorArray,
+    ComponentType.three_winding_transformer: ThreeWindingTransformerArray,
+    ComponentType.sym_gen: SymGenArray,
+    ComponentType.sym_load: SymLoadArray,
+    ComponentType.source: SourceArray,
+}
 
-@pytest.mark.parametrize(
-    "array_class, component_type",
-    [
-        (NodeArray, ComponentType.node),
-        (LineArray, ComponentType.line),
-        (TransformerArray, ComponentType.transformer),
-        (AsymLineArray, ComponentType.asym_line),
-        (LinkArray, ComponentType.link),
-        (GenericBranchArray, ComponentType.generic_branch),
-        (SymPowerSensorArray, ComponentType.sym_power_sensor),
-        (AsymPowerSensorArray, ComponentType.asym_power_sensor),
-        (SymVoltageSensorArray, ComponentType.sym_voltage_sensor),
-        (AsymVoltageSensorArray, ComponentType.asym_voltage_sensor),
-        (FaultArray, ComponentType.fault),
-        (ShuntArray, ComponentType.shunt),
-        (SymGenArray, ComponentType.sym_gen),
-        (SymLoadArray, ComponentType.sym_load),
-        (AsymGenArray, ComponentType.asym_gen),
-        (AsymLoadArray, ComponentType.asym_load),
-        (SymCurrentSensorArray, ComponentType.sym_current_sensor),
-        (AsymCurrentSensorArray, ComponentType.asym_current_sensor),
-        (VoltageRegulatorArray, ComponentType.voltage_regulator),
-        (TransformerTapRegulatorArray, ComponentType.transformer_tap_regulator),
-        (ThreeWindingTransformerArray, ComponentType.three_winding_transformer),
-    ],
-)
-def test_pgm_dtypes(array_class, component_type):
+
+@pytest.mark.parametrize("component_type", list(ComponentType))
+def test_pgm_dtypes(component_type: ComponentType):
     """Tests if dtypes of PGM-DS align with dtypes from PGM."""
+    array_class = _COMPONENT_TYPE_TO_ARRAY_CLASS[component_type]
     array_dtype = array_class.get_dtype()
     pgm_dtype = power_grid_meta_data[DatasetType.input][component_type].dtype
 
-    assert array_dtype.fields is not None
-    assert pgm_dtype.fields is not None
+    assert array_dtype.fields is not None, f"{array_class.__name__} dtype does not have fields"
+    assert pgm_dtype.fields is not None, f"PGM dtype for component type '{component_type.value}' does not have fields"
 
     for attr in array_dtype.fields:
         if attr not in pgm_dtype.fields:
             continue  # skip attributes that are not in PGM dtype, e.g., "node_type" and "feeder_*"
 
-        # Check only dtype[0], skip full dtype. Offsets of PGM-DS are not same as PGM at the moment
-        assert array_dtype.fields[attr][0] == pgm_dtype.fields[attr][0], (
+        assert array_dtype[attr] == pgm_dtype[attr], (
             f"{array_class.__name__} dtype field '{attr}' does not match PGM dtype field '{attr}'"
         )
