@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 """Various tests for the FancyArrayContainer."""
-
+import re
 from copy import deepcopy
 from dataclasses import dataclass
 
@@ -43,7 +43,7 @@ def test_id_counter_type(basic_grid: Grid):
 def test_id_counter():
     container = FancyArrayContainer.empty()
     # pylint: disable=protected-access
-    container._id_counter = 42
+    container._ids = {42}
     assert 42 == container.id_counter
 
 
@@ -171,7 +171,7 @@ def test_append_with_overlapping_ids():
     nodes_2.id = [3, 4, 5]
 
     # This should raise a ValueError due to overlapping ID 3
-    with pytest.raises(ValueError, match="Cannot append: minimum id 3 is not greater than the current id counter 3"):
+    with pytest.raises(ValueError, match=re.escape("Cannot append, array contains ids that already exist: {3}")):
         grid.append(nodes_2)
 
 
