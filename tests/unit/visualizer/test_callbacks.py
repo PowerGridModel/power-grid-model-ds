@@ -5,6 +5,8 @@ import pytest
 from dash import dash_table
 from dash.exceptions import PreventUpdate
 
+from power_grid_model_ds._core.model.arrays.pgm_arrays import NodeArray
+from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.callbacks.config import scale_elements, update_arrows, update_layout
 from power_grid_model_ds._core.visualizer.callbacks.element_selection import display_selected_element
 from power_grid_model_ds._core.visualizer.callbacks.search_form import search_element
@@ -46,8 +48,14 @@ def test_hide_arrows():
 
 
 def test_element_selection_callback():
+    grid = Grid.empty()
+    grid.node = NodeArray.empty(1)
+    grid.node[0].id = [1]
+    grid.node[0].u_rated = [100.0]
+
     node_data = [{"pgm_id": 1, "u_rated": 100.0, "group": "node"}]
     edge_data = []
+
     result = display_selected_element(node_data, edge_data)
     expected = dash_table.DataTable(  # type: ignore[attr-defined]
         data=[{"u_rated": 100.0, "id": 1}],
