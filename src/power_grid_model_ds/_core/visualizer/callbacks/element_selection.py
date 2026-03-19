@@ -44,7 +44,9 @@ def _to_data_table(array_data: IdArray):
     array_data_dict = {}
     for column in array_data.columns:
         array_data_dict[column] = array_data[column].item()
-    data_table = dash_table.DataTable(
+
+    # ignore[attr-defined] added for https://github.com/plotly/dash/issues/3226
+    data_table = dash_table.DataTable(  # type: ignore[attr-defined]
         data=[array_data_dict],
         columns=[{"name": key, "id": key} for key in array_data_dict],
         editable=False,
