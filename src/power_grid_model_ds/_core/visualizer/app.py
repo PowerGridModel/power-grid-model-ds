@@ -8,6 +8,7 @@ from dash_bootstrap_components.icons import FONT_AWESOME
 from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds._core.visualizer import server_state
 from power_grid_model_ds._core.visualizer.callbacks import (  # noqa: F401  # pylint: disable=unused-import
     config,
     element_selection,
@@ -46,6 +47,8 @@ def visualize(grid: Grid, debug: bool = False, port: int = 8050) -> None:
             - "grid": A layout that places the nodes in a grid matrix.
             - "cose": A layout that uses the CompoundSpring Embedder algorithm (force-directed layout)
     """
+    # Store Grid object on server side (thread-safe)
+    server_state.safe_set_grid(grid)
 
     app = Dash(
         external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, MDBOOTSTRAP, FONT_AWESOME, GOOGLE_FONTS]
