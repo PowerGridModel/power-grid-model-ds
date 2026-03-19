@@ -196,3 +196,18 @@ def test_append_with_non_overlapping_ids():
     assert grid.node.size == 6
     expected_ids = [1, 2, 3, 4, 5, 6]
     assert sorted(grid.node.id.tolist()) == expected_ids
+
+
+def test_rebuild_ids():
+    grid = Grid.from_txt("1 2 20", "2 3 21", "10 11 22")
+    expected_ids = {1, 2, 3, 10, 11, 20, 21, 22}
+    assert grid._ids == expected_ids
+    grid._ids = set()
+    grid.rebuild_ids()
+    assert grid._ids == expected_ids
+
+
+def test_has_id():
+    grid = Grid.from_txt("1 2 20", "2 3 21", "10 11 22")
+    assert grid.has_id(1)
+    assert not grid.has_id(15)
