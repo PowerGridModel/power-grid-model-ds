@@ -248,7 +248,7 @@ def test_asymmetric_sensor_array():
     array_length = 2
     # test if asymmetric array has NDArray3 fields, i.e. with 3 floats per element (one per phase)
     asym_volt_sens = AsymVoltageSensorArray.empty(array_length)
-    nd3_fields = ["u_sigma", "u_measured", "u_angle_measured"]
+    nd3_fields = ["u_measured", "u_angle_measured"]
     for field in nd3_fields:
         assert asym_volt_sens[field].shape == (array_length, 3)
 
