@@ -9,7 +9,6 @@ from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.constants import empty
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.grid_utils import (
-    _get_annotations,
     dynamic_grid_obj_from_grid,
     extend_grid_dynamically,
     get_attr_data_from_dataset,
