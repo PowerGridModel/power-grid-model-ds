@@ -46,7 +46,8 @@ def test_extend_grid_dynamically_with_pgm_dataset(dataset_type):
 )
 def test_dynamic_grid_obj_from_grid(dataset_type):
     grid = Grid.empty()
-    for attr in _get_annotations(Grid):
+
+    for attr in Grid.__annotations__:
         if isinstance(getattr(grid, attr), FancyArray):
             grid_array = getattr(grid, attr).__class__.empty(2)
             grid_array[:] = 99
@@ -57,7 +58,7 @@ def test_dynamic_grid_obj_from_grid(dataset_type):
     DynamicGrid = extend_grid_dynamically(Grid, extra_dataset=extra_dataset)
     new_grid_obj = dynamic_grid_obj_from_grid(DynamicGrid, grid)
 
-    for grid_attr in _get_annotations(DynamicGrid):
+    for grid_attr in DynamicGrid.__annotations__:
         grid_array = getattr(grid, grid_attr)
         new_grid_array = getattr(new_grid_obj, grid_attr)
 
