@@ -7,6 +7,7 @@
 import dataclasses
 import inspect
 import logging
+import warnings
 from dataclasses import dataclass
 from typing import Type, TypeVar
 
@@ -38,7 +39,12 @@ class FancyArrayContainer:
     @property
     def id_counter(self):
         """Returns the max id in self._ids"""
-        return max(self._ids) if self._ids else 0
+        warnings.warn(
+            "self.id_counter is deprecated, use self.max_id instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.max_id
 
     @classmethod
     def empty(cls: Type[Self]) -> Self:
@@ -81,8 +87,7 @@ class FancyArrayContainer:
     @property
     def max_id(self) -> int:
         """Returns the max id across all arrays within the container."""
-        max_per_array = [np.max(array.id) if array.size > 0 else 0 for array in self.all_arrays()]
-        return int(max(max_per_array))
+        return max(self._ids) if self._ids else 0
 
     def rebuild_ids(self) -> None:
         """Rebuild self._ids based on the arrays in the container."""
