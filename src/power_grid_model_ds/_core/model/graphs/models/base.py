@@ -187,9 +187,10 @@ class BaseGraphModel(ABC):
         for branch3 in branch3_array:
             seperate_branches = branch3.as_branches()
             self.add_branch_array(seperate_branches)
-            self._three_winding_branch_groups.add(
-                tuple(sorted([branch3.node_1.item(), branch3.node_2.item(), branch3.node_3.item()]))
-            )
+            if not self.active_only or seperate_branches.is_active.all():
+                self._three_winding_branch_groups.add(
+                    tuple(sorted([branch3.node_1.item(), branch3.node_2.item(), branch3.node_3.item()]))
+                )
 
     def delete_branch_array(self, branch_array: BranchArray, raise_on_fail: bool = True) -> None:
         """Delete all branches in branch_array from the graph."""
@@ -219,20 +220,29 @@ class BaseGraphModel(ABC):
             edge_list += list(self.in_branches(node))
             self.delete_node(node)
 
+        # removed_three_winding_groups = set()
+        # for group in self._three_winding_branch_groups:
+        #     if any(node in group for node in nodes):
+        #         removed_three_winding_groups.add(group)
+        # self._three_winding_branch_groups -= removed_three_winding_groups
+
         yield
 
+        # self._three_winding_branch_groups |= removed_three_winding_groups
         for node in nodes:
             self.add_node(int(node))  # convert to int to avoid type issues when input is e.g. a numpy array
         for source, target in edge_list:
             self.add_branch(source, target)
 
     @contextmanager
-    def with_tmp_remove_branches(self, branches: list[tuple[int, int]]) -> None:
-        for branch in branches:
-            self.delete_branch(branch[0], branch[1])
+    def tmp_remove_branches(self, branches: list[tuple[int, int]]) -> Generator:
+        for from_node, to_node in branches:
+            self.delete_branch(from_node, to_node)
+
         yield
-        for branch in branches:
-            self.add_branch(branch[0], branch[1])
+
+        for from_node, to_node in branches:
+            self.add_branch(from_node, to_node)
 
     def get_shortest_path(self, ext_start_node_id: int, ext_end_node_id: int) -> tuple[list[int], int]:
         """Calculate the shortest path between two nodes
@@ -261,6 +271,22 @@ class BaseGraphModel(ABC):
         except NoPathBetweenNodes as e:
             raise NoPathBetweenNodes(f"No path between nodes {ext_start_node_id} and {ext_end_node_id}") from e
 
+    def _cleanup_paths(self, paths: list[list[int]]) -> list[list[int]]:
+        replacements = set()
+        for group in self._three_winding_branch_groups:
+            replacements.add(frozenset(group))
+
+        for i in range(len(paths)):
+            path = paths[i]
+
+            invalid_indices = set()
+            for index in range(1, len(path) - 1):
+                if frozenset(sorted([path[index - 1], path[index], path[index + 1]])) in replacements:
+                    invalid_indices.add(index)
+
+            paths[i] = [node for index, node in enumerate(path) if index not in invalid_indices]
+        return paths
+
     def get_all_paths(self, ext_start_node_id: int, ext_end_node_id: int) -> list[list[int]]:
         """Retrieves all paths between two (external) nodes.
         Returns a list of paths, each path containing a list of external nodes.
@@ -268,8 +294,16 @@ class BaseGraphModel(ABC):
         if ext_start_node_id == ext_end_node_id:
             return []
 
+        correct_for_three_winding = False
+
         if self._three_winding_branch_groups:
-            with self.with_tmp_remove_branches([(group[1], group[2]) for group in self._three_winding_branch_groups]):
+            groups_with_all_three = [
+                group
+                for group in self._three_winding_branch_groups
+                if all(self.has_branch(group[i], group[j]) for i in range(3) for j in range(i + 1, 3))
+            ]
+            correct_for_three_winding = len(groups_with_all_three) > 0
+            with self.tmp_remove_branches([(group[1], group[2]) for group in groups_with_all_three]):
                 internal_paths = self._get_all_paths(
                     source=self.external_to_internal(ext_start_node_id),
                     target=self.external_to_internal(ext_end_node_id),
@@ -281,23 +315,8 @@ class BaseGraphModel(ABC):
             )
 
         paths = [self._internals_to_externals(path) for path in internal_paths]
-        if not self._three_winding_branch_groups:
-            return paths
-
-        replacements = set()
-        for group in self._three_winding_branch_groups:
-            replacements.add(group)
-            replacements.add(reversed(group))
-
-        for i in range(len(paths)):
-            path = paths[i]
-
-            invalid_indices = set
-            for index in range(1, len(path) - 2):
-                if (path[index - 1], path[index], path[index + 1]) in replacements:
-                    invalid_indices.add(index)
-
-            paths[i] = [node for index, node in enumerate(path) if invalid_indices]
+        if correct_for_three_winding:
+            return self._cleanup_paths(paths)
         return paths
 
     def get_components(self) -> list[list[int]]:
@@ -384,11 +403,20 @@ class BaseGraphModel(ABC):
             list[list[int]]: list of cycles, each cycle is a list of (external) node ids
         """
         if self._three_winding_branch_groups:
-            with self.with_tmp_remove_branches([(group[1], group[2]) for group in self._three_winding_branch_groups]):
+            groups_with_all_three = [
+                group
+                for group in self._three_winding_branch_groups
+                if all(self.has_branch(group[i], group[j]) for i in range(3) for j in range(i + 1, 3))
+            ]
+            with self.tmp_remove_branches([(group[1], group[2]) for group in groups_with_all_three]):
                 internal_cycles = self._find_fundamental_cycles()
         else:
             internal_cycles = self._find_fundamental_cycles()
-        return [self._internals_to_externals(nodes) for nodes in internal_cycles]
+
+        cycles = [self._internals_to_externals(nodes) for nodes in internal_cycles]
+        if self._three_winding_branch_groups:
+            return self._cleanup_paths(cycles)
+        return cycles
 
     @classmethod
     def from_arrays(cls, arrays: "Grid", active_only=False) -> "BaseGraphModel":
