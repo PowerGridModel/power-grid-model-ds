@@ -6,7 +6,6 @@ from dash import dcc, html
 from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.grids.base import Grid
-from power_grid_model_ds._core.visualizer import server_state
 from power_grid_model_ds._core.visualizer.callbacks import (  # noqa: F401  # pylint: disable=unused-import
     config,
     element_selection,
