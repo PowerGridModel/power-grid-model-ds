@@ -107,7 +107,7 @@ class FancyArrayContainer:
         Args:
             record_id(int): the id to be checked.
         """
-        return record_id in self._ids
+        return id_ in self._ids
 
     def check_ids(self, check_between_arrays: bool = True, check_within_arrays: bool = True) -> None:
         """Checks for duplicate id values across all arrays in the container.
