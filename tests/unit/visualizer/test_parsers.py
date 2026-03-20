@@ -5,7 +5,7 @@
 import numpy as np
 import pytest
 from numpy.typing import NDArray
-from power_grid_model import ComponentType, MeasuredTerminalType
+from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     Branch3Array,
@@ -13,7 +13,6 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     LineArray,
     NodeArray,
     SymLoadArray,
-    SymPowerSensorArray,
     SymVoltageSensorArray,
     ThreeWindingTransformerArray,
     TransformerTapRegulatorArray,
@@ -21,11 +20,6 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import (
 )
 from power_grid_model_ds._core.visualizer.parsers import (
     _parse_appliances,
-    _parse_faults,
-    _parse_flow_sensors,
-    _parse_transformer_tap_regulators,
-    _parse_voltage_regulators,
-    _parse_voltage_sensors,
     parse_branch3_array,
     parse_branch_array,
     parse_node_array,
@@ -442,4 +436,3 @@ def test_parsing_with_starting_elements(func, request, test_data, kwargs):
 
     assert len(elements) == len(expected_elements)
     assert elements == expected_elements
-

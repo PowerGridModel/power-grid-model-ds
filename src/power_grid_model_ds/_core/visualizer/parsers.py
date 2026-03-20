@@ -8,24 +8,14 @@ from power_grid_model import ComponentType, MeasuredTerminalType
 
 from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     ApplianceArray,
-    AsymCurrentSensorArray,
-    AsymPowerSensorArray,
-    AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
-    FaultArray,
     NodeArray,
-    SymCurrentSensorArray,
-    SymPowerSensorArray,
-    SymVoltageSensorArray,
-    TransformerTapRegulatorArray,
-    VoltageRegulatorArray,
 )
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.parsing_utils import (
     append_component_list_parsed_elements,
     array_to_dict,
-    map_appliance_to_nodes,
 )
 from power_grid_model_ds._core.visualizer.styling_classification import (
     StyleClass,
@@ -36,7 +26,6 @@ from power_grid_model_ds._core.visualizer.styling_classification import (
 from power_grid_model_ds._core.visualizer.typing import (
     ComponentTypeAppliance,
     ComponentTypeBranch,
-    ComponentTypeFlowSensor,
     VizToComponentElements,
 )
 
