@@ -7,6 +7,7 @@ from dash import Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import BRANCH_WIDTH, NODE_SIZE
+from power_grid_model_ds._core.visualizer.layout.header_config import LayoutOptions
 from power_grid_model_ds._core.visualizer.layout.layout_config import layout_with_config
 from power_grid_model_ds._core.visualizer.styling_classification import StyleClass
 from power_grid_model_ds._core.visualizer.typing import STYLESHEET
@@ -51,9 +52,9 @@ def scale_elements(node_scale: float, edge_scale: float, stylesheet: STYLESHEET)
     State("source-nodes-store", "data"),
     prevent_initial_call=True,
 )
-def update_layout(layout, source_nodes):
+def update_layout(layout: str, source_nodes: list[int]):
     """Callback to update the layout of the graph."""
-    layout_config = layout_with_config(layout, source_nodes)
+    layout_config = layout_with_config(LayoutOptions(layout), source_nodes)
     layout_config.update({"animate": True})
     return layout_config
 
