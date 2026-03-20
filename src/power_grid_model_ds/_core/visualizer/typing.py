@@ -2,12 +2,11 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import Any, Literal, NotRequired, Required, TypedDict
+from typing import Any, Literal
 
 from power_grid_model import ComponentType
 
 STYLESHEET = list[dict[str, Any]]
-
 
 
 # after removing extra data from cytoscape elements and using only VizToComponentElementsValue
