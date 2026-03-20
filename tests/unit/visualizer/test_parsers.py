@@ -7,7 +7,16 @@ import pytest
 from numpy.typing import NDArray
 from power_grid_model import ComponentType
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+from power_grid_model_ds._core.visualizer.parsers import (
+    _parse_appliances,
+    parse_branch3_array,
+    parse_branch_array,
+    parse_node_array,
+)
+from power_grid_model_ds._core.visualizer.parsing_utils import PGM_ID_KEY
+from power_grid_model_ds._core.visualizer.styling_classification import StyleClass
+from power_grid_model_ds._core.visualizer.typing import VizToComponentElements
+from power_grid_model_ds.arrays import (
     Branch3Array,
     FaultArray,
     LineArray,
@@ -18,15 +27,6 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     TransformerTapRegulatorArray,
     VoltageRegulatorArray,
 )
-from power_grid_model_ds._core.visualizer.parsers import (
-    _parse_appliances,
-    parse_branch3_array,
-    parse_branch_array,
-    parse_node_array,
-)
-from power_grid_model_ds._core.visualizer.parsing_utils import PGM_ID_KEY
-from power_grid_model_ds._core.visualizer.styling_classification import StyleClass
-from power_grid_model_ds._core.visualizer.typing import VizToComponentElements
 
 
 class CoordinatedNodeArray(NodeArray):

@@ -6,12 +6,6 @@ from typing import Literal
 
 from power_grid_model import ComponentType, MeasuredTerminalType
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
-    ApplianceArray,
-    Branch3Array,
-    BranchArray,
-    NodeArray,
-)
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.parsing_utils import (
     append_component_list_parsed_elements,
@@ -27,6 +21,12 @@ from power_grid_model_ds._core.visualizer.typing import (
     ComponentTypeAppliance,
     ComponentTypeBranch,
     VizToComponentElements,
+)
+from power_grid_model_ds.arrays import (
+    ApplianceArray,
+    Branch3Array,
+    BranchArray,
+    NodeArray,
 )
 
 _NODE_BRANCH_TERMINAL_TYPE = [

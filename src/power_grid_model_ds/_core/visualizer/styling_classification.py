@@ -7,8 +7,8 @@ from typing import Literal
 
 from power_grid_model import ComponentType
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray, NodeArray
 from power_grid_model_ds._core.visualizer.typing import ComponentTypeAppliance, ComponentTypeBranch
+from power_grid_model_ds.arrays import BranchArray, NodeArray
 
 _LARGE_NODE_ID_THRESHOLD = 10_000_000
 

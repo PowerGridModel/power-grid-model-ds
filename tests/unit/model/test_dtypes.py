@@ -6,7 +6,7 @@
 import pytest
 from power_grid_model import ComponentType, DatasetType, power_grid_meta_data
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+from power_grid_model_ds.arrays import (
     AsymCurrentSensorArray,
     AsymGenArray,
     AsymLineArray,

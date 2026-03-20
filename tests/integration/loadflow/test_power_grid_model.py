@@ -11,14 +11,14 @@ import pytest
 from power_grid_model import ComponentType, TapChangingStrategy, initialize_array
 
 from power_grid_model_ds._core.data_source.generator.grid_generators import RadialGridGenerator
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds._core.power_grid_model_interface import PowerGridModelInterface
+from power_grid_model_ds.arrays import (
     LineArray,
     NodeArray,
     SourceArray,
     SymLoadArray,
 )
-from power_grid_model_ds._core.model.grids.base import Grid
-from power_grid_model_ds._core.power_grid_model_interface import PowerGridModelInterface
 from tests.fixtures.arrays import DefaultedCustomNodeArray
 from tests.fixtures.grid_classes import ExtendedGrid, ExtendedGridNoDefaults
 

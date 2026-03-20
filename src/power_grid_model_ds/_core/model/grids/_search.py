@@ -11,9 +11,9 @@ import numpy.typing as npt
 from power_grid_model_ds._core import fancypy as fp
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
-from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray
 from power_grid_model_ds._core.model.enums.nodes import NodeType
 from power_grid_model_ds._core.utils.misc import find_diff_masks_with_equal_nan
+from power_grid_model_ds.arrays import BranchArray
 
 if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import Grid

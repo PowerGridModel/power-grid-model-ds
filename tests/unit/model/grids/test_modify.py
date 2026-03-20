@@ -6,7 +6,9 @@ from copy import deepcopy
 import pytest
 
 from power_grid_model_ds import Grid
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+from power_grid_model_ds._core.model.constants import EMPTY_ID
+from power_grid_model_ds._core.model.grids._modify import delete_appliance
+from power_grid_model_ds.arrays import (
     AsymGenArray,
     AsymLineArray,
     AsymLoadArray,
@@ -22,8 +24,6 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     TransformerArray,
     TransformerTapRegulatorArray,
 )
-from power_grid_model_ds._core.model.constants import EMPTY_ID
-from power_grid_model_ds._core.model.grids._modify import delete_appliance
 from tests.fixtures.arrays import DefaultedCustomLineArray, DefaultedCustomNodeArray
 from tests.fixtures.grid_classes import ExtendedGrid
 

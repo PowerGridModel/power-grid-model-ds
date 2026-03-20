@@ -8,13 +8,13 @@ from typing import TYPE_CHECKING, Counter, Generator
 
 from numpy._typing import NDArray
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import Branch3Array, BranchArray, NodeArray
 from power_grid_model_ds._core.model.graphs.errors import (
     GraphError,
     MissingBranchError,
     MissingNodeError,
     NoPathBetweenNodes,
 )
+from power_grid_model_ds.arrays import Branch3Array, BranchArray, NodeArray
 
 if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import Grid
