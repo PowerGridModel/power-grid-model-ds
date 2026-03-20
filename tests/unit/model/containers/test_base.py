@@ -201,10 +201,10 @@ def test_append_with_non_overlapping_ids():
 def test_rebuild_ids():
     grid = Grid.from_txt("1 2 20", "2 3 21", "10 11 22")
     expected_ids = {1, 2, 3, 10, 11, 20, 21, 22}
-    assert grid._ids == expected_ids
+    assert grid.ids == expected_ids
     grid._ids = set()
     grid.rebuild_ids()
-    assert grid._ids == expected_ids
+    assert grid.ids == expected_ids
 
 
 def test_rebuild_ids_with_duplicates():
