@@ -10,7 +10,7 @@ from power_grid_model_ds._core.visualizer.layout.header_config import LayoutOpti
 
 def test_get_cytoscape_html():
     elements = [{"data": {"id": "1", "group": "node"}}]
-    cyto_html = get_cytoscape_html(LayoutOptions.GRID, elements, [])
+    cyto_html = get_cytoscape_html(LayoutOptions.PRESET, elements, [])
     assert cyto_html.children.elements == elements
 
 
