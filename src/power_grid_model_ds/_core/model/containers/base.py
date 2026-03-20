@@ -91,12 +91,13 @@ class FancyArrayContainer:
 
     def rebuild_ids(self) -> None:
         """Rebuild self._ids based on the arrays in the container."""
-        id_arrays = [array for array in self.all_arrays() if hasattr(array, "id")]
+        ids_per_array = {
+            array.__class__.__name__: set(array.id.tolist()) for array in self.all_arrays() if hasattr(array, "id")
+        }
         new_ids: set[int] = set()
-        for array in id_arrays:
-            array_ids = set(array.id.tolist())
+        for class_name, array_ids in ids_per_array.items():
             if array_ids & new_ids:
-                raise ValueError(f"Duplicate ids found between arrays ({array.__class__.__name__})")
+                raise ValueError(f"Duplicate ids found between arrays ({class_name})")
             new_ids |= array_ids
         self._ids = new_ids
 
@@ -165,7 +166,7 @@ class FancyArrayContainer:
         if (id_set := set(array.id)) != {array.get_empty_value("id")}:
             raise ValueError(f"Cannot attach ids to array that contains non-empty ids: {id_set}")
 
-        start = self.id_counter + 1
+        start = self.max_id + 1
         end = start + len(array)
         array.id = np.arange(start, end)
         self._ids |= set(array.id.tolist())
