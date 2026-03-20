@@ -60,7 +60,7 @@ def update_column_options(selected_group, store_data):
     return columns, default_value
 
 
-def _get_matching_pgm_ids(group: str, column: str, operator: str, value: str) -> list[int]:
+def _get_matching_pgm_ids(group: str, column: str, operator: str, value: float) -> list[int]:
     """Helper function to get matching pgm_ids based on the search criteria."""
     array = getattr(get_grid(), group)
     selected_column = array[column]
