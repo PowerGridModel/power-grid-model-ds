@@ -8,14 +8,13 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds.arrays import (
     ApplianceArray,
     Branch3Array,
     BranchArray,
     NodeArray,
 )
-
-from ..arrays.base.array import FancyArray
 
 if TYPE_CHECKING:
     from .base import Grid
