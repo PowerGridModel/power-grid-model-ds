@@ -25,6 +25,11 @@ def get_cytoscape_html(layout: LayoutOptions, elements: list[dict[str, Any]], so
             style=_CYTO_INNER_STYLE,
             elements=elements,
             stylesheet=DEFAULT_STYLESHEET,
+            zoom=1.0,  # Default zoom level
+            minZoom=0.05,
+            maxZoom=3.0,
+            boxSelectionEnabled=True,
+            wheelSensitivity=0.2,  # Smooth zooming
         ),
         style=_CYTO_OUTER_STYLE,
     )
