@@ -152,7 +152,7 @@ class TestGridDiff:
         grid1 = Grid.from_txt("1 2 10", "2 3 11")
         grid2 = Grid.from_txt("1 2 10", "2 4 11")
         diff_dict = find_differences_between_grids(grid1, grid2)
-        assert len(diff_dict) == 3
+        assert len(diff_dict) == 4
         assert "line" in diff_dict
         assert diff_dict["line"]["grid1"].size
         assert diff_dict["line"]["grid2"].size
@@ -179,8 +179,10 @@ class TestGridDiff:
         grid2 = Grid.from_txt("1 2 10", "2 4 11")
         grid1.diff(grid2)
         captured = capsys.readouterr()
-        assert "Difference in 'grid.node'" in captured.out
-        assert "Difference in 'grid.line'" in captured.out
+        assert "There are differences in 'grid._ids'" in captured.out
+        assert "There are differences in 'grid.graphs'" in captured.out
+        assert "There are differences in 'grid.node'" in captured.out
+        assert "There are differences in 'grid.line'" in captured.out
 
     def test_different_order(self, capsys):
         grid1 = Grid.from_txt("1 2 10", "2 4 11")

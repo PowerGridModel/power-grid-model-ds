@@ -76,7 +76,7 @@ def merge_grids(grid: G, other_grid: G, mode: Literal["recalculate_ids", "keep_i
     match mode:
         case "recalculate_ids":
             other_grid_all_arrays = copy.deepcopy(other_grid_all_arrays)
-            offset = grid.id_counter
+            offset = grid.max_id
             _increment_grid_ids_by_offset(other_grid_all_arrays, offset)
         case "keep_ids":
             pass

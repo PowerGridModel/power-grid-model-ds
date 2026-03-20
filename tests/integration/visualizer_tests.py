@@ -17,7 +17,9 @@ class CoordinatedGrid(Grid):
 
 
 def get_radial_grid() -> Grid:
-    return RadialGridGenerator(Grid).run()
+    grid = RadialGridGenerator(Grid).run()
+    grid.set_feeder_ids()
+    return grid
 
 
 def get_coordinated_grid() -> CoordinatedGrid:
@@ -36,7 +38,8 @@ def get_grid_with_links() -> Grid:
 
 
 def visualize_grid():
-    visualize(grid=get_radial_grid(), debug=True)
+    grid = get_radial_grid()
+    visualize(grid=grid, debug=True)
 
 
 def visualize_coordinated_grid():
