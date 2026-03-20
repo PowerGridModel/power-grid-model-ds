@@ -3,15 +3,10 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
-from typing import Any
-
 from power_grid_model import ComponentType
 
-from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.typing import VizToComponentElements
-
-PGM_ID_KEY = "pgm_id"
 
 _SHOW_APPLIANCES_GROUPS = [
     "sym_load",
@@ -25,16 +20,6 @@ _SHOW_APPLIANCES_GROUPS = [
     "shunt",
     "shunt_ghost_node",
 ]
-
-
-def array_to_dict(array_record: FancyArray, columns: list[str]) -> dict[str, Any]:
-    """
-    Stringify the record (required by Dash).
-    Also, rename the "id" column to "pgm_id" to avoid conflicts with Dash's internal use of "id".
-    """
-    return {
-        (PGM_ID_KEY if column == "id" else column): value for column, value in zip(columns, array_record.tolist().pop())
-    }
 
 
 def append_component_list_parsed_elements(
