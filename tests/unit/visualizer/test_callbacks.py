@@ -5,6 +5,9 @@ import pytest
 from dash import dash_table
 from dash.exceptions import PreventUpdate
 
+from power_grid_model_ds._core.model.arrays.pgm_arrays import NodeArray
+from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds._core.visualizer import server_state
 from power_grid_model_ds._core.visualizer.callbacks.config import scale_elements, update_arrows, update_layout
 from power_grid_model_ds._core.visualizer.callbacks.element_selection import display_selected_element
 from power_grid_model_ds._core.visualizer.callbacks.search_form import search_element
@@ -46,12 +49,28 @@ def test_hide_arrows():
 
 
 def test_element_selection_callback():
+    grid = Grid.empty()
+    grid.node = NodeArray.empty(1)
+    grid.node.id = [1]
+    grid.node.u_rated = [100.0]
+
+    server_state.set_grid(grid)
+
     node_data = [{"pgm_id": 1, "u_rated": 100.0, "group": "node"}]
     edge_data = []
+
     result = display_selected_element(node_data, edge_data)
     expected = dash_table.DataTable(  # type: ignore[attr-defined]
-        data=[{"u_rated": 100.0, "id": 1}],
-        columns=[{"name": "id", "id": "id"}, {"name": "u_rated", "id": "u_rated"}],
+        data=[
+            {"u_rated": 100.0, "id": 1, "node_type": 0, "feeder_branch_id": -2147483648, "feeder_node_id": -2147483648}
+        ],
+        columns=[
+            {"name": "id", "id": "id"},
+            {"name": "u_rated", "id": "u_rated"},
+            {"name": "node_type", "id": "node_type"},
+            {"name": "feeder_branch_id", "id": "feeder_branch_id"},
+            {"name": "feeder_node_id", "id": "feeder_node_id"},
+        ],
         editable=False,
     )
     assert result.data == expected.data

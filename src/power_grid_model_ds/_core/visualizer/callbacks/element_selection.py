@@ -2,17 +2,18 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+
 from typing import Any
 
 from dash import Input, Output, callback, dash_table
 
+from power_grid_model_ds._core.model.arrays.pgm_arrays import IdArray
+from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.layout.selection_output import (
     SELECTION_OUTPUT_HTML,
 )
 from power_grid_model_ds._core.visualizer.parsing_utils import PGM_ID_KEY
-
-# Keys used in the visualization elements that are not part of the component data
-VISUALIZATION_KEYS = ["id", "label", "group", "position", "parent", "source", "target"]
+from power_grid_model_ds._core.visualizer.server_state import get_grid
 
 
 @callback(
@@ -30,21 +31,25 @@ def display_selected_element(node_data: list[dict[str, Any]], edge_data: list[di
     else:
         return SELECTION_OUTPUT_HTML.children
 
-    elm_data = {k: v for k, v in selected_data.items() if k not in VISUALIZATION_KEYS}
+    group = selected_data["group"]
+    pgm_id = selected_data[PGM_ID_KEY]
 
-    return _to_data_table(elm_data)
+    grid: Grid = get_grid()
+    array_data = getattr(grid, group).get(id=pgm_id)
+
+    return _to_data_table(array_data)
 
 
-def _to_data_table(data: dict[str, Any]):
-    data["id"] = data[PGM_ID_KEY]
-    del data[PGM_ID_KEY]
-    columns = list(data.keys())
+def _to_data_table(array_data: IdArray):
+    array_data_dict = {}
+    for column in array_data.columns:
+        array_data_dict[column] = array_data[column].item()
 
-    # Ensure "id" column is first
-    columns.remove("id")
-    columns.insert(0, "id")
-
+    # ignore[attr-defined] added for https://github.com/plotly/dash/issues/3226
     data_table = dash_table.DataTable(  # type: ignore[attr-defined]
-        data=[data], columns=[{"name": key, "id": key} for key in columns], editable=False, fill_width=False
+        data=[array_data_dict],
+        columns=[{"name": key, "id": key} for key in array_data_dict],
+        editable=False,
+        fill_width=False,
     )
     return data_table
