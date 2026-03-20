@@ -12,7 +12,6 @@ from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.layout.selection_output import (
     SELECTION_OUTPUT_HTML,
 )
-from power_grid_model_ds._core.visualizer.parsing_utils import PGM_ID_KEY
 from power_grid_model_ds._core.visualizer.server_state import safe_get_grid
 
 

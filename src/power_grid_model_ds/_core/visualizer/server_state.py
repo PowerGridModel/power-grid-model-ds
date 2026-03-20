@@ -16,7 +16,6 @@ Note that getters can modify the returned object.
 As such, callers should be careful to avoid unintended side effects on the shared state.
 """
 
-import threading
 from dataclasses import dataclass
 
 from power_grid_model_ds._core.model.grids.base import Grid
@@ -25,6 +24,7 @@ from power_grid_model_ds._core.model.grids.base import Grid
 @dataclass
 class _AppState:
     """Container for application-level state."""
+
     grid: Grid | None = None
 
 
@@ -45,7 +45,6 @@ def safe_get_grid() -> Grid:
     """
     if _state.grid is None:
         raise RuntimeError(
-            "Grid state not initialized. This should not happen during normal operation. "
-            "Please report this as a bug."
+            "Grid state not initialized. This should not happen during normal operation. Please report this as a bug."
         )
     return _state.grid
