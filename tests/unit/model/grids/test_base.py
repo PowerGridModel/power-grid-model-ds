@@ -18,7 +18,7 @@ from tests.fixtures.grids import build_basic_grid
 # pylint: disable=missing-function-docstring,missing-class-docstring
 
 
-@pytest.mark.parametrize("base_attr", ["_id_counter", "graphs"])
+@pytest.mark.parametrize("base_attr", ["_ids", "graphs"])
 def test_grid_has_base_attributes(base_attr: str):
     grid = Grid.empty()
     assert isinstance(grid, Grid)
