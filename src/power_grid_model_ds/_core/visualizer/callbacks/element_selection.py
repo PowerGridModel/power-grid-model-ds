@@ -32,7 +32,7 @@ def display_selected_element(node_data: list[dict[str, Any]], edge_data: list[di
         return SELECTION_OUTPUT_HTML.children
 
     group = selected_data["group"]
-    pgm_id = selected_data[PGM_ID_KEY]
+    pgm_id = int(selected_data["id"])
 
     grid: Grid = safe_get_grid()
     array_data = getattr(grid, group).get(id=pgm_id)
