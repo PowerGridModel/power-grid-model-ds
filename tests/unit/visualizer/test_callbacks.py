@@ -79,7 +79,7 @@ def test_element_selection_callback():
 
     server_state.set_grid(grid)
 
-    node_data = [{"pgm_id": 1, "u_rated": 100.0, "group": "node"}]
+    node_data = [{"id": "1", "u_rated": 100.0, "group": "node"}]
     edge_data = []
 
     result = display_selected_element(node_data, edge_data)
