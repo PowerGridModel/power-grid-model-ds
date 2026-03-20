@@ -48,6 +48,7 @@ class FancyArrayContainer:
 
     @property
     def ids(self):
+        """Returns the ids across all arrays"""
         return self._ids
 
     @property
