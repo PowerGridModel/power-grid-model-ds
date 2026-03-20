@@ -54,7 +54,7 @@ def visualize(grid: Grid, debug: bool = False, port: int = 8050) -> None:
         external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, MDBOOTSTRAP, FONT_AWESOME, GOOGLE_FONTS]
     )
     app.layout = get_app_layout(grid)
-    app.run(debug=debug, port=port)
+    app.run(debug=debug, port=port, threaded=False)
 
 
 def _get_columns_store(grid: Grid) -> dcc.Store:
