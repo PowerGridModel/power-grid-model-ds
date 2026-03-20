@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2025 Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
-from unittest.mock import patch
 
 import pytest
 from dash import dash_table
@@ -28,9 +27,8 @@ def test_search_element_no_input():
         search_element(group="", column="", operator="", value="", stylesheet=DEFAULT_STYLESHEET)
 
 
-@patch("power_grid_model_ds._core.visualizer.callbacks.search_form.safe_get_grid")
-def test_search_element_with_asym_column(mock_safe_get_grid):
-    mock_safe_get_grid.return_value = Grid.empty()
+def test_search_element_with_asym_column():
+    server_state.set_grid(Grid.empty())
     with pytest.raises(PreventUpdate):
         search_element(group="asym_gen", column="p_specified", operator="=", value="100", stylesheet=DEFAULT_STYLESHEET)
 
@@ -55,9 +53,8 @@ def test_search_element_with_asym_column(mock_safe_get_grid):
         ),
     ],
 )
-@patch("power_grid_model_ds._core.visualizer.callbacks.search_form.safe_get_grid")
-def test_search_element_with_input(mock_safe_get_grid, group, column, operator, value, expected_selectors):
-    mock_safe_get_grid.return_value = Grid.from_txt("S1 2 12", "2 3 23")
+def test_search_element_with_input(group, column, operator, value, expected_selectors):
+    server_state.set_grid(Grid.from_txt("S1 2 12", "2 3 23"))
 
     result = search_element(group, column, operator, value, DEFAULT_STYLESHEET)
     assert len(result) == len(DEFAULT_STYLESHEET) + len(expected_selectors)

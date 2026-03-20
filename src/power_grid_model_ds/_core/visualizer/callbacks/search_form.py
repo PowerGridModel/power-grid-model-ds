@@ -8,7 +8,7 @@ from dash import Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
-from power_grid_model_ds._core.visualizer.server_state import safe_get_grid
+from power_grid_model_ds._core.visualizer.server_state import get_grid
 from power_grid_model_ds._core.visualizer.typing import STYLESHEET
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ def search_element(group: str, column: str, operator: str, value: str, styleshee
     if not group or not column or not value:
         raise PreventUpdate
 
-    # Correct parse any backslash or quote before making is a float.
+    # Correctly parse any backslash or quote before making is a float.
     parsed_value = float(str(value).strip().replace("\\", "\\\\").replace('"', '\\"'))
 
     matching_ids = _get_matching_pgm_ids(group=group, column=column, operator=operator, value=parsed_value)
@@ -62,7 +62,7 @@ def update_column_options(selected_group, store_data):
 
 def _get_matching_pgm_ids(group: str, column: str, operator: str, value: str) -> list[int]:
     """Helper function to get matching pgm_ids based on the search criteria."""
-    array = getattr(safe_get_grid(), group)
+    array = getattr(get_grid(), group)
     selected_column = array[column]
 
     # Some colunmns have 3 digits in them (for asymmetic data). We do not support search on those columns for now.

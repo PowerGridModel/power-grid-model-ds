@@ -73,8 +73,8 @@ def visualize_grid_with_all_open_types():
 
 
 if __name__ == "__main__":
-    # visualize_grid()
+    visualize_grid()
     # visualize_coordinated_grid()
     # visualize_grid_with_links()
     # visualize_grid_with_all_types()
-    visualize_grid_with_all_open_types()
+    # visualize_grid_with_all_open_types()
