@@ -62,12 +62,8 @@ def list_of_paths_to_set(paths, ordered_paths=False):
 
 @pytest.mark.usefixtures("graph")
 class TestThreeWindingTransformer:
-    def test_three_winding_transformer_group(self, graph, active_only):
-        expected = set() if active_only else {(2, 3, 5), (20, 30, 50)}
-        assert graph._three_winding_branch_groups == expected
-
-        with graph.tmp_remove_branches([(2, 3), (20, 30)]):
-            assert graph._three_winding_branch_groups == expected
+    def test_three_winding_transformer_group(self, graph):
+        assert graph._three_winding_branch_groups == {(2, 3, 5), (20, 30, 50)}
 
     @pytest.mark.parametrize(
         ("source", "dest", "active_expected", "complete_expected"),
