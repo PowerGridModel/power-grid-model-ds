@@ -36,7 +36,9 @@ def get_grid_with_links() -> Grid:
 
 
 def visualize_grid():
-    visualize(grid=get_radial_grid(), debug=True)
+    grid = get_radial_grid()
+    grid.set_feeder_ids()
+    visualize(grid=grid, debug=True)
 
 
 def visualize_coordinated_grid():
