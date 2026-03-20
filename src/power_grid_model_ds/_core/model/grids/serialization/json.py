@@ -40,7 +40,7 @@ def serialize_to_json(grid: G, path: Path, strict: bool = True, **kwargs) -> Pat
     serialized_data = {}
 
     for field in dataclasses.fields(grid):
-        if field.name in ["graphs"]:
+        if field.name in ["graphs", "_ids"]:
             continue
 
         field_value = getattr(grid, field.name)
@@ -76,6 +76,7 @@ def deserialize_from_json(path: Path, target_grid_class: type[G]) -> G:
 
     grid = target_grid_class.empty()
     _restore_grid_values(grid, json_data["data"])
+    grid.rebuild_ids()
     grid.rebuild_graphs()
     return grid
 

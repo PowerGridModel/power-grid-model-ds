@@ -4,6 +4,7 @@
 
 """Various tests for the FancyArrayContainer."""
 
+import re
 from copy import deepcopy
 from dataclasses import dataclass
 
@@ -43,7 +44,7 @@ def test_id_counter_type(basic_grid: Grid):
 def test_id_counter():
     container = FancyArrayContainer.empty()
     # pylint: disable=protected-access
-    container._id_counter = 42
+    container._ids = {42}
     assert 42 == container.id_counter
 
 
@@ -171,7 +172,7 @@ def test_append_with_overlapping_ids():
     nodes_2.id = [3, 4, 5]
 
     # This should raise a ValueError due to overlapping ID 3
-    with pytest.raises(ValueError, match="Cannot append: minimum id 3 is not greater than the current id counter 3"):
+    with pytest.raises(ValueError, match=re.escape("Cannot append, array contains ids that already exist: {3}")):
         grid.append(nodes_2)
 
 
@@ -195,3 +196,24 @@ def test_append_with_non_overlapping_ids():
     assert grid.node.size == 6
     expected_ids = [1, 2, 3, 4, 5, 6]
     assert sorted(grid.node.id.tolist()) == expected_ids
+
+
+def test_rebuild_ids():
+    grid = Grid.from_txt("1 2 20", "2 3 21", "10 11 22")
+    expected_ids = {1, 2, 3, 10, 11, 20, 21, 22}
+    assert grid.ids == expected_ids
+    grid._ids = set()
+    grid.rebuild_ids()
+    assert grid.ids == expected_ids
+
+
+def test_rebuild_ids_with_duplicates():
+    grid = Grid.from_txt("1 2 12")
+    grid.node.id = [1, 12]  # Duplicate IDs within different arrays same array
+    with pytest.raises(ValueError):
+        grid.rebuild_ids()
+
+
+def test_ids():
+    grid = Grid.from_txt("1 2 20", "2 3 21", "10 11 22")
+    assert grid.ids == {1, 2, 3, 10, 11, 20, 21, 22}

@@ -108,15 +108,13 @@ def _compare_attr(attr1: object, attr2: object) -> dict[str, object]:
 
 def _print_differences(differences: dict[str, dict[str, object]]) -> None:
     for attr, diff in differences.items():
-        title = f"Difference in 'grid.{attr}':"
+        title = f"There are differences in 'grid.{attr}'"
         print(f"\n{title}")
         print("-" * len(title))
+
+        if attr in ["_ids", "graphs"]:
+            continue  # more info is not relevant for these attributes
+
         print(diff["grid1"])
         print("\nvs.\n")
         print(diff["grid2"])
-
-        if attr == "graphs":
-            print(
-                "\n*** Note: Differences in graphs may not be visible in the representations above. "
-                "Check the branch arrays below for actual differences. ***"
-            )
