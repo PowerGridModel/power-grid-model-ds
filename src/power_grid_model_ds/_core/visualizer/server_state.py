@@ -31,12 +31,12 @@ class _AppState:
 _state = _AppState()
 
 
-def safe_set_grid(grid: Grid) -> None:
+def set_grid(grid: Grid) -> None:
     """Set the Grid instance in a thread-safe manner."""
     _state.grid = grid
 
 
-def safe_get_grid() -> Grid:
+def get_grid() -> Grid:
     """Get the Grid instance in a thread-safe manner.
 
     Raises:

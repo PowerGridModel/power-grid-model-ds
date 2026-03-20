@@ -48,7 +48,7 @@ def visualize(grid: Grid, debug: bool = False, port: int = 8050) -> None:
             - "cose": A layout that uses the CompoundSpring Embedder algorithm (force-directed layout)
     """
     # Store Grid object on server side (thread-safe)
-    server_state.safe_set_grid(grid)
+    server_state.set_grid(grid)
 
     app = Dash(
         external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, MDBOOTSTRAP, FONT_AWESOME, GOOGLE_FONTS]

@@ -12,7 +12,7 @@ from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.layout.selection_output import (
     SELECTION_OUTPUT_HTML,
 )
-from power_grid_model_ds._core.visualizer.server_state import safe_get_grid
+from power_grid_model_ds._core.visualizer.server_state import get_grid
 
 
 @callback(
@@ -33,7 +33,7 @@ def display_selected_element(node_data: list[dict[str, Any]], edge_data: list[di
     group = selected_data["group"]
     pgm_id = int(selected_data["id"])
 
-    grid: Grid = safe_get_grid()
+    grid: Grid = get_grid()
     array_data = getattr(grid, group).get(id=pgm_id)
 
     return _to_data_table(array_data)

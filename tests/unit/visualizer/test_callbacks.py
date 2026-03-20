@@ -54,7 +54,7 @@ def test_element_selection_callback():
     grid.node.id = [1]
     grid.node.u_rated = [100.0]
 
-    server_state.safe_set_grid(grid)
+    server_state.set_grid(grid)
 
     node_data = [{"pgm_id": 1, "u_rated": 100.0, "group": "node"}]
     edge_data = []
