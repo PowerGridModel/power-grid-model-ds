@@ -96,6 +96,7 @@ class FancyArrayContainer:
             ValueError: if duplicate ids are found between or within arrays.
         """
         new_ids: set[int] = set()
+
         for array in self.all_arrays():
             if not hasattr(array, "id"):
                 continue
@@ -104,6 +105,7 @@ class FancyArrayContainer:
             if array_ids & new_ids:
                 raise ValueError(f"Duplicate ids found between arrays ({array.__class__.__name__})")
             new_ids |= array_ids
+
         self._ids = new_ids
 
     def has_id(self, id_: int) -> bool:
