@@ -5,7 +5,6 @@ import pytest
 from dash import dash_table
 from dash.exceptions import PreventUpdate
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import NodeArray
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer import server_state
 from power_grid_model_ds._core.visualizer.callbacks.config import scale_elements, update_arrows, update_layout
@@ -13,6 +12,7 @@ from power_grid_model_ds._core.visualizer.callbacks.element_selection import dis
 from power_grid_model_ds._core.visualizer.callbacks.search_form import search_element
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
+from power_grid_model_ds.arrays import NodeArray
 
 _EDGE_INDEX = 3
 

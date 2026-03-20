@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
-from power_grid_model_ds.arrays import NodeArray
 from power_grid_model_ds._core.visualizer.layout.header_config import LayoutOptions
+from power_grid_model_ds.arrays import NodeArray
 
 
 def layout_with_config(layout: LayoutOptions, source_nodes: list[int]) -> dict:
