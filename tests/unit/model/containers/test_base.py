@@ -207,6 +207,13 @@ def test_rebuild_ids():
     assert grid._ids == expected_ids
 
 
+def test_rebuild_ids_with_duplicates():
+    grid = Grid.from_txt("1 2 12")
+    grid.node.id = [1, 12]  # Duplicate IDs within different arrays same array
+    with pytest.raises(ValueError):
+        grid.rebuild_ids()
+
+
 def test_ids():
     grid = Grid.from_txt("1 2 20", "2 3 21", "10 11 22")
     assert grid.ids == {1, 2, 3, 10, 11, 20, 21, 22}
