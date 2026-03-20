@@ -3,11 +3,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
-from typing import Any
-
 from power_grid_model import ComponentType
 
-from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.typing import VizToComponentElements
 

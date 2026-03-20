@@ -45,7 +45,6 @@ def node_array() -> tuple[NodeArray, VizToComponentElements]:
             "data": {
                 "id": str(nodes["id"][i]),
                 "group": "node",
-                "u_rated": nodes["u_rated"][i].item(),
                 "associated_ids": {ComponentType.node.value: [nodes["id"][i].item()]},
             },
             "classes": f"{StyleClass.NODE.value}",
@@ -125,7 +124,6 @@ def branch3_array() -> tuple[Branch3Array, VizToComponentElements]:
         "200_0": {
             "data": {
                 "id": "200_0",
-                PGM_ID_KEY: 200,
                 "group": "three_winding_transformer",
                 "source": "1",
                 "target": "2",
@@ -138,7 +136,6 @@ def branch3_array() -> tuple[Branch3Array, VizToComponentElements]:
         "200_1": {
             "data": {
                 "id": "200_1",
-                PGM_ID_KEY: 200,
                 "group": "three_winding_transformer",
                 "source": "1",
                 "target": "3",
@@ -151,7 +148,6 @@ def branch3_array() -> tuple[Branch3Array, VizToComponentElements]:
         "200_2": {
             "data": {
                 "id": "200_2",
-                PGM_ID_KEY: 200,
                 "group": "three_winding_transformer",
                 "source": "2",
                 "target": "3",
