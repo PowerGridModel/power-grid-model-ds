@@ -40,49 +40,15 @@ class FancyArrayContainer:
     def id_counter(self):
         """Returns the max id in self._ids"""
         warnings.warn(
-            "self.id_counter is deprecated, use self.max_id instead",
+            "self.id_counter is deprecated, use self.max_id or self.ids instead",
             DeprecationWarning,
             stacklevel=2,
         )
         return self.max_id
 
-    @classmethod
-    def empty(cls: Type[Self]) -> Self:
-        """Create an empty grid"""
-        empty_fields = cls._get_empty_fields()
-        return cls(**empty_fields)
-
-    def all_arrays(self):
-        """Returns all arrays in the container."""
-
-        for field in dataclasses.fields(self):
-            attribute = getattr(self, field.name)
-            if isinstance(attribute, FancyArray):
-                yield attribute
-
-    @classmethod
-    def find_array_field(cls, array_type: Type[FancyArray]) -> dataclasses.Field:
-        """Find the Field that holds an array of type array_type.
-
-        Args:
-            array_type(type[FancyArray]): FancyArray subclass.
-
-        Raises:
-            TypeError: if no field with the given `array_type` is found or if multiple fields are found.
-
-        Returns:
-            a Field instance.
-        """
-        fields = [
-            field
-            for field in dataclasses.fields(cls)
-            if inspect.isclass(field.type) and issubclass(field.type, array_type)
-        ]
-        if (nr_fields := len(fields)) != 1:
-            raise TypeError(
-                f"Expected to find 1 array with type '{array_type.__name__}' in {cls.__name__} ({nr_fields} found)"
-            )
-        return fields[0]
+    @property
+    def ids(self):
+        return self._ids
 
     @property
     def max_id(self) -> int:
@@ -105,14 +71,6 @@ class FancyArrayContainer:
                 raise ValueError(f"Duplicate ids found between arrays ({array.__class__.__name__})")
             new_ids |= array_ids
         self._ids = new_ids
-
-    def has_id(self, id_: int) -> bool:
-        """Checks if the given record_id exists in any of the arrays within the container.
-
-        Args:
-            record_id(int): the id to be checked.
-        """
-        return id_ in self._ids
 
     def check_ids(self, check_between_arrays: bool = True, check_within_arrays: bool = True) -> None:
         """Checks for duplicate id values across all arrays in the container.
@@ -143,6 +101,20 @@ class FancyArrayContainer:
             logging.warning(f"{array_class.__name__} contains duplicates!")
 
         raise ValueError(f"Duplicates found within {self.__class__.__name__}!")
+
+    @classmethod
+    def empty(cls: Type[Self]) -> Self:
+        """Create an empty grid"""
+        empty_fields = cls._get_empty_fields()
+        return cls(**empty_fields)
+
+    def all_arrays(self):
+        """Returns all arrays in the container."""
+
+        for field in dataclasses.fields(self):
+            attribute = getattr(self, field.name)
+            if isinstance(attribute, FancyArray):
+                yield attribute
 
     def append(self, array: FancyArray, check_max_id: bool = True) -> None:
         """Append the given asset_array to the corresponding field of ArrayContainer and generate ids.
@@ -204,6 +176,30 @@ class FancyArrayContainer:
         if arrays_with_record:
             return arrays_with_record
         raise RecordDoesNotExist(f"record id '{record_id}' not found in {self.__class__.__name__}")
+
+    @classmethod
+    def find_array_field(cls, array_type: Type[FancyArray]) -> dataclasses.Field:
+        """Find the Field that holds an array of type array_type.
+
+        Args:
+            array_type(type[FancyArray]): FancyArray subclass.
+
+        Raises:
+            TypeError: if no field with the given `array_type` is found or if multiple fields are found.
+
+        Returns:
+            a Field instance.
+        """
+        fields = [
+            field
+            for field in dataclasses.fields(cls)
+            if inspect.isclass(field.type) and issubclass(field.type, array_type)
+        ]
+        if (nr_fields := len(fields)) != 1:
+            raise TypeError(
+                f"Expected to find 1 array with type '{array_type.__name__}' in {cls.__name__} ({nr_fields} found)"
+            )
+        return fields[0]
 
     def _append(self, array: FancyArray, check_max_id: bool = True) -> None:
         """

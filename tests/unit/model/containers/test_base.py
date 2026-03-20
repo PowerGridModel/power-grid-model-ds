@@ -207,7 +207,6 @@ def test_rebuild_ids():
     assert grid._ids == expected_ids
 
 
-def test_has_id():
+def test_ids():
     grid = Grid.from_txt("1 2 20", "2 3 21", "10 11 22")
-    assert grid.has_id(1)
-    assert not grid.has_id(15)
+    assert grid.ids == {1, 2, 3, 10, 11, 20, 21, 22}
