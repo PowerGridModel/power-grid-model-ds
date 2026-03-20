@@ -7,15 +7,22 @@ from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.visualizer.styling_classification import (
     StyleClass,
+    get_appliance_edge_classification,
     get_branch_classification,
     get_node_classification,
 )
 from power_grid_model_ds.arrays import (
+    AsymGenArray,
     AsymLineArray,
+    AsymLoadArray,
     GenericBranchArray,
     LineArray,
     LinkArray,
     NodeArray,
+    ShuntArray,
+    SourceArray,
+    SymGenArray,
+    SymLoadArray,
     TransformerArray,
 )
 
@@ -164,6 +171,78 @@ class TestGetBranchClassification:
         branch["to_status"] = to_status
 
         result = get_branch_classification(branch, component_type)
+        expected = " ".join(cls.value for cls in expected_classes)
+        assert result == expected
+
+        # Verify all expected classes are present
+        for cls in expected_classes:
+            assert cls.value in result
+
+
+class TestGetApplianceClassification:
+    """Test get_appliance_classification function."""
+
+    @pytest.mark.parametrize(
+        ("array_type, component_type, status, expected_classes"),
+        [
+            pytest.param(SymLoadArray, ComponentType.sym_load, 1, [StyleClass.LOADING_APPLIANCE], id="sym_load"),
+            pytest.param(SymGenArray, ComponentType.sym_gen, 1, [StyleClass.GENERATING_APPLIANCE], id="sym_gen"),
+            pytest.param(AsymLoadArray, ComponentType.asym_load, 1, [StyleClass.LOADING_APPLIANCE], id="asym_load"),
+            pytest.param(AsymGenArray, ComponentType.asym_gen, 1, [StyleClass.GENERATING_APPLIANCE], id="asym_gen"),
+            pytest.param(SourceArray, ComponentType.source, 1, [StyleClass.GENERATING_APPLIANCE], id="source"),
+            pytest.param(ShuntArray, ComponentType.shunt, 1, [StyleClass.LOADING_APPLIANCE], id="shunt"),
+            pytest.param(
+                SymLoadArray,
+                ComponentType.sym_load,
+                0,
+                [StyleClass.LOADING_APPLIANCE, StyleClass.OPEN_LOADING_APPLIANCE],
+                id="open_sym_load",
+            ),
+            pytest.param(
+                SymGenArray,
+                ComponentType.sym_gen,
+                0,
+                [StyleClass.GENERATING_APPLIANCE, StyleClass.OPEN_GENERATING_APPLIANCE],
+                id="open_sym_gen",
+            ),
+            pytest.param(
+                AsymLoadArray,
+                ComponentType.asym_load,
+                0,
+                [StyleClass.LOADING_APPLIANCE, StyleClass.OPEN_LOADING_APPLIANCE],
+                id="open_asym_load",
+            ),
+            pytest.param(
+                AsymGenArray,
+                ComponentType.asym_gen,
+                0,
+                [StyleClass.GENERATING_APPLIANCE, StyleClass.OPEN_GENERATING_APPLIANCE],
+                id="open_asym_gen",
+            ),
+            pytest.param(
+                SourceArray,
+                ComponentType.source,
+                0,
+                [StyleClass.GENERATING_APPLIANCE, StyleClass.OPEN_GENERATING_APPLIANCE],
+                id="open_source",
+            ),
+            pytest.param(
+                ShuntArray,
+                ComponentType.shunt,
+                0,
+                [StyleClass.LOADING_APPLIANCE, StyleClass.OPEN_LOADING_APPLIANCE],
+                id="open_shunt",
+            ),
+        ],
+    )
+    def test_appliance_classification(self, array_type, component_type, status, expected_classes):
+        """Test classification for various appliance types."""
+        appliance = array_type.zeros(1)
+        appliance["id"] = 100
+        appliance["node"] = 1
+        appliance["status"] = status
+
+        result = get_appliance_edge_classification(appliance, component_type)
         expected = " ".join(cls.value for cls in expected_classes)
         assert result == expected
 

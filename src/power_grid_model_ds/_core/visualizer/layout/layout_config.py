@@ -7,15 +7,15 @@ from power_grid_model_ds._core.visualizer.layout.header_config import LayoutOpti
 from power_grid_model_ds.arrays import NodeArray
 
 
-def layout_with_config(layout: LayoutOptions, source_nodes: list[int]) -> dict:
+def layout_with_config(layout: LayoutOptions, source_available: bool) -> dict:
     """Get the layout options for the selected layout."""
     if layout is LayoutOptions.BREADTHFIRST:
         config_dict = {
             "name": layout.value,
             "spacingFactor": 2.5,
         }
-        if source_nodes:
-            config_dict["roots"] = ", ".join(f'[id = "{node}"]' for node in source_nodes)
+        if source_available:
+            config_dict["roots"] = 'node[group = "source_ghost_node"]'
         return config_dict
     return {"name": layout.value}
 
