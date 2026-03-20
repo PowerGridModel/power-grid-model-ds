@@ -34,7 +34,7 @@ def _get_columns_store(grid: Grid) -> dcc.Store:
             ComponentType.three_winding_transformer: grid.three_winding_transformer.columns,
             ComponentType.asym_line: grid.asym_line.columns,
             ComponentType.generic_branch: grid.generic_branch.columns,
-            "branch": grid.branches.columns,
+            "branches": grid.branches.columns,
         },
     )
 
