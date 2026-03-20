@@ -90,7 +90,11 @@ class FancyArrayContainer:
         return max(self._ids) if self._ids else 0
 
     def rebuild_ids(self) -> None:
-        """Rebuild self._ids based on the arrays in the container."""
+        """Rebuild self._ids based on the arrays in the container.
+
+        Raises:
+            ValueError: if duplicate ids are found between or within arrays.
+        """
         ids_per_array = {
             array.__class__.__name__: set(array.id.tolist()) for array in self.all_arrays() if hasattr(array, "id")
         }
