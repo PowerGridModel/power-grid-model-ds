@@ -26,12 +26,12 @@ class CoordinatedNodeArray(NodeArray):
         (LayoutOptions.COSE, {"name": "cose"}),
         (
             LayoutOptions.BREADTHFIRST,
-            {"name": "breadthfirst", "spacingFactor": 2.5, "roots": '[id = "100"], [id = "101"]'},
+            {"name": "breadthfirst", "spacingFactor": 2.5, "roots": 'node[group = "source_ghost_node"]'},
         ),
     ],
 )
 def test_layout_with_config(name, expected):
-    result = layout_config.layout_with_config(name, source_nodes=[100, 101])
+    result = layout_config.layout_with_config(name, source_available=True)
     assert result == expected
 
 
