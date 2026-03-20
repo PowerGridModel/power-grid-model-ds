@@ -45,7 +45,7 @@ def scale_elements(node_scale: float, edge_scale: float, stylesheet: STYLESHEET)
 @callback(
     Output("cytoscape-graph", "layout"),
     Input("dropdown-update-layout", "value"),
-    State("source-nodes-store", "data"),
+    State("source-available-store", "data"),
     prevent_initial_call=True,
 )
 def update_layout(layout, source_available):
