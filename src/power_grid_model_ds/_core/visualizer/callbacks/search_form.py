@@ -33,7 +33,7 @@ def search_element(group: str, column: str, operator: str, value: str, styleshee
     if not group or not column or not value:
         raise PreventUpdate
 
-    # Correctly parse any backslash or quote before making is a float.
+    # Correctly parse any backslash or quote before making it a float.
     parsed_value = float(str(value).strip().replace("\\", "\\\\").replace('"', '\\"'))
 
     matching_ids = _get_matching_pgm_ids(group=group, column=column, operator=operator, value=parsed_value)
