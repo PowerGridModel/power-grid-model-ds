@@ -181,7 +181,7 @@ class TestStyleClass:
             pytest.param(StyleClass.NODE, "node", id="node"),
             pytest.param(StyleClass.SUBSTATION_NODE, "substation_node", id="substation_node"),
             pytest.param(StyleClass.LARGE_ID_NODE, "large_id_node", id="large_id_node"),
-            pytest.param(StyleClass.BRANCH, "branch", id="branch"),
+            pytest.param(StyleClass.BRANCH, "branches", id="branch"),
             pytest.param(StyleClass.OPEN_BRANCH, "open_branch", id="open_branch"),
             pytest.param(StyleClass.OPEN_BRANCH_FROM, "open_branch_from", id="open_branch_from"),
             pytest.param(StyleClass.OPEN_BRANCH_TO, "open_branch_to", id="open_branch_to"),

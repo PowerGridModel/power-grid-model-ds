@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2025 Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
+from unittest.mock import patch
+
 import pytest
 from dash import dash_table
 from dash.exceptions import PreventUpdate
@@ -10,7 +12,7 @@ from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer import server_state
 from power_grid_model_ds._core.visualizer.callbacks.config import scale_elements, update_arrows, update_layout
 from power_grid_model_ds._core.visualizer.callbacks.element_selection import display_selected_element
-from power_grid_model_ds._core.visualizer.callbacks.search_form import search_element
+from power_grid_model_ds._core.visualizer.callbacks.search_form import HIGHLIGHT_STYLE, search_element
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
 
@@ -26,16 +28,40 @@ def test_search_element_no_input():
         search_element(group="", column="", operator="", value="", stylesheet=DEFAULT_STYLESHEET)
 
 
-def test_search_element_with_input():
-    group = "node"
-    column = "id"
-    operator = "="
-    value = "1"
+@patch("power_grid_model_ds._core.visualizer.callbacks.search_form.safe_get_grid")
+def test_search_element_with_asym_column(mock_safe_get_grid):
+    mock_safe_get_grid.return_value = Grid.empty()
+    with pytest.raises(PreventUpdate):
+        search_element(group="asym_gen", column="p_specified", operator="=", value="100", stylesheet=DEFAULT_STYLESHEET)
 
-    expected_selector = f'[{column} {operator} "{value}"][group = "node"]'
+
+@pytest.mark.parametrize(
+    ("group", "column", "operator", "value", "expected_selectors"),
+    [
+        pytest.param("node", "id", "=", "1", [{"selector": "#1", "style": HIGHLIGHT_STYLE}], id="node id equal"),
+        pytest.param(
+            "branches", "id", "!=", "12", [{"selector": "#23", "style": HIGHLIGHT_STYLE}], id="branch id not equal"
+        ),
+        pytest.param(
+            "line", "from_node", ">", "1", [{"selector": "#23", "style": HIGHLIGHT_STYLE}], id="line from_node greater"
+        ),
+        pytest.param(
+            "line",
+            "to_node",
+            "<",
+            "10",
+            [{"selector": "#12", "style": HIGHLIGHT_STYLE}, {"selector": "#23", "style": HIGHLIGHT_STYLE}],
+            id="line to_node smaller",
+        ),
+    ],
+)
+@patch("power_grid_model_ds._core.visualizer.callbacks.search_form.safe_get_grid")
+def test_search_element_with_input(mock_safe_get_grid, group, column, operator, value, expected_selectors):
+    mock_safe_get_grid.return_value = Grid.from_txt("S1 2 12", "2 3 23")
 
     result = search_element(group, column, operator, value, DEFAULT_STYLESHEET)
-    assert result[-1]["selector"] == expected_selector
+    assert len(result) == len(DEFAULT_STYLESHEET) + len(expected_selectors)
+    assert result[-len(expected_selectors) :] == expected_selectors
 
 
 def test_show_arrows():
@@ -56,7 +82,7 @@ def test_element_selection_callback():
 
     server_state.safe_set_grid(grid)
 
-    node_data = [{"pgm_id": 1, "u_rated": 100.0, "group": "node"}]
+    node_data = [{"id": "1", "pgm_id": 1, "u_rated": 100.0, "group": "node"}]
     edge_data = []
 
     result = display_selected_element(node_data, edge_data)
