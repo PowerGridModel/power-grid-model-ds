@@ -54,6 +54,8 @@ def scale_elements(node_scale: float, edge_scale: float, stylesheet: STYLESHEET)
 )
 def update_layout(layout: str, source_nodes: list[int]):
     """Callback to update the layout of the graph."""
+    if not layout:
+        raise PreventUpdate
     layout_config = layout_with_config(LayoutOptions(layout), source_nodes)
     layout_config.update({"animate": True})
     return layout_config
