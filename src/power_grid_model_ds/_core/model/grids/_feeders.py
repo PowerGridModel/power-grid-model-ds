@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray
 from power_grid_model_ds._core.model.enums.nodes import NodeType
+from power_grid_model_ds.arrays import BranchArray
 
 if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import Grid

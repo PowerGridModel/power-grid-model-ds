@@ -6,15 +6,15 @@
 
 from typing import TypeVar
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+from power_grid_model_ds._core.model.enums.nodes import NodeType
+from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds.arrays import (
     LineArray,
     NodeArray,
     SourceArray,
     SymLoadArray,
     ThreeWindingTransformerArray,
 )
-from power_grid_model_ds._core.model.enums.nodes import NodeType
-from power_grid_model_ds._core.model.grids.base import Grid
 
 T = TypeVar("T", bound=Grid)
 

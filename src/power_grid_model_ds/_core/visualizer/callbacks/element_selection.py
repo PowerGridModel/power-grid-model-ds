@@ -7,13 +7,13 @@ from typing import Any
 
 from dash import Input, Output, callback, dash_table
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import IdArray
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.layout.selection_output import (
     SELECTION_OUTPUT_HTML,
 )
 from power_grid_model_ds._core.visualizer.parsing_utils import PGM_ID_KEY
 from power_grid_model_ds._core.visualizer.server_state import get_grid
+from power_grid_model_ds.arrays import IdArray
 
 
 @callback(

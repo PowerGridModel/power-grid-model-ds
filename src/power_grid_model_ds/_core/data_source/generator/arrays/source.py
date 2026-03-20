@@ -7,8 +7,8 @@
 import numpy as np
 
 from power_grid_model_ds._core.data_source.generator.arrays.base import BaseGenerator
-from power_grid_model_ds._core.model.arrays.pgm_arrays import NodeArray, SourceArray
 from power_grid_model_ds._core.model.enums.nodes import NodeType
+from power_grid_model_ds.arrays import NodeArray, SourceArray
 
 
 class SourceGenerator(BaseGenerator):

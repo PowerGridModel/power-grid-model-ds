@@ -11,15 +11,15 @@ from dataclasses import dataclass
 import pytest
 
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
+from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds.arrays import (
     IdArray,
     LineArray,
     LinkArray,
     NodeArray,
     TransformerArray,
 )
-from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
-from power_grid_model_ds._core.model.grids.base import Grid
 from tests.fixtures.arrays import FancyNonIdArray
 
 # pylint: disable=missing-function-docstring,missing-class-docstring

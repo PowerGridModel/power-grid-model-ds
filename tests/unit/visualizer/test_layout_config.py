@@ -6,9 +6,9 @@ import numpy as np
 import pytest
 from numpy.typing import NDArray
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import NodeArray
 from power_grid_model_ds._core.visualizer.layout import layout_config
 from power_grid_model_ds._core.visualizer.layout.header_config import LayoutOptions
+from power_grid_model_ds.arrays import NodeArray
 
 
 class CoordinatedNodeArray(NodeArray):

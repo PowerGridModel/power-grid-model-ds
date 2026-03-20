@@ -10,8 +10,8 @@ from numpy.typing import NDArray
 from power_grid_model_ds._core import fancypy as fp
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.base.errors import ArrayDefinitionError
-from power_grid_model_ds._core.model.arrays.pgm_arrays import AsymVoltageSensorArray
 from power_grid_model_ds._core.model.constants import EMPTY_ID
+from power_grid_model_ds.arrays import AsymVoltageSensorArray
 from tests.fixtures.arrays import DefaultedFancyTestArray, FancyTestArray
 
 # pylint: disable=missing-function-docstring,missing-class-docstring,duplicate-code

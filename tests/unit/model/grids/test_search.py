@@ -7,9 +7,9 @@ import pytest
 
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
-from power_grid_model_ds._core.model.arrays.pgm_arrays import LineArray, LinkArray, NodeArray, TransformerArray
 from power_grid_model_ds._core.model.enums.nodes import NodeType
 from power_grid_model_ds._core.model.grids._search import find_differences_between_grids
+from power_grid_model_ds.arrays import LineArray, LinkArray, NodeArray, TransformerArray
 from tests.fixtures.grid_classes import ExtendedGrid
 
 # pylint: disable=missing-function-docstring
