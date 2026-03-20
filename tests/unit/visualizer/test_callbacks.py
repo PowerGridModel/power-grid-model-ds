@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2025 Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
+
 import pytest
 from dash import dash_table
 from dash.exceptions import PreventUpdate
@@ -9,7 +10,7 @@ from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer import server_state
 from power_grid_model_ds._core.visualizer.callbacks.config import scale_elements, update_arrows, update_layout
 from power_grid_model_ds._core.visualizer.callbacks.element_selection import display_selected_element
-from power_grid_model_ds._core.visualizer.callbacks.search_form import search_element
+from power_grid_model_ds._core.visualizer.callbacks.search_form import HIGHLIGHT_STYLE, search_element
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
 from power_grid_model_ds.arrays import NodeArray
@@ -26,16 +27,38 @@ def test_search_element_no_input():
         search_element(group="", column="", operator="", value="", stylesheet=DEFAULT_STYLESHEET)
 
 
-def test_search_element_with_input():
-    group = "node"
-    column = "id"
-    operator = "="
-    value = "1"
+def test_search_element_with_asym_column():
+    server_state.set_grid(Grid.empty())
+    with pytest.raises(PreventUpdate):
+        search_element(group="asym_gen", column="p_specified", operator="=", value="100", stylesheet=DEFAULT_STYLESHEET)
 
-    expected_selector = f'[{column} {operator} "{value}"][group = "node"]'
+
+@pytest.mark.parametrize(
+    ("group", "column", "operator", "value", "expected_selectors"),
+    [
+        pytest.param("node", "id", "=", "1", [{"selector": "#1", "style": HIGHLIGHT_STYLE}], id="node id equal"),
+        pytest.param(
+            "branches", "id", "!=", "12", [{"selector": "#23", "style": HIGHLIGHT_STYLE}], id="branch id not equal"
+        ),
+        pytest.param(
+            "line", "from_node", ">", "1", [{"selector": "#23", "style": HIGHLIGHT_STYLE}], id="line from_node greater"
+        ),
+        pytest.param(
+            "line",
+            "to_node",
+            "<",
+            "10",
+            [{"selector": "#12", "style": HIGHLIGHT_STYLE}, {"selector": "#23", "style": HIGHLIGHT_STYLE}],
+            id="line to_node smaller",
+        ),
+    ],
+)
+def test_search_element_with_input(group, column, operator, value, expected_selectors):
+    server_state.set_grid(Grid.from_txt("S1 2 12", "2 3 23"))
 
     result = search_element(group, column, operator, value, DEFAULT_STYLESHEET)
-    assert result[-1]["selector"] == expected_selector
+    assert len(result) == len(DEFAULT_STYLESHEET) + len(expected_selectors)
+    assert result[-len(expected_selectors) :] == expected_selectors
 
 
 def test_show_arrows():
