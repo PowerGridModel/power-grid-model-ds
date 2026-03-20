@@ -115,9 +115,6 @@ select = [
   # "SIM",
   # isort
   "I",
-  # Numpy 2.0 downstream : https://numpy.org/devdocs/numpy_2_0_migration_guide.html
-  "NPY201",
-
   "YTT",
   "BLE",
   "PERF",
