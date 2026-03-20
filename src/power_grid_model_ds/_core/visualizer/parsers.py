@@ -199,6 +199,7 @@ def _parse_appliances(elements: VizToComponentElements, array: ApplianceArray, g
                 "group": group.value,
                 "associated_ids": {group.value: [appliance.id.item()]},
             },
+            "selectable": False,  # UPCOMINGPRTODO: (nitbharambe) Disable element_selection till coming PRs
             "classes": get_appliance_edge_classification(appliance, group),
         }
 

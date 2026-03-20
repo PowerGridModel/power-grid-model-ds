@@ -28,6 +28,7 @@ class StyleClass(StrEnum):
     LINK = "link"
     GENERIC_BRANCH = "generic_branch"
     ASYM_LINE = "asym_line"
+    SOURCE = "source"
     GENERATING_APPLIANCE = "generating_appliance"
     LOADING_APPLIANCE = "loading_appliance"
     OPEN_GENERATING_APPLIANCE = "open_generating_appliance"

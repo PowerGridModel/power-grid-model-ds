@@ -6,15 +6,15 @@
 from power_grid_model_ds._core.model.arrays.pgm_arrays import NodeArray
 
 
-def layout_with_config(layout_name, source_nodes) -> dict:
+def layout_with_config(layout_name, source_available) -> dict:
     """Get the layout options for the selected layout."""
     if layout_name == "breadthfirst":
         config_dict = {
             "name": layout_name,
             "spacingFactor": 2.5,
         }
-        if source_nodes:
-            config_dict["roots"] = ", ".join(f'[id = "{node}"]' for node in source_nodes)
+        if source_available:
+            config_dict["roots"] = 'node[group = "source_ghost_node"]'
         return config_dict
     return {"name": layout_name}
 

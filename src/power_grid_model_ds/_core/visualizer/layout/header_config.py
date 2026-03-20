@@ -71,4 +71,12 @@ _ARROWS_CHECKBOX = dbc.Checkbox(
     style={"margin-top": "10px"},
 )
 
-CONFIG_ELEMENTS = [_LAYOUT_DROPDOWN, _ARROWS_CHECKBOX, _SCALING_DIV]
+_SHOW_APPLIANCES_CHECKBOX = dbc.Checkbox(
+    id="show-appliances",
+    label="Show appliances",
+    value=False,
+    label_style={"color": "white"},
+    style={"margin-top": "10px"},
+)
+
+CONFIG_ELEMENTS = [_LAYOUT_DROPDOWN, _ARROWS_CHECKBOX, _SHOW_APPLIANCES_CHECKBOX, _SCALING_DIV]

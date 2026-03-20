@@ -13,6 +13,19 @@ from power_grid_model_ds._core.visualizer.typing import VizToComponentElements
 
 PGM_ID_KEY = "pgm_id"
 
+_SHOW_APPLIANCES_GROUPS = [
+    "sym_load",
+    "sym_load_ghost_node",
+    "sym_gen",
+    "sym_gen_ghost_node",
+    "asym_load",
+    "asym_load_ghost_node",
+    "asym_gen",
+    "asym_gen_ghost_node",
+    "shunt",
+    "shunt_ghost_node",
+]
+
 
 def array_to_dict(array_record: FancyArray, columns: list[str]) -> dict[str, Any]:
     """
@@ -60,3 +73,8 @@ def viz_id_to_pgm_id(id_str: str) -> int:
     for suffix in ["_0", "_1", "_2"]:
         id_str = id_str.replace(suffix, "")
     return int(id_str)
+
+
+def filter_out_appliances(elements_iterable):
+    """Filter out appliance elements from the VizToComponentElements structure."""
+    return [element for element in elements_iterable if element["data"]["group"] not in _SHOW_APPLIANCES_GROUPS]

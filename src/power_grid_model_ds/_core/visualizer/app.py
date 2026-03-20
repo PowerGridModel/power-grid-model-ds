@@ -20,26 +20,10 @@ from power_grid_model_ds._core.visualizer.layout.header import HEADER_HTML
 from power_grid_model_ds._core.visualizer.layout.layout_config import get_default_graph_layout
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
 from power_grid_model_ds._core.visualizer.parsers import parse_element_data
+from power_grid_model_ds._core.visualizer.parsing_utils import filter_out_appliances
 
 GOOGLE_FONTS = "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
 MDBOOTSTRAP = "https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/8.2.0/mdb.min.css"
-
-_SHOW_APPLIANCES_GROUPS = [
-    "sym_load",
-    "sym_load_ghost_node",
-    "sym_gen",
-    "sym_gen_ghost_node",
-    "asym_load",
-    "asym_load_ghost_node",
-    "asym_gen",
-    "asym_gen_ghost_node",
-    "shunt",
-    "shunt_ghost_node",
-    # UPCOMINGPRTODO: (nitbharambe) Source appliances to be removed from here
-    # when appliances are visualized as we wish to view them even when checked off
-    "source",
-    "source_ghost_node",
-]
 
 
 def visualize(grid: Grid, debug: bool = False, port: int = 8050) -> None:
@@ -93,9 +77,7 @@ def get_app_layout(grid: Grid) -> html.Div:
     layout = get_default_graph_layout(grid.node)
     viz_elements_dict = parse_element_data(grid)
 
-    initial_elements = [
-        element for element in viz_elements_dict.values() if element["data"]["group"] not in _SHOW_APPLIANCES_GROUPS
-    ]
+    initial_elements = filter_out_appliances(viz_elements_dict.values())
 
     # UPCOMINGPRTODO: (nitbharambe) Remove associated_ids from initial element data.
     # They will be added and used after migrating to using grid object for callbacks
@@ -107,8 +89,10 @@ def get_app_layout(grid: Grid) -> html.Div:
     return html.Div(
         [
             columns_store,
+            dcc.Store(id="parsed-elements-store", data=viz_elements_dict),
             dcc.Store(id="stylesheet-store", data=DEFAULT_STYLESHEET),
-            dcc.Store(id="source-nodes-store", data=grid.source.node.tolist()),
+            dcc.Store(id="source-available-store", data=grid.source.size != 0),
+            dcc.Store(id="show-appliances-store", data=False, storage_type="session"),
             HEADER_HTML,
             html.Hr(style={"border-color": "white", "margin": "0"}),
             cytoscape_html,

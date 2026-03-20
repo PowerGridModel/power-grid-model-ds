@@ -235,6 +235,7 @@ def appliance_array() -> tuple[SymLoadArray, VizToComponentElements, VizToCompon
                         ComponentType.sym_load.value: [100],
                     },
                 },
+                "selectable": False,  # UPCOMINGPRTODO: (nitbharambe) Disable element_selection till coming PRs
                 "classes": f"{StyleClass.LOADING_APPLIANCE.value}",
             },
             "100_ghost_node": {
@@ -258,6 +259,7 @@ def appliance_array() -> tuple[SymLoadArray, VizToComponentElements, VizToCompon
                         ComponentType.sym_load.value: [101],
                     },
                 },
+                "selectable": False,  # UPCOMINGPRTODO: (nitbharambe) Disable element_selection till coming PRs
                 "classes": f"{StyleClass.LOADING_APPLIANCE.value}",
             },
             "101_ghost_node": {
