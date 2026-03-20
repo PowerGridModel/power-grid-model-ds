@@ -7,7 +7,6 @@ from typing import Literal
 from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.grids.base import Grid
-from power_grid_model_ds._core.visualizer.parsing_utils import array_to_dict
 from power_grid_model_ds._core.visualizer.styling_classification import (
     get_branch_classification,
     get_node_classification,
@@ -56,7 +55,6 @@ def parse_node_array(nodes: NodeArray) -> VizToComponentElements:
             "data": {"id": node_id_str, "group": "node"},
             "classes": get_node_classification(node),
         }
-        parsed_nodes[node_id_str]["data"].update(array_to_dict(node, nodes.columns))
 
         if with_coords:
             parsed_nodes[node_id_str]["position"] = {
@@ -72,7 +70,6 @@ def parse_branch3_array(
     """Parse the three-winding transformer array. Fills branch3 data to viz_to_comp."""
     parsed_branches: VizToComponentElements = {}
     for branch3 in branches:
-        branch3_component_data = array_to_dict(branch3, branches.columns)  # Same for all three branches
         for count, branch in enumerate(branch3.as_branches()):
             branch_id_str = f"{branch3.id.item()}_{count}"
             parsed_branches[branch_id_str] = {
@@ -85,7 +82,6 @@ def parse_branch3_array(
                 },
                 "classes": get_branch_classification(branch, group),
             }
-            parsed_branches[branch_id_str]["data"].update(branch3_component_data)
     return parsed_branches
 
 
@@ -112,5 +108,4 @@ def parse_branch_array(
             },
             "classes": get_branch_classification(branch, group),
         }
-        parsed_branches[branch_id_str]["data"].update(array_to_dict(branch, branches.columns))
     return parsed_branches
