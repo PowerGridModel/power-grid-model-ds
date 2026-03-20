@@ -100,7 +100,7 @@ class FancyArrayContainer:
             new_ids |= array_ids
         self._ids = new_ids
 
-    def has_id(self, record_id: int) -> bool:
+    def has_id(self, id_: int) -> bool:
         """Checks if the given record_id exists in any of the arrays within the container.
 
         Args:
