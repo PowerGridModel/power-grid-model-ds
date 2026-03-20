@@ -51,15 +51,23 @@ class LayoutOptions(Enum):
     GRID = "grid"
     COSE = "cose"
     BREADTHFIRST = "breadthfirst"
+    PRESET = "preset"  # x,y-coordinates
+
+    @classmethod
+    def dropdown_options(cls):
+        """Dropdown options (without PRESET)"""
+        return [option for option in cls if option is not cls.PRESET]
 
 
+_LAYOUT_DROPDOWN_OPTIONS = [
+    {"label": option.value, "value": option.value} for option in LayoutOptions.dropdown_options()
+]
 _LAYOUT_DROPDOWN = html.Div(
     dcc.Dropdown(
         id="dropdown-update-layout",
         placeholder="Select layout",
-        value=LayoutOptions.BREADTHFIRST.value,
         clearable=False,
-        options=[{"label": option.value, "value": option.value} for option in LayoutOptions],  # type: ignore[arg-type]
+        options=_LAYOUT_DROPDOWN_OPTIONS,  # type: ignore[arg-type]
         style={"width": "200px"},
     ),
     style={"margin": "0 20px 0 10px", "color": "black"},
