@@ -53,7 +53,7 @@ def get_app_layout(grid: Grid) -> html.Div:
     for element in initial_elements:
         element["data"].pop("associated_ids", None)
 
-    cytoscape_html = get_cytoscape_html(layout, initial_elements, grid.source.node.tolist())
+    cytoscape_html = get_cytoscape_html(layout, initial_elements, grid.source.size != 0)
 
     return html.Div(
         [
