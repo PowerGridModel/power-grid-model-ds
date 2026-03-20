@@ -95,13 +95,14 @@ class FancyArrayContainer:
         Raises:
             ValueError: if duplicate ids are found between or within arrays.
         """
-        ids_per_array = {
-            array.__class__.__name__: set(array.id.tolist()) for array in self.all_arrays() if hasattr(array, "id")
-        }
         new_ids: set[int] = set()
-        for class_name, array_ids in ids_per_array.items():
+        for array in self.all_arrays():
+            if not hasattr(array, "id"):
+                continue
+
+            array_ids = set(array.id.tolist())
             if array_ids & new_ids:
-                raise ValueError(f"Duplicate ids found between arrays ({class_name})")
+                raise ValueError(f"Duplicate ids found between arrays ({array.__class__.__name__})")
             new_ids |= array_ids
         self._ids = new_ids
 
