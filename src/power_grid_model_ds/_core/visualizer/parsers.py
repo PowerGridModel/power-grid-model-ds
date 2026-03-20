@@ -150,6 +150,8 @@ def parse_branch_array(branches: BranchArray, group: ComponentTypeBranch) -> Viz
 
 def _parse_appliances(elements: VizToComponentElements, array: ApplianceArray, group: ComponentTypeAppliance) -> None:
     """Parse appliances and associate them with nodes."""
+    with_coords = any("position" in element for element in elements.values())
+
     for appliance in array:
         appliance_id_str = str(appliance.id.item())
         appliance_ghost_id_str = f"{appliance_id_str}_ghost_node"
@@ -166,6 +168,9 @@ def _parse_appliances(elements: VizToComponentElements, array: ApplianceArray, g
             "classes": StyleClass.APPLIANCE_GHOST_NODE.value,
         }
 
+        if with_coords:
+            elements[appliance_ghost_id_str]["style"] = {"z-index": -1}
+
         elements[appliance_id_str] = {
             "data": {
                 "id": appliance_id_str,
@@ -177,5 +182,11 @@ def _parse_appliances(elements: VizToComponentElements, array: ApplianceArray, g
             "selectable": False,
             "classes": get_appliance_edge_classification(appliance, group),
         }
+
+        if with_coords:
+            elements[appliance_ghost_id_str]["position"] = {
+                "x": elements[node_id_str]["position"]["x"],
+                "y": elements[node_id_str]["position"]["y"],
+            }  # invert y-axis for visualization
 
         append_component_list_parsed_elements(elements, appliance.id.item(), node_id_str, group.value)

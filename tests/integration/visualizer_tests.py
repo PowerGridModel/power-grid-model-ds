@@ -6,6 +6,7 @@
 from dataclasses import dataclass
 
 from power_grid_model_ds import Grid
+from power_grid_model_ds.arrays import SourceArray
 from power_grid_model_ds.generators import RadialGridGenerator
 from power_grid_model_ds.visualizer import visualize
 from tests.unit.visualizer.test_parsers import CoordinatedNodeArray
@@ -25,6 +26,10 @@ def get_radial_grid() -> Grid:
 def get_coordinated_grid() -> CoordinatedGrid:
     scale = 500
     grid = CoordinatedGrid.from_txt("S1 2 open", "2 3", "3 4", "S1 500000000", "500000000 6", "6 7 transformer,open")
+
+    source = SourceArray.empty(1)
+    source.node = 1
+    grid.append(source)
     grid.node.x = [3, 2.5, 2, 1.5, 3.5, 4, 4.5]
     grid.node.x *= scale
     grid.node.y = [3, 4, 3, 4, 3, 4, 3]
