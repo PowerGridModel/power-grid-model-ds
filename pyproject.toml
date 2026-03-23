@@ -154,7 +154,7 @@ select = [
   # bandit
   "S",
   # boolean positional value in call
-  #"FBT003",
+  "FBT003",
   # raise vanilla args
   "TRY002",
   # pytest-style
