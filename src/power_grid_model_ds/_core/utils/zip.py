@@ -21,7 +21,7 @@ def zip_folder(folder_to_zip: Path) -> Path:
     folder_to_zip = folder_to_zip.resolve()
 
     # move into folder to zip to avoid nested folders in .zip file
-    current_working_directory = os.getcwd()
+    current_working_directory = Path.cwd()
     os.chdir(folder_to_zip)
     files_to_zip = [path.relative_to(folder_to_zip) for path in folder_to_zip.rglob("*")]
     zip_files(zip_file_path, files_to_zip)
@@ -56,7 +56,7 @@ def gzip2file(gzip_path: Path) -> Path:
 
     file_path = gzip_path.with_suffix("")
     with gzip.open(gzip_path, "rb") as f_in:
-        with open(file_path, "wb") as f_out:
+        with Path(file_path).open("wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
     return file_path
 
@@ -66,7 +66,7 @@ def file2gzip(file_path: Path) -> Path:
     _logger.info(f"Zipping {file_path.name}")
 
     gzip_path = file_path.with_suffix(f"{file_path.suffix}.gz")
-    with open(file_path, "rb") as f_in:
+    with Path(file_path).open("rb") as f_in:
         with gzip.open(gzip_path, "wb") as f_out:
             shutil.copyfileobj(f_in, f_out)
     return gzip_path

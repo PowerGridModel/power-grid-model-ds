@@ -60,7 +60,7 @@ def deserialize_from_str(grid_class: type[G], *args: str) -> G:
 
 def deserialize_from_txt_file(grid_class: type[G], txt_file_path: Path) -> G:
     """See Grid.from_txt_file()"""
-    with open(txt_file_path, "r", encoding="utf-8") as f:
+    with Path(txt_file_path).open("r", encoding="utf-8") as f:
         txt_lines = f.readlines()
     return deserialize_from_str(grid_class, *txt_lines)
 

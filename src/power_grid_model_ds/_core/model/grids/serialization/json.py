@@ -55,7 +55,7 @@ def serialize_to_json(grid: G, path: Path, strict: bool = True, **kwargs) -> Pat
     # Store in a wrapper for PGM compatibility
     json_data = {"data": serialized_data}
 
-    with open(path, "w", encoding="utf-8") as f:
+    with Path(path).open("w", encoding="utf-8") as f:
         json.dump(json_data, f, **kwargs)
 
     return path
@@ -71,7 +71,7 @@ def deserialize_from_json(path: Path, target_grid_class: type[G]) -> G:
     Returns:
         Grid: The deserialized Grid object of the specified target class
     """
-    with open(path, "r", encoding="utf-8") as f:
+    with Path(path).open("r", encoding="utf-8") as f:
         json_data = json.load(f)
 
     grid = target_grid_class.empty()

@@ -13,13 +13,13 @@ from power_grid_model_ds._core.utils.zip import gzip2file
 def save_to_pickle(path: Path, python_object: object):
     """Save a python object to pickle"""
     path.parent.mkdir(exist_ok=True, parents=True)
-    with open(str(path), "wb") as file:
+    with Path(str(path)).open("wb") as file:
         pickle.dump(python_object, file)
 
 
 def load_from_pickle(path: Path) -> object:
     """Load a python object from a pickle file"""
-    with open(str(path), "rb") as file:
+    with Path(str(path)).open("rb") as file:
         return pickle.load(file)
 
 
