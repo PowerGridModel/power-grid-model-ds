@@ -115,8 +115,49 @@ select = [
   # "SIM",
   # isort
   "I",
-  # Numpy 2.0 downstream : https://numpy.org/devdocs/numpy_2_0_migration_guide.html
-  "NPY201",
+  "YTT",
+  "BLE",
+  "PERF",
+  "Q",
+  #"ICN",
+  #"ISC",
+  #"G",
+  #"LOG",
+  "EXE",
+  "FA",
+  "FURB",
+  "FLY",
+  "SLOT",
+  # pylint
+  #"PL",
+  # Numpy-specific rules
+  "NPY",
+  # Warning
+  "W",
+  # use pathlib
+  #"PTH",
+  # tidy imports
+  "TID",
+  # unused arguments
+  #"ARG",
+  # Return
+  #"RET",
+  # pie
+  "PIE",
+  # self
+  #"SLF",
+  # raise
+  "RSE",
+  # ruff sepcific rules
+  #"RUF",
+  # bandit
+  #"S",
+  # boolean positional value in call
+  #"FBT003",
+  # raise vanilla args
+  "TRY002",
+  # pytest-style
+  #"PT",
 ]
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
