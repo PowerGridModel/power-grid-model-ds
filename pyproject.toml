@@ -135,7 +135,7 @@ select = [
   # Warning
   "W",
   # use pathlib
-  #"PTH",
+  "PTH",
   # tidy imports
   "TID",
   # unused arguments

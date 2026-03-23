@@ -229,7 +229,7 @@ class TestDeserialize:
 
         data = {"node": [{"id": 1, "u_rated": 10000}, {"id": 2, "u_rated": 20000}]}
 
-        with open(path, "w", encoding="utf-8") as f:
+        with Path(path).open("w", encoding="utf-8") as f:
             json.dump({"data": data}, f)
 
         grid = Grid.deserialize(path)
@@ -248,7 +248,7 @@ class TestDeserialize:
         }
 
         path = tmp_path / "json_data.json"
-        with open(path, "w", encoding="utf-8") as f:
+        with Path(path).open("w", encoding="utf-8") as f:
             json.dump({"data": extended_data}, f)
 
         grid = ExtendedGrid.deserialize(path)
@@ -265,7 +265,7 @@ class TestDeserialize:
         }
 
         # Write incompatible data to file
-        with open(path, "w", encoding="utf-8") as f:
+        with Path(path).open("w", encoding="utf-8") as f:
             json.dump({"data": incompatible_data}, f)
 
         grid = Grid.deserialize(path)
@@ -280,7 +280,7 @@ class TestDeserialize:
         }
 
         # Write data to file
-        with open(path, "w", encoding="utf-8") as f:
+        with Path(path).open("w", encoding="utf-8") as f:
             json.dump({"data": missing_array_data}, f)
 
         Grid.deserialize(path)
@@ -294,7 +294,7 @@ class TestDeserialize:
         }
 
         # Write data to file
-        with open(path, "w", encoding="utf-8") as f:
+        with Path(path).open("w", encoding="utf-8") as f:
             json.dump({"data": missing_array_data}, f)
 
         with pytest.raises(ValueError):
@@ -306,7 +306,7 @@ class TestDeserialize:
             "node": [{"id": 1, "u_rated": 10000}, {"u_rated": 10000}, {"id": 3}],
         }
 
-        with open(path, "w", encoding="utf-8") as f:
+        with Path(path).open("w", encoding="utf-8") as f:
             json.dump({"data": incomplete_data}, f)
 
         with pytest.raises(ValueError):
