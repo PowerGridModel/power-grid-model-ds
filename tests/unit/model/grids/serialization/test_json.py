@@ -17,8 +17,7 @@ from power_grid_model_ds import Grid, PowerGridModelInterface
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.containers.helpers import container_equal
 from power_grid_model_ds._core.utils.misc import array_equal_with_nan
-from power_grid_model_ds.arrays import LineArray
-from power_grid_model_ds.arrays import NodeArray as BaseNodeArray
+from power_grid_model_ds.arrays import LineArray, NodeArray as BaseNodeArray
 
 
 class ExtendedNodeArray(BaseNodeArray):

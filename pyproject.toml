@@ -99,6 +99,7 @@ max-line-length = 120
 [tool.ruff]
 output-format = "github"
 line-length = 120
+indent-width = 4
 show-fixes = true
 
 [tool.ruff.lint]
@@ -151,7 +152,7 @@ select = [
   # ruff sepcific rules
   #"RUF",
   # bandit
-  #"S",
+  "S",
   # boolean positional value in call
   #"FBT003",
   # raise vanilla args
@@ -162,6 +163,13 @@ select = [
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
 unfixable = []
+
+[tool.ruff.lint.isort]
+# Imports that are imported using keyword "as" and are from the same source - are combined.
+combine-as-imports = true
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"] # assert statements are used in tests
 
 [tool.mypy]
 disable_error_code = ["assignment", "import-untyped"]
