@@ -172,6 +172,11 @@ combine-as-imports = true
 "tests/*" = ["S101"] # assert statements are used in tests
 
 [tool.mypy]
+follow_imports = "silent"
+ignore_missing_imports = true
+show_column_numbers = true
+non_interactive = true
+install_types = true
 disable_error_code = ["assignment", "import-untyped"]
 
 [tool.coverage.run]
