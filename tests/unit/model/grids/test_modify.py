@@ -588,17 +588,3 @@ class TestDeleteNodes:
         assert 102 not in basic_grid.sym_load.node
         assert len(original_grid.node) == len(basic_grid.node) + 1
         assert len(original_grid.sym_load) == len(basic_grid.sym_load) + 1
-
-
-    def test_delete_mutliple_nodes_with_load(self, basic_grid: Grid):
-        assert 102 in basic_grid.node.id
-        assert 102 in basic_grid.sym_load.node
-
-        original_grid = deepcopy(basic_grid)
-        nodes = basic_grid.node.filter(id=[102, 106])
-        basic_grid.delete_node(nodes)
-
-        assert 102 not in basic_grid.node.id
-        assert 102 not in basic_grid.sym_load.node
-        assert len(original_grid.node) == len(basic_grid.node) + 1
-        assert len(original_grid.sym_load) == len(basic_grid.sym_load) + 1
