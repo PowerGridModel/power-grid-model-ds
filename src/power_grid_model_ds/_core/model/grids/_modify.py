@@ -124,7 +124,8 @@ def delete_node(grid: "Grid", node: NodeArray) -> None:
         grid.delete_branch3(three_winding_transformer)
 
     grid.graphs.delete_node(node=node)
-    logging.debug(f"deleted rail {node.id}")
+    grid.rebuild_ids()
+    logging.debug(f"deleted node {node.id}")
 
 
 def delete_branch(grid: "Grid", branch: BranchArray) -> None:
