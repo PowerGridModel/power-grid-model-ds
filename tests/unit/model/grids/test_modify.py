@@ -500,6 +500,7 @@ def test_grid_delete_three_winding_transformer(grid_with_3wt: Grid):
     assert not grid.graphs.active_graph.has_branch(101, 103)
     assert not grid.graphs.active_graph.has_branch(102, 103)
 
+
 def test_grid_delete_multiple_three_winding_transformers(grid_with_3wt: Grid):
     grid = grid_with_3wt
 
@@ -631,7 +632,6 @@ class TestDeleteNodes:
         assert 102 not in basic_grid.sym_load.node
         assert len(original_grid.node) == len(basic_grid.node) + 1
         assert len(original_grid.sym_load) == len(basic_grid.sym_load) + 1
-
 
     def test_delete_multiple_nodes(self, basic_grid: Grid):
         assert {102, 106}.intersection(basic_grid.ids) == {102, 106}

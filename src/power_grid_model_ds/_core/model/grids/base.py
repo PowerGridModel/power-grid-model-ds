@@ -242,7 +242,7 @@ class Grid(FancyArrayContainer):
         """
         return add_branch(self, branch)
 
-    def delete_branch(self, branch: LineArray | TransformerArray | LinkArray) -> None:
+    def delete_branch(self, branch: BranchArray) -> None:
         """Remove a branch array from the grid
 
         Supports removing multiple branches at once.
