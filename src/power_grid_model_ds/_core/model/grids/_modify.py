@@ -114,30 +114,31 @@ def delete_node(grid: "Grid", node: NodeArray) -> None:
 
     for branch_array in grid.branch_arrays:
         matching_branches = branch_array.filter(from_node=node.id, to_node=node.id, mode_="OR")
-        for branch in matching_branches:
-            grid.delete_branch(branch)
+        grid.delete_branch(matching_branches)
 
     matching_three_winding_transformers = grid.three_winding_transformer.filter(
         node_1=node.id, node_2=node.id, node_3=node.id, mode_="OR"
     )
-    for three_winding_transformer in matching_three_winding_transformers:
-        grid.delete_branch3(three_winding_transformer)
+    grid.delete_branch3(matching_three_winding_transformers)
 
     grid.graphs.delete_node(node=node)
-    logging.debug(f"deleted rail {node.id}")
+    grid.rebuild_ids()
+    logging.debug(f"deleted node {node.id}")
 
 
 def delete_branch(grid: "Grid", branch: BranchArray) -> None:
     """See Grid.delete_branch()"""
     _delete_branch_array(branch=branch, grid=grid)
     grid.graphs.delete_branch(branch=branch)
-    logging.debug(f"""deleted branch {branch.id.item()} from {branch.from_node.item()} to {branch.to_node.item()}""")
+    grid.rebuild_ids()
+    logging.debug(f"""deleted branch {branch.id} from {branch.from_node} to {branch.to_node}""")
 
 
 def delete_branch3(grid: "Grid", branch: Branch3Array) -> None:
     """See Grid.delete_branch3()"""
     _delete_branch_array(branch=branch, grid=grid)
     grid.graphs.delete_branch3(branch=branch)
+    grid.rebuild_ids()
     logging.debug(f"deleted branch3 {branch.id}")
 
 
@@ -164,4 +165,5 @@ def delete_appliance(grid: "Grid", appliance: ApplianceArray) -> None:
     grid.sym_power_sensor = grid.sym_power_sensor.exclude(measured_object=appliance.id)
     grid.asym_power_sensor = grid.asym_power_sensor.exclude(measured_object=appliance.id)
     grid.voltage_regulator = grid.voltage_regulator.exclude(regulated_object=appliance.id)
+    grid.rebuild_ids()
     logging.debug(f"deleted appliance {appliance.id}")

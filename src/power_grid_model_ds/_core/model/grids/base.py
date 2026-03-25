@@ -243,18 +243,25 @@ class Grid(FancyArrayContainer):
         return add_branch(self, branch)
 
     def delete_branch(self, branch: BranchArray) -> None:
-        """Remove a branch from the grid
+        """Remove a branch array from the grid
+
+        Supports removing multiple branches at once.
+        Also removes assets connected to the branch (e.g. sensors) and updates the graphs accordingly.
 
         Args:
-            branch (BranchArray): The branch to remove
+            branch (BranchArray): The branch array to remove
         """
         return delete_branch(self, branch=branch)
 
     def delete_branch3(self, branch: Branch3Array) -> None:
-        """Remove a branch3 from the grid
+        """Remove a branch3 array from the grid
+
+        Supports removing multiple branch3 records at once
+        Also removes assets connected to the branch3 (e.g. sensors) and updates the graphs accordingly.
+
 
         Args:
-            branch (Branch3Array): The branch3 to remove
+            branch (Branch3Array): The branch3 array to remove
         """
         return delete_branch3(self, branch=branch)
 
@@ -267,10 +274,13 @@ class Grid(FancyArrayContainer):
         return add_node(self, node=node)
 
     def delete_node(self, node: NodeArray) -> None:
-        """Remove a node from the grid
+        """Remove a node array from the grid
+
+        Supports removing multiple branches at once.
+        Also removes assets connected to the node (e.g. branches, sensors, loads) and updates the graphs accordingly.
 
         Args:
-            node (NodeArray): The node to remove
+            node (NodeArray): node array to remove
         """
         return delete_node(self, node=node)
 
