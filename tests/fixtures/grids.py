@@ -22,7 +22,7 @@ T = TypeVar("T", bound=Grid)
 def build_basic_grid(grid: T) -> T:
     """Build a basic grid"""
 
-    # This defines a circle with 4 medium voltage stations and a 400V rail (12)
+    # This defines a circle with 4 medium voltage stations and a 400V busbar (12)
 
     # Legend:
     #     Node: ***  (ids: 1xx)
