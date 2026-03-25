@@ -19,8 +19,8 @@ def save_to_pickle(path: Path, python_object: object):
 
 def load_from_pickle(path: Path) -> object:
     """Load a python object from a pickle file"""
-    with Path(str(path)).open("rb") as file:
-        return pickle.load(file)
+    with path.open("rb") as file:
+        return pickle.load(file)  # noqa S301
 
 
 def get_pickle_path(path: Path) -> Path:

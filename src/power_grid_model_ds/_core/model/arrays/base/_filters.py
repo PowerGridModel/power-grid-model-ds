@@ -85,7 +85,7 @@ def _build_filter_mask_for_field(array: np.ndarray, field: str, values) -> np.nd
         values = [values]
 
     if not len(values):  # pylint: disable=use-implicit-booleaness-not-len
-        return np.full(array.size, False)
+        return np.full(array.size, fill_value=False)
     if isinstance(values, set):
         values = list(values)
     if len(values) == 1:  # speed-up for single value
@@ -109,7 +109,7 @@ def _parse(args: tuple[int | Iterable[int] | NDArray, ...] | NDArray[np.int64], 
 
 def _initialize_filter_mask(mode_: Literal["AND", "OR"], size: int) -> np.ndarray:
     if mode_ == "AND":
-        return np.full(size, True)
+        return np.full(size, fill_value=True)
     if mode_ == "OR":
-        return np.full(size, False)
+        return np.full(size, fill_value=False)
     raise ValueError(f"Invalid mode: {mode_}, must be 'AND' or 'OR'")
