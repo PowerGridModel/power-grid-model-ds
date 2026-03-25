@@ -114,14 +114,12 @@ def delete_node(grid: "Grid", node: NodeArray) -> None:
 
     for branch_array in grid.branch_arrays:
         matching_branches = branch_array.filter(from_node=node.id, to_node=node.id, mode_="OR")
-        for branch in matching_branches:
-            grid.delete_branch(branch)
+        grid.delete_branch(matching_branches)
 
     matching_three_winding_transformers = grid.three_winding_transformer.filter(
         node_1=node.id, node_2=node.id, node_3=node.id, mode_="OR"
     )
-    for three_winding_transformer in matching_three_winding_transformers:
-        grid.delete_branch3(three_winding_transformer)
+    grid.delete_branch3(matching_three_winding_transformers)
 
     grid.graphs.delete_node(node=node)
     grid.rebuild_ids()
