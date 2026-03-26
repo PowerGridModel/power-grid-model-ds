@@ -49,7 +49,7 @@ def serialize_to_json(grid: G, path: Path, strict: bool = True, **kwargs) -> Pat
             serialized_data[field.name] = _serialize_array(field_value)
             continue
 
-        if _is_serializable(field_value, strict):
+        if _is_serializable(field_value, strict, **kwargs):
             serialized_data[field.name] = field_value
 
     # Store in a wrapper for PGM compatibility
@@ -61,7 +61,7 @@ def serialize_to_json(grid: G, path: Path, strict: bool = True, **kwargs) -> Pat
     return path
 
 
-def deserialize_from_json(path: Path, target_grid_class: type[G]) -> G:
+def deserialize_from_json(path: Path, target_grid_class: type[G], **kwargs) -> G:
     """Load a Grid object from JSON format with cross-type loading support.
 
     Args:
@@ -71,8 +71,11 @@ def deserialize_from_json(path: Path, target_grid_class: type[G]) -> G:
     Returns:
         Grid: The deserialized Grid object of the specified target class
     """
+    if "decoder_cls" in kwargs:
+        kwargs["cls"] = kwargs.pop("decoder_cls")
+
     with Path(path).open("r", encoding="utf-8") as f:
-        json_data = json.load(f)
+        json_data = json.load(f, **kwargs)
 
     grid = target_grid_class.empty()
     _restore_grid_values(grid, json_data["data"])
@@ -127,10 +130,10 @@ def _deserialize_array(array_data: list[dict[str, Any]], array_class: type[Fancy
     return array_class(**data_as_dict_of_lists)
 
 
-def _is_serializable(value: Any, strict: bool) -> bool:
+def _is_serializable(value: Any, strict: bool, **kwargs) -> bool:
     # Check if a value is JSON serializable.
     try:
-        json.dumps(value)
+        json.dumps(value, **kwargs)
     except TypeError as error:
         msg = f"Failed to serialize '{value}'. You can set strict=False to ignore this attribute."
         if strict:
