@@ -55,9 +55,8 @@ def gzip2file(gzip_path: Path) -> Path:
     _logger.info(f"Unzipping {gzip_path.name}")
 
     file_path = gzip_path.with_suffix("")
-    with gzip.open(gzip_path, "rb") as f_in:
-        with Path(file_path).open("wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
+    with gzip.open(gzip_path, "rb") as f_in, Path(file_path).open("wb") as f_out:
+        shutil.copyfileobj(f_in, f_out)
     return file_path
 
 
@@ -66,7 +65,6 @@ def file2gzip(file_path: Path) -> Path:
     _logger.info(f"Zipping {file_path.name}")
 
     gzip_path = file_path.with_suffix(f"{file_path.suffix}.gz")
-    with Path(file_path).open("rb") as f_in:
-        with gzip.open(gzip_path, "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
+    with Path(file_path).open("rb") as f_in, gzip.open(gzip_path, "wb") as f_out:
+        shutil.copyfileobj(f_in, f_out)
     return gzip_path

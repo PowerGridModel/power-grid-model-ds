@@ -30,9 +30,9 @@ class TestFromTxt:
             "7 8",
             "8 9",
         )
-        assert 8 == grid.node.size
-        assert 1 == grid.branches.filter(to_status=0).size
-        assert 1 == grid.transformer.size
+        assert grid.node.size == 8
+        assert grid.branches.filter(to_status=0).size == 1
+        assert grid.transformer.size == 1
         np.testing.assert_array_equal([14, 10, 11, 12, 13, 15, 16, 17], grid.branches.id)
 
     def test_from_txt_string(self):
@@ -59,9 +59,9 @@ class TestFromTxt:
         grid = Grid.from_txt(
             "S1 2 91", "S1 3 92,open", "2 7 93", "3 5 94", "3 6 transformer,95", "5 7 96", "7 8 97", "8 9 98"
         )
-        assert 8 == grid.node.size
-        assert 1 == grid.branches.filter(to_status=0).size
-        assert 1 == grid.transformer.size
+        assert grid.node.size == 8
+        assert grid.branches.filter(to_status=0).size == 1
+        assert grid.transformer.size == 1
         np.testing.assert_array_equal([95, 91, 92, 93, 94, 96, 97, 98], grid.branches.id)
 
     def test_from_txt_with_conflicting_ids(self):
@@ -86,11 +86,11 @@ class TestFromTxt:
 
     def test_from_txt_with_unordered_node_ids(self):
         grid = Grid.from_txt("S1 2", "S1 10", "10 11", "2 5", "5 6", "3 4", "3 7")
-        assert 9 == grid.node.size
+        assert grid.node.size == 9
 
     def test_from_txt_with_unordered_branch_ids(self):
         grid = Grid.from_txt("5 6 16", "3 4 17", "3 7 18", "S1 2 12", "S1 10 13", "10 11 14", "2 5 15")
-        assert 9 == grid.node.size
+        assert grid.node.size == 9
 
     def test_from_txt_file(self, tmp_path: Path):
         txt_file = tmp_path / "tmp_grid"
@@ -98,9 +98,9 @@ class TestFromTxt:
         grid = Grid.from_txt_file(txt_file)
         txt_file.unlink()
 
-        assert 8 == grid.node.size
-        assert 1 == grid.branches.filter(to_status=0).size
-        assert 1 == grid.transformer.size
+        assert grid.node.size == 8
+        assert grid.branches.filter(to_status=0).size == 1
+        assert grid.transformer.size == 1
         np.testing.assert_array_equal([14, 10, 11, 12, 13, 15, 16, 17], grid.branches.id)
 
     def test_from_txt_all_branch_types(self):

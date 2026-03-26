@@ -142,7 +142,7 @@ class PowerGridModelInterface:
         """
         if not self.output_data:
             raise PGMCoreException("Can not update grid without output_data")
-        for array_name in self.output_data.keys():
+        for array_name in self.output_data:
             if not hasattr(self.grid, array_name):
                 continue
             internal_array = getattr(self.grid, array_name)
