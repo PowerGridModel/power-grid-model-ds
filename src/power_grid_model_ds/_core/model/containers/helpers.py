@@ -11,7 +11,7 @@ from power_grid_model_ds._core.utils.misc import array_equal_with_nan
 if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import FancyArrayContainer
 
-logger = logging.getLogger("power_grid_model_ds.fancypy")  # public location of the container_equal function
+_logger = logging.getLogger("power_grid_model_ds.fancypy")  # public location of the container_equal function
 
 
 def container_equal(
@@ -65,10 +65,10 @@ def _fields_are_equal(
 
     if isinstance(value_a, FancyArray):
         if not _check_array_equal(value_a, value_b, ignore_extras):
-            logger.debug("Array field '%s' differs between %ss.", field.name, class_name)
+            _logger.debug("Array field '%s' differs between %ss.", field.name, class_name)
             return False
     elif value_a != value_b:
-        logger.debug("Field '%s' differs between %ss.", field.name, class_name)
+        _logger.debug("Field '%s' differs between %ss.", field.name, class_name)
         return False
 
     return True
@@ -81,7 +81,7 @@ def _check_for_extra_fields(container_a: "FancyArrayContainer", container_b: "Fa
     extra_fields = fields_b - fields_a
 
     if extra_fields:
-        logger.debug("Container %s has extra fields: %s", container_b.__class__.__name__, extra_fields)
+        _logger.debug("Container %s has extra fields: %s", container_b.__class__.__name__, extra_fields)
         return True
     return False
 

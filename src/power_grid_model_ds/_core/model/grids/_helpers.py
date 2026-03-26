@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 
 G = TypeVar("G", bound="Grid")
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 def create_grid_from_extended_grid(grid_class: type[G], extended: G) -> G:

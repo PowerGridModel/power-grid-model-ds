@@ -19,7 +19,7 @@ from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExis
 from power_grid_model_ds._core.model.constants import EMPTY_ID
 from power_grid_model_ds._core.model.containers.helpers import container_equal
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 Self = TypeVar("Self", bound="FancyArrayContainer")
 
@@ -101,9 +101,9 @@ class FancyArrayContainer:
             return
 
         if any(duplicates_between_arrays):
-            logger.warning("The following ids occur in multiple arrays: %s!", duplicates_between_arrays)
+            _logger.warning("The following ids occur in multiple arrays: %s!", duplicates_between_arrays)
         for array_class in arrays_with_duplicates:
-            logger.warning("%s contains duplicates!", array_class.__name__)
+            _logger.warning("%s contains duplicates!", array_class.__name__)
 
         raise ValueError(f"Duplicates found within {self.__class__.__name__}!")
 
@@ -168,7 +168,7 @@ class FancyArrayContainer:
          Each array within the list contains all records with the given array.
         """
 
-        logger.warning("Using search_for_id(). Make sure to use only while debugging!")
+        _logger.warning("Using search_for_id(). Make sure to use only while debugging!")
 
         arrays_with_record = []
 

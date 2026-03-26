@@ -11,7 +11,7 @@ from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
 from power_grid_model_ds._core.visualizer.server_state import get_grid
 from power_grid_model_ds._core.visualizer.typing import STYLESHEET
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 HIGHLIGHT_STYLE = {
     "background-color": CYTO_COLORS["highlighted"],
     "text-background-color": CYTO_COLORS["highlighted"],
@@ -67,7 +67,7 @@ def _get_matching_pgm_ids(group: str, column: str, operator: str, value: float) 
 
     # Some columns have 3 digits in them (for asymmetic data). We do not support search on those columns for now.
     if selected_column.ndim != 1:
-        logger.warning("Column '%s' in group '%s' is not 1-dimensional. Skipping search.", column, group)
+        _logger.warning("Column '%s' in group '%s' is not 1-dimensional. Skipping search.", column, group)
         raise PreventUpdate
 
     match operator:
