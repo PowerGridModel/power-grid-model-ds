@@ -99,9 +99,9 @@ class FancyArrayContainer:
             return
 
         if any(duplicates_between_arrays):
-            logging.warning(f"The following ids occur in multiple arrays: {duplicates_between_arrays}!")
+            logging.warning("The following ids occur in multiple arrays: %s!", duplicates_between_arrays)
         for array_class in arrays_with_duplicates:
-            logging.warning(f"{array_class.__name__} contains duplicates!")
+            logging.warning("%s contains duplicates!", array_class.__name__)
 
         raise ValueError(f"Duplicates found within {self.__class__.__name__}!")
 

@@ -85,7 +85,7 @@ def _restore_grid_values(grid: G, json_data: dict) -> None:
     """Restore arrays to the grid."""
     for attr_name, attr_values in json_data.items():
         if not hasattr(grid, attr_name):
-            logger.warning(f"Unexpected attribute '{attr_name}'")
+            logger.warning("Unexpected attribute '%s'", attr_name)
             continue
 
         grid_attr = getattr(grid, attr_name)
@@ -123,7 +123,7 @@ def _deserialize_array(array_data: list[dict[str, Any]], array_class: type[Fancy
     all_columns_in_array_data = set().union(*(row.keys() for row in array_data))
     extra_columns = all_columns_in_array_data - array_columns
     if extra_columns:
-        logger.warning(f"Ignoring extra columns {extra_columns} from array data for {array_class.__name__}.")
+        logger.warning("Ignoring extra columns %s from array data for %s.", extra_columns, array_class.__name__)
     return array_class(**data_as_dict_of_lists)
 
 

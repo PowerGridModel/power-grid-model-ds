@@ -52,7 +52,7 @@ def unzip_files(zip_file_path: Path) -> Path:
 
 def gzip2file(gzip_path: Path) -> Path:
     """unzip a gzip (.gz) file"""
-    _logger.info(f"Unzipping {gzip_path.name}")
+    _logger.info("Unzipping %s", gzip_path.name)
 
     file_path = gzip_path.with_suffix("")
     with gzip.open(gzip_path, "rb") as f_in:
@@ -63,7 +63,7 @@ def gzip2file(gzip_path: Path) -> Path:
 
 def file2gzip(file_path: Path) -> Path:
     """zip a gzip (.gz) file"""
-    _logger.info(f"Zipping {file_path.name}")
+    _logger.info("Zipping %s", file_path.name)
 
     gzip_path = file_path.with_suffix(f"{file_path.suffix}.gz")
     with Path(file_path).open("rb") as f_in:

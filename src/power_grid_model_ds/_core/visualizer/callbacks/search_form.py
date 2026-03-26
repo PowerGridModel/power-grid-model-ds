@@ -67,7 +67,7 @@ def _get_matching_pgm_ids(group: str, column: str, operator: str, value: float) 
 
     # Some columns have 3 digits in them (for asymmetic data). We do not support search on those columns for now.
     if selected_column.ndim != 1:
-        logger.warning(f"Column '{column}' in group '{group}' is not 1-dimensional. Skipping search.")
+        logger.warning("Column '%s' in group '%s' is not 1-dimensional. Skipping search.", column, group)
         raise PreventUpdate
 
     match operator:
