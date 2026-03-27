@@ -261,7 +261,7 @@ def test_copy_function(fancy_test_array: FancyTestArray):
 def test_copy_method(fancy_test_array: FancyTestArray):
     array_copy = fancy_test_array.copy()
     array_copy.test_int = 123
-    assert id(fancy_test_array.data) != id(array_copy.data)
+    assert fancy_test_array.data is not array_copy.data
     assert fancy_test_array.test_int[0] != array_copy.test_int[0]  # type: ignore
 
 
