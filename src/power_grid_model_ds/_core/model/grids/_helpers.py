@@ -95,6 +95,7 @@ def merge_grids(grid: G, other_grid: G, mode: Literal["recalculate_ids", "keep_i
 
     return offset
 
+
 def _increment_grid_ids_by_offset(all_arrays: list[FancyArray], offset: int) -> None:
     for array in all_arrays:
         if isinstance(array, IdArray):
