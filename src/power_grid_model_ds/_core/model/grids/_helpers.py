@@ -65,7 +65,7 @@ def create_empty_grid(grid_class: Type[G], graph_model: type[BaseGraphModel] = R
     return grid_class(**empty_fields)
 
 
-def merge_grids(grid: G, other_grid: G, mode: Literal["recalculate_ids", "keep_ids"]) -> None:
+def merge_grids(grid: G, other_grid: G, mode: Literal["recalculate_ids", "keep_ids"]) -> int:
     """See Grid.merge()"""
 
     if type(grid) is not type(other_grid):
@@ -79,7 +79,7 @@ def merge_grids(grid: G, other_grid: G, mode: Literal["recalculate_ids", "keep_i
             offset = grid.max_id
             _increment_grid_ids_by_offset(other_grid_all_arrays, offset)
         case "keep_ids":
-            pass
+            offset = 0
         case _:
             raise NotImplementedError(f"Merge mode {mode} is not implemented")
 
@@ -93,6 +93,7 @@ def merge_grids(grid: G, other_grid: G, mode: Literal["recalculate_ids", "keep_i
         except ValueError as e:
             raise ValueError("Asset ids are not unique after merging! Use mode='recalculate_ids' to avoid this.") from e
 
+    return offset
 
 def _increment_grid_ids_by_offset(all_arrays: list[FancyArray], offset: int) -> None:
     for array in all_arrays:
