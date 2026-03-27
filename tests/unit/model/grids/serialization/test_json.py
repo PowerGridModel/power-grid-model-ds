@@ -47,18 +47,27 @@ class ExtendedGrid(Grid):
     str_extension: str = "default"
 
 
-class NonSerializableExtension:
+class CustomClass:
     """A non-serializable extension class"""
 
     def __init__(self):
-        self.data = "non_serializable"
+        self.data = "my data"
 
 
 @dataclass
-class GridWithNonSerializableExtension(Grid):
-    """Grid with a non-serializable extension attribute"""
+class GridWithCustomClass(Grid):
+    """Grid with a custom class attribute (by default not serializable)"""
 
-    non_serializable: NonSerializableExtension = NonSerializableExtension()
+    custom_class: CustomClass = CustomClass()
+
+
+class CustomClassEncoder(json.JSONEncoder):
+    """Custom class encoder"""
+
+    def default(self, obj):
+        if isinstance(obj, CustomClass):
+            return obj.data
+        return super().default(obj)
 
 
 @pytest.fixture
@@ -221,6 +230,23 @@ class TestExtensionHandling:
         np.testing.assert_array_almost_equal(loaded_grid.custom_metadata.metadata_value, [1.5, 2.5, 3.5])
         np.testing.assert_array_equal(loaded_grid.custom_metadata.category, [1, 2, 1])
 
+    def test_non_serializable_extension(self, tmp_path: Path):
+        path = tmp_path / "non_serializable.json"
+
+        grid = GridWithCustomClass.empty()
+        assert grid.custom_class.data == "my data"
+
+        with pytest.raises(TypeError):
+            grid.serialize(path)
+
+    def test_custom_json_encoder(self, tmp_path: Path):
+        path = tmp_path / "custom_json_encoder.json"
+        grid = GridWithCustomClass.empty()
+
+        assert not path.is_file()
+        grid.serialize(path, cls=CustomClassEncoder)
+        assert path.is_file()
+
 
 class TestDeserialize:
     def test_deserialize(self, tmp_path: Path):
@@ -310,12 +336,3 @@ class TestDeserialize:
 
         with pytest.raises(ValueError):
             Grid.deserialize(path)
-
-    def test_non_serializable_extension(self, tmp_path: Path):
-        path = tmp_path / "non_serializable.json"
-
-        grid = GridWithNonSerializableExtension.empty()
-        grid.non_serializable = NonSerializableExtension()
-
-        with pytest.raises(TypeError):
-            grid.serialize(path)
