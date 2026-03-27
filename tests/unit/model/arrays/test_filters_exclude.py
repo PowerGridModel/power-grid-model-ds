@@ -70,7 +70,7 @@ def test_exclude_empty_list_input(fancy_test_array: FancyTestArray):
 
 def test_exclude_mode_or(fancy_test_array: FancyTestArray):
     array = fancy_test_array.exclude(test_float=1.0, test_str="a", mode_="OR")
-    assert 1 == array.size
+    assert array.size == 1
     assert_array_equal(array.id, [2])
 
 

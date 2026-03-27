@@ -60,8 +60,8 @@ def test_cache_and_load_empty_grid(grid):
 
     for old, new in zip(grid.all_arrays(), new_grid.all_arrays()):
         assert fp.array_equal(old, new)
-    assert 0 == new_grid.graphs.active_graph.nr_nodes
-    assert 0 == new_grid.graphs.complete_graph.nr_nodes
+    assert new_grid.graphs.active_graph.nr_nodes == 0
+    assert new_grid.graphs.complete_graph.nr_nodes == 0
     shutil.rmtree(cache_dir)
 
 

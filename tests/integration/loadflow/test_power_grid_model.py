@@ -109,7 +109,7 @@ class TestCalculatePowerFlow:
 
         # Check that regulator is passed on and used to get node_3 within the band of transformer
         output = core_interface.calculate_power_flow(tap_changing_strategy=TapChangingStrategy.any_valid_tap)
-        assert 390 < output["node"]["u"][1]
+        assert output["node"]["u"][1] > 390
         assert output["node"]["u"][1] < 410
         assert output["transformer_tap_regulator"]["tap_pos"][0] > 0
 
@@ -204,7 +204,7 @@ class TestPowerGridModelInterfaceMethods:
         output = core_interface.calculate_power_flow(update_data=update_data)
 
         # Results have been calculated for all 10 scenarios
-        assert 10 == len(output["line"])
+        assert len(output["line"]) == 10
 
     def test_setup_model(self):
         """Test whether a pgm model can be setup with a custom grid"""

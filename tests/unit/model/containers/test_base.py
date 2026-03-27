@@ -45,7 +45,7 @@ def test_id_counter():
     container = FancyArrayContainer.empty()
     # pylint: disable=protected-access
     container._ids = {42}
-    assert 42 == container.id_counter
+    assert container.id_counter == 42
 
 
 def test_deepcopy():
@@ -65,7 +65,7 @@ def test_deepcopy():
 
 def test_all_arrays():
     container = _TwoArraysContainer.empty()
-    assert 2 == len(list(container.all_arrays()))
+    assert len(list(container.all_arrays())) == 2
     array_1_id = id(container.array_1)
     all_arrays = list(container.all_arrays())
     assert array_1_id == id(all_arrays[0])
@@ -73,19 +73,19 @@ def test_all_arrays():
 
 def test_check_ids_no_arrays():
     container = FancyArrayContainer.empty()
-    assert 0 == len(list(container.all_arrays()))
+    assert len(list(container.all_arrays())) == 0
     container.check_ids()
 
 
 def test_check_ids_two_empty_arrays():
     container = _TwoArraysContainer.empty()
-    assert 2 == len(list(container.all_arrays()))
+    assert len(list(container.all_arrays())) == 2
     container.check_ids()
 
 
 def test_check_ids_4_arrays_3_with_id():
     container = _FourArraysContainer.empty()
-    assert 4 == len(list(container.all_arrays()))
+    assert len(list(container.all_arrays())) == 4
     container.check_ids()
 
 
@@ -96,7 +96,7 @@ def test_check_ids_two_arrays_no_conflicts():
     container.array_2 = IdArray.zeros(1)
     container.array_1.id = 2
 
-    assert 2 == len(list(container.all_arrays()))
+    assert len(list(container.all_arrays())) == 2
     container.check_ids()
 
 
@@ -107,7 +107,7 @@ def test_check_ids_two_arrays_with_conflict():
     container.array_2 = IdArray.zeros(1)
     container.array_2.id = 1
 
-    assert 2 == len(list(container.all_arrays()))
+    assert len(list(container.all_arrays())) == 2
 
     with pytest.raises(ValueError):
         container.check_ids()
@@ -120,7 +120,7 @@ def test_check_ids_two_arrays_with_conflict_in_same_array():
     container.array_2 = IdArray.zeros(1)
     container.array_2.id = 2
 
-    assert 2 == len(list(container.all_arrays()))
+    assert len(list(container.all_arrays())) == 2
 
     with pytest.raises(ValueError):
         container.check_ids()
