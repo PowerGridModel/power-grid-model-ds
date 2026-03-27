@@ -369,6 +369,27 @@ class TestFindFirstConnected:
             graph.find_first_connected(1, candidate_node_ids=[99])
 
 
+class TestTmpRemoveBranches:
+    def test_tmp_remove_branches(self, graph_with_2_routes: BaseGraphModel):
+        graph = deepcopy(graph_with_2_routes)
+
+        assert graph.has_branch(1, 2)
+        assert graph.has_branch(2, 3)
+
+        with graph.tmp_remove_branches([(1, 2), (2, 3)]):
+            assert not graph.has_branch(1, 2)
+            assert not graph.has_branch(2, 3)
+
+        assert graph == graph_with_2_routes
+
+    def test_tmp_remove_branches_non_existent_branch(self, graph_with_2_routes: BaseGraphModel):
+        graph = deepcopy(graph_with_2_routes)
+
+        with pytest.raises(MissingBranchError):
+            with graph.tmp_remove_branches([(1, 99)]):
+                pass
+
+
 class TestEq:
     def test_eq(self, graph_with_2_routes: BaseGraphModel):
         copied_graph = deepcopy(graph_with_2_routes)
