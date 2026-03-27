@@ -13,6 +13,8 @@ import numpy as np
 from power_grid_model_ds._core.model.constants import empty
 from power_grid_model_ds._core.utils.misc import is_sequence
 
+_logger = logging.getLogger(__name__)
+
 
 def build_array(*args: tuple[Any], dtype: np.dtype, defaults: dict[str, np.generic], **kwargs) -> np.ndarray:
     """Constructs the array from the given args/kwargs."""
@@ -79,7 +81,7 @@ def _fill_with_kwargs(array: np.ndarray, kwargs: dict[str, np.ndarray]):
 def _parse_structured_array(from_array: np.ndarray, to_array: np.ndarray) -> np.ndarray:
     shared_columns, ignored_columns = _determine_column_overlap(from_array, to_array)
     if ignored_columns:
-        logging.debug(
+        _logger.debug(
             "Ignored provided columns %s during build of array with columns %s", ignored_columns, to_array.dtype.names
         )
     to_array[shared_columns] = from_array[shared_columns]  # type: ignore[index]
