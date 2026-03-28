@@ -4,12 +4,12 @@
 
 import inspect
 import timeit
+from collections.abc import Generator
 from itertools import product
-from typing import Generator, Union
 
 
 def do_performance_test(
-    code_to_test: Union[str, dict[str, str], list[str]],
+    code_to_test: str | dict[str, str] | list[str],
     size_list: list[int],
     repeats: int,
     setup_codes: dict[str, str],

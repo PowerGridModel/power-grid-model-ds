@@ -2,7 +2,8 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import Any, Iterable, Literal
+from collections.abc import Iterable
+from typing import Any, Literal
 
 import numpy as np
 from numpy.typing import NDArray
