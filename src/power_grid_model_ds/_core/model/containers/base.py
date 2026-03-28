@@ -9,7 +9,7 @@ import inspect
 import logging
 import warnings
 from dataclasses import dataclass
-from typing import Type, TypeVar
+from typing import TypeVar
 
 import numpy as np
 
@@ -108,7 +108,7 @@ class FancyArrayContainer:
         raise ValueError(f"Duplicates found within {self.__class__.__name__}!")
 
     @classmethod
-    def empty(cls: Type[Self]) -> Self:
+    def empty(cls: type[Self]) -> Self:
         """Create an empty grid"""
         empty_fields = cls._get_empty_fields()
         return cls(**empty_fields)
@@ -183,7 +183,7 @@ class FancyArrayContainer:
         raise RecordDoesNotExist(f"record id '{record_id}' not found in {self.__class__.__name__}")
 
     @classmethod
-    def find_array_field(cls, array_type: Type[FancyArray]) -> dataclasses.Field:
+    def find_array_field(cls, array_type: type[FancyArray]) -> dataclasses.Field:
         """Find the Field that holds an array of type array_type.
 
         Args:
@@ -270,7 +270,7 @@ class FancyArrayContainer:
 
     @staticmethod
     def _get_arrays_with_duplicates(id_arrays: list[FancyArray], check: bool) -> list:
-        arrays_with_duplicates: list[Type] = []
+        arrays_with_duplicates: list[type] = []
         if not check:
             return arrays_with_duplicates
         for id_array in id_arrays:

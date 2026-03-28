@@ -4,7 +4,7 @@
 
 import itertools
 from pathlib import Path
-from typing import TYPE_CHECKING, Generic, Type, TypeVar
+from typing import TYPE_CHECKING
 
 from power_grid_model import ComponentType
 
@@ -13,10 +13,8 @@ from power_grid_model_ds._core.model.enums.nodes import NodeType
 if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import Grid
 
-G = TypeVar("G", bound="Grid")
 
-
-def serialize_to_str(grid: "Grid") -> str:
+def serialize_to_str(grid: Grid) -> str:
     """See Grid.__str__()"""
     grid_str = ""
 
@@ -53,19 +51,19 @@ def serialize_to_str(grid: "Grid") -> str:
     return grid_str
 
 
-def deserialize_from_str(grid_class: type[G], *args: str) -> G:
+def deserialize_from_str[G: Grid](grid_class: type[G], *args: str) -> G:
     """See Grid.from_txt()"""
     return _TextSource(grid_class).load_from_txt(*args)
 
 
-def deserialize_from_txt_file(grid_class: type[G], txt_file_path: Path) -> G:
+def deserialize_from_txt_file[G: Grid](grid_class: type[G], txt_file_path: Path) -> G:
     """See Grid.from_txt_file()"""
     with Path(txt_file_path).open("r", encoding="utf-8") as f:
         txt_lines = f.readlines()
     return deserialize_from_str(grid_class, *txt_lines)
 
 
-class _TextSource(Generic[G]):
+class _TextSource[G: Grid]:
     """Class for handling text sources.
 
     Text sources are only intended for test purposes so that a grid can quickly be designed from a text file.
@@ -81,7 +79,7 @@ class _TextSource(Generic[G]):
     See docs/examples/3_drawing_a_grid.md for more information.
     """
 
-    def __init__(self, grid_class: Type[G]):
+    def __init__(self, grid_class: type[G]):
         self.grid: G = grid_class.empty()
 
     def load_from_txt(self, *args: str) -> G:

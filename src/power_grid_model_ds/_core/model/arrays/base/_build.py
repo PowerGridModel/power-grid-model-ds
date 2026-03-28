@@ -5,8 +5,8 @@
 """Contains the build_array function."""
 
 import logging
-from collections.abc import Sized
-from typing import Any, Iterable
+from collections.abc import Iterable, Sized
+from typing import Any
 
 import numpy as np
 
