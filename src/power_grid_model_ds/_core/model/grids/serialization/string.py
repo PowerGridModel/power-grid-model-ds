@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import Grid
 
 
-def serialize_to_str(grid: Grid) -> str:
+def serialize_to_str[G: Grid](grid: G) -> str:
     """See Grid.__str__()"""
     grid_str = ""
 
