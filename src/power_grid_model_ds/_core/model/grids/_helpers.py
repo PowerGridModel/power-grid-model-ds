@@ -4,7 +4,7 @@
 import copy
 import logging
 from dataclasses import fields
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, overload
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
@@ -62,8 +62,15 @@ def create_empty_grid[G: Grid](grid_class: type[G], graph_model: type[BaseGraphM
     empty_fields["graphs"] = GraphContainer.empty(graph_model=graph_model)
     return grid_class(**empty_fields)
 
+@overload
+def merge_grids[G: Grid](grid: G, other_grid: G, mode: Literal["recalculate_ids"]) -> int: ...
 
-def merge_grids[G: Grid](grid: G, other_grid: G, mode: Literal["recalculate_ids", "keep_ids"]) -> int:
+
+@overload
+def merge_grids[G: Grid](grid: G, other_grid: G, mode: Literal["keep_ids"]) -> None: ...
+
+
+def merge_grids(grid, other_grid, mode):
     """See Grid.merge()"""
 
     if type(grid) is not type(other_grid):
@@ -77,7 +84,7 @@ def merge_grids[G: Grid](grid: G, other_grid: G, mode: Literal["recalculate_ids"
             offset = grid.max_id
             _increment_grid_ids_by_offset(other_grid_all_arrays, offset)
         case "keep_ids":
-            offset = 0
+            offset = None
         case _:
             raise NotImplementedError(f"Merge mode {mode} is not implemented")
 

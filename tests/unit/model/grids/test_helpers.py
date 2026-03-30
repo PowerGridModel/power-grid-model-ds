@@ -80,4 +80,4 @@ class TestMergeGrids:
 
     def test_merging_with_incorrect_mode(self, grid1: Grid, grid2: Grid):
         with pytest.raises(NotImplementedError):
-            grid1.merge(grid2, mode="invalid_mode")  # type: ignore[arg-type]
+            grid1.merge(grid2, mode="invalid_mode")  # type: ignore[arg-type,call-overload]
