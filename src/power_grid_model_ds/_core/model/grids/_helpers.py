@@ -4,7 +4,7 @@
 import copy
 import logging
 from dataclasses import fields
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, overload
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
@@ -63,7 +63,15 @@ def create_empty_grid[G: Grid](grid_class: type[G], graph_model: type[BaseGraphM
     return grid_class(**empty_fields)
 
 
-def merge_grids[G: Grid](grid: G, other_grid: G, mode: Literal["recalculate_ids", "keep_ids"]) -> None:
+@overload
+def merge_grids[G: Grid](grid: G, other_grid: G, mode: Literal["recalculate_ids"]) -> int: ...
+
+
+@overload
+def merge_grids[G: Grid](grid: G, other_grid: G, mode: Literal["keep_ids"]) -> None: ...
+
+
+def merge_grids(grid, other_grid, mode: Literal["keep_ids", "recalculate_ids"]):
     """See Grid.merge()"""
 
     if type(grid) is not type(other_grid):
@@ -77,7 +85,7 @@ def merge_grids[G: Grid](grid: G, other_grid: G, mode: Literal["recalculate_ids"
             offset = grid.max_id
             _increment_grid_ids_by_offset(other_grid_all_arrays, offset)
         case "keep_ids":
-            pass
+            offset = None
         case _:
             raise NotImplementedError(f"Merge mode {mode} is not implemented")
 
@@ -90,6 +98,8 @@ def merge_grids[G: Grid](grid: G, other_grid: G, mode: Literal["recalculate_ids"
             grid.check_ids()
         except ValueError as e:
             raise ValueError("Asset ids are not unique after merging! Use mode='recalculate_ids' to avoid this.") from e
+
+    return offset
 
 
 def _increment_grid_ids_by_offset(all_arrays: list[FancyArray], offset: int) -> None:

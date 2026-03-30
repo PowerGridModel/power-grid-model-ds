@@ -7,7 +7,7 @@
 import warnings
 from dataclasses import dataclass, fields
 from pathlib import Path
-from typing import Literal, Self, TypeVar
+from typing import Literal, Self, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -441,19 +441,28 @@ class Grid(FancyArrayContainer):
         )
         return save_grid_to_pickle(self, cache_dir=cache_dir, cache_name=cache_name, compress=compress)
 
-    def merge(self, other_grid: Self, mode: Literal["recalculate_ids", "keep_ids"]) -> None:
+    @overload
+    def merge(self: Self, other_grid: G, mode: Literal["recalculate_ids"]) -> int: ...
+
+    @overload
+    def merge(self: Self, other_grid: G, mode: Literal["keep_ids"]) -> None: ...
+
+    def merge(self, other_grid, mode: Literal["keep_ids", "recalculate_ids"]):
         """Merge another grid into this grid.
 
         Args:
             other_grid (Grid): The grid to merge into this grid.
-            mode (str): The merge mode:
+            mode (Literal["keep_ids", "recalculate_ids"]): The merge mode:
                 - "recalculate_ids": ids in the arrays of other_grid are offset to avoid conflicts.
                 IMPORTANT: we currently only update any `id` column and all id references in the default PGM-DS grid.
-
                 - "keep_ids": Keep ids of other_grid. Raises an error if grids contain overlapping indices.
+        Returns:
+            int: The offset of the IDs in the merged grid.
+                If mode is "keep_ids", the offset will be 0.
+                If mode is "recalculate_ids", the offset will be the value that was added
+                to the other_grid ids to avoid conflicts.
         """
-
-        merge_grids(self, other_grid, mode)
+        return merge_grids(self, other_grid, mode)
 
     def serialize(self, path: Path, **kwargs) -> Path:
         """Serialize the grid.
