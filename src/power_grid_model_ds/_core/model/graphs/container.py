@@ -6,8 +6,9 @@
 
 import dataclasses
 import warnings
+from collections.abc import Generator
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING
 
 import numpy as np
 

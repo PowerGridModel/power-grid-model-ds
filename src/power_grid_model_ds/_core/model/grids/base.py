@@ -7,7 +7,7 @@
 import warnings
 from dataclasses import dataclass, fields
 from pathlib import Path
-from typing import Literal, Self, Type, TypeVar
+from typing import Literal, Self, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -151,7 +151,7 @@ class Grid(FancyArrayContainer):
         return serialize_to_str(self)
 
     @classmethod
-    def empty(cls: Type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
+    def empty(cls: type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
         """Create an empty grid
 
         Args:
@@ -164,7 +164,7 @@ class Grid(FancyArrayContainer):
 
     @classmethod
     # pylint: disable=arguments-differ
-    def from_cache(cls: Type[Self], cache_path: Path, load_graphs: bool = True) -> Self:
+    def from_cache(cls: type[Self], cache_path: Path, load_graphs: bool = True) -> Self:
         """Read from cache and build .graphs from arrays
 
         WARNING: This function uses pickle.load() which can execute arbitrary code.
@@ -186,7 +186,7 @@ class Grid(FancyArrayContainer):
         return load_grid_from_pickle(cls, cache_path=cache_path, load_graphs=load_graphs)
 
     @classmethod
-    def from_txt(cls: Type[G], *args: str) -> G:
+    def from_txt(cls: type[G], *args: str) -> G:
         """Build a grid from a list of strings
 
         See the documentation for the expected format of the txt_lines
@@ -202,7 +202,7 @@ class Grid(FancyArrayContainer):
 
     @classmethod
     # pylint: disable=arguments-differ
-    def from_txt_file(cls: Type[G], txt_file_path: Path) -> G:
+    def from_txt_file(cls: type[G], txt_file_path: Path) -> G:
         """Load grid from txt file
 
         Args:
@@ -211,7 +211,7 @@ class Grid(FancyArrayContainer):
         return deserialize_from_txt_file(cls, txt_file_path)
 
     @classmethod
-    def from_extended(cls: Type[G], extended: G) -> G:
+    def from_extended(cls: type[G], extended: G) -> G:
         """Create a grid from an extended Grid object."""
         return create_grid_from_extended_grid(cls, extended=extended)
 
@@ -467,7 +467,7 @@ class Grid(FancyArrayContainer):
         return serialize_to_json(grid=self, path=path, strict=True, **kwargs)
 
     @classmethod
-    def deserialize(cls: Type[Self], path: Path) -> Self:
+    def deserialize(cls: type[Self], path: Path) -> Self:
         """Deserialize the grid."""
         return deserialize_from_json(path=path, target_grid_class=cls)
 

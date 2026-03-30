@@ -8,7 +8,7 @@ import dataclasses
 import json
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 
@@ -17,13 +17,10 @@ if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import Grid
 
 
-G = TypeVar("G", bound="Grid")
-
-
 _logger = logging.getLogger(__name__)
 
 
-def serialize_to_json(grid: G, path: Path, strict: bool = True, **kwargs) -> Path:
+def serialize_to_json[G: Grid](grid: G, path: Path, strict: bool = True, **kwargs) -> Path:
     """Save a Grid object to JSON format using power-grid-model serialization with extensions support.
 
     Args:
@@ -61,7 +58,7 @@ def serialize_to_json(grid: G, path: Path, strict: bool = True, **kwargs) -> Pat
     return path
 
 
-def deserialize_from_json(path: Path, target_grid_class: type[G], **kwargs) -> G:
+def deserialize_from_json[G: Grid](path: Path, target_grid_class: type[G], **kwargs) -> G:
     """Load a Grid object from JSON format with cross-type loading support.
 
     Args:
@@ -84,7 +81,7 @@ def deserialize_from_json(path: Path, target_grid_class: type[G], **kwargs) -> G
     return grid
 
 
-def _restore_grid_values(grid: G, json_data: dict) -> None:
+def _restore_grid_values[G: Grid](grid: G, json_data: dict) -> None:
     """Restore arrays to the grid."""
     for attr_name, attr_values in json_data.items():
         if not hasattr(grid, attr_name):
