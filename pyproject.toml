@@ -121,7 +121,7 @@ select = [
   "PERF",
   "Q",
   "ICN",
-  #"ISC",
+  "ISC",
   "G",
   "LOG",
   "EXE",
