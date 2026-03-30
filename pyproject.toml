@@ -146,7 +146,7 @@ select = [
   # pie
   "PIE",
   # self
-  #"SLF",
+  "SLF",
   # raise
   "RSE",
   # ruff sepcific rules
@@ -169,7 +169,7 @@ unfixable = []
 combine-as-imports = true
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101"] # assert statements are used in tests
+"tests/*" = ["S101", "SLF001"] # assert statements are used in tests, private member access allowed in tests
 
 [tool.mypy]
 follow_imports = "silent"

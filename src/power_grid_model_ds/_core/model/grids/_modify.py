@@ -27,7 +27,7 @@ def add_array_to_grid(grid: "Grid", array: FancyArray, check_max_id: bool = True
     """See Grid.append()"""
     grid._append(array, check_max_id=check_max_id)  # noqa # pylint: disable=protected-access
     # pylint: disable=protected-access
-    grid.graphs._append(array)
+    grid.graphs._append(array)  # noqa: SLF001
 
 
 def add_node(grid: "Grid", node: NodeArray) -> None:
