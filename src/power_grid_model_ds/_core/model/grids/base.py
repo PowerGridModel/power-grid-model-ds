@@ -447,7 +447,7 @@ class Grid(FancyArrayContainer):
     @overload
     def merge(self: Self, other_grid: G, mode: Literal["keep_ids"]) -> None: ...
 
-    def merge(self, other_grid, mode):
+    def merge(self, other_grid, mode: Literal["keep_ids", "recalculate_ids"]):
         """Merge another grid into this grid.
 
         Args:

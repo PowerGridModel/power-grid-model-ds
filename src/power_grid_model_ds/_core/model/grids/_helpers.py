@@ -71,7 +71,7 @@ def merge_grids[G: Grid](grid: G, other_grid: G, mode: Literal["recalculate_ids"
 def merge_grids[G: Grid](grid: G, other_grid: G, mode: Literal["keep_ids"]) -> None: ...
 
 
-def merge_grids(grid, other_grid, mode):
+def merge_grids(grid, other_grid, mode: Literal["keep_ids", "recalculate_ids"]):
     """See Grid.merge()"""
 
     if type(grid) is not type(other_grid):
