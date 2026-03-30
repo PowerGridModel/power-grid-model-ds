@@ -4,12 +4,9 @@
 
 """Optional dependencies for the arrays module."""
 
-import importlib.util
-
-HAS_PANDAS = importlib.util.find_spec("pandas") is not None
-if HAS_PANDAS:
+try:
     import pandas as pd
-else:
+except ImportError:
     pd = None  # pylint: disable=invalid-name
 
 __all__ = ["pd"]
