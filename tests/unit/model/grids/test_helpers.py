@@ -27,7 +27,7 @@ class TestMergeGrids:
 
         offset = grid1.merge(grid2, mode="keep_ids")
 
-        assert offset == 0
+        assert offset is None
 
         assert grid1.node.id.tolist() == [1, 2, 3, 4, 11, 12, 13, 14], (
             "Merged node ids should be equal to those of grid1 and grid2 combined"
