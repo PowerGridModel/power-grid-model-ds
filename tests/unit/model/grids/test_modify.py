@@ -345,7 +345,7 @@ def test_grid_add_line(basic_grid: Grid):
 
     assert not grid.graphs.complete_graph.has_branch(102, 105)
 
-    grid.add_branch(branch=line)
+    grid.append(line)
 
     assert len(grid.line) == 5
     assert EMPTY_ID not in grid.line.id
@@ -425,7 +425,7 @@ def test_grid_add_link(basic_grid: Grid):
 
     assert len(grid.link) == 1
     assert not grid.graphs.complete_graph.has_branch(105, 103)
-    grid.add_branch(new_link_array)
+    grid.append(new_link_array)
     assert len(grid.link) == 2
     assert EMPTY_ID not in grid.link.id
     assert grid.graphs.complete_graph.has_branch(105, 103)
@@ -440,7 +440,7 @@ def test_grid_add_tranformer(basic_grid: Grid):
 
     assert len(grid.transformer) == 1
     assert not grid.graphs.complete_graph.has_branch(105, 103)
-    grid.add_branch(new_transformer_array)
+    grid.append(new_transformer_array)
     assert len(grid.transformer) == 2
     assert EMPTY_ID not in grid.transformer.id
     assert grid.graphs.complete_graph.has_branch(105, 103)
