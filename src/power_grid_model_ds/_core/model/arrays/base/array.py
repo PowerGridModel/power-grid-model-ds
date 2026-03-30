@@ -15,7 +15,7 @@ from numpy.typing import ArrayLike, NDArray
 from power_grid_model_ds._core.model.arrays.base._build import build_array
 from power_grid_model_ds._core.model.arrays.base._filters import apply_exclude, apply_filter, apply_get, get_filter_mask
 from power_grid_model_ds._core.model.arrays.base._modify import check_ids, re_order, update_by_id
-from power_grid_model_ds._core.model.arrays.base._optional import pandas
+from power_grid_model_ds._core.model.arrays.base._optional import pd
 from power_grid_model_ds._core.model.arrays.base._string import convert_array_to_string
 from power_grid_model_ds._core.model.arrays.base.errors import ArrayDefinitionError
 from power_grid_model_ds._core.model.constants import EMPTY_ID, empty
@@ -336,9 +336,9 @@ class FancyArray(ABC):
 
     def as_df(self):
         """Convert to pandas DataFrame"""
-        if pandas is None:
+        if pd is None:
             raise ImportError("pandas is not installed")
-        return pandas.DataFrame(self._data)
+        return pd.DataFrame(self._data)
 
     @classmethod
     def from_extended(cls: type[Self], extended: Self) -> Self:

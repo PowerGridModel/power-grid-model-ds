@@ -120,7 +120,7 @@ select = [
   "BLE",
   "PERF",
   "Q",
-  #"ICN",
+  "ICN",
   #"ISC",
   "G",
   "LOG",
