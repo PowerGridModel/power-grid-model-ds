@@ -62,6 +62,7 @@ def create_empty_grid[G: Grid](grid_class: type[G], graph_model: type[BaseGraphM
     empty_fields["graphs"] = GraphContainer.empty(graph_model=graph_model)
     return grid_class(**empty_fields)
 
+
 @overload
 def merge_grids[G: Grid](grid: G, other_grid: G, mode: Literal["recalculate_ids"]) -> int: ...
 
