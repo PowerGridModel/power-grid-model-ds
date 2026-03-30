@@ -31,7 +31,7 @@ Column = NDArray
 Self = TypeVar("Self", bound="FancyArray")
 
 
-class FancyArray(ABC):
+class FancyArray(ABC):  # noqa: B024
     """Base class for all arrays.
 
     You can create your own array by subclassing FancyArray.
@@ -113,7 +113,7 @@ class FancyArray(ABC):
 
     def __repr__(self) -> str:
         try:
-            data = getattr(self, "data")
+            data = self.data
             if data.size > 3:
                 return f"{self.__class__.__name__}([{data[:3]}]... + {data.size - 3} more rows)"
             return f"{self.__class__.__name__}([{data}])"

@@ -21,7 +21,7 @@ def do_performance_test(
         formatted_setup_codes = {key: code.format(size=size) for key, code in setup_codes.items()}
         if isinstance(code_to_test, dict):
             code_to_test_list = [code_to_test[variant].format(size=size) for variant in setup_codes]
-            test_generator = zip(formatted_setup_codes.items(), code_to_test_list)
+            test_generator = zip(formatted_setup_codes.items(), code_to_test_list, strict=True)
         elif isinstance(code_to_test, list):
             code_to_test_list = [code.format(size=size) for code in code_to_test]
             test_generator = product(formatted_setup_codes.items(), code_to_test_list)
