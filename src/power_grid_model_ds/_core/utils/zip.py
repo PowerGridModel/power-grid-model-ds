@@ -9,7 +9,6 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import List
 from zipfile import ZipFile
 
 _logger = logging.getLogger(__name__)
@@ -32,7 +31,7 @@ def zip_folder(folder_to_zip: Path) -> Path:
     return zip_file_path
 
 
-def zip_files(zip_file_path: Path, files_to_zip: List[Path]) -> Path:
+def zip_files(zip_file_path: Path, files_to_zip: list[Path]) -> Path:
     """Zip files"""
     with ZipFile(str(zip_file_path.with_suffix(".zip")), "w") as zip_object:
         for file in files_to_zip:

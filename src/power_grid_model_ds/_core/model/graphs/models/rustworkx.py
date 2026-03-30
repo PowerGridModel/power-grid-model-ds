@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import logging
-from typing import Generator
+from collections.abc import Generator
 
 import rustworkx as rx
 from rustworkx import NoEdgeBetweenNodes

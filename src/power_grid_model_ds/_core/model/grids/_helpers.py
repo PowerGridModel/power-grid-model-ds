@@ -4,7 +4,7 @@
 import copy
 import logging
 from dataclasses import fields
-from typing import TYPE_CHECKING, Literal, Type, TypeVar
+from typing import TYPE_CHECKING, Literal
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
@@ -36,12 +36,10 @@ if TYPE_CHECKING:
     from .base import Grid
 
 
-G = TypeVar("G", bound="Grid")
-
 _logger = logging.getLogger(__name__)
 
 
-def create_grid_from_extended_grid(grid_class: type[G], extended: G) -> G:
+def create_grid_from_extended_grid[G: Grid](grid_class: type[G], extended: G) -> G:
     """See Grid.from_extended()"""
     new_grid = grid_class.empty()
 
@@ -58,14 +56,14 @@ def create_grid_from_extended_grid(grid_class: type[G], extended: G) -> G:
     return new_grid
 
 
-def create_empty_grid(grid_class: Type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
+def create_empty_grid[G: Grid](grid_class: type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
     """See Grid.empty()"""
     empty_fields = grid_class._get_empty_fields()  # noqa # pylint: disable=protected-access
     empty_fields["graphs"] = GraphContainer.empty(graph_model=graph_model)
     return grid_class(**empty_fields)
 
 
-def merge_grids(grid: G, other_grid: G, mode: Literal["recalculate_ids", "keep_ids"]) -> int:
+def merge_grids[G: Grid](grid: G, other_grid: G, mode: Literal["recalculate_ids", "keep_ids"]) -> int:
     """See Grid.merge()"""
 
     if type(grid) is not type(other_grid):

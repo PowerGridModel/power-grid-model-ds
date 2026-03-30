@@ -4,9 +4,10 @@
 
 from abc import ABC
 from collections import namedtuple
+from collections.abc import Iterable
 from copy import copy
 from functools import lru_cache
-from typing import Any, Iterable, Literal, Type, TypeVar, overload
+from typing import Any, Literal, TypeVar, overload
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -206,7 +207,7 @@ class FancyArray(ABC):
         return copy(self)
 
     @classmethod
-    def zeros(cls: Type[Self], num: int, empty_id: bool = True) -> Self:
+    def zeros(cls: type[Self], num: int, empty_id: bool = True) -> Self:
         """Construct an array filled with zeros.
 
         If 'empty_id' is True, the 'id' column will be filled with EMPTY_ID values.
@@ -218,7 +219,7 @@ class FancyArray(ABC):
         return cls(data=zeros_array)
 
     @classmethod
-    def empty(cls: Type[Self], num: int, use_defaults: bool = True) -> Self:
+    def empty(cls: type[Self], num: int, use_defaults: bool = True) -> Self:
         """Construct an array filled with 'empty' values.
 
         'empty' values differs per dtype:
@@ -340,7 +341,7 @@ class FancyArray(ABC):
         return pandas.DataFrame(self._data)
 
     @classmethod
-    def from_extended(cls: Type[Self], extended: Self) -> Self:
+    def from_extended(cls: type[Self], extended: Self) -> Self:
         """Create an instance from an extended array."""
         if not isinstance(extended, cls):
             raise TypeError(f"Extended array must be of type {cls.__name__}, got {type(extended).__name__}")

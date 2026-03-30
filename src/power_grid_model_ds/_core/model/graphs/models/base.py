@@ -3,8 +3,10 @@
 # SPDX-License-Identifier: MPL-2.0
 import warnings
 from abc import ABC, abstractmethod
+from collections import Counter
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Counter, Generator
+from typing import TYPE_CHECKING
 
 from numpy._typing import NDArray
 
@@ -441,7 +443,7 @@ class BaseGraphModel(ABC):
             set(self.external_ids) == set(other.external_ids)
             and self.active_only == other.active_only
             and (
-                Counter((frozenset(branch) for branch in self.all_branches))
-                == Counter((frozenset(branch) for branch in other.all_branches))
+                Counter(frozenset(branch) for branch in self.all_branches)
+                == Counter(frozenset(branch) for branch in other.all_branches)
             )
         )
