@@ -51,7 +51,7 @@ def _get_cycle_paths_rustworkx(unused_edges, spanning_forest_graph):
     """Find nodes that are part of a cycle in the graph using the MST."""
     node_cycle_paths = []
     for source, target in unused_edges:
-        path_mapping = rx.dijkstra_shortest_paths(spanning_forest_graph, source, target, weight_fn=lambda x: 1)
+        path_mapping = rx.dijkstra_shortest_paths(spanning_forest_graph, source, target, weight_fn=lambda _: 1)
 
         path_nodes = list(path_mapping[target])
         path_nodes.append(source)

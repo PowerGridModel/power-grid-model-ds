@@ -140,7 +140,7 @@ select = [
   # tidy imports
   "TID",
   # unused arguments
-  #"ARG",
+  "ARG",
   # Return
   "RET",
   # pie
@@ -172,7 +172,8 @@ combine-as-imports = true
 # S101: assert statements are used in tests
 # SLF001: private member access allowed in tests
 # PLR2004: magic numbers allowed in tests
-"tests/*" = ["S101", "SLF001", "PLR2004"]
+# ARG001, ARG002: Unused arguments allowed in tests
+"tests/*" = ["S101", "SLF001", "PLR2004", "ARG001", "ARG002"]
 
 [tool.mypy]
 follow_imports = "silent"
