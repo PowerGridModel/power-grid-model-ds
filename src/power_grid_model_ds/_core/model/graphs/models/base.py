@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 
 # pylint: disable=too-many-public-methods
-class BaseGraphModel(ABC):
+class BaseGraphModel(ABC):  # noqa: PLW1641
     """Base class for graph models"""
 
     def __init__(self, active_only=False) -> None:

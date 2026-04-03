@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+from enum import StrEnum
+
 import pytest
 from power_grid_model import ComponentType
 
@@ -277,6 +279,5 @@ class TestStyleClass:
 
     def test_style_class_is_string_enum(self):
         """Test that StyleClass is a StrEnum."""
-        from enum import StrEnum
 
         assert issubclass(StyleClass, StrEnum)

@@ -25,6 +25,7 @@ from power_grid_model_ds._core.utils.misc import array_equal_with_nan, get_inher
 
 _RESERVED_COLUMN_NAMES: set = set(dir(np.array([]))).union({"data"})
 _DEFAULT_STR_LENGTH: int = 50
+_MAX_DATA_SIZE: int = 3
 
 Column = NDArray
 
@@ -114,7 +115,7 @@ class FancyArray(ABC):  # noqa: B024
     def __repr__(self) -> str:
         try:
             data = self.data
-            if data.size > 3:
+            if data.size > _MAX_DATA_SIZE:
                 return f"{self.__class__.__name__}([{data[:3]}]... + {data.size - 3} more rows)"
             return f"{self.__class__.__name__}([{data}])"
         except AttributeError:
@@ -243,7 +244,7 @@ class FancyArray(ABC):  # noqa: B024
     def is_empty(self, column: str) -> NDArray[np.bool_]:
         """Check if a column is filled with 'empty' values."""
         empty_value = self.get_empty_value(column)
-        if empty_value is np.nan:
+        if empty_value is np.nan:  # noqa: PLW0177
             return np.isnan(self._data[column])
         return np.isin(self._data[column], empty_value)
 
