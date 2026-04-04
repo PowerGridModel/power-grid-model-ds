@@ -7,7 +7,7 @@
 import warnings
 from dataclasses import dataclass, fields
 from pathlib import Path
-from typing import Literal, Self, Type, TypeVar
+from typing import Literal, Self, Type, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -72,7 +72,12 @@ from power_grid_model_ds._core.model.grids._search import (
     get_nearest_substation_node,
     get_typed_branches,
 )
-from power_grid_model_ds._core.model.grids.serialization.json import deserialize_from_json, serialize_to_json
+from power_grid_model_ds._core.model.grids.serialization.json import (
+    deserialize_from_dict,
+    deserialize_from_json,
+    serialize_to_dict,
+    serialize_to_json,
+)
 from power_grid_model_ds._core.model.grids.serialization.pickle import load_grid_from_pickle, save_grid_to_pickle
 from power_grid_model_ds._core.model.grids.serialization.string import (
     deserialize_from_str,
@@ -445,21 +450,61 @@ class Grid(FancyArrayContainer):
 
         merge_grids(self, other_grid, mode)
 
-    def serialize(self, path: Path, **kwargs) -> Path:
+    @overload
+    def serialize(self, path: Path, mode: Literal["json"] = "json", **kwargs) -> Path: ...
+
+    @overload
+    def serialize(self, path: None = None, *, mode: Literal["dict"], **kwargs) -> dict: ...
+
+    def serialize(self, path: Path | None = None, mode: Literal["json", "dict"] = "json", **kwargs) -> Path | dict:
         """Serialize the grid.
 
         Args:
-            path: Destination file path to write JSON to.
-            **kwargs: Additional keyword arguments forwarded to ``json.dump``
+            path: Destination file path. Required when mode is ``"json"``, ignored when mode is ``"dict"``.
+            mode: Serialization target. Use ``"json"`` (default) to write a JSON file, or ``"dict"`` to return a
+                Python dict.
+            **kwargs: Additional keyword arguments forwarded to ``json.dump`` (json mode only).
         Returns:
-            Path: The path where the file was saved.
+            Path when mode is ``"json"``, dict when mode is ``"dict"``.
         """
-        return serialize_to_json(grid=self, path=path, strict=True, **kwargs)
+        match mode:
+            case "dict":
+                return serialize_to_dict(grid=self, **kwargs)
+            case "json":
+                assert isinstance(path, Path), "path must be a Path when mode='json'"
+                return serialize_to_json(grid=self, path=path, strict=True, **kwargs)
+            case _:
+                raise ValueError(f"Invalid mode '{mode}'. Expected 'json' or 'dict'.")
 
     @classmethod
-    def deserialize(cls: Type[Self], path: Path) -> Self:
-        """Deserialize the grid."""
-        return deserialize_from_json(path=path, target_grid_class=cls)
+    @overload
+    def deserialize(cls: Type[Self], path: Path, mode: Literal["json"] = "json") -> Self: ...
+
+    @classmethod
+    @overload
+    def deserialize(cls: Type[Self], path: dict, mode: Literal["dict"]) -> Self: ...
+
+    @classmethod
+    def deserialize(cls: Type[Self], path: Path | dict, mode: Literal["json", "dict"] = "json") -> Self:
+        """Deserialize the grid.
+
+        Args:
+            path: File path when mode is ``"json"``, or a dict (as produced by ``serialize(mode="dict")``) when
+                mode is ``"dict"``.
+            mode: Deserialization source. Use ``"json"`` (default) to read from a JSON file, or ``"dict"`` to
+                load from a Python dict.
+        Returns:
+            Self: The deserialized grid instance.
+        """
+        match mode:
+            case "dict":
+                assert isinstance(path, dict), "path must be a dict when mode='dict'"
+                return deserialize_from_dict(data=path, target_grid_class=cls)
+            case "json":
+                assert isinstance(path, Path), "path must be a Path when mode='json'"
+                return deserialize_from_json(path=path, target_grid_class=cls)
+            case _:
+                raise ValueError(f"Invalid mode '{mode}'. Expected 'json' or 'dict'.")
 
     def rebuild_graphs(self) -> None:
         """(Re)build the graphs in the grid."""

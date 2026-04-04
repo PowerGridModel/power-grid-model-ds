@@ -36,7 +36,21 @@ def serialize_to_json(grid: G, path: Path, strict: bool = True, **kwargs) -> Pat
         Path: The path where the file was saved
     """
     path.parent.mkdir(parents=True, exist_ok=True)
+    json_data = serialize_to_dict(grid=grid, strict=strict)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(json_data, f, **kwargs)
+    return path
 
+
+def serialize_to_dict(grid: G, strict: bool = True) -> dict:
+    """Serialize a Grid object to a Python dict.
+
+    Args:
+        grid: The Grid object to serialize
+        strict: Whether to raise an error if the grid object is not serializable.
+    Returns:
+        dict: A PGM-compatible dict representation of the grid.
+    """
     serialized_data = {}
 
     for field in dataclasses.fields(grid):
@@ -52,13 +66,7 @@ def serialize_to_json(grid: G, path: Path, strict: bool = True, **kwargs) -> Pat
         if _is_serializable(field_value, strict):
             serialized_data[field.name] = field_value
 
-    # Store in a wrapper for PGM compatibility
-    json_data = {"data": serialized_data}
-
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(json_data, f, **kwargs)
-
-    return path
+    return {"data": serialized_data}
 
 
 def deserialize_from_json(path: Path, target_grid_class: type[G]) -> G:
@@ -73,9 +81,21 @@ def deserialize_from_json(path: Path, target_grid_class: type[G]) -> G:
     """
     with open(path, "r", encoding="utf-8") as f:
         json_data = json.load(f)
+    return deserialize_from_dict(data=json_data, target_grid_class=target_grid_class)
 
+
+def deserialize_from_dict(data: dict, target_grid_class: type[G]) -> G:
+    """Load a Grid object from a Python dict.
+
+    Args:
+        data: A dict as produced by ``serialize_to_dict``.
+        target_grid_class: Grid class to load into.
+
+    Returns:
+        Grid: The deserialized Grid object of the specified target class
+    """
     grid = target_grid_class.empty()
-    _restore_grid_values(grid, json_data["data"])
+    _restore_grid_values(grid, data["data"])
     grid.rebuild_graphs()
     return grid
 
