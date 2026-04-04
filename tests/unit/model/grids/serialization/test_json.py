@@ -356,7 +356,7 @@ class TestDictRoundtrips:
         dict_result = basic_grid.serialize(mode="dict")
         json_path = basic_grid.serialize(tmp_path / "grid.json")
         # Compare via JSON strings to handle NaN consistently (nan != nan in Python)
-        with open(json_path) as f:
+        with json_path.open() as f:
             json_str = f.read()
         assert json.dumps(dict_result, sort_keys=True) == json.dumps(json.loads(json_str), sort_keys=True)
 

@@ -33,18 +33,19 @@ def serialize_to_json[G: Grid](grid: G, path: Path, strict: bool = True, **kwarg
         Path: The path where the file was saved
     """
     path.parent.mkdir(parents=True, exist_ok=True)
-    json_data = serialize_to_dict(grid=grid, strict=strict)
-    with open(path, "w", encoding="utf-8") as f:
+    json_data = serialize_to_dict(grid=grid, strict=strict, **kwargs)
+    with path.open("w", encoding="utf-8") as f:
         json.dump(json_data, f, **kwargs)
     return path
 
 
-def serialize_to_dict(grid: G, strict: bool = True) -> dict:
+def serialize_to_dict[G: Grid](grid: G, strict: bool = True, **kwargs) -> dict:
     """Serialize a Grid object to a Python dict.
 
     Args:
         grid: The Grid object to serialize
         strict: Whether to raise an error if the grid object is not serializable.
+        **kwargs: Keyword arguments forwarded to json.dumps for serializability checks (e.g. cls).
     Returns:
         dict: A PGM-compatible dict representation of the grid.
     """
@@ -66,7 +67,7 @@ def serialize_to_dict(grid: G, strict: bool = True) -> dict:
     return {"data": serialized_data}
 
 
-def deserialize_from_json[G: Grid](path: Path, target_grid_class: type[G], **kwargs) -> G:
+def deserialize_from_json[G: Grid](path: Path, target_grid_class: type[G]) -> G:
     """Load a Grid object from JSON format with cross-type loading support.
 
     Args:
@@ -76,12 +77,12 @@ def deserialize_from_json[G: Grid](path: Path, target_grid_class: type[G], **kwa
     Returns:
         Grid: The deserialized Grid object of the specified target class
     """
-    with open(path, "r", encoding="utf-8") as f:
+    with path.open(encoding="utf-8") as f:
         json_data = json.load(f)
     return deserialize_from_dict(data=json_data, target_grid_class=target_grid_class)
 
 
-def deserialize_from_dict(data: dict, target_grid_class: type[G]) -> G:
+def deserialize_from_dict[G: Grid](data: dict, target_grid_class: type[G]) -> G:
     """Load a Grid object from a Python dict.
 
     Args:
@@ -93,6 +94,7 @@ def deserialize_from_dict(data: dict, target_grid_class: type[G]) -> G:
     """
     grid = target_grid_class.empty()
     _restore_grid_values(grid, data["data"])
+    grid.rebuild_ids()
     grid.rebuild_graphs()
     return grid
 

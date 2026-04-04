@@ -7,7 +7,7 @@
 import warnings
 from dataclasses import dataclass, fields
 from pathlib import Path
-from typing import Literal, Self, Type, TypeVar, overload
+from typing import Literal, Self, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -490,21 +490,22 @@ class Grid(FancyArrayContainer):
             case "dict":
                 return serialize_to_dict(grid=self, **kwargs)
             case "json":
-                assert isinstance(path, Path), "path must be a Path when mode='json'"
+                if not isinstance(path, Path):
+                    raise TypeError("path must be a Path when mode='json'")
                 return serialize_to_json(grid=self, path=path, strict=True, **kwargs)
             case _:
                 raise ValueError(f"Invalid mode '{mode}'. Expected 'json' or 'dict'.")
 
     @classmethod
     @overload
-    def deserialize(cls: Type[Self], path: Path, mode: Literal["json"] = "json") -> Self: ...
+    def deserialize(cls: type[Self], path: Path, mode: Literal["json"] = "json") -> Self: ...
 
     @classmethod
     @overload
-    def deserialize(cls: Type[Self], path: dict, mode: Literal["dict"]) -> Self: ...
+    def deserialize(cls: type[Self], path: dict, mode: Literal["dict"]) -> Self: ...
 
     @classmethod
-    def deserialize(cls: Type[Self], path: Path | dict, mode: Literal["json", "dict"] = "json") -> Self:
+    def deserialize(cls: type[Self], path: Path | dict, mode: Literal["json", "dict"] = "json") -> Self:
         """Deserialize the grid.
 
         Args:
@@ -517,10 +518,12 @@ class Grid(FancyArrayContainer):
         """
         match mode:
             case "dict":
-                assert isinstance(path, dict), "path must be a dict when mode='dict'"
+                if not isinstance(path, dict):
+                    raise TypeError("path must be a dict when mode='dict'")
                 return deserialize_from_dict(data=path, target_grid_class=cls)
             case "json":
-                assert isinstance(path, Path), "path must be a Path when mode='json'"
+                if not isinstance(path, Path):
+                    raise TypeError("path must be a Path when mode='json'")
                 return deserialize_from_json(path=path, target_grid_class=cls)
             case _:
                 raise ValueError(f"Invalid mode '{mode}'. Expected 'json' or 'dict'.")
