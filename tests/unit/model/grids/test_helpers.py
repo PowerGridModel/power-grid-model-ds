@@ -4,7 +4,7 @@
 import pytest
 
 from power_grid_model_ds import Grid
-from power_grid_model_ds._core.model.arrays.pgm_arrays import SourceArray
+from power_grid_model_ds.arrays import SourceArray
 from tests.fixtures.grid_classes import ExtendedGrid
 
 
@@ -25,7 +25,9 @@ class TestMergeGrids:
         grid1 = Grid.from_txt("S1 2", "S1 3 link", "3 4 transformer")
         grid2 = Grid.from_txt("S11 12", "S11 13 link", "13 14 transformer")
 
-        grid1.merge(grid2, mode="keep_ids")
+        offset = grid1.merge(grid2, mode="keep_ids")
+
+        assert offset is None
 
         assert grid1.node.id.tolist() == [1, 2, 3, 4, 11, 12, 13, 14], (
             "Merged node ids should be equal to those of grid1 and grid2 combined"
@@ -37,7 +39,8 @@ class TestMergeGrids:
         grid1.append(source)
         grid2.append(source)
 
-        grid1.merge(grid2, mode="recalculate_ids")
+        offset = grid1.merge(grid2, mode="recalculate_ids")
+        assert offset == 501
         grid1.check_ids()
 
         # The node ids of the second grid should be offset by 501:
@@ -54,8 +57,8 @@ class TestMergeGrids:
 
     def test_merge_grid_with_some_identical_lines(self, grid1: Grid, grid2: Grid):
         # Now both grids have 14 as highest node id, so both will have branch ids 15, 16 and 17:
-
-        grid1.merge(grid2, mode="recalculate_ids")
+        offset = grid1.merge(grid2, mode="recalculate_ids")
+        assert offset == 17
         grid1.check_ids()
 
     def test_merge_grid_with_some_identical_lines_failing(self, grid1: Grid, grid2: Grid):
@@ -77,4 +80,4 @@ class TestMergeGrids:
 
     def test_merging_with_incorrect_mode(self, grid1: Grid, grid2: Grid):
         with pytest.raises(NotImplementedError):
-            grid1.merge(grid2, mode="invalid_mode")  # type: ignore[arg-type]
+            grid1.merge(grid2, mode="invalid_mode")  # type: ignore[call-overload]

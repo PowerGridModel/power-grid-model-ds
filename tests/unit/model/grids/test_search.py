@@ -7,9 +7,9 @@ import pytest
 
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
-from power_grid_model_ds._core.model.arrays.pgm_arrays import LineArray, LinkArray, NodeArray, TransformerArray
 from power_grid_model_ds._core.model.enums.nodes import NodeType
 from power_grid_model_ds._core.model.grids._search import find_differences_between_grids
+from power_grid_model_ds.arrays import LineArray, LinkArray, NodeArray, TransformerArray
 from tests.fixtures.grid_classes import ExtendedGrid
 
 # pylint: disable=missing-function-docstring
@@ -17,7 +17,7 @@ from tests.fixtures.grid_classes import ExtendedGrid
 
 def test_grid_get_nearest_substation_node(basic_grid):
     substation_node = basic_grid.get_nearest_substation_node(node_id=103)
-    assert NodeType.SUBSTATION_NODE == substation_node.node_type
+    assert substation_node.node_type == NodeType.SUBSTATION_NODE
 
 
 def test_grid_get_nearest_substation_node_no_substation(basic_grid):
@@ -46,7 +46,7 @@ class TestGetDownstreamNodes:
     def test_get_downstream_nodes(self):
         grid = Grid.from_txt("S1 11", "S1 2", "2 3", "3 5", "5 6", "2 4", "4 99", "99 100")
         downstream_nodes = grid.get_downstream_nodes(node_id=3)
-        assert [5, 6] == downstream_nodes
+        assert downstream_nodes == [5, 6]
 
     def test_get_downstream_nodes_from_substation_node(self):
         grid = Grid.from_txt("S1 11", "S1 2", "2 3", "3 5", "5 6", "2 4", "4 99", "99 100")
@@ -66,11 +66,11 @@ class TestGetBranchesInPath:
 
     def test_get_branches_in_path_one_node(self, basic_grid):
         branches = basic_grid.get_branches_in_path([106])
-        assert 0 == branches.size
+        assert branches.size == 0
 
     def test_get_branches_in_path_empty_path(self, basic_grid):
         branches = basic_grid.get_branches_in_path([])
-        assert 0 == branches.size
+        assert branches.size == 0
 
 
 def test_component_three_winding_transformer(grid_with_3wt):
@@ -124,7 +124,7 @@ class TestGetTypedBranches:
 
     def test_get_typed_branches_array_input(self, basic_grid: Grid):
         lines = basic_grid.get_typed_branches(np.array([201, 202]))
-        assert 2 == lines.size
+        assert lines.size == 2
         assert isinstance(lines, LineArray)
 
     def test_get_typed_branches_no_array_input(self, basic_grid: Grid):
@@ -152,7 +152,7 @@ class TestGridDiff:
         grid1 = Grid.from_txt("1 2 10", "2 3 11")
         grid2 = Grid.from_txt("1 2 10", "2 4 11")
         diff_dict = find_differences_between_grids(grid1, grid2)
-        assert len(diff_dict) == 3
+        assert len(diff_dict) == 4
         assert "line" in diff_dict
         assert diff_dict["line"]["grid1"].size
         assert diff_dict["line"]["grid2"].size
@@ -179,8 +179,10 @@ class TestGridDiff:
         grid2 = Grid.from_txt("1 2 10", "2 4 11")
         grid1.diff(grid2)
         captured = capsys.readouterr()
-        assert "Difference in 'grid.node'" in captured.out
-        assert "Difference in 'grid.line'" in captured.out
+        assert "There are differences in 'grid._ids'" in captured.out
+        assert "There are differences in 'grid.graphs'" in captured.out
+        assert "There are differences in 'grid.node'" in captured.out
+        assert "There are differences in 'grid.line'" in captured.out
 
     def test_different_order(self, capsys):
         grid1 = Grid.from_txt("1 2 10", "2 4 11")

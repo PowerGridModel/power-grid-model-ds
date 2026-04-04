@@ -2,9 +2,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import dash_bootstrap_components as dbc
-from dash import Dash, dcc, html
-from dash_bootstrap_components.icons import FONT_AWESOME
+from dash import dcc, html
 from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.grids.base import Grid
@@ -20,38 +18,10 @@ from power_grid_model_ds._core.visualizer.layout.header import HEADER_HTML
 from power_grid_model_ds._core.visualizer.layout.layout_config import get_default_graph_layout
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
 from power_grid_model_ds._core.visualizer.parsers import parse_element_data
+from power_grid_model_ds._core.visualizer.parsing_utils import filter_out_appliances
 
 GOOGLE_FONTS = "https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
 MDBOOTSTRAP = "https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/8.2.0/mdb.min.css"
-
-
-def visualize(grid: Grid, debug: bool = False, port: int = 8050) -> None:
-    """Visualize the Grid.
-
-    grid: Grid
-        The grid to visualize.
-
-    layout: str
-        The layout to use.
-
-        If 'layout' is not provided (""):
-            And grid.node contains "x" and "y" columns:
-                The layout will be set to "preset" which uses the x and y coordinates to place the nodes.
-            Otherwise:
-                The layout will be set to "breadthfirst", which is a hierarchical breadth-first-search (BFS) layout.
-        Other options:
-            - "random": A layout that places the nodes randomly.
-            - "circle": A layout that places the nodes in a circle.
-            - "concentric": A layout that places the nodes in concentric circles.
-            - "grid": A layout that places the nodes in a grid matrix.
-            - "cose": A layout that uses the CompoundSpring Embedder algorithm (force-directed layout)
-    """
-
-    app = Dash(
-        external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, MDBOOTSTRAP, FONT_AWESOME, GOOGLE_FONTS]
-    )
-    app.layout = get_app_layout(grid)
-    app.run(debug=debug, port=port)
 
 
 def _get_columns_store(grid: Grid) -> dcc.Store:
@@ -65,7 +35,7 @@ def _get_columns_store(grid: Grid) -> dcc.Store:
             ComponentType.three_winding_transformer: grid.three_winding_transformer.columns,
             ComponentType.asym_line: grid.asym_line.columns,
             ComponentType.generic_branch: grid.generic_branch.columns,
-            "branch": grid.branches.columns,
+            "branches": grid.branches.columns,
         },
     )
 
@@ -73,15 +43,25 @@ def _get_columns_store(grid: Grid) -> dcc.Store:
 def get_app_layout(grid: Grid) -> html.Div:
     """Get the app layout."""
     columns_store = _get_columns_store(grid)
-    graph_layout = get_default_graph_layout(grid.node)
-    elements = list(parse_element_data(grid).values())
-    cytoscape_html = get_cytoscape_html(graph_layout, elements, grid.source.node.tolist())
+    layout = get_default_graph_layout(grid.node)
+    viz_elements_dict = parse_element_data(grid)
+
+    initial_elements = filter_out_appliances(viz_elements_dict.values())
+
+    # Remove associated_ids from initial element data.
+    # They will be added and used after migrating to using grid object for callbacks
+    for element in initial_elements:
+        element["data"].pop("associated_ids", None)
+
+    cytoscape_html = get_cytoscape_html(layout, initial_elements, grid.source.size != 0)
 
     return html.Div(
         [
             columns_store,
+            dcc.Store(id="parsed-elements-store", data=viz_elements_dict),
             dcc.Store(id="stylesheet-store", data=DEFAULT_STYLESHEET),
-            dcc.Store(id="source-nodes-store", data=grid.source.node.tolist()),
+            dcc.Store(id="source-available-store", data=grid.source.size != 0),
+            dcc.Store(id="show-appliances-store", data=False, storage_type="session"),
             HEADER_HTML,
             html.Hr(style={"border-color": "white", "margin": "0"}),
             cytoscape_html,

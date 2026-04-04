@@ -13,32 +13,6 @@ import numpy as np
 import numpy.typing as npt
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
-    AsymCurrentSensorArray,
-    AsymGenArray,
-    AsymLineArray,
-    AsymLoadArray,
-    AsymPowerSensorArray,
-    AsymVoltageSensorArray,
-    Branch3Array,
-    BranchArray,
-    FaultArray,
-    GenericBranchArray,
-    LineArray,
-    LinkArray,
-    NodeArray,
-    ShuntArray,
-    SourceArray,
-    SymCurrentSensorArray,
-    SymGenArray,
-    SymLoadArray,
-    SymPowerSensorArray,
-    SymVoltageSensorArray,
-    ThreeWindingTransformerArray,
-    TransformerArray,
-    TransformerTapRegulatorArray,
-    VoltageRegulatorArray,
-)
 from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
@@ -83,6 +57,32 @@ from power_grid_model_ds._core.model.grids.serialization.string import (
     deserialize_from_str,
     deserialize_from_txt_file,
     serialize_to_str,
+)
+from power_grid_model_ds.arrays import (
+    AsymCurrentSensorArray,
+    AsymGenArray,
+    AsymLineArray,
+    AsymLoadArray,
+    AsymPowerSensorArray,
+    AsymVoltageSensorArray,
+    Branch3Array,
+    BranchArray,
+    FaultArray,
+    GenericBranchArray,
+    LineArray,
+    LinkArray,
+    NodeArray,
+    ShuntArray,
+    SourceArray,
+    SymCurrentSensorArray,
+    SymGenArray,
+    SymLoadArray,
+    SymPowerSensorArray,
+    SymVoltageSensorArray,
+    ThreeWindingTransformerArray,
+    TransformerArray,
+    TransformerTapRegulatorArray,
+    VoltageRegulatorArray,
 )
 
 G = TypeVar("G", bound="Grid")
@@ -156,7 +156,7 @@ class Grid(FancyArrayContainer):
         return serialize_to_str(self)
 
     @classmethod
-    def empty(cls: Type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
+    def empty(cls: type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
         """Create an empty grid
 
         Args:
@@ -169,7 +169,7 @@ class Grid(FancyArrayContainer):
 
     @classmethod
     # pylint: disable=arguments-differ
-    def from_cache(cls: Type[Self], cache_path: Path, load_graphs: bool = True) -> Self:
+    def from_cache(cls: type[Self], cache_path: Path, load_graphs: bool = True) -> Self:
         """Read from cache and build .graphs from arrays
 
         WARNING: This function uses pickle.load() which can execute arbitrary code.
@@ -191,7 +191,7 @@ class Grid(FancyArrayContainer):
         return load_grid_from_pickle(cls, cache_path=cache_path, load_graphs=load_graphs)
 
     @classmethod
-    def from_txt(cls: Type[G], *args: str) -> G:
+    def from_txt(cls: type[G], *args: str) -> G:
         """Build a grid from a list of strings
 
         See the documentation for the expected format of the txt_lines
@@ -207,7 +207,7 @@ class Grid(FancyArrayContainer):
 
     @classmethod
     # pylint: disable=arguments-differ
-    def from_txt_file(cls: Type[G], txt_file_path: Path) -> G:
+    def from_txt_file(cls: type[G], txt_file_path: Path) -> G:
         """Load grid from txt file
 
         Args:
@@ -216,7 +216,7 @@ class Grid(FancyArrayContainer):
         return deserialize_from_txt_file(cls, txt_file_path)
 
     @classmethod
-    def from_extended(cls: Type[G], extended: G) -> G:
+    def from_extended(cls: type[G], extended: G) -> G:
         """Create a grid from an extended Grid object."""
         return create_grid_from_extended_grid(cls, extended=extended)
 
@@ -248,18 +248,25 @@ class Grid(FancyArrayContainer):
         return add_branch(self, branch)
 
     def delete_branch(self, branch: BranchArray) -> None:
-        """Remove a branch from the grid
+        """Remove a branch array from the grid
+
+        Supports removing multiple branches at once.
+        Also removes assets connected to the branch (e.g. sensors) and updates the graphs accordingly.
 
         Args:
-            branch (BranchArray): The branch to remove
+            branch (BranchArray): The branch array to remove
         """
         return delete_branch(self, branch=branch)
 
     def delete_branch3(self, branch: Branch3Array) -> None:
-        """Remove a branch3 from the grid
+        """Remove a branch3 array from the grid
+
+        Supports removing multiple branch3 records at once
+        Also removes assets connected to the branch3 (e.g. sensors) and updates the graphs accordingly.
+
 
         Args:
-            branch (Branch3Array): The branch3 to remove
+            branch (Branch3Array): The branch3 array to remove
         """
         return delete_branch3(self, branch=branch)
 
@@ -272,10 +279,13 @@ class Grid(FancyArrayContainer):
         return add_node(self, node=node)
 
     def delete_node(self, node: NodeArray) -> None:
-        """Remove a node from the grid
+        """Remove a node array from the grid
+
+        Supports removing multiple branches at once.
+        Also removes assets connected to the node (e.g. branches, sensors, loads) and updates the graphs accordingly.
 
         Args:
-            node (NodeArray): The node to remove
+            node (NodeArray): node array to remove
         """
         return delete_node(self, node=node)
 
@@ -436,19 +446,28 @@ class Grid(FancyArrayContainer):
         )
         return save_grid_to_pickle(self, cache_dir=cache_dir, cache_name=cache_name, compress=compress)
 
-    def merge(self, other_grid: Self, mode: Literal["recalculate_ids", "keep_ids"]) -> None:
+    @overload
+    def merge(self: Self, other_grid: G, mode: Literal["recalculate_ids"]) -> int: ...
+
+    @overload
+    def merge(self: Self, other_grid: G, mode: Literal["keep_ids"]) -> None: ...
+
+    def merge(self, other_grid, mode: Literal["keep_ids", "recalculate_ids"]):
         """Merge another grid into this grid.
 
         Args:
             other_grid (Grid): The grid to merge into this grid.
-            mode (str): The merge mode:
+            mode (Literal["keep_ids", "recalculate_ids"]): The merge mode:
                 - "recalculate_ids": ids in the arrays of other_grid are offset to avoid conflicts.
                 IMPORTANT: we currently only update any `id` column and all id references in the default PGM-DS grid.
-
                 - "keep_ids": Keep ids of other_grid. Raises an error if grids contain overlapping indices.
+        Returns:
+            int: The offset of the IDs in the merged grid.
+                If mode is "keep_ids", the offset will be 0.
+                If mode is "recalculate_ids", the offset will be the value that was added
+                to the other_grid ids to avoid conflicts.
         """
-
-        merge_grids(self, other_grid, mode)
+        return merge_grids(self, other_grid, mode)
 
     @overload
     def serialize(self, path: Path, mode: Literal["json"] = "json", **kwargs) -> Path: ...

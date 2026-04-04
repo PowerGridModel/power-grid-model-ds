@@ -6,7 +6,9 @@ from copy import deepcopy
 import pytest
 
 from power_grid_model_ds import Grid
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+from power_grid_model_ds._core.model.constants import EMPTY_ID
+from power_grid_model_ds._core.model.grids._modify import delete_appliance
+from power_grid_model_ds.arrays import (
     AsymGenArray,
     AsymLineArray,
     AsymLoadArray,
@@ -22,8 +24,6 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     TransformerArray,
     TransformerTapRegulatorArray,
 )
-from power_grid_model_ds._core.model.constants import EMPTY_ID
-from power_grid_model_ds._core.model.grids._modify import delete_appliance
 from tests.fixtures.arrays import DefaultedCustomLineArray, DefaultedCustomNodeArray
 from tests.fixtures.grid_classes import ExtendedGrid
 
@@ -34,7 +34,7 @@ def test_grid_add_node(basic_grid: Grid):
     new_node = NodeArray.zeros(1)
     grid.add_node(node=new_node)
 
-    assert 7 == len(grid.node)
+    assert len(grid.node) == 7
     assert EMPTY_ID not in grid.node.id
     assert grid.node[-1].id.item() in grid.graphs.complete_graph.external_ids
     assert EMPTY_ID not in grid.graphs.complete_graph.external_ids
@@ -46,8 +46,9 @@ def test_grid_delete_node(basic_grid: Grid):
     target_node = grid.node.get(101)
     grid.delete_node(node=target_node)
 
-    assert 5 == len(grid.node)
+    assert len(grid.node) == 5
     assert target_node.id not in grid.node.id
+    assert 101 not in grid.ids
 
 
 @pytest.mark.parametrize(
@@ -72,7 +73,7 @@ def test_grid_delete_node_with_three_winding_transformer(
     target_node = grid.node.get(101)
     grid.delete_node(node=target_node)
 
-    assert 5 == len(grid.node)
+    assert len(grid.node) == 5
     assert expected_length_three_winding_transformers == len(grid.three_winding_transformer)
     assert target_node.id not in grid.node.id
 
@@ -313,9 +314,11 @@ def test_grid_delete_appliance_all(
     # Act
     appliance_name = grid.find_array_field(appliance_array_class).name
     target_appliance = getattr(grid, appliance_name).get(appliance_id_to_delete)
+    target_appliance_id = target_appliance.id.item()
 
-    # TODO - change test to grid.remove once implemented
+    assert target_appliance_id in grid.ids
     delete_appliance(grid, target_appliance)
+    assert target_appliance_id not in grid.ids
 
     for deleted_id in deleted_ids:
         assert deleted_id not in grid.sym_power_sensor.id
@@ -342,9 +345,9 @@ def test_grid_add_line(basic_grid: Grid):
 
     assert not grid.graphs.complete_graph.has_branch(102, 105)
 
-    grid.add_branch(branch=line)
+    grid.append(line)
 
-    assert 5 == len(grid.line)
+    assert len(grid.line) == 5
     assert EMPTY_ID not in grid.line.id
     assert grid.graphs.complete_graph.has_branch(102, 105)
 
@@ -358,10 +361,28 @@ def test_grid_delete_line(basic_grid: Grid):
 
     grid.delete_branch(branch=line)
 
-    assert 3 == len(grid.line)
+    assert len(grid.line) == 3
     assert line.id not in grid.line.id
 
     assert not grid.graphs.complete_graph.has_branch(line.from_node.item(), line.to_node.item())
+
+
+def test_grid_delete_multiple_lines(basic_grid: Grid):
+    grid = basic_grid
+
+    lines = grid.line.filter([201, 202])
+
+    for line in lines:
+        assert grid.graphs.complete_graph.has_branch(line.from_node.item(), line.to_node.item())
+
+    assert len(grid.line) == 4
+
+    grid.delete_branch(branch=lines)
+    assert len(grid.line) == 2
+    assert not grid.ids.intersection({201, 202})
+
+    for line in lines:
+        assert not grid.graphs.complete_graph.has_branch(line.from_node.item(), line.to_node.item())
 
 
 def test_grid_delete_inactive_line(basic_grid: Grid):
@@ -374,7 +395,7 @@ def test_grid_delete_inactive_line(basic_grid: Grid):
 
     grid.delete_branch(branch=target_line)
 
-    assert 3 == len(grid.line)
+    assert len(grid.line) == 3
     assert target_line.id not in grid.line.id
 
     assert not grid.graphs.complete_graph.has_branch(target_line.from_node.item(), target_line.to_node.item())
@@ -386,12 +407,12 @@ def test_grid_delete_transformer_with_regulator(basic_grid: Grid):
     transformer_regulator.regulated_object = 301
     grid.append(transformer_regulator)
 
-    assert 1 == len(grid.transformer_tap_regulator)
+    assert len(grid.transformer_tap_regulator) == 1
 
     transformer = grid.transformer.get(id=301)
     grid.delete_branch(branch=transformer)
 
-    assert 0 == len(grid.transformer)
+    assert len(grid.transformer) == 0
     assert transformer.id not in grid.transformer.id
 
 
@@ -402,10 +423,10 @@ def test_grid_add_link(basic_grid: Grid):
     new_link_array.from_node = 105
     new_link_array.to_node = 103
 
-    assert 1 == len(grid.link)
+    assert len(grid.link) == 1
     assert not grid.graphs.complete_graph.has_branch(105, 103)
-    grid.add_branch(new_link_array)
-    assert 2 == len(grid.link)
+    grid.append(new_link_array)
+    assert len(grid.link) == 2
     assert EMPTY_ID not in grid.link.id
     assert grid.graphs.complete_graph.has_branch(105, 103)
 
@@ -417,10 +438,10 @@ def test_grid_add_tranformer(basic_grid: Grid):
     new_transformer_array.from_node = 105
     new_transformer_array.to_node = 103
 
-    assert 1 == len(grid.transformer)
+    assert len(grid.transformer) == 1
     assert not grid.graphs.complete_graph.has_branch(105, 103)
-    grid.add_branch(new_transformer_array)
-    assert 2 == len(grid.transformer)
+    grid.append(new_transformer_array)
+    assert len(grid.transformer) == 2
     assert EMPTY_ID not in grid.transformer.id
     assert grid.graphs.complete_graph.has_branch(105, 103)
 
@@ -433,7 +454,7 @@ def test_grid_delete_tranformer(basic_grid: Grid):
 
     grid.delete_branch(branch=transformer)
 
-    assert 0 == len(grid.transformer)
+    assert len(grid.transformer) == 0
     assert transformer.id not in grid.transformer.id
 
     assert not grid.graphs.complete_graph.has_branch(transformer.from_node.item(), transformer.to_node.item())
@@ -454,7 +475,7 @@ def test_grid_add_three_winding_transformer():
     three_winding_transformer.status_3 = 1
     grid.append(three_winding_transformer)
 
-    assert 1 == len(grid.three_winding_transformer)
+    assert len(grid.three_winding_transformer) == 1
     assert grid.graphs.active_graph.has_branch(102, 103)
     assert grid.graphs.active_graph.has_branch(102, 104)
     assert grid.graphs.active_graph.has_branch(103, 104)
@@ -462,17 +483,38 @@ def test_grid_add_three_winding_transformer():
 
 def test_grid_delete_three_winding_transformer(grid_with_3wt: Grid):
     grid = grid_with_3wt
+
+    three_winding_transformer_id = grid.three_winding_transformer.id.item()
+
     assert grid.graphs.active_graph.has_branch(101, 102)
     assert grid.graphs.active_graph.has_branch(101, 103)
     assert grid.graphs.active_graph.has_branch(102, 103)
+    assert three_winding_transformer_id in grid.ids
 
     grid.delete_branch3(branch=grid.three_winding_transformer[0])
 
-    assert 0 == len(grid.three_winding_transformer)
+    assert len(grid.three_winding_transformer) == 0
+    assert three_winding_transformer_id not in grid.ids
 
     assert not grid.graphs.active_graph.has_branch(101, 102)
     assert not grid.graphs.active_graph.has_branch(101, 103)
     assert not grid.graphs.active_graph.has_branch(102, 103)
+
+
+def test_grid_delete_multiple_three_winding_transformers(grid_with_3wt: Grid):
+    grid = grid_with_3wt
+
+    grid.merge(grid, mode="recalculate_ids")  # duplicate grid to have multiple three winding transformers
+    assert grid.three_winding_transformer.size == 2
+    ids_3wt = [301, 802]
+    assert grid.three_winding_transformer.id.tolist() == ids_3wt
+    assert set(ids_3wt).issubset(grid.ids)
+
+    grid.delete_branch3(branch=grid.three_winding_transformer)
+
+    assert not set(ids_3wt).issubset(grid.ids)
+
+    assert len(grid.three_winding_transformer) == 0
 
 
 def test_grid_activate_branch(basic_grid: Grid):
@@ -516,7 +558,7 @@ def test_grid_make_inactive_from_side(basic_grid: Grid):
     grid.make_inactive(branch=target_line, at_to_side=False)
 
     target_line_after = grid.line.get(202)
-    assert 0 == target_line_after.from_status
+    assert target_line_after.from_status == 0
 
 
 def test_grid_make_inactive_to_side(basic_grid: Grid):
@@ -528,7 +570,7 @@ def test_grid_make_inactive_to_side(basic_grid: Grid):
     grid.make_inactive(branch=target_line)
 
     target_line_after = grid.line.get(202)
-    assert 0 == target_line_after.to_status
+    assert target_line_after.to_status == 0
 
 
 def test_add_active_branch_to_extended_grid():
@@ -542,10 +584,10 @@ def test_add_active_branch_to_extended_grid():
     line.to_node = nodes[1].id
     line.from_status = 1
     line.to_status = 1
-    assert 0 == grid.line.size
+    assert grid.line.size == 0
     grid.append(line)
-    assert 1 == grid.line.size
-    assert 2 == len(grid.graphs.active_graph.external_ids)
+    assert grid.line.size == 1
+    assert len(grid.graphs.active_graph.external_ids) == 2
 
 
 class TestDeleteNodes:
@@ -557,6 +599,7 @@ class TestDeleteNodes:
         node = basic_grid.node.get(id=106)
         basic_grid.delete_node(node)
 
+        assert 106 not in basic_grid.ids
         assert 106 not in basic_grid.transformer["to_node"]
         assert 106 not in basic_grid.node.id
         assert len(original_grid.node) == len(basic_grid.node) + 1
@@ -570,6 +613,7 @@ class TestDeleteNodes:
         node = basic_grid.node.get(id=101)
         basic_grid.delete_node(node)
 
+        assert 101 not in basic_grid.ids
         assert 101 not in basic_grid.node.id
         assert 101 not in basic_grid.source.node
         assert len(original_grid.node) == len(basic_grid.node) + 1
@@ -583,7 +627,20 @@ class TestDeleteNodes:
         node = basic_grid.node.get(id=102)
         basic_grid.delete_node(node)
 
+        assert 102 not in basic_grid.ids
         assert 102 not in basic_grid.node.id
         assert 102 not in basic_grid.sym_load.node
         assert len(original_grid.node) == len(basic_grid.node) + 1
         assert len(original_grid.sym_load) == len(basic_grid.sym_load) + 1
+
+    def test_delete_multiple_nodes(self, basic_grid: Grid):
+        assert {102, 106}.intersection(basic_grid.ids) == {102, 106}
+
+        nodes = basic_grid.node.filter(id=[106, 102])
+        basic_grid.delete_node(nodes)
+
+        assert not {102, 106}.intersection(basic_grid.ids)
+        assert 106 not in basic_grid.transformer["to_node"]
+        assert 106 not in basic_grid.node.id
+        assert 102 not in basic_grid.sym_load.node
+        assert 102 not in basic_grid.node.id

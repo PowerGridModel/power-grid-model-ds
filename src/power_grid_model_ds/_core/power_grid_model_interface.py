@@ -5,7 +5,6 @@
 """Power flow functions and classes"""
 
 import warnings
-from typing import Dict, Optional
 
 import numpy as np
 from numpy.typing import NDArray
@@ -29,8 +28,8 @@ class PowerGridModelInterface:
 
     def __init__(
         self,
-        grid: Optional[Grid] = None,
-        input_data: Optional[Dict] = None,
+        grid: Grid | None = None,
+        input_data: dict | None = None,
         system_frequency: float = 50.0,
     ):
         self.grid = grid or Grid.empty()
@@ -38,10 +37,10 @@ class PowerGridModelInterface:
 
         self._input_data = input_data or {}
         self.output_data: dict[str, NDArray] = {}
-        self.model: Optional[PowerGridModel] = None
+        self.model: PowerGridModel | None = None
 
     @property
-    def input_data(self) -> Dict[str, NDArray]:
+    def input_data(self) -> dict[str, NDArray]:
         """Get the input data for the PowerGridModel."""
         warnings.warn(
             "Input data has been made private and will be removed as public properety in a future version. "
@@ -85,7 +84,7 @@ class PowerGridModelInterface:
     def calculate_power_flow(
         self,
         calculation_method: CalculationMethod = CalculationMethod.newton_raphson,
-        update_data: Optional[Dict] = None,
+        update_data: dict | None = None,
         **kwargs,
     ):
         """Initialize the PowerGridModel and calculate power flow over input data.
@@ -109,7 +108,7 @@ class PowerGridModelInterface:
         pgm_array[fields] = internal_array.data[fields]
         return pgm_array
 
-    def update_model(self, update_data: Dict):
+    def update_model(self, update_data: dict):
         """
         Updates the power-grid-model using update_data, this allows for batch calculations
 
@@ -142,7 +141,7 @@ class PowerGridModelInterface:
         """
         if not self.output_data:
             raise PGMCoreException("Can not update grid without output_data")
-        for array_name in self.output_data.keys():
+        for array_name in self.output_data:
             if not hasattr(self.grid, array_name):
                 continue
             internal_array = getattr(self.grid, array_name)

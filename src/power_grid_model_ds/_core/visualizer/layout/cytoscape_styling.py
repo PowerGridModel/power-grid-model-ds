@@ -46,6 +46,54 @@ _SELECTED_NODE_STYLE = {
     "style": {"border-width": 5, "border-color": CYTO_COLORS["selected"]},
 }
 
+_APPLIANCE_GHOST_NODE_STYLE = {
+    "selector": f".{StyleClass.APPLIANCE_GHOST_NODE.value}",
+    "style": {
+        "label": "",
+        "border-width": 5,
+        "border-color": "black",
+        "font-size": 25,
+        "text-halign": "center",
+        "text-valign": "center",
+        "background-color": CYTO_COLORS["node"],
+        "text-background-color": CYTO_COLORS["node"],
+        "text-background-opacity": 1,
+        "text-background-shape": "round-rectangle",
+        "width": NODE_SIZE * 0.25,
+        "height": NODE_SIZE * 0.25,
+    },
+}
+
+_GENERATING_EDGE_STYLE = {
+    "selector": f".{StyleClass.GENERATING_APPLIANCE.value}",
+    "style": {
+        "line-color": StyleClass.BRANCH,
+        "curve-style": "bezier",
+        "source-arrow-color": StyleClass.BRANCH,
+        "source-arrow-shape": "vee",
+        "arrow-scale": 3.0,
+        "width": BRANCH_WIDTH * 0.5,
+    },
+}
+_SOURCE_EDGE_STYLE = {
+    "selector": f".{StyleClass.SOURCE.value}",
+    "style": {
+        "line-color": CYTO_COLORS["substation_node"],
+        "source-arrow-color": CYTO_COLORS["substation_node"],
+    },
+}
+_LOADING_EDGE_STYLE = {
+    "selector": f".{StyleClass.LOADING_APPLIANCE.value}",
+    "style": {
+        "line-color": StyleClass.BRANCH,
+        "curve-style": "bezier",
+        "target-arrow-color": StyleClass.BRANCH,
+        "target-arrow-shape": "vee",
+        "arrow-scale": 3.0,
+        "width": BRANCH_WIDTH * 0.5,
+    },
+}
+
 _SELECTED_BRANCH_STYLE = {
     "selector": f".{StyleClass.BRANCH.value}:selected, .{StyleClass.BRANCH.value}:active",
     "style": {"line-color": CYTO_COLORS["selected"], "target-arrow-color": CYTO_COLORS["selected"], "width": 10},
@@ -139,6 +187,24 @@ _OPEN_TO_SIDE_BRANCH_STYLE = {
     },
 }
 
+_OPEN_LOADING_EDGE_STYLE = {
+    "selector": f".{StyleClass.OPEN_LOADING_APPLIANCE.value}",
+    "style": {
+        "line-style": "dashed",
+        "line-color": CYTO_COLORS["open_branch"],
+        "target-arrow-color": CYTO_COLORS["open_branch"],
+        "target-arrow-fill": "hollow",
+    },
+}
+_OPEN_GENERATING_EDGE_STYLE = {
+    "selector": f".{StyleClass.OPEN_GENERATING_APPLIANCE.value}",
+    "style": {
+        "line-style": "dashed",
+        "line-color": CYTO_COLORS["open_branch"],
+        "source-arrow-color": CYTO_COLORS["open_branch"],
+        "source-arrow-fill": "hollow",
+    },
+}
 
 DEFAULT_STYLESHEET = [
     _NODE_STYLE,
@@ -155,8 +221,14 @@ DEFAULT_STYLESHEET = [
     _SELECTED_GENERIC_BRANCH_STYLE,
     _ASYM_LINE_STYLE,
     _SELECTED_ASYM_LINE_STYLE,
+    _APPLIANCE_GHOST_NODE_STYLE,
+    _GENERATING_EDGE_STYLE,
+    _LOADING_EDGE_STYLE,
+    _SOURCE_EDGE_STYLE,
     # Note: Keep the OPEN BRANCH styles last in list, otherwise they potentially get overridden.
     _OPEN_BRANCH_STYLE,
     _OPEN_FROM_SIDE_BRANCH_STYLE,
     _OPEN_TO_SIDE_BRANCH_STYLE,
+    _OPEN_LOADING_EDGE_STYLE,
+    _OPEN_GENERATING_EDGE_STYLE,
 ]

@@ -11,14 +11,14 @@ import pytest
 from power_grid_model import ComponentType, TapChangingStrategy, initialize_array
 
 from power_grid_model_ds._core.data_source.generator.grid_generators import RadialGridGenerator
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds._core.power_grid_model_interface import PowerGridModelInterface
+from power_grid_model_ds.arrays import (
     LineArray,
     NodeArray,
     SourceArray,
     SymLoadArray,
 )
-from power_grid_model_ds._core.model.grids.base import Grid
-from power_grid_model_ds._core.power_grid_model_interface import PowerGridModelInterface
 from tests.fixtures.arrays import DefaultedCustomNodeArray
 from tests.fixtures.grid_classes import ExtendedGrid, ExtendedGridNoDefaults
 
@@ -109,7 +109,7 @@ class TestCalculatePowerFlow:
 
         # Check that regulator is passed on and used to get node_3 within the band of transformer
         output = core_interface.calculate_power_flow(tap_changing_strategy=TapChangingStrategy.any_valid_tap)
-        assert 390 < output["node"]["u"][1]
+        assert output["node"]["u"][1] > 390
         assert output["node"]["u"][1] < 410
         assert output["transformer_tap_regulator"]["tap_pos"][0] > 0
 
@@ -204,7 +204,7 @@ class TestPowerGridModelInterfaceMethods:
         output = core_interface.calculate_power_flow(update_data=update_data)
 
         # Results have been calculated for all 10 scenarios
-        assert 10 == len(output["line"])
+        assert len(output["line"]) == 10
 
     def test_setup_model(self):
         """Test whether a pgm model can be setup with a custom grid"""

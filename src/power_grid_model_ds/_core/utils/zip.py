@@ -9,7 +9,6 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import List
 from zipfile import ZipFile
 
 _logger = logging.getLogger(__name__)
@@ -21,7 +20,7 @@ def zip_folder(folder_to_zip: Path) -> Path:
     folder_to_zip = folder_to_zip.resolve()
 
     # move into folder to zip to avoid nested folders in .zip file
-    current_working_directory = os.getcwd()
+    current_working_directory = Path.cwd()
     os.chdir(folder_to_zip)
     files_to_zip = [path.relative_to(folder_to_zip) for path in folder_to_zip.rglob("*")]
     zip_files(zip_file_path, files_to_zip)
@@ -32,7 +31,7 @@ def zip_folder(folder_to_zip: Path) -> Path:
     return zip_file_path
 
 
-def zip_files(zip_file_path: Path, files_to_zip: List[Path]) -> Path:
+def zip_files(zip_file_path: Path, files_to_zip: list[Path]) -> Path:
     """Zip files"""
     with ZipFile(str(zip_file_path.with_suffix(".zip")), "w") as zip_object:
         for file in files_to_zip:
@@ -52,21 +51,19 @@ def unzip_files(zip_file_path: Path) -> Path:
 
 def gzip2file(gzip_path: Path) -> Path:
     """unzip a gzip (.gz) file"""
-    _logger.info(f"Unzipping {gzip_path.name}")
+    _logger.info("Unzipping %s", gzip_path.name)
 
     file_path = gzip_path.with_suffix("")
-    with gzip.open(gzip_path, "rb") as f_in:
-        with open(file_path, "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
+    with gzip.open(gzip_path, "rb") as f_in, Path(file_path).open("wb") as f_out:
+        shutil.copyfileobj(f_in, f_out)
     return file_path
 
 
 def file2gzip(file_path: Path) -> Path:
     """zip a gzip (.gz) file"""
-    _logger.info(f"Zipping {file_path.name}")
+    _logger.info("Zipping %s", file_path.name)
 
     gzip_path = file_path.with_suffix(f"{file_path.suffix}.gz")
-    with open(file_path, "rb") as f_in:
-        with gzip.open(gzip_path, "wb") as f_out:
-            shutil.copyfileobj(f_in, f_out)
+    with Path(file_path).open("rb") as f_in, gzip.open(gzip_path, "wb") as f_out:
+        shutil.copyfileobj(f_in, f_out)
     return gzip_path

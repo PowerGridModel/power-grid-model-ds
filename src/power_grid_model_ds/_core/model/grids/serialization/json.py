@@ -8,7 +8,7 @@ import dataclasses
 import json
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 
@@ -17,13 +17,10 @@ if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import Grid
 
 
-G = TypeVar("G", bound="Grid")
+_logger = logging.getLogger(__name__)
 
 
-logger = logging.getLogger(__name__)
-
-
-def serialize_to_json(grid: G, path: Path, strict: bool = True, **kwargs) -> Path:
+def serialize_to_json[G: Grid](grid: G, path: Path, strict: bool = True, **kwargs) -> Path:
     """Save a Grid object to JSON format using power-grid-model serialization with extensions support.
 
     Args:
@@ -54,7 +51,7 @@ def serialize_to_dict(grid: G, strict: bool = True) -> dict:
     serialized_data = {}
 
     for field in dataclasses.fields(grid):
-        if field.name in ["graphs"]:
+        if field.name in ["graphs", "_ids"]:
             continue
 
         field_value = getattr(grid, field.name)
@@ -63,13 +60,13 @@ def serialize_to_dict(grid: G, strict: bool = True) -> dict:
             serialized_data[field.name] = _serialize_array(field_value)
             continue
 
-        if _is_serializable(field_value, strict):
+        if _is_serializable(field_value, strict, **kwargs):
             serialized_data[field.name] = field_value
 
     return {"data": serialized_data}
 
 
-def deserialize_from_json(path: Path, target_grid_class: type[G]) -> G:
+def deserialize_from_json[G: Grid](path: Path, target_grid_class: type[G], **kwargs) -> G:
     """Load a Grid object from JSON format with cross-type loading support.
 
     Args:
@@ -100,11 +97,11 @@ def deserialize_from_dict(data: dict, target_grid_class: type[G]) -> G:
     return grid
 
 
-def _restore_grid_values(grid: G, json_data: dict) -> None:
+def _restore_grid_values[G: Grid](grid: G, json_data: dict) -> None:
     """Restore arrays to the grid."""
     for attr_name, attr_values in json_data.items():
         if not hasattr(grid, attr_name):
-            logger.warning(f"Unexpected attribute '{attr_name}'")
+            _logger.warning("Unexpected attribute '%s'", attr_name)
             continue
 
         grid_attr = getattr(grid, attr_name)
@@ -142,18 +139,18 @@ def _deserialize_array(array_data: list[dict[str, Any]], array_class: type[Fancy
     all_columns_in_array_data = set().union(*(row.keys() for row in array_data))
     extra_columns = all_columns_in_array_data - array_columns
     if extra_columns:
-        logger.warning(f"Ignoring extra columns {extra_columns} from array data for {array_class.__name__}.")
+        _logger.warning("Ignoring extra columns %s from array data for %s.", extra_columns, array_class.__name__)
     return array_class(**data_as_dict_of_lists)
 
 
-def _is_serializable(value: Any, strict: bool) -> bool:
+def _is_serializable(value: Any, strict: bool, **kwargs) -> bool:
     # Check if a value is JSON serializable.
     try:
-        json.dumps(value)
+        json.dumps(value, **kwargs)
     except TypeError as error:
         msg = f"Failed to serialize '{value}'. You can set strict=False to ignore this attribute."
         if strict:
             raise TypeError(msg) from error
-        logger.warning(msg)
+        _logger.warning(msg)
         return False
     return True

@@ -4,25 +4,21 @@
 
 """helpers for grid tests"""
 
-from typing import TypeVar
-
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+from power_grid_model_ds._core.model.enums.nodes import NodeType
+from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds.arrays import (
     LineArray,
     NodeArray,
     SourceArray,
     SymLoadArray,
     ThreeWindingTransformerArray,
 )
-from power_grid_model_ds._core.model.enums.nodes import NodeType
-from power_grid_model_ds._core.model.grids.base import Grid
-
-T = TypeVar("T", bound=Grid)
 
 
-def build_basic_grid(grid: T) -> T:
+def build_basic_grid[T: Grid](grid: T) -> T:
     """Build a basic grid"""
 
-    # This defines a circle with 4 medium voltage stations and a 400V rail (12)
+    # This defines a circle with 4 medium voltage stations and a 400V busbar (12)
 
     # Legend:
     #     Node: ***  (ids: 1xx)
@@ -106,7 +102,7 @@ def build_basic_grid(grid: T) -> T:
     return grid
 
 
-def build_basic_grid_with_three_winding(grid: T) -> T:
+def build_basic_grid_with_three_winding[T: Grid](grid: T) -> T:
     """Build a grid with three winding transformer"""
 
     # This defines a network being fed from a single 150kV node through a three winding transformer
@@ -215,7 +211,7 @@ def build_basic_grid_with_three_winding(grid: T) -> T:
     return grid
 
 
-def build_topologically_full_grid(grid: T) -> T:
+def build_topologically_full_grid[T: Grid](grid: T) -> T:
     """Build two disjoint grids with comprehensive component coverage
 
     Creates two independent (disjoint) grids within a single Grid object, each with a central

@@ -37,7 +37,7 @@ def test_get_pickle_path(pickle_path: Path):
 def test_get_pickle_path_gz(gzip_path: Path):
     with patch.object(pickle_mod, "gzip2file") as mock:
         get_pickle_path(gzip_path)
-    assert 1 == mock.call_count
+    assert mock.call_count == 1
 
 
 def test_get_pickle_path_find_gz(gzip_path: Path):
@@ -45,4 +45,4 @@ def test_get_pickle_path_find_gz(gzip_path: Path):
     pickle_path = gzip_path.with_suffix("")
     with patch.object(pickle_mod, "gzip2file") as mock:
         get_pickle_path(pickle_path)
-    assert 1 == mock.call_count
+    assert mock.call_count == 1

@@ -37,17 +37,14 @@ def find_fundamental_cycles_rustworkx(graph):
     """
     mst = rx.minimum_spanning_tree(graph)
     unused_edges = _find_unused_edges_rustworkx(graph, mst)
-    node_cycle_paths = _get_cycle_paths_rustworkx(unused_edges, mst)
-
-    return node_cycle_paths
+    return _get_cycle_paths_rustworkx(unused_edges, mst)  # node cycle paths
 
 
 def _find_unused_edges_rustworkx(full_graph, subset_graph):
     """Determine unused edges by comparing all edges with a subset of edges in the MST."""
     full_edges = Counter(full_graph.edge_list())
     subset_edges = Counter(subset_graph.edge_list())
-    unused_edges = full_edges - subset_edges
-    return unused_edges
+    return full_edges - subset_edges  # unused edges
 
 
 def _get_cycle_paths_rustworkx(unused_edges, spanning_forest_graph):

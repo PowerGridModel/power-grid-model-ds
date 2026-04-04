@@ -17,8 +17,7 @@ from power_grid_model_ds import Grid, PowerGridModelInterface
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.containers.helpers import container_equal
 from power_grid_model_ds._core.utils.misc import array_equal_with_nan
-from power_grid_model_ds.arrays import LineArray
-from power_grid_model_ds.arrays import NodeArray as BaseNodeArray
+from power_grid_model_ds.arrays import LineArray, NodeArray as BaseNodeArray
 
 
 class ExtendedNodeArray(BaseNodeArray):
@@ -48,18 +47,27 @@ class ExtendedGrid(Grid):
     str_extension: str = "default"
 
 
-class NonSerializableExtension:
+class CustomClass:
     """A non-serializable extension class"""
 
     def __init__(self):
-        self.data = "non_serializable"
+        self.data = "my data"
 
 
 @dataclass
-class GridWithNonSerializableExtension(Grid):
-    """Grid with a non-serializable extension attribute"""
+class GridWithCustomClass(Grid):
+    """Grid with a custom class attribute (by default not serializable)"""
 
-    non_serializable: NonSerializableExtension = NonSerializableExtension()
+    custom_class: CustomClass = CustomClass()
+
+
+class CustomClassEncoder(json.JSONEncoder):
+    """Custom class encoder"""
+
+    def default(self, obj):
+        if isinstance(obj, CustomClass):
+            return obj.data
+        return super().default(obj)
 
 
 @pytest.fixture
@@ -222,6 +230,23 @@ class TestExtensionHandling:
         np.testing.assert_array_almost_equal(loaded_grid.custom_metadata.metadata_value, [1.5, 2.5, 3.5])
         np.testing.assert_array_equal(loaded_grid.custom_metadata.category, [1, 2, 1])
 
+    def test_non_serializable_extension(self, tmp_path: Path):
+        path = tmp_path / "non_serializable.json"
+
+        grid = GridWithCustomClass.empty()
+        assert grid.custom_class.data == "my data"
+
+        with pytest.raises(TypeError):
+            grid.serialize(path)
+
+    def test_custom_json_encoder(self, tmp_path: Path):
+        path = tmp_path / "custom_json_encoder.json"
+        grid = GridWithCustomClass.empty()
+
+        assert not path.is_file()
+        grid.serialize(path, cls=CustomClassEncoder)
+        assert path.is_file()
+
 
 class TestDeserialize:
     def test_deserialize(self, tmp_path: Path):
@@ -229,7 +254,7 @@ class TestDeserialize:
 
         data = {"node": [{"id": 1, "u_rated": 10000}, {"id": 2, "u_rated": 20000}]}
 
-        with open(path, "w", encoding="utf-8") as f:
+        with Path(path).open("w", encoding="utf-8") as f:
             json.dump({"data": data}, f)
 
         grid = Grid.deserialize(path)
@@ -248,7 +273,7 @@ class TestDeserialize:
         }
 
         path = tmp_path / "json_data.json"
-        with open(path, "w", encoding="utf-8") as f:
+        with Path(path).open("w", encoding="utf-8") as f:
             json.dump({"data": extended_data}, f)
 
         grid = ExtendedGrid.deserialize(path)
@@ -265,7 +290,7 @@ class TestDeserialize:
         }
 
         # Write incompatible data to file
-        with open(path, "w", encoding="utf-8") as f:
+        with Path(path).open("w", encoding="utf-8") as f:
             json.dump({"data": incompatible_data}, f)
 
         grid = Grid.deserialize(path)
@@ -280,7 +305,7 @@ class TestDeserialize:
         }
 
         # Write data to file
-        with open(path, "w", encoding="utf-8") as f:
+        with Path(path).open("w", encoding="utf-8") as f:
             json.dump({"data": missing_array_data}, f)
 
         Grid.deserialize(path)
@@ -294,7 +319,7 @@ class TestDeserialize:
         }
 
         # Write data to file
-        with open(path, "w", encoding="utf-8") as f:
+        with Path(path).open("w", encoding="utf-8") as f:
             json.dump({"data": missing_array_data}, f)
 
         with pytest.raises(ValueError):
@@ -306,20 +331,11 @@ class TestDeserialize:
             "node": [{"id": 1, "u_rated": 10000}, {"u_rated": 10000}, {"id": 3}],
         }
 
-        with open(path, "w", encoding="utf-8") as f:
+        with Path(path).open("w", encoding="utf-8") as f:
             json.dump({"data": incomplete_data}, f)
 
         with pytest.raises(ValueError):
             Grid.deserialize(path)
-
-    def test_non_serializable_extension(self, tmp_path: Path):
-        path = tmp_path / "non_serializable.json"
-
-        grid = GridWithNonSerializableExtension.empty()
-        grid.non_serializable = NonSerializableExtension()
-
-        with pytest.raises(TypeError):
-            grid.serialize(path)
 
 
 class TestDictRoundtrips:

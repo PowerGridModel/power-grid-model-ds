@@ -3,18 +3,20 @@
 # SPDX-License-Identifier: MPL-2.0
 import warnings
 from abc import ABC, abstractmethod
+from collections import Counter
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Counter, Generator
+from typing import TYPE_CHECKING
 
 from numpy._typing import NDArray
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import Branch3Array, BranchArray, NodeArray
 from power_grid_model_ds._core.model.graphs.errors import (
     GraphError,
     MissingBranchError,
     MissingNodeError,
     NoPathBetweenNodes,
 )
+from power_grid_model_ds.arrays import Branch3Array, BranchArray, NodeArray
 
 if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import Grid
@@ -441,7 +443,7 @@ class BaseGraphModel(ABC):
             set(self.external_ids) == set(other.external_ids)
             and self.active_only == other.active_only
             and (
-                Counter((frozenset(branch) for branch in self.all_branches))
-                == Counter((frozenset(branch) for branch in other.all_branches))
+                Counter(frozenset(branch) for branch in self.all_branches)
+                == Counter(frozenset(branch) for branch in other.all_branches)
             )
         )
