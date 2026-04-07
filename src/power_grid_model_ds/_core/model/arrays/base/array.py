@@ -244,7 +244,7 @@ class FancyArray(ABC):  # noqa: B024
     def is_empty(self, column: str) -> NDArray[np.bool_]:
         """Check if a column is filled with 'empty' values."""
         empty_value = self.get_empty_value(column)
-        if empty_value is np.nan:  # noqa: PLW0177
+        if isinstance(empty_value, float) and np.isnan(empty_value):
             return np.isnan(self._data[column])
         return np.isin(self._data[column], empty_value)
 
