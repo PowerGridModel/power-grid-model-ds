@@ -25,13 +25,14 @@ Self = TypeVar("Self", bound="FancyArrayContainer")
 
 
 @dataclass
-class FancyArrayContainer:  # noqa: PLW1641
+class FancyArrayContainer:
     """
     Base class for ArrayContainers.
     Contains general functionality that is nonspecific to the type of array being stored.
     """
 
     _ids: set[int]
+    __hash__ = None
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, self.__class__):

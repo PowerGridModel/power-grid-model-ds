@@ -9,7 +9,7 @@ import numpy as np
 from power_grid_model_ds._core.data_source.generator.arrays.base import BaseGenerator
 from power_grid_model_ds.arrays import TransformerArray
 
-_V_10_KV: int = 10_500
+_V_10_5_KV: int = 10_500
 _V_3_KV: int = 3_000
 
 
@@ -19,7 +19,7 @@ class TransformerGenerator(BaseGenerator):
     def run(self, amount: int) -> TransformerArray:
         """Generate transformers"""
         # Create transformers from 10kV to 3kV
-        from_mask = self.grid.node.u_rated == _V_10_KV
+        from_mask = self.grid.node.u_rated == _V_10_5_KV
         from_nodes = self.rng.choice(self.grid.node.id[from_mask], amount, replace=True)
         to_mask = self.grid.node.u_rated == _V_3_KV
         to_nodes = self.rng.choice(self.grid.node.id[to_mask], amount, replace=False)

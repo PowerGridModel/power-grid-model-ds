@@ -85,7 +85,7 @@ class LineGenerator(BaseGenerator):
         from_node = self.rng.choice(np.array(self.connected_nodes)[options_mask])
         capacity = 100 + self.rng.exponential(200, 1)
         new_line = self.grid.line.__class__.zeros(1)
-        new_line.id = 1 + max(*self.line_array.id, self.grid.max_id)
+        new_line.id = 1 + max(self.line_array.id.max(), self.grid.max_id)
         new_line.from_node = from_node
         new_line.to_node = to_node
         new_line.from_status = [1]
