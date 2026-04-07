@@ -497,36 +497,26 @@ class Grid(FancyArrayContainer):
                 raise ValueError(f"Invalid mode '{mode}'. Expected 'json' or 'dict'.")
 
     @classmethod
-    @overload
-    def deserialize(cls: type[Self], path: Path, mode: Literal["json"] = "json") -> Self: ...
-
-    @classmethod
-    @overload
-    def deserialize(cls: type[Self], path: dict, mode: Literal["dict"]) -> Self: ...
-
-    @classmethod
-    def deserialize(cls: type[Self], path: Path | dict, mode: Literal["json", "dict"] = "json") -> Self:
-        """Deserialize the grid.
+    def from_dict(cls: type[Self], data: dict) -> Self:
+        """Deserialize the grid from a Python dict.
 
         Args:
-            path: File path when mode is ``"json"``, or a dict (as produced by ``serialize(mode="dict")``) when
-                mode is ``"dict"``.
-            mode: Deserialization source. Use ``"json"`` (default) to read from a JSON file, or ``"dict"`` to
-                load from a Python dict.
+            data: A dict as produced by ``serialize(mode="dict")``.
         Returns:
             Self: The deserialized grid instance.
         """
-        match mode:
-            case "dict":
-                if not isinstance(path, dict):
-                    raise TypeError("path must be a dict when mode='dict'")
-                return deserialize_from_dict(data=path, target_grid_class=cls)
-            case "json":
-                if not isinstance(path, Path):
-                    raise TypeError("path must be a Path when mode='json'")
-                return deserialize_from_json(path=path, target_grid_class=cls)
-            case _:
-                raise ValueError(f"Invalid mode '{mode}'. Expected 'json' or 'dict'.")
+        return deserialize_from_dict(data=data, target_grid_class=cls)
+
+    @classmethod
+    def deserialize(cls: type[Self], path: Path) -> Self:
+        """Deserialize the grid from a JSON file.
+
+        Args:
+            path: Path to the JSON file.
+        Returns:
+            Self: The deserialized grid instance.
+        """
+        return deserialize_from_json(path=path, target_grid_class=cls)
 
     def rebuild_graphs(self) -> None:
         """(Re)build the graphs in the grid."""
