@@ -3,12 +3,10 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
-import logging
 from typing import Any
-from venv import logger
 
 import dash_ag_grid as dag
-from dash import Input, Output, callback
+from dash import Input, Output, callback, html
 
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.layout.selection_output import (
@@ -16,8 +14,6 @@ from power_grid_model_ds._core.visualizer.layout.selection_output import (
 )
 from power_grid_model_ds._core.visualizer.server_state import get_grid
 from power_grid_model_ds.arrays import IdArray
-
-_logger = logging.getLogger(__name__)
 
 
 @callback(
@@ -43,7 +39,7 @@ def display_selected_element(node_data: list[dict[str, Any]], edge_data: list[di
 
     grid: Grid = get_grid()
 
-    tables: list[html.H5 | html.Div] = []
+    tables: list[html.H5 | dag.AgGrid] = []
     for comp_type, ids in items_to_visualize.items():
         # Select unique as multiple selected elements can be connected to the same component
         # (e.g. appliance and node selected together, branch3 edges selected together)

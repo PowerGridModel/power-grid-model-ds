@@ -115,8 +115,8 @@ def test_element_selection_callback():
         ],
     )
     assert result[0].children == "node"
-    assert result.rowData == expected.rowData
-    assert result.columnDefs == expected.columnDefs
+    assert result[1].rowData == expected.rowData
+    assert result[1].columnDefs == expected.columnDefs
 
 
 def test_display_selected_element_none():
