@@ -106,11 +106,6 @@ def test_get_attr_data_from_dataset():
     assert np.array_equal(y_actual, np.array([22, 42]))
     assert np.array_equal(x_actual, np.array([0, 2]))
 
-    # Duplicate pgm_id=12 in a scenario
-    loads["id"] = [[11, 12, 13], [11, 12, 12], [11, 12, 13], [11, 12, 13]]
-    with pytest.raises(ValueError, match="Erraneous dataset."):
-        get_attr_data_from_dataset(batch_dataset, ComponentType.sym_load, "p_specified", pgm_id=12)
-
 
 def test_get_attr_data_from_dataset_3ph():
     loads = initialize_array(DatasetType.update, ComponentType.asym_load, (4, 3))

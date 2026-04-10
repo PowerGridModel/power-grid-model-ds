@@ -8,14 +8,14 @@ from typing import Any
 import numpy as np
 from numpy.typing import NDArray
 from power_grid_model import ComponentType
-from power_grid_model.data_types import BatchDataset, DenseBatchArray, SingleArray
+from power_grid_model.data_types import BatchDataset
 
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.dtypes.typing import NDArray3
 
 
-def extend_grid_dynamically(base_grid_class: type[Grid], extra_dataset: SingleArray | DenseBatchArray) -> type[Grid]:
+def extend_grid_dynamically(base_grid_class: type[Grid], extra_dataset: BatchDataset) -> type[Grid]:
     """Add extra attributes to the grid's component arrays based on the provided dataset,
     and return a new Grid class with the extended schema."""
     grid_annotations = {}
@@ -31,7 +31,7 @@ def extend_grid_dynamically(base_grid_class: type[Grid], extra_dataset: SingleAr
     return dataclass(DynamicGridClass)
 
 
-def _get_class_dict(base_class: type[FancyArray], grid_attr: str, extra_dataset: SingleArray | DenseBatchArray):
+def _get_class_dict(base_class: type[FancyArray], grid_attr: str, extra_dataset: BatchDataset) -> dict[str, Any]:
     """Get the class dictionary for the dynamically created array class, including new annotations and defaults."""
     extra_array_dtype = extra_dataset[ComponentType(grid_attr)].dtype
     if not extra_array_dtype.fields:
@@ -76,16 +76,7 @@ def get_attr_data_from_dataset(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Find the data for the given component type, attribute, and pgm_id from a batch dataset across all scenarios.
     Only returns if there is valid data (not all empty values) for the given pgm_id for all scenarios of dataset."""
-    id_data = dataset[comp_type]["id"]
-
-    # Create a boolean mask to match id and ignore empty values
-    array_mask = id_data == pgm_id
-    sum_mask_over_scenarios = np.sum(array_mask.astype(int), axis=1)
-    if np.any(sum_mask_over_scenarios > 1):
-        raise ValueError(
-            f"Erraneous dataset. Expected exactly one or zero elements with id {pgm_id} "
-            f"across any scenario for component {comp_type}, but found multiple."
-        )
+    array_mask = dataset[comp_type]["id"] == pgm_id
 
     scenario_indices, _ = np.nonzero(array_mask)
     match_data = dataset[comp_type][attr][array_mask]

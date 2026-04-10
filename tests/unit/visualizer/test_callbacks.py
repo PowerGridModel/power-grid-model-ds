@@ -38,7 +38,7 @@ def test_search_element_no_input():
 
 
 def test_search_element_with_asym_column():
-    server_state.set_grid(Grid.empty())
+    server_state.set_app_state(Grid.empty())
     with pytest.raises(PreventUpdate):
         search_element(group="asym_gen", column="p_specified", operator="=", value="100", stylesheet=DEFAULT_STYLESHEET)
 
@@ -64,7 +64,7 @@ def test_search_element_with_asym_column():
     ],
 )
 def test_search_element_with_input(group, column, operator, value, expected_selectors):
-    server_state.set_grid(Grid.from_txt("S1 2 12", "2 3 23"))
+    server_state.set_app_state(Grid.from_txt("S1 2 12", "2 3 23"))
 
     result = search_element(group, column, operator, value, DEFAULT_STYLESHEET)
     assert len(result) == len(DEFAULT_STYLESHEET) + len(expected_selectors)
@@ -88,7 +88,7 @@ def test_element_selection_callback():
     grid.node.u_rated = [100.0]
     grid.node.three_phase_quantity = [[1.0, 2.0, 3.0]]
 
-    server_state.set_grid(grid)
+    server_state.set_app_state(grid)
 
     node_data = [{"id": "1", "u_rated": 100.0, "group": "node"}]
     edge_data = []
