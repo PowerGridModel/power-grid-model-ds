@@ -10,8 +10,8 @@ from numpy.typing import NDArray
 from power_grid_model_ds._core import fancypy as fp
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.base.errors import ArrayDefinitionError
-from power_grid_model_ds._core.model.arrays.pgm_arrays import AsymVoltageSensorArray
 from power_grid_model_ds._core.model.constants import EMPTY_ID
+from power_grid_model_ds.arrays import AsymVoltageSensorArray
 from tests.fixtures.arrays import DefaultedFancyTestArray, FancyTestArray
 
 # pylint: disable=missing-function-docstring,missing-class-docstring,duplicate-code
@@ -60,7 +60,7 @@ def test_build_without_array_definition():
 def test_build_without_args_or_kwargs():
     array = FancyTestArray()
     assert_array_equal(array.id, [])
-    assert 0 == array.size
+    assert array.size == 0
 
 
 def test_build_from_kwargs():
@@ -139,18 +139,18 @@ def test_build_from_numpy_array_with_data_kwarg(fancy_test_array: FancyTestArray
 
 def test_build_from_numpy_2d_shape_2_4():
     numpy_array = np.array([[1, 2, 3, 4, 5], [9, 9, 9, 9, 9]])
-    assert (2, 5) == numpy_array.shape
+    assert numpy_array.shape == (2, 5)
     array = FancyTestArray(numpy_array)
     assert_array_equal([2, 9], array.test_int)
-    assert 2 == array.size
+    assert array.size == 2
 
 
 def test_build_from_numpy_2d_shape_4_2():
     numpy_array = np.array([[15, 9], [2, 9], [3, 9], [4, 9], [7, 9]])
-    assert (5, 2) == numpy_array.shape
+    assert numpy_array.shape == (5, 2)
     array = FancyTestArray(numpy_array)
     assert_array_equal([2, 9], array.test_int)
-    assert 2 == array.size
+    assert array.size == 2
 
 
 def test_array_invalid_columns_before_initialization():
@@ -160,15 +160,15 @@ def test_array_invalid_columns_before_initialization():
 
 def test_some_zeros():
     array = FancyTestArray.zeros(3)
-    assert 3 == array.size
+    assert array.size == 3
     assert_array_equal([np.iinfo(np.int32).min] * 3, array.id)
     assert_array_equal([0, 0, 0], array.test_int)
-    assert 3 == array.size
-    assert 3 == len(array)
-    assert 3 == len(array.data)
-    assert 3 == len(array.id)
-    assert 3 == len(array.test_int)
-    assert 3 == len(array.test_float)
+    assert array.size == 3
+    assert len(array) == 3
+    assert len(array.data) == 3
+    assert len(array.id) == 3
+    assert len(array.test_int) == 3
+    assert len(array.test_float) == 3
 
 
 def test_many_zeros():
@@ -183,7 +183,7 @@ def test_many_zeros():
 
 def test_empty():
     array = FancyTestArray.empty(3)
-    assert 3 == array.size
+    assert array.size == 3
     assert_array_equal([EMPTY_ID, EMPTY_ID, EMPTY_ID], array.id)
     min_int64 = np.iinfo(np.int64).min
     assert_array_equal([min_int64] * 3, array.test_int)
@@ -204,7 +204,7 @@ def test_empty_with_sized_dtypes():
 
 def test_empty_with_defaults():
     array = DefaultedFancyTestArray.empty(3)
-    assert 3 == array.size
+    assert array.size == 3
     assert_array_equal([-1, -1, -1], array.id)
     assert_array_equal([4, 4, 4], array.test_int)
     assert_array_equal([4.5, 4.5, 4.5], array.test_float)
@@ -213,7 +213,7 @@ def test_empty_with_defaults():
 
 def test_from_structured_subarray_with_defaults(fancy_test_array: FancyTestArray):
     array = ExtendedFancyTestArray(fancy_test_array.data)
-    assert 3 == array.size
+    assert array.size == 3
     assert all(np.isnan(array.test_float2))
     assert_array_equal([42.0, 42.0, 42.0], array.test_float3)
 
@@ -248,14 +248,14 @@ def test_asymmetric_sensor_array():
     array_length = 2
     # test if asymmetric array has NDArray3 fields, i.e. with 3 floats per element (one per phase)
     asym_volt_sens = AsymVoltageSensorArray.empty(array_length)
-    nd3_fields = ["u_sigma", "u_measured", "u_angle_measured"]
+    nd3_fields = ["u_measured", "u_angle_measured"]
     for field in nd3_fields:
         assert asym_volt_sens[field].shape == (array_length, 3)
 
 
 def test_inherit_defaults_from_multiple_parents():
     array = ChildArray.empty(3)
-    assert 3 == array.size
+    assert array.size == 3
     assert_array_equal([-1, -1, -1], array.id)
     assert_array_equal([4, 4, 4], array.test_int)
     assert_array_equal([4.5, 4.5, 4.5], array.test_float)

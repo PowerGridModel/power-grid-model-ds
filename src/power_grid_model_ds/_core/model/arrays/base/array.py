@@ -4,9 +4,10 @@
 
 from abc import ABC
 from collections import namedtuple
+from collections.abc import Iterable
 from copy import copy
 from functools import lru_cache
-from typing import Any, Iterable, Literal, Type, TypeVar, overload
+from typing import Any, Literal, TypeVar, overload
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -14,7 +15,7 @@ from numpy.typing import ArrayLike, NDArray
 from power_grid_model_ds._core.model.arrays.base._build import build_array
 from power_grid_model_ds._core.model.arrays.base._filters import apply_exclude, apply_filter, apply_get, get_filter_mask
 from power_grid_model_ds._core.model.arrays.base._modify import check_ids, re_order, update_by_id
-from power_grid_model_ds._core.model.arrays.base._optional import pandas
+from power_grid_model_ds._core.model.arrays.base._optional import pd
 from power_grid_model_ds._core.model.arrays.base._string import convert_array_to_string
 from power_grid_model_ds._core.model.arrays.base.errors import ArrayDefinitionError
 from power_grid_model_ds._core.model.constants import EMPTY_ID, empty
@@ -24,13 +25,14 @@ from power_grid_model_ds._core.utils.misc import array_equal_with_nan, get_inher
 
 _RESERVED_COLUMN_NAMES: set = set(dir(np.array([]))).union({"data"})
 _DEFAULT_STR_LENGTH: int = 50
+_MAX_DATA_SIZE: int = 3
 
 Column = NDArray
 
 Self = TypeVar("Self", bound="FancyArray")
 
 
-class FancyArray(ABC):
+class FancyArray(ABC):  # noqa: B024
     """Base class for all arrays.
 
     You can create your own array by subclassing FancyArray.
@@ -112,8 +114,8 @@ class FancyArray(ABC):
 
     def __repr__(self) -> str:
         try:
-            data = getattr(self, "data")
-            if data.size > 3:
+            data = self.data
+            if data.size > _MAX_DATA_SIZE:
                 return f"{self.__class__.__name__}([{data[:3]}]... + {data.size - 3} more rows)"
             return f"{self.__class__.__name__}([{data}])"
         except AttributeError:
@@ -206,7 +208,7 @@ class FancyArray(ABC):
         return copy(self)
 
     @classmethod
-    def zeros(cls: Type[Self], num: int, empty_id: bool = True) -> Self:
+    def zeros(cls: type[Self], num: int, empty_id: bool = True) -> Self:
         """Construct an array filled with zeros.
 
         If 'empty_id' is True, the 'id' column will be filled with EMPTY_ID values.
@@ -218,7 +220,7 @@ class FancyArray(ABC):
         return cls(data=zeros_array)
 
     @classmethod
-    def empty(cls: Type[Self], num: int, use_defaults: bool = True) -> Self:
+    def empty(cls: type[Self], num: int, use_defaults: bool = True) -> Self:
         """Construct an array filled with 'empty' values.
 
         'empty' values differs per dtype:
@@ -242,7 +244,7 @@ class FancyArray(ABC):
     def is_empty(self, column: str) -> NDArray[np.bool_]:
         """Check if a column is filled with 'empty' values."""
         empty_value = self.get_empty_value(column)
-        if empty_value is np.nan:
+        if isinstance(empty_value, float) and np.isnan(empty_value):
             return np.isnan(self._data[column])
         return np.isin(self._data[column], empty_value)
 
@@ -335,12 +337,12 @@ class FancyArray(ABC):
 
     def as_df(self):
         """Convert to pandas DataFrame"""
-        if pandas is None:
+        if pd is None:
             raise ImportError("pandas is not installed")
-        return pandas.DataFrame(self._data)
+        return pd.DataFrame(self._data)
 
     @classmethod
-    def from_extended(cls: Type[Self], extended: Self) -> Self:
+    def from_extended(cls: type[Self], extended: Self) -> Self:
         """Create an instance from an extended array."""
         if not isinstance(extended, cls):
             raise TypeError(f"Extended array must be of type {cls.__name__}, got {type(extended).__name__}")

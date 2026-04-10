@@ -4,8 +4,6 @@
 
 """Generators for the grid"""
 
-from typing import Generic, Type, TypeVar
-
 import numpy as np
 
 from power_grid_model_ds._core.data_source.generator.arrays.line import LineGenerator
@@ -18,15 +16,13 @@ from power_grid_model_ds._core.model.grids.base import Grid
 
 # pylint: disable=too-few-public-methods,too-many-arguments,too-many-positional-arguments
 
-T = TypeVar("T", bound=Grid)
 
-
-class RadialGridGenerator(Generic[T]):
+class RadialGridGenerator[T: Grid]:
     """Generates a random but structurally correct radial grid with the given specifications"""
 
     def __init__(
         self,
-        grid_class: Type[T],
+        grid_class: type[T],
         nr_nodes: int = 100,
         nr_sources: int = 2,
         nr_nops: int = 10,

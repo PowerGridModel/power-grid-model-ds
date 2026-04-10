@@ -11,9 +11,9 @@ from numpy.typing import NDArray
 
 from power_grid_model_ds._core import fancypy as fp
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
-from power_grid_model_ds._core.model.arrays.pgm_arrays import LineArray, TransformerArray
 from power_grid_model_ds._core.model.constants import EMPTY_ID, empty
 from power_grid_model_ds._core.utils.misc import array_equal_with_nan
+from power_grid_model_ds.arrays import LineArray, TransformerArray
 from tests.conftest import FancyTestArray
 from tests.fixtures.arrays import DefaultedCustomLineArray, FancyTestArray3
 
@@ -118,13 +118,13 @@ def test_getitem_with_empty_list_mask():
 
 def test_setitem_with_index(fancy_test_array: FancyTestArray):
     fancy_test_array[0] = (9, 9, 9, 9, 9)
-    assert [9, 2, 3] == fancy_test_array.id.tolist()
+    assert fancy_test_array.id.tolist() == [9, 2, 3]
 
 
 def test_setitem_with_mask(fancy_test_array: FancyTestArray):
     mask = np.array([True, False, True])
     fancy_test_array[mask] = (9, 9, 9, 9, 9)
-    assert [9, 2, 9] == fancy_test_array.id.tolist()
+    assert fancy_test_array.id.tolist() == [9, 2, 9]
 
 
 def test_setitem_as_fancy_array_with_mask(fancy_test_array: FancyTestArray):
@@ -254,15 +254,15 @@ def test_sort(fancy_test_array: FancyTestArray):
 def test_copy_function(fancy_test_array: FancyTestArray):
     array_copy = copy(fancy_test_array)
     array_copy.test_int = 123
-    assert not id(fancy_test_array) == id(array_copy)
-    assert not fancy_test_array.test_int[0] == array_copy.test_int[0]
+    assert id(fancy_test_array) != id(array_copy)
+    assert fancy_test_array.test_int[0] != array_copy.test_int[0]
 
 
 def test_copy_method(fancy_test_array: FancyTestArray):
     array_copy = fancy_test_array.copy()
     array_copy.test_int = 123
-    assert not id(fancy_test_array.data) == id(array_copy.data)
-    assert not fancy_test_array.test_int[0] == array_copy.test_int[0]  # type: ignore
+    assert fancy_test_array.data is not array_copy.data
+    assert fancy_test_array.test_int[0] != array_copy.test_int[0]  # type: ignore
 
 
 def test_prevent_np_unique_on_fancy_array(fancy_test_array: FancyTestArray):

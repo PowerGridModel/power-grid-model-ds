@@ -58,10 +58,10 @@ def test_cache_and_load_empty_grid(grid):
 
     new_grid = Grid.from_cache(cache_path)
 
-    for old, new in zip(grid.all_arrays(), new_grid.all_arrays()):
+    for old, new in zip(grid.all_arrays(), new_grid.all_arrays(), strict=True):
         assert fp.array_equal(old, new)
-    assert 0 == new_grid.graphs.active_graph.nr_nodes
-    assert 0 == new_grid.graphs.complete_graph.nr_nodes
+    assert new_grid.graphs.active_graph.nr_nodes == 0
+    assert new_grid.graphs.complete_graph.nr_nodes == 0
     shutil.rmtree(cache_dir)
 
 
@@ -71,7 +71,7 @@ def test_cache_and_load_basic_grid(basic_grid):
 
     new_grid = Grid.from_cache(cache_path)
 
-    for old, new in zip(basic_grid.all_arrays(), new_grid.all_arrays()):
+    for old, new in zip(basic_grid.all_arrays(), new_grid.all_arrays(), strict=True):
         assert fp.array_equal(old, new)
     assert basic_grid.graphs.active_graph.nr_nodes == new_grid.graphs.active_graph.nr_nodes
     assert basic_grid.graphs.complete_graph.nr_nodes == new_grid.graphs.complete_graph.nr_nodes
@@ -85,7 +85,7 @@ def test_cache_and_load_basic_grid_with_compression(basic_grid):
     new_grid = Grid.from_cache(cache_path)
     assert isinstance(new_grid, Grid)
 
-    for old, new in zip(basic_grid.all_arrays(), new_grid.all_arrays()):
+    for old, new in zip(basic_grid.all_arrays(), new_grid.all_arrays(), strict=True):
         assert fp.array_equal(old, new)
 
     shutil.rmtree(cache_dir)
@@ -101,7 +101,7 @@ def test_cache_and_load_extended_grid():
 
     new_grid = ExtendedGrid.from_cache(cache_path)
 
-    for old, new in zip(grid.all_arrays(), new_grid.all_arrays()):
+    for old, new in zip(grid.all_arrays(), new_grid.all_arrays(), strict=True):
         assert fp.array_equal(old, new)
     assert grid.graphs.active_graph.nr_nodes == new_grid.graphs.active_graph.nr_nodes
     assert grid.graphs.complete_graph.nr_nodes == new_grid.graphs.complete_graph.nr_nodes
@@ -118,7 +118,7 @@ def test_cache_and_load_after_node_deletion(basic_grid):
 
     new_grid = Grid.from_cache(cache_path)
 
-    for old, new in zip(basic_grid.all_arrays(), new_grid.all_arrays()):
+    for old, new in zip(basic_grid.all_arrays(), new_grid.all_arrays(), strict=True):
         assert fp.array_equal(old, new)
     assert basic_grid.graphs.complete_graph.nr_nodes == new_grid.graphs.complete_graph.nr_nodes
     assert basic_grid.graphs.active_graph.nr_nodes == new_grid.graphs.active_graph.nr_nodes

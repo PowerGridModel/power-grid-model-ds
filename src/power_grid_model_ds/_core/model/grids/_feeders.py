@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray
 from power_grid_model_ds._core.model.enums.nodes import NodeType
+from power_grid_model_ds.arrays import BranchArray
 
 if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import Grid
@@ -101,8 +101,7 @@ def _get_active_component_branches(grid: "Grid", component_node_ids: list[int]) 
 
     branches = grid.branches
     branches_in_component = branches.filter(from_node=component_node_ids, to_node=component_node_ids, mode_="OR")
-    active_branches = branches_in_component.filter(from_status=1, to_status=1)
-    return active_branches
+    return branches_in_component.filter(from_status=1, to_status=1)  # active branches
 
 
 def _get_feeder_branch(component_branches: BranchArray) -> BranchArray:

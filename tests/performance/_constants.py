@@ -10,14 +10,14 @@ ARRAY_SETUP_CODES = {
     "structured": "import numpy as np;" + NUMPY_DTYPE + "input_array = np.zeros({size}, dtype=dtype)",
     "rec": "import numpy as np;" + NUMPY_DTYPE + "input_array = np.recarray(({size},),dtype=dtype)",
     "fancy": "from tests.conftest import FancyTestArray; input_array=FancyTestArray.zeros({size});"
-    + "import numpy as np;input_array.id = np.arange({size})",
+    "import numpy as np;input_array.id = np.arange({size})",
 }
 
 GRAPH_SETUP_CODES = {
     "rustworkx": "from power_grid_model_ds import Grid;"
-    + "from power_grid_model_ds.generators import RadialGridGenerator;"
-    + "from power_grid_model_ds.graph_models import RustworkxGraphModel;"
-    + "grid=RadialGridGenerator(nr_nodes={size}, grid_class=Grid, graph_model=RustworkxGraphModel).run()",
+    "from power_grid_model_ds.generators import RadialGridGenerator;"
+    "from power_grid_model_ds.graph_models import RustworkxGraphModel;"
+    "grid=RadialGridGenerator(nr_nodes={size}, grid_class=Grid, graph_model=RustworkxGraphModel).run()",
 }
 
 SINGLE_REPEATS = 1000

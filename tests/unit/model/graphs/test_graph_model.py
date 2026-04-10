@@ -27,8 +27,8 @@ class TestBasicGraphFunctions:
         assert 1 in graph.external_ids
         assert 2 in graph.external_ids
         # the graph has the correct size
-        assert 2 == graph.nr_nodes
-        assert 1 == graph.nr_branches
+        assert graph.nr_nodes == 2
+        assert graph.nr_branches == 1
 
     def test_add_node_already_there(self, graph: BaseGraphModel):
         graph.add_node(1)
@@ -63,7 +63,7 @@ class TestBasicGraphFunctions:
         graph.add_node(2)
         graph.add_branch(1, 2)
 
-        assert [(1, 2)] == list(graph.all_branches)
+        assert list(graph.all_branches) == [(1, 2)]
 
     def test_graph_all_branches_parallel(self, graph: BaseGraphModel):
         graph.add_node(1)
@@ -72,7 +72,7 @@ class TestBasicGraphFunctions:
         graph.add_branch(1, 2)
         graph.add_branch(2, 1)
 
-        assert [(1, 2), (1, 2), (2, 1)] == list(graph.all_branches)
+        assert list(graph.all_branches) == [(1, 2), (1, 2), (2, 1)]
 
     def test_delete_invalid_node_without_error(self, graph: BaseGraphModel):
         graph.delete_node(3, raise_on_fail=False)
@@ -87,8 +87,8 @@ class TestBasicGraphFunctions:
 
         graph.delete_node(1)  # also deletes branch 1-2
 
-        assert 1 == graph.nr_nodes
-        assert 0 == graph.nr_branches
+        assert graph.nr_nodes == 1
+        assert graph.nr_branches == 0
         assert 2 in graph.external_ids
         assert 1 not in graph.external_ids
         assert not graph.has_branch(1, 2)
@@ -139,8 +139,8 @@ class TestBasicGraphFunctions:
         graph.add_branch(1, 2)
         graph.add_branch(2, 1)
 
-        assert [(2, 1), (2, 1), (2, 1)] == list(graph.in_branches(1))
-        assert [(1, 2), (1, 2), (1, 2)] == list(graph.in_branches(2))
+        assert list(graph.in_branches(1)) == [(2, 1), (2, 1), (2, 1)]
+        assert list(graph.in_branches(2)) == [(1, 2), (1, 2), (1, 2)]
 
 
 def test_tmp_remove_nodes(graph_with_2_routes: BaseGraphModel) -> None:
@@ -355,7 +355,7 @@ class TestGetConnected:
 class TestFindFirstConnected:
     def test_find_first_connected(self, graph_with_2_routes: BaseGraphModel):
         graph = graph_with_2_routes
-        assert 2 == graph.find_first_connected(1, candidate_node_ids=[2, 3, 4])
+        assert graph.find_first_connected(1, candidate_node_ids=[2, 3, 4]) == 2
 
     def test_find_first_connected_same_node(self, graph_with_2_routes: BaseGraphModel):
         graph = graph_with_2_routes

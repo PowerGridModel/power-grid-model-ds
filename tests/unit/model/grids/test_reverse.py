@@ -4,10 +4,9 @@
 import numpy as np
 import pytest
 
-from power_grid_model_ds import Grid
-from power_grid_model_ds import fancypy as fp
+from power_grid_model_ds import Grid, fancypy as fp
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
-from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray, SourceArray
+from power_grid_model_ds.arrays import BranchArray, SourceArray
 
 
 class TestGetReversedBranches:
