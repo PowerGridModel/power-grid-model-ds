@@ -6,8 +6,8 @@ import numpy as np
 from numpy._typing import NDArray
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
-from power_grid_model_ds._core.model.arrays.pgm_arrays import LineArray, NodeArray
 from power_grid_model_ds._core.model.dtypes.typing import NDArray3
+from power_grid_model_ds.arrays import LineArray, NodeArray
 
 
 class FancyTestArray(FancyArray):

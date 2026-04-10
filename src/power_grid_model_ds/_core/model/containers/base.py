@@ -7,8 +7,9 @@
 import dataclasses
 import inspect
 import logging
+import warnings
 from dataclasses import dataclass
-from typing import Type, TypeVar
+from typing import TypeVar
 
 import numpy as np
 
@@ -17,6 +18,8 @@ from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.constants import EMPTY_ID
 from power_grid_model_ds._core.model.containers.helpers import container_equal
+
+_logger = logging.getLogger(__name__)
 
 Self = TypeVar("Self", bound="FancyArrayContainer")
 
@@ -28,7 +31,8 @@ class FancyArrayContainer:
     Contains general functionality that is nonspecific to the type of array being stored.
     """
 
-    _id_counter: int
+    _ids: set[int]
+    __hash__ = None
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, self.__class__):
@@ -37,52 +41,42 @@ class FancyArrayContainer:
 
     @property
     def id_counter(self):
-        """Returns the private _id_counter field (as read-only)"""
-        return self._id_counter
+        """Returns the max id in self._ids"""
+        warnings.warn(
+            "self.id_counter is deprecated, use self.max_id or self.ids instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.max_id
 
-    @classmethod
-    def empty(cls: Type[Self]) -> Self:
-        """Create an empty grid"""
-        empty_fields = cls._get_empty_fields()
-        return cls(**empty_fields)
-
-    def all_arrays(self):
-        """Returns all arrays in the container."""
-
-        for field in dataclasses.fields(self):
-            attribute = getattr(self, field.name)
-            if isinstance(attribute, FancyArray):
-                yield attribute
-
-    @classmethod
-    def find_array_field(cls, array_type: Type[FancyArray]) -> dataclasses.Field:
-        """Find the Field that holds an array of type array_type.
-
-        Args:
-            array_type(type[FancyArray]): FancyArray subclass.
-
-        Raises:
-            TypeError: if no field with the given `array_type` is found or if multiple fields are found.
-
-        Returns:
-            a Field instance.
-        """
-        fields = [
-            field
-            for field in dataclasses.fields(cls)
-            if inspect.isclass(field.type) and issubclass(field.type, array_type)
-        ]
-        if (nr_fields := len(fields)) != 1:
-            raise TypeError(
-                f"Expected to find 1 array with type '{array_type.__name__}' in {cls.__name__} ({nr_fields} found)"
-            )
-        return fields[0]
+    @property
+    def ids(self):
+        """Returns the ids across all arrays"""
+        return self._ids
 
     @property
     def max_id(self) -> int:
         """Returns the max id across all arrays within the container."""
-        max_per_array = [np.max(array.id) if array.size > 0 else 0 for array in self.all_arrays()]
-        return int(max(max_per_array))
+        return max(self._ids) if self._ids else 0
+
+    def rebuild_ids(self) -> None:
+        """Rebuild self._ids based on the arrays in the container.
+
+        Raises:
+            ValueError: if duplicate ids are found between or within arrays.
+        """
+        new_ids: set[int] = set()
+
+        for array in self.all_arrays():
+            if not hasattr(array, "id"):
+                continue
+
+            array_ids = set(array.id.tolist())
+            if array_ids & new_ids:
+                raise ValueError(f"Duplicate ids found between arrays ({array.__class__.__name__})")
+            new_ids |= array_ids
+
+        self._ids = new_ids
 
     def check_ids(self, check_between_arrays: bool = True, check_within_arrays: bool = True) -> None:
         """Checks for duplicate id values across all arrays in the container.
@@ -108,11 +102,25 @@ class FancyArrayContainer:
             return
 
         if any(duplicates_between_arrays):
-            logging.warning(f"The following ids occur in multiple arrays: {duplicates_between_arrays}!")
+            _logger.warning("The following ids occur in multiple arrays: %s!", duplicates_between_arrays)
         for array_class in arrays_with_duplicates:
-            logging.warning(f"{array_class.__name__} contains duplicates!")
+            _logger.warning("%s contains duplicates!", array_class.__name__)
 
         raise ValueError(f"Duplicates found within {self.__class__.__name__}!")
+
+    @classmethod
+    def empty(cls: type[Self]) -> Self:
+        """Create an empty grid"""
+        empty_fields = cls._get_empty_fields()
+        return cls(**empty_fields)
+
+    def all_arrays(self):
+        """Returns all arrays in the container."""
+
+        for field in dataclasses.fields(self):
+            attribute = getattr(self, field.name)
+            if isinstance(attribute, FancyArray):
+                yield attribute
 
     def append(self, array: FancyArray, check_max_id: bool = True) -> None:
         """Append the given asset_array to the corresponding field of ArrayContainer and generate ids.
@@ -127,7 +135,7 @@ class FancyArrayContainer:
         self._append(array=array, check_max_id=check_max_id)
 
     def attach_ids(self, array: FancyArray) -> FancyArray:
-        """Generate and attach ids to the given FancyArray. Also updates _id_counter.
+        """Generate and attach ids to the given FancyArray. Also updates _ids.
 
         Args:
             array(FancyArray): the array of which the id column is set.
@@ -141,11 +149,10 @@ class FancyArrayContainer:
         if (id_set := set(array.id)) != {array.get_empty_value("id")}:
             raise ValueError(f"Cannot attach ids to array that contains non-empty ids: {id_set}")
 
-        start = self._id_counter + 1
+        start = self.max_id + 1
         end = start + len(array)
         array.id = np.arange(start, end)
-        self._id_counter = max(self._id_counter, end - 1)
-
+        self._ids |= set(array.id.tolist())
         return array
 
     def search_for_id(self, record_id: int) -> list[FancyArray]:
@@ -162,7 +169,7 @@ class FancyArrayContainer:
          Each array within the list contains all records with the given array.
         """
 
-        logging.warning("Using search_for_id(). Make sure to use only while debugging!")
+        _logger.warning("Using search_for_id(). Make sure to use only while debugging!")
 
         arrays_with_record = []
 
@@ -175,6 +182,30 @@ class FancyArrayContainer:
         if arrays_with_record:
             return arrays_with_record
         raise RecordDoesNotExist(f"record id '{record_id}' not found in {self.__class__.__name__}")
+
+    @classmethod
+    def find_array_field(cls, array_type: type[FancyArray]) -> dataclasses.Field:
+        """Find the Field that holds an array of type array_type.
+
+        Args:
+            array_type(type[FancyArray]): FancyArray subclass.
+
+        Raises:
+            TypeError: if no field with the given `array_type` is found or if multiple fields are found.
+
+        Returns:
+            a Field instance.
+        """
+        fields = [
+            field
+            for field in dataclasses.fields(cls)
+            if inspect.isclass(field.type) and issubclass(field.type, array_type)
+        ]
+        if (nr_fields := len(fields)) != 1:
+            raise TypeError(
+                f"Expected to find 1 array with type '{array_type.__name__}' in {cls.__name__} ({nr_fields} found)"
+            )
+        return fields[0]
 
     def _append(self, array: FancyArray, check_max_id: bool = True) -> None:
         """
@@ -190,7 +221,7 @@ class FancyArrayContainer:
         array_field = self.find_array_field(array.__class__)
 
         if hasattr(array, "id"):
-            self._update_id_counter(array, check_max_id)
+            self._update_ids(array, check_max_id)
 
         # Add the given asset_array to the corresponding array in the Grid.
         array_attr = getattr(self, array_field.name)
@@ -202,7 +233,7 @@ class FancyArrayContainer:
         empty_fields = {}
 
         empty_fields.update(cls._get_empty_arrays())
-        empty_fields.update({"_id_counter": 0})
+        empty_fields.update({"_ids": set()})
         return empty_fields
 
     @classmethod
@@ -213,25 +244,18 @@ class FancyArrayContainer:
             if inspect.isclass(field.type) and issubclass(field.type, FancyArray)
         }
 
-    def _update_id_counter(self, array, check_max_id: bool = True):
+    def _update_ids(self, array, check_max_id: bool = True):
         if np.all(array.id == EMPTY_ID):
+            check_max_id = False
             array = self.attach_ids(array)
         elif np.any(array.id == EMPTY_ID):
             raise ValueError(f"Cannot append: array contains empty [{EMPTY_ID}] and non-empty ids.")
-        elif check_max_id and self.id_counter > 0:
-            # Only check for overlaps when array has prescribed (non-empty) IDs
-            # Check if any incoming ID might overlap with existing IDs
-            # This prevents overlaps since counter tracks the highest used ID
-            new_min_id = np.min(array.id)
-            if new_min_id <= self._id_counter:
-                raise ValueError(
-                    f"Cannot append: minimum id {new_min_id} is not greater than "
-                    f"the current id counter {self._id_counter}"
-                )
 
-        new_max_id = np.max(array.id).item()
-        # Update _id_counter
-        self._id_counter = max(self._id_counter, new_max_id)
+        new_ids = set(array.id.tolist())
+
+        if check_max_id and (overlap := self._ids & new_ids):
+            raise ValueError(f"Cannot append, array contains ids that already exist: {overlap}")
+        self._ids |= new_ids
 
     @staticmethod
     def _get_duplicates_between_arrays(id_arrays: list[FancyArray], check: bool) -> np.ndarray:
@@ -247,7 +271,7 @@ class FancyArrayContainer:
 
     @staticmethod
     def _get_arrays_with_duplicates(id_arrays: list[FancyArray], check: bool) -> list:
-        arrays_with_duplicates: list[Type] = []
+        arrays_with_duplicates: list[type] = []
         if not check:
             return arrays_with_duplicates
         for id_array in id_arrays:

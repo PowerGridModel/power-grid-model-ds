@@ -4,12 +4,12 @@
 
 import inspect
 import timeit
+from collections.abc import Generator
 from itertools import product
-from typing import Generator, Union
 
 
 def do_performance_test(
-    code_to_test: Union[str, dict[str, str], list[str]],
+    code_to_test: str | dict[str, str] | list[str],
     size_list: list[int],
     repeats: int,
     setup_codes: dict[str, str],
@@ -21,7 +21,7 @@ def do_performance_test(
         formatted_setup_codes = {key: code.format(size=size) for key, code in setup_codes.items()}
         if isinstance(code_to_test, dict):
             code_to_test_list = [code_to_test[variant].format(size=size) for variant in setup_codes]
-            test_generator = zip(formatted_setup_codes.items(), code_to_test_list)
+            test_generator = zip(formatted_setup_codes.items(), code_to_test_list, strict=True)
         elif isinstance(code_to_test, list):
             code_to_test_list = [code.format(size=size) for code in code_to_test]
             test_generator = product(formatted_setup_codes.items(), code_to_test_list)
@@ -37,8 +37,8 @@ def do_performance_test(
 
 
 def _print_timings(timings: Generator):
-    for key, code, timing in timings:
-        code = code.split(";")[-1].replace("\n", " ").replace("\t", " ")
+    for key, _code, timing in timings:
+        code = _code.split(";")[-1].replace("\n", " ").replace("\t", " ")
         code = f"{key}: {code}"
 
         if isinstance(timing, Exception):

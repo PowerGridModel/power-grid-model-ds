@@ -5,15 +5,57 @@
 """Base grid classes"""
 
 import warnings
+from collections.abc import Iterator
 from dataclasses import dataclass, fields
 from pathlib import Path
-from typing import Iterator, Literal, Self, Type, TypeVar
+from typing import Literal, Self, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
+from power_grid_model_ds._core.model.graphs.container import GraphContainer
+from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
+from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
+from power_grid_model_ds._core.model.grids._feeders import set_feeder_ids
+from power_grid_model_ds._core.model.grids._helpers import (
+    create_empty_grid,
+    create_grid_from_extended_grid,
+    merge_grids,
+)
+from power_grid_model_ds._core.model.grids._modify import (
+    add_array_to_grid,
+    add_branch,
+    add_node,
+    delete_branch,
+    delete_branch3,
+    delete_node,
+    make_active,
+    make_inactive,
+)
+from power_grid_model_ds._core.model.grids._reverse import (
+    get_reversed_branches,
+    reverse_branches,
+    set_branch_orientations,
+)
+from power_grid_model_ds._core.model.grids._search import (
+    find_differences_between_grids,
+    get_branch_arrays,
+    get_branches,
+    get_downstream_nodes,
+    get_nearest_substation_node,
+    get_typed_branches,
+    iter_branches_in_shortest_path,
+)
+from power_grid_model_ds._core.model.grids.serialization.json import deserialize_from_json, serialize_to_json
+from power_grid_model_ds._core.model.grids.serialization.pickle import load_grid_from_pickle, save_grid_to_pickle
+from power_grid_model_ds._core.model.grids.serialization.string import (
+    deserialize_from_str,
+    deserialize_from_txt_file,
+    serialize_to_str,
+)
+from power_grid_model_ds.arrays import (
     AsymCurrentSensorArray,
     AsymGenArray,
     AsymLineArray,
@@ -38,42 +80,6 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     TransformerArray,
     TransformerTapRegulatorArray,
     VoltageRegulatorArray,
-)
-from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
-from power_grid_model_ds._core.model.graphs.container import GraphContainer
-from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
-from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
-from power_grid_model_ds._core.model.grids._feeders import set_feeder_ids
-from power_grid_model_ds._core.model.grids._helpers import (
-    create_empty_grid,
-    create_grid_from_extended_grid,
-    merge_grids,
-)
-from power_grid_model_ds._core.model.grids._modify import (
-    add_array_to_grid,
-    add_branch,
-    add_node,
-    delete_branch,
-    delete_branch3,
-    delete_node,
-    make_active,
-    make_inactive,
-    reverse_branches,
-)
-from power_grid_model_ds._core.model.grids._search import (
-    get_branch_arrays,
-    get_branches,
-    get_downstream_nodes,
-    get_nearest_substation_node,
-    get_typed_branches,
-    iter_branches_in_shortest_path,
-)
-from power_grid_model_ds._core.model.grids.serialization.json import deserialize_from_json, serialize_to_json
-from power_grid_model_ds._core.model.grids.serialization.pickle import load_grid_from_pickle, save_grid_to_pickle
-from power_grid_model_ds._core.model.grids.serialization.string import (
-    deserialize_from_str,
-    deserialize_from_txt_file,
-    serialize_to_str,
 )
 
 G = TypeVar("G", bound="Grid")
@@ -147,7 +153,7 @@ class Grid(FancyArrayContainer):
         return serialize_to_str(self)
 
     @classmethod
-    def empty(cls: Type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
+    def empty(cls: type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
         """Create an empty grid
 
         Args:
@@ -160,7 +166,7 @@ class Grid(FancyArrayContainer):
 
     @classmethod
     # pylint: disable=arguments-differ
-    def from_cache(cls: Type[Self], cache_path: Path, load_graphs: bool = True) -> Self:
+    def from_cache(cls: type[Self], cache_path: Path, load_graphs: bool = True) -> Self:
         """Read from cache and build .graphs from arrays
 
         WARNING: This function uses pickle.load() which can execute arbitrary code.
@@ -182,7 +188,7 @@ class Grid(FancyArrayContainer):
         return load_grid_from_pickle(cls, cache_path=cache_path, load_graphs=load_graphs)
 
     @classmethod
-    def from_txt(cls: Type[G], *args: str) -> G:
+    def from_txt(cls: type[G], *args: str) -> G:
         """Build a grid from a list of strings
 
         See the documentation for the expected format of the txt_lines
@@ -198,7 +204,7 @@ class Grid(FancyArrayContainer):
 
     @classmethod
     # pylint: disable=arguments-differ
-    def from_txt_file(cls: Type[G], txt_file_path: Path) -> G:
+    def from_txt_file(cls: type[G], txt_file_path: Path) -> G:
         """Load grid from txt file
 
         Args:
@@ -207,7 +213,7 @@ class Grid(FancyArrayContainer):
         return deserialize_from_txt_file(cls, txt_file_path)
 
     @classmethod
-    def from_extended(cls: Type[G], extended: G) -> G:
+    def from_extended(cls: type[G], extended: G) -> G:
         """Create a grid from an extended Grid object."""
         return create_grid_from_extended_grid(cls, extended=extended)
 
@@ -239,18 +245,25 @@ class Grid(FancyArrayContainer):
         return add_branch(self, branch)
 
     def delete_branch(self, branch: BranchArray) -> None:
-        """Remove a branch from the grid
+        """Remove a branch array from the grid
+
+        Supports removing multiple branches at once.
+        Also removes assets connected to the branch (e.g. sensors) and updates the graphs accordingly.
 
         Args:
-            branch (BranchArray): The branch to remove
+            branch (BranchArray): The branch array to remove
         """
         return delete_branch(self, branch=branch)
 
     def delete_branch3(self, branch: Branch3Array) -> None:
-        """Remove a branch3 from the grid
+        """Remove a branch3 array from the grid
+
+        Supports removing multiple branch3 records at once
+        Also removes assets connected to the branch3 (e.g. sensors) and updates the graphs accordingly.
+
 
         Args:
-            branch (Branch3Array): The branch3 to remove
+            branch (Branch3Array): The branch3 array to remove
         """
         return delete_branch3(self, branch=branch)
 
@@ -263,10 +276,13 @@ class Grid(FancyArrayContainer):
         return add_node(self, node=node)
 
     def delete_node(self, node: NodeArray) -> None:
-        """Remove a node from the grid
+        """Remove a node array from the grid
+
+        Supports removing multiple branches at once.
+        Also removes assets connected to the node (e.g. branches, sensors, loads) and updates the graphs accordingly.
 
         Args:
-            node (NodeArray): The node to remove
+            node (NodeArray): node array to remove
         """
         return delete_node(self, node=node)
 
@@ -334,6 +350,32 @@ class Grid(FancyArrayContainer):
     def reverse_branches(self, branches: BranchArray):
         """Reverse the direction of the branches."""
         return reverse_branches(self, branches)
+
+    def get_reversed_branches(self) -> BranchArray:
+        """Get the branch array of branches that are oriented towards the source(s).
+
+        Orientation is determined by the distance of the branch's from_node and to_node to the source node.
+        The node that is closer to the source is considered the "from_node".
+        Note that this might not reflect the actual power flow direction in the grid.
+
+        - If a source is connected to another source. The orientation will be set from the perspective of
+          the source with the lowest node id.
+        - Parallel edges (multiple edges between the same two nodes) and cycles are supported.
+        - Open branches will be corrected so that the from_status is 1 and the to_status is 0.
+
+        Returns:
+            BranchArray: All branches that are oriented towards the source(s)
+        """
+        return get_reversed_branches(self)
+
+    def set_branch_orientations(self) -> BranchArray:
+        """Set branch orientations in the grid so that all branches are oriented away from the sources.
+        See also get_reversed_branches() for how the branches to reverse are determined.
+
+        Returns:
+            BranchArray: All branches that were reversed.
+        """
+        return set_branch_orientations(self)
 
     def get_branches_in_path(self, nodes_in_path: list[int]) -> BranchArray:
         """Returns all branches within a path of nodes
@@ -420,19 +462,28 @@ class Grid(FancyArrayContainer):
         )
         return save_grid_to_pickle(self, cache_dir=cache_dir, cache_name=cache_name, compress=compress)
 
-    def merge(self, other_grid: Self, mode: Literal["recalculate_ids", "keep_ids"]) -> None:
+    @overload
+    def merge(self: Self, other_grid: G, mode: Literal["recalculate_ids"]) -> int: ...
+
+    @overload
+    def merge(self: Self, other_grid: G, mode: Literal["keep_ids"]) -> None: ...
+
+    def merge(self, other_grid, mode: Literal["keep_ids", "recalculate_ids"]):
         """Merge another grid into this grid.
 
         Args:
             other_grid (Grid): The grid to merge into this grid.
-            mode (str): The merge mode:
+            mode (Literal["keep_ids", "recalculate_ids"]): The merge mode:
                 - "recalculate_ids": ids in the arrays of other_grid are offset to avoid conflicts.
                 IMPORTANT: we currently only update any `id` column and all id references in the default PGM-DS grid.
-
                 - "keep_ids": Keep ids of other_grid. Raises an error if grids contain overlapping indices.
+        Returns:
+            int: The offset of the IDs in the merged grid.
+                If mode is "keep_ids", the offset will be 0.
+                If mode is "recalculate_ids", the offset will be the value that was added
+                to the other_grid ids to avoid conflicts.
         """
-
-        merge_grids(self, other_grid, mode)
+        return merge_grids(self, other_grid, mode)
 
     def serialize(self, path: Path, **kwargs) -> Path:
         """Serialize the grid.
@@ -446,6 +497,24 @@ class Grid(FancyArrayContainer):
         return serialize_to_json(grid=self, path=path, strict=True, **kwargs)
 
     @classmethod
-    def deserialize(cls: Type[Self], path: Path) -> Self:
+    def deserialize(cls: type[Self], path: Path) -> Self:
         """Deserialize the grid."""
         return deserialize_from_json(path=path, target_grid_class=cls)
+
+    def rebuild_graphs(self) -> None:
+        """(Re)build the graphs in the grid."""
+        self.graphs = GraphContainer.from_grid(self)
+
+    def diff(self, other_grid: Self) -> None:
+        """Print the differences between two grids
+
+        Intended for debugging.
+
+        Note: Only the content of the arrays is compared. Differences in the ordering within arrays are ignored.
+
+        Args:
+            other_grid (Grid): The grid to compare with.
+        """
+        diffs = find_differences_between_grids(grid1=self, grid2=other_grid, print_diff=True)
+        if not diffs:
+            print("Grids are identical")

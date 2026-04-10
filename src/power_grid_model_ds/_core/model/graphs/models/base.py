@@ -1,20 +1,22 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
-
+import warnings
 from abc import ABC, abstractmethod
+from collections import Counter
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Counter, Generator
+from typing import TYPE_CHECKING
 
 from numpy._typing import NDArray
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import Branch3Array, BranchArray, NodeArray
 from power_grid_model_ds._core.model.graphs.errors import (
     GraphError,
     MissingBranchError,
     MissingNodeError,
     NoPathBetweenNodes,
 )
+from power_grid_model_ds.arrays import Branch3Array, BranchArray, NodeArray
 
 if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import Grid
@@ -23,6 +25,8 @@ if TYPE_CHECKING:
 # pylint: disable=too-many-public-methods
 class BaseGraphModel(ABC):
     """Base class for graph models"""
+
+    __hash__ = None
 
     def __init__(self, active_only=False) -> None:
         self.active_only = active_only
@@ -42,6 +46,10 @@ class BaseGraphModel(ABC):
     @abstractmethod
     def nr_branches(self) -> int:
         """Returns the number of branches in the graph"""
+
+    @abstractmethod
+    def has_parallel_edges(self) -> bool:
+        """Check if the graph has parallel edges (multiple edges between the same two nodes)"""
 
     @property
     def all_branches(self) -> Generator[tuple[int, int], None, None]:
@@ -344,13 +352,22 @@ class BaseGraphModel(ABC):
 
     @classmethod
     def from_arrays(cls, arrays: "Grid", active_only=False) -> "BaseGraphModel":
-        """Build from arrays"""
+        """Build from arrays. DEPRECATED: Use .from_grid instead."""
+        warnings.warn(
+            f"{cls.__name__}.from_arrays is deprecated and will be removed in a future release. "
+            f"Use {cls.__name__}.from_grid instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return cls.from_grid(arrays, active_only=active_only)
+
+    @classmethod
+    def from_grid(cls, grid: "Grid", active_only=False) -> "BaseGraphModel":
+        """Build from grid."""
         new_graph = cls(active_only=active_only)
-
-        new_graph.add_node_array(node_array=arrays.node, raise_on_fail=False)
-        new_graph.add_branch_array(arrays.branches)
-        new_graph.add_branch3_array(arrays.three_winding_transformer)
-
+        new_graph.add_node_array(node_array=grid.node, raise_on_fail=False)
+        new_graph.add_branch_array(grid.branches)
+        new_graph.add_branch3_array(grid.three_winding_transformer)
         return new_graph
 
     def _internals_to_externals(self, internal_nodes: list[int]) -> list[int]:
@@ -428,7 +445,7 @@ class BaseGraphModel(ABC):
             set(self.external_ids) == set(other.external_ids)
             and self.active_only == other.active_only
             and (
-                Counter((frozenset(branch) for branch in self.all_branches))
-                == Counter((frozenset(branch) for branch in other.all_branches))
+                Counter(frozenset(branch) for branch in self.all_branches)
+                == Counter(frozenset(branch) for branch in other.all_branches)
             )
         )

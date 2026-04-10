@@ -4,11 +4,12 @@
 
 """Grid tests"""
 
-import dataclasses
 from copy import deepcopy
 
 import numpy as np
+import pytest
 from numpy.testing import assert_equal
+from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.grids.base import Grid
 from tests.fixtures.grid_classes import ExtendedGrid
@@ -17,35 +18,18 @@ from tests.fixtures.grids import build_basic_grid
 # pylint: disable=missing-function-docstring,missing-class-docstring
 
 
-def test_initialize_empty_grid(grid: Grid):
+@pytest.mark.parametrize("base_attr", ["_ids", "graphs"])
+def test_grid_has_base_attributes(base_attr: str):
+    grid = Grid.empty()
     assert isinstance(grid, Grid)
-    fields = dataclasses.asdict(grid).keys()
-    assert {
-        "_id_counter",
-        "asym_current_sensor",
-        "asym_line",
-        "asym_power_sensor",
-        "asym_voltage_sensor",
-        "generic_branch",
-        "graphs",
-        "fault",
-        "line",
-        "link",
-        "node",
-        "source",
-        "sym_current_sensor",
-        "sym_gen",
-        "sym_load",
-        "asym_gen",
-        "asym_load",
-        "shunt",
-        "sym_power_sensor",
-        "sym_voltage_sensor",
-        "three_winding_transformer",
-        "transformer",
-        "transformer_tap_regulator",
-        "voltage_regulator",
-    } == set(fields)
+    assert hasattr(grid, base_attr), f"Grid is missing '{base_attr}' attribute"
+
+
+@pytest.mark.parametrize("component_type", list(ComponentType))
+def test_grid_has_component_type(component_type: ComponentType):
+    """Test if all components have the same dtype"""
+    grid = Grid.empty()
+    assert hasattr(grid, component_type.value), f"Grid is missing attribute for component type '{component_type.value}'"
 
 
 def test_initialize_empty_extended_grid():
@@ -71,16 +55,16 @@ def test_basic_grid_fixture(basic_grid: Grid):
     grid = basic_grid
 
     # The grid consists of 6 nodes
-    assert 6 == len(grid.node)
+    assert len(grid.node) == 6
     # 1 of these is a source
-    assert 1 == len(grid.source)
+    assert len(grid.source) == 1
     # 4 of these have a load attaches
-    assert 4 == len(grid.sym_load)
+    assert len(grid.sym_load) == 4
 
     inactive_mask = np.logical_or(grid.line.from_status == 0, grid.line.to_status == 0)
     inactive_lines = grid.line[inactive_mask]
     # we have placed 1 normally open point
-    assert 1 == len(inactive_lines)
+    assert len(inactive_lines) == 1
 
     # All nodes should be in both graphs
     assert len(grid.graphs.active_graph.external_ids) == len(grid.node)
@@ -93,7 +77,7 @@ def test_basic_grid_fixture(basic_grid: Grid):
     inactive_mask = np.logical_or(grid.line.from_status == 0, grid.line.to_status == 0)
     inactive_lines = grid.line[inactive_mask]
     # we have placed 1 normally open point
-    assert 1 == len(inactive_lines)
+    assert len(inactive_lines) == 1
 
     assert len(grid.line) + len(grid.transformer) + len(grid.link) - 1 == grid.graphs.active_graph.nr_branches
     assert len(grid.line) + len(grid.transformer) + len(grid.link) == grid.graphs.complete_graph.nr_branches
@@ -142,6 +126,8 @@ def test_grid_repr_includes_graph_and_array_info(basic_grid: Grid):
     assert "RustworkxGraphModel(nodes=6, branches=5, active_only=True)" in repr_str
     assert "RustworkxGraphModel(nodes=6, branches=6, active_only=False)" in repr_str
 
+
+class TestGrid:
     def test_different_lines(self, basic_grid: Grid):
         grid1 = basic_grid
         grid2 = build_basic_grid(Grid.empty())
