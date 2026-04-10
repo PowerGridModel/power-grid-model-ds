@@ -78,22 +78,6 @@ def get_downstream_nodes(grid: "Grid", node_id: int, inclusive: bool = False):
     )
 
 
-def _get_branches(grid: "Grid", from_node: int, to_node: int) -> BranchArray:
-    """Return active branch records and an index filtered to the requested path nodes."""
-
-    active_branches = grid.branches.filter(from_status=1, to_status=1).filter(
-        from_node=from_node, to_node=to_node, mode_="AND"
-    )
-    if grid.three_winding_transformer.size:
-        three_winding_active = grid.three_winding_transformer.as_branches().filter(
-            from_status=1, to_status=1, from_node=from_node, to_node=to_node, mode_="AND"
-        )
-        if three_winding_active.size:
-            active_branches = fp.concatenate(active_branches, three_winding_active)
-
-    return active_branches
-
-
 def iter_branches_in_shortest_path(
     grid: "Grid", from_node_id: int, to_node_id: int
 ) -> Iterator[BranchArray | Branch3Array]:
@@ -113,6 +97,22 @@ def iter_branches_in_shortest_path(
         except RecordDoesNotExist:
             typed_branches = grid.three_winding_transformer.filter(branch_ids)
         yield typed_branches
+
+
+def _get_branches(grid: "Grid", from_node: int, to_node: int) -> BranchArray:
+    """Return active branch records and an index filtered to the requested path nodes."""
+
+    active_branches = grid.branches.filter(from_status=1, to_status=1).filter(
+        from_node=from_node, to_node=to_node, mode_="AND"
+    )
+    if grid.three_winding_transformer.size:
+        three_winding_active = grid.three_winding_transformer.as_branches().filter(
+            from_status=1, to_status=1, from_node=from_node, to_node=to_node, mode_="AND"
+        )
+        if three_winding_active.size:
+            active_branches = fp.concatenate(active_branches, three_winding_active)
+
+    return active_branches
 
 
 def find_differences_between_grids(
