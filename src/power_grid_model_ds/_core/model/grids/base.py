@@ -475,9 +475,7 @@ class Grid(FancyArrayContainer):
     @overload
     def serialize(self, path: None = None, *, mode: Literal["json_string"], **kwargs) -> str: ...
 
-    def serialize(
-        self, path: Path | None = None, mode: Literal["json", "json_string"] = "json", **kwargs
-    ) -> Path | str:
+    def serialize(self, path=None, mode: Literal["json", "json_string"] = "json", **kwargs):
         """Serialize the grid.
 
         Args:
