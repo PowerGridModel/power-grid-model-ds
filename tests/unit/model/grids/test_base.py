@@ -126,6 +126,8 @@ def test_grid_repr_includes_graph_and_array_info(basic_grid: Grid):
     assert "RustworkxGraphModel(nodes=6, branches=5, active_only=True)" in repr_str
     assert "RustworkxGraphModel(nodes=6, branches=6, active_only=False)" in repr_str
 
+
+class TestGrid:
     def test_different_lines(self, basic_grid: Grid):
         grid1 = basic_grid
         grid2 = build_basic_grid(Grid.empty())

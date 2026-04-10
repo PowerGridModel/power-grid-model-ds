@@ -168,7 +168,7 @@ class TestCrossTypeCompatibility:
         # Core data should transfer
         assert container_equal(basic_grid, loaded_grid, ignore_extras=True, fields_to_ignore=["graphs"])
 
-    def test_extended_to_basic_loading(self, extended_grid: ExtendedGrid, tmp_path: Path, caplog):
+    def test_extended_to_basic_loading(self, extended_grid: ExtendedGrid, tmp_path: Path):
         """Test loading extended grid into basic type"""
         path = tmp_path / "extended.json"
 
@@ -263,7 +263,7 @@ class TestDeserialize:
         assert grid.node.id.tolist() == [1, 2]
         assert grid.node.u_rated.tolist() == [10000, 20000]
 
-    def test_extended_grid(self, tmp_path: Path, extended_grid: ExtendedGrid):
+    def test_extended_grid(self, tmp_path: Path):
         extended_data = {
             "node": [
                 {"id": 1, "u_rated": 10000, "analysis_flag": 42},

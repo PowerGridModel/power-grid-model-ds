@@ -2,10 +2,12 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+import dash_ag_grid as dag
+import numpy as np
 import pytest
-from dash import dash_table
 from dash.exceptions import PreventUpdate
 
+from power_grid_model_ds._core.model.dtypes.typing import NDArray3
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer import server_state
 from power_grid_model_ds._core.visualizer.callbacks.config import scale_elements, update_arrows, update_layout
@@ -16,6 +18,14 @@ from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTI
 from power_grid_model_ds.arrays import NodeArray
 
 _EDGE_INDEX = 3
+
+
+class ThreePhaseNodeArray(NodeArray):
+    three_phase_quantity: NDArray3[np.float64]
+
+
+class ThreePhaseGrid(Grid):
+    node: ThreePhaseNodeArray
 
 
 def test_scale_elements():
@@ -72,10 +82,11 @@ def test_hide_arrows():
 
 
 def test_element_selection_callback():
-    grid = Grid.empty()
-    grid.node = NodeArray.empty(1)
+    grid = ThreePhaseGrid.empty()
+    grid.node = ThreePhaseNodeArray.empty(1)
     grid.node.id = [1]
     grid.node.u_rated = [100.0]
+    grid.node.three_phase_quantity = [[1.0, 2.0, 3.0]]
 
     server_state.set_grid(grid)
 
@@ -83,21 +94,28 @@ def test_element_selection_callback():
     edge_data = []
 
     result = display_selected_element(node_data, edge_data)
-    expected = dash_table.DataTable(  # type: ignore[attr-defined]
-        data=[
-            {"u_rated": 100.0, "id": 1, "node_type": 0, "feeder_branch_id": -2147483648, "feeder_node_id": -2147483648}
+    expected = dag.AgGrid(  # type: ignore[attr-defined]
+        rowData=[
+            {
+                "u_rated": 100.0,
+                "id": 1,
+                "node_type": 0,
+                "feeder_branch_id": -2147483648,
+                "feeder_node_id": -2147483648,
+                "three_phase_quantity": [1.0, 2.0, 3.0],
+            }
         ],
-        columns=[
-            {"name": "id", "id": "id"},
-            {"name": "u_rated", "id": "u_rated"},
-            {"name": "node_type", "id": "node_type"},
-            {"name": "feeder_branch_id", "id": "feeder_branch_id"},
-            {"name": "feeder_node_id", "id": "feeder_node_id"},
+        columnDefs=[
+            {"field": "id", "headerName": "id"},
+            {"field": "u_rated", "headerName": "u_rated"},
+            {"field": "node_type", "headerName": "node_type"},
+            {"field": "feeder_branch_id", "headerName": "feeder_branch_id"},
+            {"field": "feeder_node_id", "headerName": "feeder_node_id"},
+            {"field": "three_phase_quantity", "headerName": "three_phase_quantity"},
         ],
-        editable=False,
     )
-    assert result.data == expected.data
-    assert result.columns == expected.columns
+    assert result.rowData == expected.rowData
+    assert result.columnDefs == expected.columnDefs
 
 
 def test_display_selected_element_none():

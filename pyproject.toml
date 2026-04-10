@@ -41,6 +41,7 @@ visualizer = [
   "dash>=3.0.0",
   "dash-bootstrap-components>=2.0.0",
   "dash-cytoscape>=1.0.2",
+  "dash-ag-grid",
 ]
 pandas = ["pandas>=2.2.1"]
 
@@ -59,6 +60,7 @@ dev = [
   "dash>=3.0.0",
   "dash-bootstrap-components>=2.0.0",
   "dash-cytoscape>=1.0.2",
+  "dash-ag-grid",
   "nb-clean>=4.0.1",
 ]
 
@@ -130,7 +132,7 @@ select = [
   "FLY",
   "SLOT",
   # pylint
-  #"PL",
+  "PL",
   # Numpy-specific rules
   "NPY",
   # Warning
@@ -140,7 +142,7 @@ select = [
   # tidy imports
   "TID",
   # unused arguments
-  #"ARG",
+  "ARG",
   # Return
   "RET",
   # pie
@@ -169,7 +171,10 @@ unfixable = []
 combine-as-imports = true
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101", "SLF001"] # assert statements are used in tests, private member access allowed in tests
+# S101: assert statements are used in tests
+# SLF001: private member access allowed in tests
+# PLR2004: magic numbers allowed in tests
+"tests/*" = ["S101", "SLF001", "PLR2004"]
 
 [tool.mypy]
 follow_imports = "silent"

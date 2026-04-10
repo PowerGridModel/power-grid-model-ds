@@ -5,7 +5,8 @@
 
 from typing import Any
 
-from dash import Input, Output, callback, dash_table
+import dash_ag_grid as dag
+from dash import Input, Output, callback
 
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.layout.selection_output import (
@@ -41,14 +42,24 @@ def display_selected_element(node_data: list[dict[str, Any]], edge_data: list[di
 
 
 def _to_data_table(array_data: IdArray):
-    array_data_dict = {}
-    for column in array_data.columns:
-        array_data_dict[column] = array_data[column].item()
+    data_table_headers: list[dict[str, str]] = [{"field": col, "headerName": col} for col in array_data.columns]
+
+    list_array_data = []
+    for entry in array_data:
+        record_dict = {}
+        for col in array_data.columns:
+            if entry[col].ndim == 1:
+                record_dict[col] = entry[col].item()
+            else:
+                record_dict[col] = entry[col].tolist().pop()
+
+        list_array_data.append(record_dict)
 
     # ignore[attr-defined] added for https://github.com/plotly/dash/issues/3226
-    return dash_table.DataTable(  # type: ignore[attr-defined]
-        data=[array_data_dict],
-        columns=[{"name": key, "id": key} for key in array_data_dict],
-        editable=False,
-        fill_width=False,
+    return dag.AgGrid(  # type: ignore[attr-defined]
+        rowData=list_array_data,
+        columnDefs=data_table_headers,
+        defaultColDef={"filter": True},
+        dashGridOptions={"maintainColumnOrder": True, "animateRows": False},
+        columnSize="sizeToFit",
     )
