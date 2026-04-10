@@ -381,13 +381,17 @@ class TestTmpRemoveBranches:
             assert not graph.has_branch(2, 3)
 
         assert graph == graph_with_2_routes
+        assert graph.has_branch(1, 2)
+        assert graph.has_branch(2, 3)
 
     def test_tmp_remove_branches_non_existent_branch(self, graph_with_2_routes: BaseGraphModel):
         graph = deepcopy(graph_with_2_routes)
 
-        with pytest.raises(MissingBranchError):
-            with graph.tmp_remove_branches([(1, 99)]):
-                pass
+        with (
+            pytest.raises(MissingBranchError, match="Branch between nodes 1 and 99 does NOT exist."),
+            graph.tmp_remove_branches([(1, 99)]),
+        ):
+            pass
 
 
 class TestEq:
