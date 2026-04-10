@@ -99,6 +99,32 @@ def deserialize_from_dict[G: Grid](data: dict, target_grid_class: type[G]) -> G:
     return grid
 
 
+def serialize_to_json_string[G: Grid](grid: G, strict: bool = True, **kwargs) -> str:
+    """Serialize a Grid to a JSON string (in memory, no file I/O).
+
+    Args:
+        grid: The Grid object to serialize.
+        strict: Whether to raise an error if the grid is not serializable.
+        **kwargs: Forwarded to json.dumps (e.g. indent, sort_keys, cls).
+    Returns:
+        str: A JSON string representation of the grid.
+    """
+    data = serialize_to_dict(grid=grid, strict=strict, **kwargs)
+    return json.dumps(data, **kwargs)
+
+
+def deserialize_from_json_string[G: Grid](json_string: str, target_grid_class: type[G]) -> G:
+    """Load a Grid from a JSON string.
+
+    Args:
+        json_string: A JSON string as produced by ``serialize_to_json_string``.
+        target_grid_class: Grid class to load into.
+    Returns:
+        Grid: The deserialized Grid object.
+    """
+    return deserialize_from_dict(data=json.loads(json_string), target_grid_class=target_grid_class)
+
+
 def _restore_grid_values[G: Grid](grid: G, json_data: dict) -> None:
     """Restore arrays to the grid."""
     for attr_name, attr_values in json_data.items():

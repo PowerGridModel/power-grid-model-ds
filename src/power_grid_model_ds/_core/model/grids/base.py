@@ -47,10 +47,10 @@ from power_grid_model_ds._core.model.grids._search import (
     get_typed_branches,
 )
 from power_grid_model_ds._core.model.grids.serialization.json import (
-    deserialize_from_dict,
     deserialize_from_json,
-    serialize_to_dict,
+    deserialize_from_json_string,
     serialize_to_json,
+    serialize_to_json_string,
 )
 from power_grid_model_ds._core.model.grids.serialization.pickle import load_grid_from_pickle, save_grid_to_pickle
 from power_grid_model_ds._core.model.grids.serialization.string import (
@@ -473,39 +473,41 @@ class Grid(FancyArrayContainer):
     def serialize(self, path: Path, mode: Literal["json"] = "json", **kwargs) -> Path: ...
 
     @overload
-    def serialize(self, path: None = None, *, mode: Literal["dict"], **kwargs) -> dict: ...
+    def serialize(self, path: None = None, *, mode: Literal["json_string"], **kwargs) -> str: ...
 
-    def serialize(self, path: Path | None = None, mode: Literal["json", "dict"] = "json", **kwargs) -> Path | dict:
+    def serialize(
+        self, path: Path | None = None, mode: Literal["json", "json_string"] = "json", **kwargs
+    ) -> Path | str:
         """Serialize the grid.
 
         Args:
-            path: Destination file path. Required when mode is ``"json"``, ignored when mode is ``"dict"``.
-            mode: Serialization target. Use ``"json"`` (default) to write a JSON file, or ``"dict"`` to return a
-                Python dict.
-            **kwargs: Additional keyword arguments forwarded to ``json.dump`` (json mode only).
+            path: Destination file path. Required when mode is ``"json"``, ignored otherwise.
+            mode: Serialization target. Use ``"json"`` (default) to write a JSON file, or ``"json_string"`` to
+                return a JSON string.
+            **kwargs: Additional keyword arguments forwarded to ``json.dump`` / ``json.dumps``.
         Returns:
-            Path when mode is ``"json"``, dict when mode is ``"dict"``.
+            Path when mode is ``"json"``, str when mode is ``"json_string"``.
         """
         match mode:
-            case "dict":
-                return serialize_to_dict(grid=self, **kwargs)
+            case "json_string":
+                return serialize_to_json_string(grid=self, **kwargs)
             case "json":
                 if not isinstance(path, Path):
                     raise TypeError("path must be a Path when mode='json'")
                 return serialize_to_json(grid=self, path=path, strict=True, **kwargs)
             case _:
-                raise ValueError(f"Invalid mode '{mode}'. Expected 'json' or 'dict'.")
+                raise ValueError(f"Invalid mode '{mode}'. Expected 'json' or 'json_string'.")
 
     @classmethod
-    def from_dict(cls: type[Self], data: dict) -> Self:
-        """Deserialize the grid from a Python dict.
+    def from_json_string(cls: type[Self], json_string: str) -> Self:
+        """Deserialize the grid from a JSON string.
 
         Args:
-            data: A dict as produced by ``serialize(mode="dict")``.
+            json_string: A JSON string as produced by ``serialize(mode="json_string")``.
         Returns:
             Self: The deserialized grid instance.
         """
-        return deserialize_from_dict(data=data, target_grid_class=cls)
+        return deserialize_from_json_string(json_string=json_string, target_grid_class=cls)
 
     @classmethod
     def deserialize(cls: type[Self], path: Path) -> Self:

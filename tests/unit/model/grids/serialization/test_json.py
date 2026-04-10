@@ -338,37 +338,35 @@ class TestDeserialize:
             Grid.deserialize(path)
 
 
-class TestDictRoundtrips:
-    """Test serialize/deserialize with mode="dict"."""
+class TestJsonStringRoundtrips:
+    """Test serialize/deserialize with mode="json_string"."""
 
-    def test_basic_grid_dict_roundtrip(self, basic_grid: Grid):
-        data = basic_grid.serialize(mode="dict")
-        assert "data" in data
-        restored = Grid.from_dict(data)
+    def test_basic_grid_json_string_roundtrip(self, basic_grid: Grid):
+        s = basic_grid.serialize(mode="json_string")
+        assert isinstance(s, str)
+        restored = Grid.from_json_string(s)
         assert restored == basic_grid
 
-    def test_extended_grid_dict_roundtrip(self, extended_grid: ExtendedGrid):
-        data = extended_grid.serialize(mode="dict")
-        restored = ExtendedGrid.from_dict(data)
+    def test_extended_grid_json_string_roundtrip(self, extended_grid: ExtendedGrid):
+        s = extended_grid.serialize(mode="json_string")
+        restored = ExtendedGrid.from_json_string(s)
         assert restored == extended_grid
 
-    def test_dict_and_json_produce_same_structure(self, basic_grid: Grid, tmp_path: Path):
-        dict_result = basic_grid.serialize(mode="dict")
-        json_path = basic_grid.serialize(tmp_path / "grid.json")
-        # Compare via JSON strings to handle NaN consistently (nan != nan in Python)
-        with json_path.open() as f:
-            json_str = f.read()
-        assert json.dumps(dict_result, sort_keys=True) == json.dumps(json.loads(json_str), sort_keys=True)
+    def test_json_string_matches_json_file(self, basic_grid: Grid, tmp_path: Path):
+        s = basic_grid.serialize(mode="json_string")
+        path = basic_grid.serialize(tmp_path / "grid.json")
+        with path.open() as f:
+            assert json.loads(s) == json.load(f)
 
-    def test_cross_type_dict_loading(self, basic_grid: Grid):
-        data = basic_grid.serialize(mode="dict")
-        restored = ExtendedGrid.from_dict(data)
+    def test_json_string_kwargs_forwarded(self, basic_grid: Grid):
+        s = basic_grid.serialize(mode="json_string", indent=2)
+        assert "\n" in s
+
+    def test_cross_type_json_string_loading(self, basic_grid: Grid):
+        s = basic_grid.serialize(mode="json_string")
+        restored = ExtendedGrid.from_json_string(s)
         assert isinstance(restored, ExtendedGrid)
 
     def test_serialize_invalid_mode(self, basic_grid: Grid):
         with pytest.raises(ValueError, match="Invalid mode"):
             basic_grid.serialize(mode="xml")  # type: ignore[call-overload]
-
-    def test_from_dict_invalid_input(self, basic_grid: Grid):
-        with pytest.raises(TypeError):
-            Grid.from_dict("not a dict")  # type: ignore[arg-type]
