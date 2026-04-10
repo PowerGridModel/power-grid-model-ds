@@ -19,6 +19,7 @@ from power_grid_model_ds.arrays import IdArray
 
 _logger = logging.getLogger(__name__)
 
+
 @callback(
     Output("selection-output", "children"),
     Input("cytoscape-graph", "selectedNodeData"),
