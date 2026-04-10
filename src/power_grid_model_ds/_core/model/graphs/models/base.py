@@ -303,7 +303,6 @@ class BaseGraphModel(ABC):
             for group in self._three_winding_nodes
             if all(self.has_branch(from_node, to_node) for from_node, to_node in combinations(group, 2))
         ]
-        return None
 
     def get_all_paths(self, ext_start_node_id: int, ext_end_node_id: int) -> list[list[int]]:
         """Retrieves all paths between two (external) nodes.
