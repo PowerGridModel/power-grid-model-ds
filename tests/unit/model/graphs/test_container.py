@@ -6,9 +6,9 @@ from copy import deepcopy
 import pytest
 
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
-from power_grid_model_ds._core.model.arrays.pgm_arrays import NodeArray, ThreeWindingTransformerArray
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds.arrays import NodeArray, ThreeWindingTransformerArray
 
 # pylint: disable=missing-function-docstring
 

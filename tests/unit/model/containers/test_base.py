@@ -4,21 +4,22 @@
 
 """Various tests for the FancyArrayContainer."""
 
+import re
 from copy import deepcopy
 from dataclasses import dataclass
 
 import pytest
 
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
+from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds.arrays import (
     IdArray,
     LineArray,
     LinkArray,
     NodeArray,
     TransformerArray,
 )
-from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
-from power_grid_model_ds._core.model.grids.base import Grid
 from tests.fixtures.arrays import FancyNonIdArray
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
@@ -43,8 +44,8 @@ def test_id_counter_type(basic_grid: Grid):
 def test_id_counter():
     container = FancyArrayContainer.empty()
     # pylint: disable=protected-access
-    container._id_counter = 42
-    assert 42 == container.id_counter
+    container._ids = {42}
+    assert container.id_counter == 42
 
 
 def test_deepcopy():
@@ -64,7 +65,7 @@ def test_deepcopy():
 
 def test_all_arrays():
     container = _TwoArraysContainer.empty()
-    assert 2 == len(list(container.all_arrays()))
+    assert len(list(container.all_arrays())) == 2
     array_1_id = id(container.array_1)
     all_arrays = list(container.all_arrays())
     assert array_1_id == id(all_arrays[0])
@@ -72,19 +73,19 @@ def test_all_arrays():
 
 def test_check_ids_no_arrays():
     container = FancyArrayContainer.empty()
-    assert 0 == len(list(container.all_arrays()))
+    assert len(list(container.all_arrays())) == 0
     container.check_ids()
 
 
 def test_check_ids_two_empty_arrays():
     container = _TwoArraysContainer.empty()
-    assert 2 == len(list(container.all_arrays()))
+    assert len(list(container.all_arrays())) == 2
     container.check_ids()
 
 
 def test_check_ids_4_arrays_3_with_id():
     container = _FourArraysContainer.empty()
-    assert 4 == len(list(container.all_arrays()))
+    assert len(list(container.all_arrays())) == 4
     container.check_ids()
 
 
@@ -95,7 +96,7 @@ def test_check_ids_two_arrays_no_conflicts():
     container.array_2 = IdArray.zeros(1)
     container.array_1.id = 2
 
-    assert 2 == len(list(container.all_arrays()))
+    assert len(list(container.all_arrays())) == 2
     container.check_ids()
 
 
@@ -106,7 +107,7 @@ def test_check_ids_two_arrays_with_conflict():
     container.array_2 = IdArray.zeros(1)
     container.array_2.id = 1
 
-    assert 2 == len(list(container.all_arrays()))
+    assert len(list(container.all_arrays())) == 2
 
     with pytest.raises(ValueError):
         container.check_ids()
@@ -119,7 +120,7 @@ def test_check_ids_two_arrays_with_conflict_in_same_array():
     container.array_2 = IdArray.zeros(1)
     container.array_2.id = 2
 
-    assert 2 == len(list(container.all_arrays()))
+    assert len(list(container.all_arrays())) == 2
 
     with pytest.raises(ValueError):
         container.check_ids()
@@ -171,7 +172,7 @@ def test_append_with_overlapping_ids():
     nodes_2.id = [3, 4, 5]
 
     # This should raise a ValueError due to overlapping ID 3
-    with pytest.raises(ValueError, match="Cannot append: minimum id 3 is not greater than the current id counter 3"):
+    with pytest.raises(ValueError, match=re.escape("Cannot append, array contains ids that already exist: {3}")):
         grid.append(nodes_2)
 
 
@@ -195,3 +196,24 @@ def test_append_with_non_overlapping_ids():
     assert grid.node.size == 6
     expected_ids = [1, 2, 3, 4, 5, 6]
     assert sorted(grid.node.id.tolist()) == expected_ids
+
+
+def test_rebuild_ids():
+    grid = Grid.from_txt("1 2 20", "2 3 21", "10 11 22")
+    expected_ids = {1, 2, 3, 10, 11, 20, 21, 22}
+    assert grid.ids == expected_ids
+    grid._ids = set()
+    grid.rebuild_ids()
+    assert grid.ids == expected_ids
+
+
+def test_rebuild_ids_with_duplicates():
+    grid = Grid.from_txt("1 2 12")
+    grid.node.id = [1, 12]  # Duplicate IDs within different arrays same array
+    with pytest.raises(ValueError):
+        grid.rebuild_ids()
+
+
+def test_ids():
+    grid = Grid.from_txt("1 2 20", "2 3 21", "10 11 22")
+    assert grid.ids == {1, 2, 3, 10, 11, 20, 21, 22}

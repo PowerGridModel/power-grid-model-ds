@@ -5,9 +5,9 @@
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import LineArray, NodeArray
 from power_grid_model_ds._core.model.constants import EMPTY_ID
 from power_grid_model_ds._core.model.enums.nodes import NodeType
+from power_grid_model_ds.arrays import LineArray, NodeArray
 from tests.fixtures.grids import build_basic_grid
 
 

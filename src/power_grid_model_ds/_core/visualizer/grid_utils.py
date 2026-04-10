@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from dataclasses import dataclass
-from typing import Any, Type
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -15,7 +15,7 @@ from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.dtypes.typing import NDArray3
 
 
-def extend_grid_dynamically(base_grid_class: Type[Grid], extra_dataset: SingleArray | DenseBatchArray) -> Type[Grid]:
+def extend_grid_dynamically(base_grid_class: type[Grid], extra_dataset: SingleArray | DenseBatchArray) -> type[Grid]:
     """Add extra attributes to the grid's component arrays based on the provided dataset,
     and return a new Grid class with the extended schema."""
     grid_annotations = {}
@@ -31,7 +31,7 @@ def extend_grid_dynamically(base_grid_class: Type[Grid], extra_dataset: SingleAr
     return dataclass(DynamicGridClass)
 
 
-def _get_class_dict(base_class: Type[FancyArray], grid_attr: str, extra_dataset: SingleArray | DenseBatchArray):
+def _get_class_dict(base_class: type[FancyArray], grid_attr: str, extra_dataset: SingleArray | DenseBatchArray):
     """Get the class dictionary for the dynamically created array class, including new annotations and defaults."""
     extra_array_dtype = extra_dataset[ComponentType(grid_attr)].dtype
     if not extra_array_dtype.fields:
@@ -54,7 +54,7 @@ def _get_class_dict(base_class: Type[FancyArray], grid_attr: str, extra_dataset:
     }
 
 
-def dynamic_grid_obj_from_grid(dynamic_grid_class: Type[Grid], grid: Grid):
+def dynamic_grid_obj_from_grid(dynamic_grid_class: type[Grid], grid: Grid):
     """Create new object of dynamic_grid_class type using data from grid object."""
     dynamic_grid_obj = dynamic_grid_class.empty()
 

@@ -23,9 +23,9 @@ def test_extend_grid_dynamically_with_pgm_dataset(dataset_type):
     extra_dataset = {k: initialize_array(dataset_type, k, (2, 3)) for k in ComponentType}
     DynamicGrid = extend_grid_dynamically(Grid, extra_dataset=extra_dataset)
     dynamic_grid_obj = DynamicGrid.empty()
-    for grid_attr in extra_dataset:
+    for grid_attr, extra_dataset_array in extra_dataset.items():
         grid_array = getattr(dynamic_grid_obj, grid_attr)
-        extra_dataset_dtype_fields = extra_dataset[grid_attr].dtype.fields
+        extra_dataset_dtype_fields = extra_dataset_array.dtype.fields
         assert extra_dataset_dtype_fields is not None
 
         for attr in extra_dataset_dtype_fields:
@@ -73,7 +73,7 @@ def test_dynamic_grid_obj_from_grid(dataset_type):
                 assert np.array_equal(new_grid_array[array_attr], grid_array[array_attr]), (
                     f"new_grid_obj.'{grid_attr}'['{array_attr}'] != grid.'{grid_attr}'['{array_attr}']"
                 )
-            elif empty_value is np.nan:
+            elif isinstance(empty_value, float) and np.isnan(empty_value):
                 assert np.all(np.isnan(new_grid_array[array_attr])), (
                     f"new_grid_obj.'{grid_attr}'['{array_attr}'] should be initialized to empty value (nan)"
                 )
