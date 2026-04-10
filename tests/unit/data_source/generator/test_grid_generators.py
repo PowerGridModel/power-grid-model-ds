@@ -27,13 +27,13 @@ def test_generate_random_grid():
     assert len(grid.graphs.active_graph.external_ids) == len(grid.node)
     assert len(grid.graphs.complete_graph.external_ids) == len(grid.node)
 
-    assert 102 == len(grid.node)
-    assert 2 == len(grid.source)
-    assert 100 == len(grid.sym_load)
+    assert len(grid.node) == 102
+    assert len(grid.source) == 2
+    assert len(grid.sym_load) == 100
 
     inactive_mask = np.logical_or(grid.line.from_status == 0, grid.line.to_status == 0)
     inactive_lines = grid.line[inactive_mask]
-    assert 10 == len(inactive_lines)
+    assert len(inactive_lines) == 10
     assert len(grid.line) - 10 == grid.graphs.active_graph.nr_branches
     assert len(grid.line) == grid.graphs.complete_graph.nr_branches
 
@@ -51,9 +51,9 @@ def test_generate_random_nodes(grid: Grid):
     nodes, loads_low, loads_high = node_generator.run(amount=2)
 
     # We have generated 2 nodes with load scenarios
-    assert 2 == len(nodes)
-    assert 2 == len(loads_low)
-    assert 2 == len(loads_high)
+    assert len(nodes) == 2
+    assert len(loads_low) == 2
+    assert len(loads_high) == 2
 
     # The arrays are of the correct type
     assert isinstance(nodes, NodeArray)
@@ -71,8 +71,8 @@ def test_generate_random_sources(grid: Grid):
     nodes, sources = source_generator.run(amount=1)
 
     # We have generated 1 nodes with load scenarios
-    assert 1 == len(nodes)
-    assert 1 == len(sources)
+    assert len(nodes) == 1
+    assert len(sources) == 1
 
     # The arrays are of the correct type
     assert isinstance(nodes, NodeArray)
@@ -104,7 +104,7 @@ def test_generate_random_lines(grid: Grid):
     assert len(lines) >= 5
     # Two lines are inactive
     inactive_line_mask = np.logical_or(lines.from_status == 0, lines.to_status == 0)
-    assert 2 == sum(inactive_line_mask)
+    assert sum(inactive_line_mask) == 2
 
     assert isinstance(lines, LineArray)
 
@@ -129,17 +129,17 @@ def test_create_routes(grid: Grid):
     grid.append(sources)
 
     line_generator = LineGenerator(grid=grid, seed=0)
-    assert 0 == len(line_generator.line_array)
+    assert len(line_generator.line_array) == 0
     line_generator.create_routes(2)
 
     # We have generated 2 lines
-    assert 2 == len(line_generator.line_array)
+    assert len(line_generator.line_array) == 2
     # These lines are active
     inactive_line_mask = np.logical_or(
         line_generator.line_array.from_status == 0,
         line_generator.line_array.to_status == 0,
     )
-    assert 0 == sum(inactive_line_mask)
+    assert sum(inactive_line_mask) == 0
 
     # All lines have from node in sources.node
     assert all(np.isin(line_generator.line_array.from_node, sources.node))
@@ -156,17 +156,17 @@ def test_determine_number_of_routes(grid: Grid):
 
     # The number of routes has a minimum of 1
     number_of_routes = line_generator.determine_number_of_routes()
-    assert 1 == number_of_routes
+    assert number_of_routes == 1
 
     # The number of routes should be increased based on the number of sources
     line_generator.grid.source = SourceArray.zeros(2)
     number_of_routes = line_generator.determine_number_of_routes()
-    assert 2 == number_of_routes
+    assert number_of_routes == 2
 
     # When more nodes are added the number of routes increases
     line_generator.grid.node = NodeArray.zeros(50)
     number_of_routes = line_generator.determine_number_of_routes()
-    assert 3 == number_of_routes
+    assert number_of_routes == 3
 
 
 def test_connect_nodes(grid: Grid):
@@ -197,13 +197,13 @@ def test_connect_nodes(grid: Grid):
 
     line_generator.set_unconnected_nodes()
 
-    assert [0, 1] == line_generator.connected_nodes
-    assert [2, 3] == line_generator.unconnected_nodes
+    assert line_generator.connected_nodes == [0, 1]
+    assert line_generator.unconnected_nodes == [2, 3]
 
     line_generator.connect_nodes()
 
     # We have generated 1 extra line
-    assert 2 == len(line_generator.line_array)
+    assert len(line_generator.line_array) == 2
 
 
 def test_create_nops(grid: Grid):
@@ -235,13 +235,13 @@ def test_create_nops(grid: Grid):
     line_generator.create_nop_lines(1)
 
     # We have generated 1 extra line
-    assert 3 == len(line_generator.line_array)
+    assert len(line_generator.line_array) == 3
     # This line is inactive
     inactive_line_mask = np.logical_or(
         line_generator.line_array.from_status == 0,
         line_generator.line_array.to_status == 0,
     )
-    assert 1 == sum(inactive_line_mask)
+    assert sum(inactive_line_mask) == 1
 
 
 def test_generate_random_grid_with_tranformers():
@@ -250,7 +250,7 @@ def test_generate_random_grid_with_tranformers():
     grid = grid_generator.run(seed=0, create_10_3_kv_net=True)
 
     # two ten to 3 kv transformers have been added
-    assert 2 == len(grid.transformer)
+    assert len(grid.transformer) == 2
     assert all(np.isclose([10_500] * 2, grid.transformer.u1.tolist()))
     assert all(np.isclose([3_000] * 2, grid.transformer.u2.tolist()))
 

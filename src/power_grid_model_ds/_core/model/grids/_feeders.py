@@ -101,8 +101,7 @@ def _get_active_component_branches(grid: "Grid", component_node_ids: list[int]) 
 
     branches = grid.branches
     branches_in_component = branches.filter(from_node=component_node_ids, to_node=component_node_ids, mode_="OR")
-    active_branches = branches_in_component.filter(from_status=1, to_status=1)
-    return active_branches
+    return branches_in_component.filter(from_status=1, to_status=1)  # active branches
 
 
 def _get_feeder_branch(component_branches: BranchArray) -> BranchArray:

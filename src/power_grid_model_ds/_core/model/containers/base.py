@@ -9,7 +9,7 @@ import inspect
 import logging
 import warnings
 from dataclasses import dataclass
-from typing import Type, TypeVar
+from typing import TypeVar
 
 import numpy as np
 
@@ -18,6 +18,8 @@ from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.constants import EMPTY_ID
 from power_grid_model_ds._core.model.containers.helpers import container_equal
+
+_logger = logging.getLogger(__name__)
 
 Self = TypeVar("Self", bound="FancyArrayContainer")
 
@@ -99,14 +101,14 @@ class FancyArrayContainer:
             return
 
         if any(duplicates_between_arrays):
-            logging.warning(f"The following ids occur in multiple arrays: {duplicates_between_arrays}!")
+            _logger.warning("The following ids occur in multiple arrays: %s!", duplicates_between_arrays)
         for array_class in arrays_with_duplicates:
-            logging.warning(f"{array_class.__name__} contains duplicates!")
+            _logger.warning("%s contains duplicates!", array_class.__name__)
 
         raise ValueError(f"Duplicates found within {self.__class__.__name__}!")
 
     @classmethod
-    def empty(cls: Type[Self]) -> Self:
+    def empty(cls: type[Self]) -> Self:
         """Create an empty grid"""
         empty_fields = cls._get_empty_fields()
         return cls(**empty_fields)
@@ -166,7 +168,7 @@ class FancyArrayContainer:
          Each array within the list contains all records with the given array.
         """
 
-        logging.warning("Using search_for_id(). Make sure to use only while debugging!")
+        _logger.warning("Using search_for_id(). Make sure to use only while debugging!")
 
         arrays_with_record = []
 
@@ -181,7 +183,7 @@ class FancyArrayContainer:
         raise RecordDoesNotExist(f"record id '{record_id}' not found in {self.__class__.__name__}")
 
     @classmethod
-    def find_array_field(cls, array_type: Type[FancyArray]) -> dataclasses.Field:
+    def find_array_field(cls, array_type: type[FancyArray]) -> dataclasses.Field:
         """Find the Field that holds an array of type array_type.
 
         Args:
@@ -268,7 +270,7 @@ class FancyArrayContainer:
 
     @staticmethod
     def _get_arrays_with_duplicates(id_arrays: list[FancyArray], check: bool) -> list:
-        arrays_with_duplicates: list[Type] = []
+        arrays_with_duplicates: list[type] = []
         if not check:
             return arrays_with_duplicates
         for id_array in id_arrays:

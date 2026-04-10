@@ -49,7 +49,7 @@ def map_appliance_to_nodes(grid: Grid) -> dict[str, str]:
         ComponentType.shunt,
     ]:
         appliance_array = getattr(grid, appliance_name)
-        appliance_to_node.update(dict(zip(map(str, appliance_array.id), map(str, appliance_array.node))))
+        appliance_to_node.update(dict(zip(map(str, appliance_array.id), map(str, appliance_array.node), strict=True)))
     return appliance_to_node
 
 

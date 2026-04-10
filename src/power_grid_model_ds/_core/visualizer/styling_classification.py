@@ -49,7 +49,7 @@ def get_node_classification(node_arr: NodeArray) -> str:
         classes.append(StyleClass.LARGE_ID_NODE)
     if node_arr.node_type == 1:
         classes.append(StyleClass.SUBSTATION_NODE)
-    return " ".join((entry.value for entry in classes))
+    return " ".join(entry.value for entry in classes)
 
 
 def get_branch_classification(
@@ -76,7 +76,7 @@ def get_branch_classification(
     if branch_arr.to_status == 0:
         classes.extend([StyleClass.OPEN_BRANCH_TO])
 
-    return " ".join((entry.value for entry in classes))
+    return " ".join(entry.value for entry in classes)
 
 
 def get_appliance_edge_classification(
@@ -100,4 +100,4 @@ def get_appliance_edge_classification(
         else:
             classes.append(StyleClass.OPEN_GENERATING_APPLIANCE)
 
-    return " ".join((entry.value for entry in classes))
+    return " ".join(entry.value for entry in classes)

@@ -38,8 +38,7 @@ def get_coordinated_grid() -> CoordinatedGrid:
 
 
 def get_grid_with_links() -> Grid:
-    grid = Grid.from_txt("S1 2 transformer", "2 3 link", "3 4")
-    return grid
+    return Grid.from_txt("S1 2 transformer", "2 3 link", "3 4")
 
 
 def visualize_grid():

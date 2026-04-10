@@ -99,6 +99,7 @@ max-line-length = 120
 [tool.ruff]
 output-format = "github"
 line-length = 120
+indent-width = 4
 show-fixes = true
 
 [tool.ruff.lint]
@@ -108,21 +109,74 @@ select = [
   # Pyflakes
   "F",
   # # pyupgrade
-  # "UP",
+  "UP",
   # # flake8-bugbear
-  # "B",
+  "B",
   # # flake8-simplify
-  # "SIM",
+  "SIM",
   # isort
   "I",
-  # Numpy 2.0 downstream : https://numpy.org/devdocs/numpy_2_0_migration_guide.html
-  "NPY201",
+  "YTT",
+  "BLE",
+  "PERF",
+  "Q",
+  "ICN",
+  "ISC",
+  "G",
+  "LOG",
+  "EXE",
+  "FA",
+  "FURB",
+  "FLY",
+  "SLOT",
+  # pylint
+  #"PL",
+  # Numpy-specific rules
+  "NPY",
+  # Warning
+  "W",
+  # use pathlib
+  "PTH",
+  # tidy imports
+  "TID",
+  # unused arguments
+  #"ARG",
+  # Return
+  "RET",
+  # pie
+  "PIE",
+  # self
+  "SLF",
+  # raise
+  "RSE",
+  # ruff sepcific rules
+  #"RUF",
+  # bandit
+  "S",
+  # boolean positional value in call
+  "FBT003",
+  # raise vanilla args
+  "TRY002",
+  # pytest-style
+  #"PT",
 ]
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
 unfixable = []
 
+[tool.ruff.lint.isort]
+# Imports that are imported using keyword "as" and are from the same source - are combined.
+combine-as-imports = true
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "SLF001"] # assert statements are used in tests, private member access allowed in tests
+
 [tool.mypy]
+follow_imports = "silent"
+ignore_missing_imports = true
+show_column_numbers = true
+non_interactive = true
+install_types = true
 disable_error_code = ["assignment", "import-untyped"]
 
 [tool.coverage.run]

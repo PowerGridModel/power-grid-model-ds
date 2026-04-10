@@ -64,10 +64,9 @@ def _to_data_table(array_data: IdArray):
         list_array_data.append(record_dict)
 
     # ignore[attr-defined] added for https://github.com/plotly/dash/issues/3226
-    data_table = dash_table.DataTable(  # type: ignore[attr-defined]
-        data=list_array_data,
-        columns=[{"name": key, "id": key} for key in list_array_data[0]],
+    return dash_table.DataTable(  # type: ignore[attr-defined]
+        data=[array_data_dict],
+        columns=[{"name": key, "id": key} for key in array_data_dict],
         editable=False,
         fill_width=False,
     )
-    return html.Div(data_table)

@@ -55,16 +55,16 @@ def test_basic_grid_fixture(basic_grid: Grid):
     grid = basic_grid
 
     # The grid consists of 6 nodes
-    assert 6 == len(grid.node)
+    assert len(grid.node) == 6
     # 1 of these is a source
-    assert 1 == len(grid.source)
+    assert len(grid.source) == 1
     # 4 of these have a load attaches
-    assert 4 == len(grid.sym_load)
+    assert len(grid.sym_load) == 4
 
     inactive_mask = np.logical_or(grid.line.from_status == 0, grid.line.to_status == 0)
     inactive_lines = grid.line[inactive_mask]
     # we have placed 1 normally open point
-    assert 1 == len(inactive_lines)
+    assert len(inactive_lines) == 1
 
     # All nodes should be in both graphs
     assert len(grid.graphs.active_graph.external_ids) == len(grid.node)
@@ -77,7 +77,7 @@ def test_basic_grid_fixture(basic_grid: Grid):
     inactive_mask = np.logical_or(grid.line.from_status == 0, grid.line.to_status == 0)
     inactive_lines = grid.line[inactive_mask]
     # we have placed 1 normally open point
-    assert 1 == len(inactive_lines)
+    assert len(inactive_lines) == 1
 
     assert len(grid.line) + len(grid.transformer) + len(grid.link) - 1 == grid.graphs.active_graph.nr_branches
     assert len(grid.line) + len(grid.transformer) + len(grid.link) == grid.graphs.complete_graph.nr_branches

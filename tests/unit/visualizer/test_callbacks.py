@@ -62,12 +62,12 @@ def test_search_element_with_input(group, column, operator, value, expected_sele
 
 
 def test_show_arrows():
-    stylesheet = update_arrows(True, DEFAULT_STYLESHEET)
+    stylesheet = update_arrows(show_arrows=True, current_stylesheet=DEFAULT_STYLESHEET)
     assert stylesheet[_EDGE_INDEX]["style"]["target-arrow-shape"] == "triangle"
 
 
 def test_hide_arrows():
-    stylesheet = update_arrows(False, DEFAULT_STYLESHEET)
+    stylesheet = update_arrows(show_arrows=False, current_stylesheet=DEFAULT_STYLESHEET)
     assert stylesheet[_EDGE_INDEX]["style"]["target-arrow-shape"] == "none"
 
 
