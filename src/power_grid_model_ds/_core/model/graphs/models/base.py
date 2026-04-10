@@ -31,6 +31,11 @@ class BaseGraphModel(ABC):
 
     def __init__(self, active_only=False) -> None:
         self.active_only = active_only
+
+        # Three winding transformers are represented as a cycle in our graph ((1,2), (2,3) and (1,3))
+        # This makes certain graph algorithms invalid.
+        # With self._three_winding_nodes we keep track of the three winding transformers in the graph.
+        # This is used to correct the graph state before we perform these graph algorithms.
         self._three_winding_nodes: set[tuple[int, int, int]] = set()
 
     def __repr__(self) -> str:
@@ -274,10 +279,13 @@ class BaseGraphModel(ABC):
             raise NoPathBetweenNodes(f"No path between nodes {ext_start_node_id} and {ext_end_node_id}") from e
 
     def _squash_paths_inside_three_winding_transformers(self, paths: list[list[int]]) -> list[list[int]]:
-        """For each path check if we can squash it.
+        """For each path check if we can squash it to remove a detour in a three winding transformer.
 
-        If a path contains three nodes of the three winding transformer, we can remove the middle node.
-        Since we can always go directly.
+        This function should be used together with _branches_to_remove_from_three_winding_transformers
+
+        If a path contains all nodes of the three winding transformer after each other, we can remove the middle node.
+        Since if we hadn't removed the third branch of the three winding transformer, we would have gone directly.
+
 
         NOTE: if a node has an inactive status, we can never have a situation where
         we go through 3 nodes of the transformer directly after each other.
@@ -297,12 +305,13 @@ class BaseGraphModel(ABC):
         ]
 
     def _branches_to_remove_from_three_winding_transformers(self) -> list[tuple[int, int]]:
-        """Returns a list of branches that should be temporarily removed cycles by three winding transformers.
+        """Returns a list of branches that can be removed to remove the cycles by three winding transformers.
 
-        By removing one branch, we still can make all the paths but do not create to many solutions/invalid solutions.
-        Later on, we can remove any detour we made because we didn't use the removed branch.
+        This branch can be used to temporarily remove the cycles caused by three winding transformers.
+        The graph is still has the same components after removing these branches.
+        We just force the path through the three winding transformers.
 
-        NOTE: we only want to remove a branch for a three winding transformer if all three of branches are active.
+        NOTE: we only return branches to remove for a three winding transformer if all three of branches are active.
         """
         if not self._three_winding_nodes:
             return []
