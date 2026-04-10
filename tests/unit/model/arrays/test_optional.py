@@ -13,6 +13,6 @@ def test_as_df(fancy_test_array: FancyTestArray):
     """Test that .as_df() can convert an array to a pandas DataFrame."""
     data_frame = fancy_test_array.as_df()
     # pylint: disable=import-outside-toplevel, import-error
-    import pandas as pd
+    import pandas as pd  # noqa: PLC0415
 
     assert isinstance(data_frame, pd.DataFrame)

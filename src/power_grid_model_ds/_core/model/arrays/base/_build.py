@@ -14,6 +14,7 @@ from power_grid_model_ds._core.model.constants import empty
 from power_grid_model_ds._core.utils.misc import is_sequence
 
 _logger = logging.getLogger(__name__)
+_ARRAY_2D: int = 2
 
 
 def build_array(*args: tuple[Any], dtype: np.dtype, defaults: dict[str, np.generic], **kwargs) -> np.ndarray:
@@ -101,7 +102,7 @@ def _parse_array(array: np.ndarray, dtype: np.dtype):
         return array
     if len(array.shape) == 1:
         return np.array(array, dtype=dtype)
-    if len(array.shape) == 2:
+    if len(array.shape) == _ARRAY_2D:
         return _parse_2d_array(array, dtype)
     raise NotImplementedError(f"Unsupported array shape {array.shape}")
 
@@ -155,7 +156,7 @@ def _args2kwargs(args: tuple[Any, ...], columns: list[str]) -> dict[str, list]:
         args = args[0]
 
     args_as_array = np.array(args)
-    if len(args_as_array.shape) != 2:
+    if len(args_as_array.shape) != _ARRAY_2D:
         raise ValueError(
             "Cannot parse args: input is not 2D, probably due to an inconsistent number of values per row."
         )

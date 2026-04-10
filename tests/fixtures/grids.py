@@ -211,7 +211,7 @@ def build_basic_grid_with_three_winding[T: Grid](grid: T) -> T:
     return grid
 
 
-def build_topologically_full_grid[T: Grid](grid: T) -> T:
+def build_topologically_full_grid[T: Grid](grid: T) -> T:  # noqa: PLR0915
     """Build two disjoint grids with comprehensive component coverage
 
     Creates two independent (disjoint) grids within a single Grid object, each with a central

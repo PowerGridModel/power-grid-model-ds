@@ -5,16 +5,24 @@
 
 from dataclasses import dataclass
 
+import numpy as np
+
 from power_grid_model_ds import Grid
-from power_grid_model_ds.arrays import SourceArray
+from power_grid_model_ds._core.model.dtypes.typing import NDArray3
+from power_grid_model_ds.arrays import LineArray, SourceArray
 from power_grid_model_ds.generators import RadialGridGenerator
 from power_grid_model_ds.visualizer import visualize
 from tests.unit.visualizer.test_parsers import CoordinatedNodeArray
 
 
+class ThreePhaseCoordinatedLineArray(LineArray):
+    three_phase_quantity: NDArray3[np.float64]
+
+
 @dataclass
-class CoordinatedGrid(Grid):
+class ThreePhaseCoordinatedGrid(Grid):
     node: CoordinatedNodeArray
+    line: ThreePhaseCoordinatedLineArray
 
 
 def get_radial_grid() -> Grid:
@@ -23,9 +31,11 @@ def get_radial_grid() -> Grid:
     return grid
 
 
-def get_coordinated_grid() -> CoordinatedGrid:
+def get_coordinated_three_phase_grid() -> ThreePhaseCoordinatedGrid:
     scale = 500
-    grid = CoordinatedGrid.from_txt("S1 2 open", "2 3", "3 4", "S1 500000000", "500000000 6", "6 7 transformer,open")
+    grid = ThreePhaseCoordinatedGrid.from_txt(
+        "S1 2 open", "2 3", "3 4", "S1 500000000", "500000000 6", "6 7 transformer,open"
+    )
 
     source = SourceArray.empty(1)
     source.node = 1
@@ -34,6 +44,7 @@ def get_coordinated_grid() -> CoordinatedGrid:
     grid.node.x *= scale
     grid.node.y = [3, 4, 3, 4, 3, 4, 3]
     grid.node.y *= scale
+    grid.line.three_phase_quantity = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12], [np.nan, np.nan, np.nan]])
     return grid
 
 
@@ -46,9 +57,9 @@ def visualize_grid():
     visualize(grid=grid, debug=True)
 
 
-def visualize_coordinated_grid():
+def visualize_coordinated_three_phase_grid():
     visualize(
-        grid=get_coordinated_grid(),
+        grid=get_coordinated_three_phase_grid(),
         debug=True,
     )
 
@@ -81,7 +92,7 @@ def visualize_grid_with_all_open_types():
 
 if __name__ == "__main__":
     # visualize_grid()
-    # visualize_coordinated_grid()
+    # visualize_coordinated_three_phase_grid()
     # visualize_grid_with_links()
     # visualize_grid_with_all_types()
     visualize_grid_with_all_open_types()

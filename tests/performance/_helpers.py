@@ -37,8 +37,8 @@ def do_performance_test(
 
 
 def _print_timings(timings: Generator):
-    for key, code, timing in timings:
-        code = code.split(";")[-1].replace("\n", " ").replace("\t", " ")
+    for key, _code, timing in timings:
+        code = _code.split(";")[-1].replace("\n", " ").replace("\t", " ")
         code = f"{key}: {code}"
 
         if isinstance(timing, Exception):
