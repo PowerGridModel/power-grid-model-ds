@@ -190,8 +190,7 @@ class BaseGraphModel(ABC):
     def add_branch3_array(self, branch3_array: Branch3Array) -> None:
         """Add all branch3s in the branch3 array to the graph."""
         for branch3 in branch3_array:
-            seperate_branches = branch3.as_branches()
-            self.add_branch_array(seperate_branches)
+            self.add_branch_array(branch3.as_branches())
             self._three_winding_nodes.add(self._get_branch3_nodes(branch3))
 
     def delete_branch_array(self, branch_array: BranchArray, raise_on_fail: bool = True) -> None:
@@ -463,7 +462,7 @@ class BaseGraphModel(ABC):
     def _get_branch3_nodes(self, branch3_array: Branch3Array) -> tuple[int, int, int]:
         """Get the nodes of the branch3 array as a set of tuples"""
         if len(branch3_array) != 1:
-            raise ValueError("branch3_array must have exactly one element")
+            raise ValueError("branch3_array must be of length one element")
         return (branch3_array.node_1.item(), branch3_array.node_2.item(), branch3_array.node_3.item())
 
     @abstractmethod
