@@ -92,8 +92,8 @@ def _get_branches(grid: "Grid", from_node: int, to_node: int) -> BranchArray:
 
 
 def iter_branches_in_shortest_path(
-    grid: "Grid", from_node_id: int, to_node_id: int, typed: bool = False
-) -> Iterator[BranchArray] | Iterator[BranchArray | Branch3Array]:
+    grid: "Grid", from_node_id: int, to_node_id: int
+) -> Iterator[BranchArray | Branch3Array]:
     """See Grid.iter_branches_in_shortest_path()."""
 
     path, _ = grid.graphs.active_graph.get_shortest_path(from_node_id, to_node_id)
@@ -104,12 +104,9 @@ def iter_branches_in_shortest_path(
             raise MissingBranchError(
                 f"No active branch connects nodes {current_node} -> {next_node} even though a path exists."
             )
-        if typed:
-            branch_ids = branches.id.tolist()
-            try:
-                typed_branches = grid.get_typed_branches(branch_ids)
-            except RecordDoesNotExist:
-                typed_branches = grid.three_winding_transformer.filter(branch_ids)
-            yield typed_branches
-        else:
-            yield branches
+        branch_ids = branches.id.tolist()
+        try:
+            typed_branches = grid.get_typed_branches(branch_ids)
+        except RecordDoesNotExist:
+            typed_branches = grid.three_winding_transformer.filter(branch_ids)
+        yield typed_branches
