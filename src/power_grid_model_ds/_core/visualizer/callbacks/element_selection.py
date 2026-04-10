@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
-import logging
 from typing import Any
 
 import dash_ag_grid as dag
@@ -16,8 +15,6 @@ from power_grid_model_ds._core.visualizer.layout.selection_output import (
 from power_grid_model_ds._core.visualizer.parsing_utils import viz_id_to_pgm_id
 from power_grid_model_ds._core.visualizer.server_state import get_grid
 from power_grid_model_ds.arrays import IdArray
-
-_logger = logging.getLogger(__name__)
 
 
 @callback(
