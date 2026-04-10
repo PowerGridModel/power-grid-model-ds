@@ -45,12 +45,7 @@ def display_selected_element(node_data: list[dict[str, Any]], edge_data: list[di
 
 
 def _to_data_table(array_data: IdArray):
-    data_table_headers: list[dict[str, str]] = []
-    for col in array_data.columns:
-        if array_data[col].ndim == 1:
-            data_table_headers.append({"field": col, "headerName": col})
-        else:
-            _logger.warning("Column '%s' is not 1-dimensional hence not visualized.", col)
+    data_table_headers: list[dict[str, str]] = [{"field": col, "headerName": col} for col in array_data.columns]
 
     list_array_data = []
     for entry in array_data:
@@ -58,6 +53,8 @@ def _to_data_table(array_data: IdArray):
         for col in array_data.columns:
             if entry[col].ndim == 1:
                 record_dict[col] = entry[col].item()
+            else:
+                record_dict[col] = entry[col].tolist().pop()
 
         list_array_data.append(record_dict)
 
