@@ -32,6 +32,7 @@ class FancyArrayContainer:
     """
 
     _ids: set[int]
+    __hash__ = None
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, self.__class__):

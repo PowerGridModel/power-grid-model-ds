@@ -162,7 +162,7 @@ class TestPowerGridModelInterfaceMethods:
         assert not hasattr(extended_grid, "node")
         assert all(extended_grid.line.i_from > 0)
 
-    def test_update_model(self, extended_grid):
+    def test_update_model(self):
         """Test whether a pgm model can be updated and returns different results"""
         grid_generator = RadialGridGenerator(grid_class=Grid, nr_nodes=5, nr_sources=1, nr_nops=0)
         grid = grid_generator.run(seed=0)
