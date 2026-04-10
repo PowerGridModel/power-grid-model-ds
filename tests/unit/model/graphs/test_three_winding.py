@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
+""" "This file contains tests that are very specific to three winding transformers.
+More generic tests are in a differnt file. This file works on a more complicated graph."""
 
 import pytest
 
@@ -21,7 +23,7 @@ def branch3_array() -> ThreeWindingTransformerArray:
     return three
 
 
-def _setup_graph(graph: RustworkxGraphModel, branch3_array: ThreeWindingTransformerArray) -> None:
+def _setup_graph(graph: RustworkxGraphModel, branch3_array: ThreeWindingTransformerArray) -> RustworkxGraphModel:
     nodes = NodeArray.empty(12)
     nodes.id = [1, 2, 3, 4, 5, 6, 10, 20, 30, 40, 50, 60]
 
@@ -119,7 +121,7 @@ class TestGetAllPaths:
             ),
         ],
     )
-    def test_get_all_paths(self, graph, active_only, source, dest, active_expected, complete_expected):
+    def test_get_all_paths(self, graph, active_only, source, dest, active_expected, complete_expected):  # noqa: PLR0913
         expected = active_expected if active_only else complete_expected
         actual_paths = graph.get_all_paths(source, dest)
 
@@ -148,7 +150,7 @@ class TestGetAllPaths:
             ),
         ],
     )
-    def test_get_all_paths_removed_branch(self, graph, active_only, source, dest, active_expected, complete_expected):
+    def test_get_all_paths_removed_branch(self, graph, active_only, source, dest, active_expected, complete_expected):  # noqa: PLR0913
         expected = active_expected if active_only else complete_expected
         with graph.tmp_remove_branches([(2, 3), (20, 30)]):
             actual_paths = graph.get_all_paths(source, dest)
