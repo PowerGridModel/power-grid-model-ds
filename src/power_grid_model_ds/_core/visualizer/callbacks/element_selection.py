@@ -3,10 +3,12 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
+import logging
 from typing import Any
 from venv import logger
 
-from dash import Input, Output, callback, dash_table, html
+import dash_ag_grid as dag
+from dash import Input, Output, callback
 
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.layout.selection_output import (
@@ -14,6 +16,8 @@ from power_grid_model_ds._core.visualizer.layout.selection_output import (
 )
 from power_grid_model_ds._core.visualizer.server_state import get_grid
 from power_grid_model_ds.arrays import IdArray
+
+_logger = logging.getLogger(__name__)
 
 
 @callback(
@@ -52,6 +56,8 @@ def display_selected_element(node_data: list[dict[str, Any]], edge_data: list[di
 
 
 def _to_data_table(array_data: IdArray):
+    data_table_headers: list[dict[str, str]] = [{"field": col, "headerName": col} for col in array_data.columns]
+
     list_array_data = []
     for entry in array_data:
         record_dict = {}
@@ -59,14 +65,15 @@ def _to_data_table(array_data: IdArray):
             if entry[col].ndim == 1:
                 record_dict[col] = entry[col].item()
             else:
-                logger.warning(f"Column '{col}' in group '{array_data.name}' is not 1-dimensional. Skipping search.")
+                record_dict[col] = entry[col].tolist().pop()
 
         list_array_data.append(record_dict)
 
     # ignore[attr-defined] added for https://github.com/plotly/dash/issues/3226
-    return dash_table.DataTable(  # type: ignore[attr-defined]
-        data=[array_data_dict],
-        columns=[{"name": key, "id": key} for key in array_data_dict],
-        editable=False,
-        fill_width=False,
+    return dag.AgGrid(  # type: ignore[attr-defined]
+        rowData=list_array_data,
+        columnDefs=data_table_headers,
+        defaultColDef={"filter": True},
+        dashGridOptions={"maintainColumnOrder": True, "animateRows": False},
+        columnSize="sizeToFit",
     )

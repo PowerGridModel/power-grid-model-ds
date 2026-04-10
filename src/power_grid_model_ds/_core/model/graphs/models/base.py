@@ -26,6 +26,8 @@ if TYPE_CHECKING:
 class BaseGraphModel(ABC):
     """Base class for graph models"""
 
+    __hash__ = None
+
     def __init__(self, active_only=False) -> None:
         self.active_only = active_only
 

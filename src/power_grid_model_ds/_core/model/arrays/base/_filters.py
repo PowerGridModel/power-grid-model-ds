@@ -85,7 +85,7 @@ def _build_filter_mask_for_field(array: np.ndarray, field: str, values) -> np.nd
         # Note: is_sequence() does not consider a string as a sequence.
         values = [values]
 
-    if not len(values):  # pylint: disable=use-implicit-booleaness-not-len
+    if len(values) == 0:
         return np.full(array.size, fill_value=False)
     if isinstance(values, set):
         values = list(values)
