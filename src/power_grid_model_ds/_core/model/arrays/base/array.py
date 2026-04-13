@@ -273,6 +273,10 @@ class FancyArray(ABC):  # noqa: B024
             return tpl_cls(*self._data)
         return tpl_cls(*self._data[0])
 
+    @property
+    def size(self) -> int:
+        return self._data.size
+
     def filter(
         self: Self,
         *args: int | Iterable[int] | np.ndarray,
