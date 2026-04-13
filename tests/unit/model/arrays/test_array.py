@@ -318,5 +318,6 @@ def test_from_extended_array():
     array_equal_with_nan(array.data, extended_array[array.columns])
 
 
+
 def test_size(fancy_test_array: FancyTestArray):
     assert fancy_test_array.size == 3
