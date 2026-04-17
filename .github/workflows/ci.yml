@@ -132,7 +132,7 @@ jobs:
         run: echo "${{ steps.tag.outputs.tag }}"
 
       - name: Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
           files: |
             ./dist/*
