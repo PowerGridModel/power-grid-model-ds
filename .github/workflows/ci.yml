@@ -49,7 +49,7 @@ jobs:
         run: uv sync --frozen
 
       - name: Set PyPI version
-        uses: PowerGridModel/pgm-version-bump@17f01ca0e845c35804c8c3c2490f61d14a77ede2 # v0.1.1
+        uses: PowerGridModel/pgm-version-bump@b75ff549cae00be1ca859d181dbc460f69003643 # v0.1.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
