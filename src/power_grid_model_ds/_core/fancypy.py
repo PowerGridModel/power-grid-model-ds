@@ -25,7 +25,7 @@ def concatenate[T: FancyArray](fancy_array: T, *other_arrays: T | np.ndarray) ->
 
 
 @overload
-def unique[T: FancyArray](array: T) -> T: ...  # pyright: ignore[reportOverlappingOverload]
+def unique[T: FancyArray](array: T) -> T: ...
 
 
 @overload
