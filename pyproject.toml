@@ -99,7 +99,7 @@ max-parents = 15
 max-line-length = 120
 
 [tool.ruff]
-output-format = "github"
+#output-format = "github"
 line-length = 120
 indent-width = 4
 show-fixes = true
@@ -110,11 +110,11 @@ select = [
   "E",
   # Pyflakes
   "F",
-  # # pyupgrade
+  # pyupgrade
   "UP",
-  # # flake8-bugbear
+  # flake8-bugbear
   "B",
-  # # flake8-simplify
+  # flake8-simplify
   "SIM",
   # isort
   "I",
@@ -152,7 +152,7 @@ select = [
   # raise
   "RSE",
   # ruff sepcific rules
-  #"RUF",
+  "RUF",
   # bandit
   "S",
   # boolean positional value in call
