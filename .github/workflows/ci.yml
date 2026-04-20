@@ -35,10 +35,10 @@ jobs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         if: ${{ always() }}
         with:
           activate-environment: true
@@ -49,7 +49,7 @@ jobs:
         run: uv sync --frozen
 
       - name: Set PyPI version
-        uses: PowerGridModel/pgm-version-bump@main
+        uses: PowerGridModel/pgm-version-bump@b75ff549cae00be1ca859d181dbc460f69003643 # v0.1.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -62,7 +62,7 @@ jobs:
           uv build
 
       - name: Store built wheel file
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: power-grid-model-ds
           path: dist/
@@ -78,10 +78,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         if: ${{ always() }}
         with:
           activate-environment: true
@@ -91,7 +91,7 @@ jobs:
         run: uv tool install poethepoet
 
       - name: Load built wheel file
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: power-grid-model-ds
           path: dist/
@@ -114,10 +114,10 @@ jobs:
       tag: ${{ steps.tag.outputs.tag }}
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Load built wheel file
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: power-grid-model-ds
           path: dist/
@@ -132,7 +132,7 @@ jobs:
         run: echo "${{ steps.tag.outputs.tag }}"
 
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
           files: |
             ./dist/*
@@ -161,7 +161,7 @@ jobs:
         run: ls -la assets-to-publish
 
       - name: Upload assets to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
         with:
           # To test, use the TestPyPI:
           # repository-url: https://test.pypi.org/legacy/
