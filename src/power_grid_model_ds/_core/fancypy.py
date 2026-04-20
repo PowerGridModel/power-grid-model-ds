@@ -4,7 +4,7 @@
 
 """A set of helper functions that mimic numpy functions but are specifically designed for FancyArrays."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, overload
 
 import numpy as np
 
@@ -24,7 +24,15 @@ def concatenate[T: FancyArray](fancy_array: T, *other_arrays: T | np.ndarray) ->
     return fancy_array.__class__(data=concatenated)
 
 
-def unique[T: FancyArray](array: T, **kwargs):
+@overload
+def unique[T: FancyArray](array: T) -> T: ...  # pyright: ignore[reportOverlappingOverload]
+
+
+@overload
+def unique[T: FancyArray](array: T, **kwargs: Any): ...
+
+
+def unique[T: FancyArray](array: T, **kwargs: Any):
     """Return the unique elements of the array."""
     for column in array.columns:
         if np.issubdtype(array.dtype[column], np.floating) and np.isnan(array[column]).any():
