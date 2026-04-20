@@ -4,7 +4,7 @@
 
 """A set of helper functions that mimic numpy functions but are specifically designed for FancyArrays."""
 
-from typing import TYPE_CHECKING, Any, overload
+from typing import TYPE_CHECKING, overload
 
 import numpy as np
 
@@ -29,10 +29,10 @@ def unique[T: FancyArray](array: T) -> T: ...
 
 
 @overload
-def unique[T: FancyArray](array: T, **kwargs: Any): ...
+def unique[T: FancyArray](array: T, **kwargs): ...
 
 
-def unique[T: FancyArray](array: T, **kwargs: Any):
+def unique[T: FancyArray](array: T, **kwargs):
     """Return the unique elements of the array."""
     for column in array.columns:
         if np.issubdtype(array.dtype[column], np.floating) and np.isnan(array[column]).any():
