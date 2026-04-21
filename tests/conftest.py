@@ -37,18 +37,18 @@ def get_installed_graph_models() -> dict[str, type[BaseGraphModel]]:
 @pytest.fixture
 def grid() -> Generator[Grid, Any, None]:
     """A grid fixture that will be parametrized"""
-    yield Grid.empty()
+    yield Grid.empty()  # noqa: PT022
 
 
 @pytest.fixture
 def graph() -> Generator[RustworkxGraphModel, Any, None]:
     """A graph fixture that will be parametrized"""
-    yield RustworkxGraphModel()
+    yield RustworkxGraphModel()  # noqa: PT022
 
 
 @pytest.fixture
 def fancy_test_array():
-    yield FancyTestArray(
+    return FancyTestArray(
         id=[1, 2, 3],
         test_int=[3, 0, 4],
         test_float=[4.0, 4.0, 1.0],
@@ -59,17 +59,17 @@ def fancy_test_array():
 
 @pytest.fixture
 def basic_grid(grid: Grid):
-    yield build_basic_grid(grid)
+    return build_basic_grid(grid)
 
 
 @pytest.fixture
 def grid_with_3wt(grid: Grid):
-    yield build_basic_grid_with_three_winding(grid)
+    return build_basic_grid_with_three_winding(grid)
 
 
 @pytest.fixture
 def topologically_full_grid(grid: Grid):
-    yield build_topologically_full_grid(grid)
+    return build_topologically_full_grid(grid)
 
 
 @pytest.fixture

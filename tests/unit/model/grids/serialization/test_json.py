@@ -107,7 +107,7 @@ def extended_grid():
 class TestSerializationRoundtrips:
     """Test serialization across different formats and configurations"""
 
-    @pytest.mark.parametrize("grid_fixture", ("basic_grid", "grid"))
+    @pytest.mark.parametrize("grid_fixture", ["basic_grid", "grid"])
     def test_serialization_roundtrip(self, request, grid_fixture: str, tmp_path: Path):
         """Test serialization roundtrip
 
@@ -123,7 +123,7 @@ class TestSerializationRoundtrips:
         loaded_grid = Grid.deserialize(path)
         assert loaded_grid == grid
 
-    @pytest.mark.parametrize("grid_fixture", ("basic_grid", "grid"))
+    @pytest.mark.parametrize("grid_fixture", ["basic_grid", "grid"])
     def test_pgm_roundtrip(self, request, grid_fixture: str, tmp_path: Path):
         """Test roundtrip serialization for PGM-compatible grid"""
         # Grid
@@ -322,7 +322,7 @@ class TestDeserialize:
         with Path(path).open("w", encoding="utf-8") as f:
             json.dump({"data": missing_array_data}, f)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Missing required columns: {'u_rated'}"):
             Grid.deserialize(path)
 
     def test_some_records_miss_data(self, tmp_path):
@@ -334,5 +334,9 @@ class TestDeserialize:
         with Path(path).open("w", encoding="utf-8") as f:
             json.dump({"data": incomplete_data}, f)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ValueError,
+            match="Some records in column 'id' have missing values. "
+            "For defaulted columns, either provide all values or none.",
+        ):
             Grid.deserialize(path)

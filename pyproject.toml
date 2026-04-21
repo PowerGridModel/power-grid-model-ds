@@ -99,7 +99,7 @@ max-parents = 15
 max-line-length = 120
 
 [tool.ruff]
-output-format = "github"
+#output-format = "github"
 line-length = 120
 indent-width = 4
 show-fixes = true
@@ -160,7 +160,7 @@ select = [
   # raise vanilla args
   "TRY002",
   # pytest-style
-  #"PT",
+  "PT",
 ]
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]

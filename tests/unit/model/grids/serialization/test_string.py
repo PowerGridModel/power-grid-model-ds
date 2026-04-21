@@ -65,11 +65,11 @@ class TestFromTxt:
         np.testing.assert_array_equal([95, 91, 92, 93, 94, 96, 97, 98], grid.branches.id)
 
     def test_from_txt_with_conflicting_ids(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Source nodes and regular nodes have overlapping ids"):
             Grid.from_txt("S1 2", "1 3")
 
     def test_from_txt_with_invalid_line(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="Text line 'S1' is invalid. Skipping..."):
             Grid.from_txt("S1")
 
     def test_from_txt_parallel_lines_without_ids(self):
