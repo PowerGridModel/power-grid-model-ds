@@ -55,11 +55,6 @@ save_html(grid, "my_grid.html", layout="cose", include_appliances=True)
 
 The generated file embeds the graph data and [Cytoscape.js](https://js.cytoscape.org/) and supports pan, zoom, and click interactions in any browser.
 
-| Parameter | Default | Description |
-|---|---|---|
-| `layout` | auto | Layout algorithm: `"breadthfirst"`, `"cose"`, `"circle"`, `"concentric"`, `"grid"`, `"random"`. Auto-selects `"preset"` when x/y coordinates are present, otherwise `"breadthfirst"`. |
-| `include_appliances` | `False` | Include load, generator and source appliance nodes. |
-
 #### Disclaimer
 Please note that the visualizer is still a work in progress and may not be fully functional or contain bugs.
 We welcome any feedback or suggestions for improvement.
