@@ -12,7 +12,6 @@ _HTML_TEMPLATE = """\
 <html>
 <head>
   <meta charset="utf-8">
-  <title>{title}</title>
   <script src="https://unpkg.com/cytoscape@3/dist/cytoscape.min.js"></script>
   <style>
     body {{ margin: 0; background: {background_color}; }}
@@ -34,18 +33,13 @@ _HTML_TEMPLATE = """\
 """
 
 
-_DEFAULT_TITLE = "Power Grid Model Visualization"
-
-
 def generate_standalone_html(
     elements: list[dict[str, Any]],
     stylesheet: list[dict[str, Any]],
     layout: dict[str, Any],
-    title: str = _DEFAULT_TITLE,
 ) -> str:
     """Generate a standalone HTML string with an interactive Cytoscape.js graph."""
     return _HTML_TEMPLATE.format(
-        title=title,
         background_color=BACKGROUND_COLOR,
         elements_json=json.dumps(elements),
         stylesheet_json=json.dumps(stylesheet),

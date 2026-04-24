@@ -30,7 +30,6 @@ def save_html(
     *,
     layout: str = "",
     include_appliances: bool = False,
-    title: str = "Power Grid Model Visualization",
 ) -> None:
     """Save the Grid visualization as a standalone HTML file.
 
@@ -46,8 +45,6 @@ def save_html(
         or breadthfirst. Other options: "random", "circle", "concentric", "grid", "cose".
     include_appliances: bool
         Whether to include appliance nodes (loads, generators, sources). Default: False.
-    title: str
-        Title shown in the browser tab. Default: "Power Grid Model Visualization".
     """
     viz_elements_dict = parse_element_data(grid)
     all_elements = viz_elements_dict.values()
@@ -58,7 +55,7 @@ def save_html(
     layout_option = LayoutOptions(layout) if layout else get_default_graph_layout(grid.node)
     layout_config = layout_with_config(layout_option, source_available=grid.source.size != 0)
 
-    html_content = generate_standalone_html(elements, DEFAULT_STYLESHEET, layout_config, title=title)
+    html_content = generate_standalone_html(elements, DEFAULT_STYLESHEET, layout_config)
     Path(path).write_text(html_content, encoding="utf-8")
 
 

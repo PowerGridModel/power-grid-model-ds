@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: MPL-2.0
 import pytest
 
-from power_grid_model_ds._core.visualizer.html_export import _DEFAULT_TITLE
 from power_grid_model_ds.visualizer import save_html
 from tests.fixtures.grids import build_basic_grid
 
@@ -20,16 +19,14 @@ def test_save_html_defaults(tmp_path, basic_grid):
 
     assert path.exists()
     assert "breadthfirst" in content
-    assert f"<title>{_DEFAULT_TITLE}</title>" in content
 
 
 def test_save_html_options(tmp_path, basic_grid):
     path = tmp_path / "grid.html"
-    save_html(basic_grid, path, layout="cose", include_appliances=True, title="Test Grid")
+    save_html(basic_grid, path, layout="cose", include_appliances=True)
     content = path.read_text()
 
     assert "cose" in content
-    assert "<title>Test Grid</title>" in content
 
     path_no_appliances = tmp_path / "no_appliances.html"
     save_html(basic_grid, path_no_appliances, include_appliances=False)

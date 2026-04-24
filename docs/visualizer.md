@@ -50,7 +50,7 @@ grid = RadialGridGenerator(Grid).run()
 save_html(grid, "my_grid.html")
 
 # With options:
-save_html(grid, "my_grid.html", layout="cose", include_appliances=True, title="My Grid")
+save_html(grid, "my_grid.html", layout="cose", include_appliances=True)
 ```
 
 The generated file embeds the graph data and [Cytoscape.js](https://js.cytoscape.org/) and supports pan, zoom, and click interactions in any browser.
@@ -59,7 +59,6 @@ The generated file embeds the graph data and [Cytoscape.js](https://js.cytoscape
 |---|---|---|
 | `layout` | auto | Layout algorithm: `"breadthfirst"`, `"cose"`, `"circle"`, `"concentric"`, `"grid"`, `"random"`. Auto-selects `"preset"` when x/y coordinates are present, otherwise `"breadthfirst"`. |
 | `include_appliances` | `False` | Include load, generator and source appliance nodes. |
-| `title` | `"Power Grid Model Visualization"` | Title shown in the browser tab. |
 
 #### Disclaimer
 Please note that the visualizer is still a work in progress and may not be fully functional or contain bugs.
