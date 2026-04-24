@@ -13,6 +13,7 @@ SPDX-License-Identifier: MPL-2.0
 - Explore attributes of nodes and branches
 - Highlight specific nodes and branches
 - Visualize various layouts, including hierarchical, force-directed and coordinate-based layouts
+- Export as a standalone HTML file for sharing or offline viewing
 
 With Coordinates    | Hierarchical | Force-Directed
 :------------------:|:------------:|:-------------:
@@ -35,6 +36,30 @@ grid = RadialGridGenerator(Grid).run()
 visualize(grid)
 ```
 This will start a local web server at http://localhost:8050
+
+#### Saving to HTML
+
+To save a visualization as a standalone HTML file that can be shared or opened later without a running Python server:
+
+```python
+from power_grid_model_ds import Grid
+from power_grid_model_ds.visualizer import save_html
+from power_grid_model_ds.generators import RadialGridGenerator
+
+grid = RadialGridGenerator(Grid).run()
+save_html(grid, "my_grid.html")
+
+# With options:
+save_html(grid, "my_grid.html", layout="cose", include_appliances=True, title="My Grid")
+```
+
+The generated file embeds the graph data and [Cytoscape.js](https://js.cytoscape.org/) and supports pan, zoom, and click interactions in any browser.
+
+| Parameter | Default | Description |
+|---|---|---|
+| `layout` | auto | Layout algorithm: `"breadthfirst"`, `"cose"`, `"circle"`, `"concentric"`, `"grid"`, `"random"`. Auto-selects `"preset"` when x/y coordinates are present, otherwise `"breadthfirst"`. |
+| `include_appliances` | `False` | Include load, generator and source appliance nodes. |
+| `title` | `"Power Grid Model Visualization"` | Title shown in the browser tab. |
 
 #### Disclaimer
 Please note that the visualizer is still a work in progress and may not be fully functional or contain bugs.
