@@ -5,8 +5,9 @@
 """Comprehensive unit tests for Grid serialization with power-grid-model compatibility."""
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import ClassVar
 
 import numpy as np
 import pytest
@@ -23,7 +24,7 @@ from power_grid_model_ds.arrays import LineArray, NodeArray as BaseNodeArray
 class ExtendedNodeArray(BaseNodeArray):
     """Test array with extended columns"""
 
-    _defaults = {"u": 0.0, "analysis_flag": 0}
+    _defaults: ClassVar = {"u": 0.0, "analysis_flag": 0}
     u: NDArray[np.float64]
     analysis_flag: NDArray[np.int32]
 
@@ -31,7 +32,7 @@ class ExtendedNodeArray(BaseNodeArray):
 class ExtendedLineArray(LineArray):
     """Test array with extended columns"""
 
-    _defaults = {"i_from": 0.0, "loading_factor": 0.0}
+    _defaults: ClassVar = {"i_from": 0.0, "loading_factor": 0.0}
     i_from: NDArray[np.float64]
     loading_factor: NDArray[np.float64]
 
@@ -58,7 +59,7 @@ class CustomClass:
 class GridWithCustomClass(Grid):
     """Grid with a custom class attribute (by default not serializable)"""
 
-    custom_class: CustomClass = CustomClass()
+    custom_class: CustomClass = field(default_factory=CustomClass)
 
 
 class CustomClassEncoder(json.JSONEncoder):
@@ -190,7 +191,7 @@ class TestExtensionHandling:
         class CustomMetadataArray(FancyArray):
             """Custom metadata array for testing"""
 
-            _defaults = {"metadata_value": 0.0, "category": 0}
+            _defaults: ClassVar = {"metadata_value": 0.0, "category": 0}
 
             id: NDArray[np.int32]
             metadata_value: NDArray[np.float64]

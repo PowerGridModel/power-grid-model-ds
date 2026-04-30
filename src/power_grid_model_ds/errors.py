@@ -16,12 +16,12 @@ from power_grid_model_ds._core.model.graphs.errors import (
 from power_grid_model_ds._core.power_grid_model_interface import PGMCoreException
 
 __all__ = [
-    "PGMCoreException",
-    "GraphError",
     "ArrayDefinitionError",
-    "RecordDoesNotExist",
-    "MultipleRecordsReturned",
-    "MissingNodeError",
+    "GraphError",
     "MissingBranchError",
+    "MissingNodeError",
+    "MultipleRecordsReturned",
     "NoPathBetweenNodes",
+    "PGMCoreException",
+    "RecordDoesNotExist",
 ]
