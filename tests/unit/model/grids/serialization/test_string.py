@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
+import re
 from pathlib import Path
 
 import numpy as np
@@ -69,7 +70,7 @@ class TestFromTxt:
             Grid.from_txt("S1 2", "1 3")
 
     def test_from_txt_with_invalid_line(self):
-        with pytest.raises(ValueError, match="Text line 'S1' is invalid. Skipping..."):
+        with pytest.raises(ValueError, match=re.escape("Text line 'S1' is invalid. Skipping...")):
             Grid.from_txt("S1")
 
     def test_from_txt_parallel_lines_without_ids(self):

@@ -94,7 +94,7 @@ def test_build_from_kwargs_with_missing_input_fields():
 
 
 def test_build_from_kwargs_with_different_input_lengths():
-    with pytest.raises(ValueError, match="Size of column 'test_bool' does not match other columns."):
+    with pytest.raises(ValueError, match=re.escape("Size of column 'test_bool' does not match other columns.")):
         FancyTestArray(
             id=[1, 2, 3],
             test_int=[3, 0, 4],
@@ -106,7 +106,7 @@ def test_build_from_kwargs_with_different_input_lengths():
 
 def test_build_from_kwargs_with_different_input_lengths_with_defaults():
     # Also fail when defaults are defined
-    with pytest.raises(ValueError, match="Size of column 'test_bool' does not match other columns."):
+    with pytest.raises(ValueError, match=re.escape("Size of column 'test_bool' does not match other columns.")):
         DefaultedFancyTestArray(
             id=[1, 2, 3],
             test_int=[3, 0, 4],

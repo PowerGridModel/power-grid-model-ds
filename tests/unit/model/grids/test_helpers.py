@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
+import re
+
 import pytest
 
 from power_grid_model_ds import Grid
@@ -63,7 +65,8 @@ class TestMergeGrids:
 
     def test_merge_grid_with_some_identical_lines_failing(self, grid1: Grid, grid2: Grid):
         with pytest.raises(
-            ValueError, match="Asset ids are not unique after merging! Use mode='recalculate_ids' to avoid this."
+            ValueError,
+            match=re.escape("Asset ids are not unique after merging! Use mode='recalculate_ids' to avoid this."),
         ):
             grid1.merge(grid2, mode="keep_ids")
 

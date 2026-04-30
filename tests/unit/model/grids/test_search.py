@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+import re
+
 import numpy as np
 import pytest
 
@@ -119,7 +121,7 @@ class TestGetTypedBranches:
     def test_get_typed_branches_no_input(self, basic_grid: Grid):
         grid = basic_grid
 
-        with pytest.raises(ValueError, match="No branch_ids provided."):
+        with pytest.raises(ValueError, match=re.escape("No branch_ids provided.")):
             grid.get_typed_branches([])  # 101 is a node
 
     def test_get_typed_branches_array_input(self, basic_grid: Grid):
@@ -128,7 +130,7 @@ class TestGetTypedBranches:
         assert isinstance(lines, LineArray)
 
     def test_get_typed_branches_no_array_input(self, basic_grid: Grid):
-        with pytest.raises(ValueError, match="No branch_ids provided."):
+        with pytest.raises(ValueError, match=re.escape("No branch_ids provided.")):
             basic_grid.get_typed_branches(np.array([]))
 
 

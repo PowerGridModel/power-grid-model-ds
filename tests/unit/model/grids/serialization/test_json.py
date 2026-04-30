@@ -5,6 +5,7 @@
 """Comprehensive unit tests for Grid serialization with power-grid-model compatibility."""
 
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import ClassVar
@@ -323,7 +324,7 @@ class TestDeserialize:
         with Path(path).open("w", encoding="utf-8") as f:
             json.dump({"data": missing_array_data}, f)
 
-        with pytest.raises(ValueError, match="Missing required columns: {'u_rated'}"):
+        with pytest.raises(ValueError, match=re.escape("Missing required columns: {'u_rated'}")):
             Grid.deserialize(path)
 
     def test_some_records_miss_data(self, tmp_path):
