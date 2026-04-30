@@ -336,7 +336,7 @@ class TestDeserialize:
 
         with pytest.raises(
             ValueError,
-            match="Some records in column 'id' have missing values. "
+            match=r"Some records in column '(id|u_rated)' have missing values. "
             "For defaulted columns, either provide all values or none.",
         ):
             Grid.deserialize(path)

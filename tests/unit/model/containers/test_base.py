@@ -38,14 +38,14 @@ class _FourArraysContainer(_TwoArraysContainer):
 
 
 def test_id_counter_type(basic_grid: Grid):
-    assert isinstance(basic_grid.max_id, int)
+    assert isinstance(basic_grid.id_counter, int)
 
 
 def test_id_counter():
     container = FancyArrayContainer.empty()
     # pylint: disable=protected-access
     container._ids = {42}
-    assert container.max_id == 42
+    assert container.id_counter == 42
 
 
 def test_deepcopy():
@@ -210,7 +210,7 @@ def test_rebuild_ids():
 def test_rebuild_ids_with_duplicates():
     grid = Grid.from_txt("1 2 12")
     grid.node.id = [1, 12]  # Duplicate IDs within different arrays same array
-    with pytest.raises(ValueError, match=r"Duplicate ids found between arrays \(LineArray\)"):
+    with pytest.raises(ValueError, match=re.escape("Duplicate ids found between arrays (LineArray)")):
         grid.rebuild_ids()
 
 
