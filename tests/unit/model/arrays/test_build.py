@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+from typing import ClassVar
+
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
@@ -24,7 +26,7 @@ class InvalidArray(FancyArray):
 
 
 class ExtendedFancyTestArray(FancyTestArray):
-    _defaults = {"test_float2": np.nan, "test_float3": 42.0}
+    _defaults: ClassVar = {"test_float2": np.nan, "test_float3": 42.0}
 
     test_float2: NDArray[np.float64]
     test_float3: NDArray[np.float64]
@@ -36,7 +38,7 @@ class ExtendedFancyTestArrayNoDefaults(FancyTestArray):
 
 
 class ChildArray(DefaultedFancyTestArray):
-    _defaults = {"test_float4": 42.0}
+    _defaults: ClassVar = {"test_float4": 42.0}
 
     test_float4: NDArray[np.float64]
 
