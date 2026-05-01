@@ -18,7 +18,7 @@ def concatenate[T: FancyArray](fancy_array: T, *other_arrays: T | np.ndarray) ->
     """Concatenate arrays."""
     np_arrays = [array if isinstance(array, np.ndarray) else array.data for array in other_arrays]
     try:
-        concatenated = np.concatenate([fancy_array.data] + np_arrays)
+        concatenated = np.concatenate([fancy_array.data, *np_arrays])
     except TypeError as error:
         raise TypeError("Cannot append arrays: mismatching dtypes.") from error
     return fancy_array.__class__(data=concatenated)

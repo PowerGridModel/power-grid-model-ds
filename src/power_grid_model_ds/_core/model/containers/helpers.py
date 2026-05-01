@@ -19,7 +19,7 @@ def container_equal(
     container_b: "FancyArrayContainer",
     ignore_extras: bool = False,
     early_exit: bool = True,
-    fields_to_ignore: list[str] = None,
+    fields_to_ignore: list[str] | None = None,
 ) -> bool:
     """
     Compares two containers for equality.
