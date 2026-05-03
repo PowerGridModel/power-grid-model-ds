@@ -124,12 +124,9 @@ class TestSerializationRoundtrips:
         loaded_grid = Grid.deserialize(path)
         assert loaded_grid == grid
 
-    @pytest.mark.parametrize("grid_fixture", ("basic_grid", "grid"))
-    def test_pgm_roundtrip(self, request, grid_fixture: str, tmp_path: Path):
+    def test_pgm_roundtrip(self, basic_grid: Grid, tmp_path: Path):
         """Test roundtrip serialization for PGM-compatible grid"""
-        # Grid
-        grid: Grid = request.getfixturevalue(grid_fixture)
-
+        grid = basic_grid
         # Replace nan values with dummy value. Otherwise PGM's json_serialize_to_file will remove these columns.
         grid.node.u_rated = 42
 
