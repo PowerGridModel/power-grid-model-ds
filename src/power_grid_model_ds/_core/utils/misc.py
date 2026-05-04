@@ -5,7 +5,7 @@
 """Misc utils"""
 
 from collections.abc import Sequence
-from typing import get_type_hints
+from typing import get_type_hints, overload
 
 import numpy as np
 
@@ -30,7 +30,17 @@ def get_public_annotations(cls: type):
     return {attr: type_ for attr, type_ in class_attributes.items() if not attr.startswith("_")}
 
 
-def build_mro_attribute(cls: type, attribute_name: str, attribute_type: type[dict] | type[set]) -> dict | set:
+@overload
+def build_mro_attribute(cls: type, attribute_name: str, attribute_type: type[dict]) -> dict:
+    ...
+
+
+@overload
+def build_mro_attribute(cls: type, attribute_name: str, attribute_type: type[set]) -> set:
+    ...
+
+
+def build_mro_attribute(cls: type, attribute_name: str, attribute_type) -> dict | set:
     """Combine all versions of an attribute in the Method Resolution Order (mro) of a class into a single attribute
 
     For dicts this means the dict is updated so that child classes override parent classes.
