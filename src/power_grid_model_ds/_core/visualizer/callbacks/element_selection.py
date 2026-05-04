@@ -103,20 +103,20 @@ def cell_selection_graph(_):
     if y_array.ndim == 1:
         fig.add_trace(
             go.Scatter(
-                x=x_array.tolist(),
+                x=x_array,
                 y=y_array,
                 mode="lines",
                 line={"width": 2},
             )
         )
     else:
-        for i in range(y_array.shape[1]):
+        for i, color in zip(range(y_array.shape[1]), ["red", "green", "blue"], strict=True):
             fig.add_trace(
                 go.Scatter(
-                    x=x_array.tolist(),
-                    y=y_array[:, i].tolist(),
+                    x=x_array,
+                    y=y_array[:, i],
                     mode="lines",
-                    line={"width": 2},
+                    line={"width": 2, "color": color},
                     name=f"{column_id}_phase_{i}",
                 )
             )
