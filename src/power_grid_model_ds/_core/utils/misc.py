@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 """Misc utils"""
-import typing
+
 from collections.abc import Sequence
-from typing import get_type_hints, ClassVar
+from typing import get_type_hints
 
 import numpy as np
 
@@ -23,12 +23,11 @@ def is_sequence(seq):
     return isinstance(seq, Sequence)
 
 
-def get_public_class_attrs(cls: type):
-    """Get the public attributes from the class"""
-    # The extras are needed for annotated types like NDArray3
+def get_public_annotations(cls: type):
+    """Get the public annotations for a class"""
+    # Note: include_extras=True for annotated types like NDArray3
     class_attributes = get_type_hints(cls, include_extras=True)
-    retrieved_attributes = {attr: type_ for attr, type_ in class_attributes.items() if not attr.startswith("_")}
-    return retrieved_attributes
+    return {attr: type_ for attr, type_ in class_attributes.items() if not attr.startswith("_")}
 
 
 def build_mro_attribute(cls: type, attribute_name: str, attribute_type: type[dict] | type[set]) -> dict | set:
@@ -46,8 +45,10 @@ def build_mro_attribute(cls: type, attribute_name: str, attribute_type: type[dic
         elif attribute_type is set:
             attr_value |= getattr(parent, attribute_name, set())
         else:
-            raise NotImplementedError(f"Type {attribute_type} cannot combine inherited for attribute {attribute_name}. "
-                                      f"Only dict and set are currently supported.")
+            raise NotImplementedError(
+                f"Type {attribute_type} cannot combine inherited for attribute {attribute_name}. "
+                f"Only dict and set are currently supported."
+            )
     return attr_value
 
 

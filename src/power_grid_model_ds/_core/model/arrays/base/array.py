@@ -19,7 +19,7 @@ from power_grid_model_ds._core.model.arrays.base._optional import pd
 from power_grid_model_ds._core.model.arrays.base._string import convert_array_to_string
 from power_grid_model_ds._core.model.arrays.base.errors import ArrayDefinitionError
 from power_grid_model_ds._core.model.constants import EMPTY_ID, empty
-from power_grid_model_ds._core.utils.misc import array_equal_with_nan, get_public_class_attrs, build_mro_attribute
+from power_grid_model_ds._core.utils.misc import array_equal_with_nan, build_mro_attribute, get_public_annotations
 
 # pylint: disable=missing-function-docstring, too-many-public-methods
 
@@ -90,7 +90,7 @@ class FancyArray(ABC):  # noqa: B024
     @classmethod
     @lru_cache
     def get_dtype(cls):
-        annotations = get_public_class_attrs(cls)
+        annotations = get_public_annotations(cls)
         str_lengths = build_mro_attribute(cls, "_str_lengths", dict)
         dtypes = {}
         for name, dtype in annotations.items():
