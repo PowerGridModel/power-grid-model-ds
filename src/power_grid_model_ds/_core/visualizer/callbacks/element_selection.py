@@ -74,7 +74,6 @@ def _to_data_table(array_data: IdArray, group):
 @callback(
     Output("selection-graph", "figure"),
     Output("selection-graph", "style"),
-    # Input({"type": "selection-table", "group": ALL}, "cellDoubleClicked"),  # Capture change
     Input({"type": "selection-table", "group": ALL}, "cellClicked"),  # Capture change
     prevent_initial_call=True,
 )
