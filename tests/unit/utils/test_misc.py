@@ -49,17 +49,21 @@ def test_array_equal_with_nan():
 class _ParentClass:
     a: ClassVar[set[int]] = {1, 2, 3}
     b: ClassVar[dict[int, str]] = {1: "a", 2: "b", 3: "c"}
-    c: ClassVar[dict[int, str]] = [1, 2, 3]
+    c: ClassVar[list[int]] = [1, 2, 3]
 
 
 class _ChildClass(_ParentClass):
     a: ClassVar[set[int]] = {3, 4, 5}
     b: ClassVar[dict[int, str]] = {2: "b", 3: "ccc"}
-    c: ClassVar[dict[int, str]] = [3, 4, 5]
+    c: ClassVar[list[int]] = [3, 4, 5]
 
 
 def test_get_public_class_attrs():
-    assert get_public_annotations(_ParentClass) == {"a": set, "b": dict, "c": list}
+    assert get_public_annotations(_ParentClass) == {
+        "a": ClassVar[set[int]],
+        "b": ClassVar[dict[int, str]],
+        "c": ClassVar[list[int]],
+    }
 
 
 def test_build_mro_attribute_set():

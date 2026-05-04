@@ -31,13 +31,11 @@ def get_public_annotations(cls: type):
 
 
 @overload
-def build_mro_attribute(cls: type, attribute_name: str, attribute_type: type[dict]) -> dict:
-    ...
+def build_mro_attribute(cls: type, attribute_name: str, attribute_type: type[dict]) -> dict: ...
 
 
 @overload
-def build_mro_attribute(cls: type, attribute_name: str, attribute_type: type[set]) -> set:
-    ...
+def build_mro_attribute(cls: type, attribute_name: str, attribute_type: type[set]) -> set: ...
 
 
 def build_mro_attribute(cls: type, attribute_name: str, attribute_type) -> dict | set:
