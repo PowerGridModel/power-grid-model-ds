@@ -84,7 +84,6 @@ class TestMergeGrids:
         with pytest.raises(NotImplementedError):
             grid1.merge(grid2, mode="invalid_mode")  # type: ignore[call-overload]
 
-
     def test_merge_recalculate_extended_grid(self):
         grid1 = ExtendedGrid.empty()
         grid1.append(ExtraArray.empty(3))
@@ -98,4 +97,3 @@ class TestMergeGrids:
         assert offset == 3
         assert grid1.extra.branch_id.tolist() == [10, 10, 10, 10 + offset, 10 + offset, 10 + offset]
         assert grid1.extra.node_id.tolist() == [20, 20, 20, 20 + offset, 20 + offset, 20 + offset]
-
