@@ -36,6 +36,7 @@ class _FourArraysContainer(_TwoArraysContainer):
     array_3_no_id: IdArray
     array_4_no_id: FancyNonIdArray
 
+
 def test_deepcopy():
     container = Grid.empty()
     container.node = NodeArray.zeros(1)
