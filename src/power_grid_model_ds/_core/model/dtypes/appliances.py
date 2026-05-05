@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 """Appliance data types"""
+
 from typing import ClassVar
 
 import numpy as np
@@ -18,6 +19,7 @@ class Appliance(Id):
     node: NDArray[np.int32]  # id of the coupled node
     status: NDArray[np.int8]  # connection status to the node
     _id_columns: ClassVar[set[str]] = {"node"}
+
 
 class Source(Appliance):
     """Source data type"""

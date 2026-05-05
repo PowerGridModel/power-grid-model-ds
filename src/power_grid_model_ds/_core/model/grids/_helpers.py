@@ -10,27 +10,6 @@ from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.graphs.models.rustworkx import RustworkxGraphModel
-from power_grid_model_ds.arrays import (
-    AsymCurrentSensorArray,
-    AsymGenArray,
-    AsymLoadArray,
-    AsymPowerSensorArray,
-    AsymVoltageSensorArray,
-    Branch3Array,
-    BranchArray,
-    FaultArray,
-    IdArray,
-    NodeArray,
-    ShuntArray,
-    SourceArray,
-    SymCurrentSensorArray,
-    SymGenArray,
-    SymLoadArray,
-    SymPowerSensorArray,
-    SymVoltageSensorArray,
-    TransformerTapRegulatorArray,
-    VoltageRegulatorArray,
-)
 
 if TYPE_CHECKING:
     from .base import Grid
