@@ -8,6 +8,7 @@ import dash_ag_grid as dag
 import numpy as np
 import pytest
 from dash.exceptions import PreventUpdate
+from plotly import graph_objs as go
 from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.dtypes.typing import NDArray3
@@ -155,6 +156,7 @@ def test_cell_selection_graph_invalid_trigger():
     with patch(_CTX_PATH, ctx):
         fig, style = cell_selection_graph(None)
     assert style == {"display": "none"}
+    assert fig == go.Figure()
 
 
 def test_cell_selection_graph_no_data(_mock_cell_clicked_ctx):
@@ -162,6 +164,7 @@ def test_cell_selection_graph_no_data(_mock_cell_clicked_ctx):
     with patch(_CTX_PATH, _mock_cell_clicked_ctx):
         fig, style = cell_selection_graph(None)
     assert style == {"display": "none"}
+    assert fig == go.Figure()
 
 
 def test_cell_selection_graph_with_output_data(_mock_cell_clicked_ctx):
