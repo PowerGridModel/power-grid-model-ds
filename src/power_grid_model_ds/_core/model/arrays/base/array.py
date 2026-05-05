@@ -65,7 +65,6 @@ class FancyArray(ABC):  # noqa: B024
     _data: NDArray = np.ndarray([])
     _defaults: ClassVar[dict[str, Any]] = {}
     _str_lengths: ClassVar[dict[str, int]] = {}
-    _id_columns: ClassVar[set[str]] = set()
 
     def __init__(self, *args, data: NDArray | None = None, **kwargs):
         if data is None:
