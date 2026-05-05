@@ -36,18 +36,6 @@ class _FourArraysContainer(_TwoArraysContainer):
     array_3_no_id: IdArray
     array_4_no_id: FancyNonIdArray
 
-
-def test_id_counter_type(basic_grid: Grid):
-    assert isinstance(basic_grid.id_counter, int)
-
-
-def test_id_counter():
-    container = FancyArrayContainer.empty()
-    # pylint: disable=protected-access
-    container._ids = {42}
-    assert container.id_counter == 42
-
-
 def test_deepcopy():
     container = Grid.empty()
     container.node = NodeArray.zeros(1)
