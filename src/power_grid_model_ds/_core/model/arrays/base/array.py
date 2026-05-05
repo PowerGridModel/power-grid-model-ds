@@ -52,6 +52,7 @@ class FancyArray(ABC):  # noqa: B024
     Note on string-columns:
         The default length for string columns is stored in _DEFAULT_STR_LENGTH.
         To change this, you can set the _str_lengths class attribute.
+        The _str_lengths attribute is inherited by child classes.
 
     Example:
         >>> class MyArray(FancyArray):
