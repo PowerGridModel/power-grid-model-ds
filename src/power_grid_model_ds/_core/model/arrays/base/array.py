@@ -49,14 +49,15 @@ class FancyArray(ABC):  # noqa: B024
         which is a dictionary mapping column names to their default values.
         The _defaults attribute is inherited by child classes.
 
-    Note on string-columns:
+    Note on string columns:
         The default length for string columns is stored in _DEFAULT_STR_LENGTH.
         To change this, you can set the _str_lengths class attribute.
         The _str_lengths attribute is inherited by child classes.
 
-    Note on id-columns:
+    Note on id columns:
         Columns that contain ids or reference ids (e.g., 'id', 'from_node', etc.) should be defined in the _id_columns
-        class attribute to ensure correct functionality of grid.merge
+        class attribute to ensure correct functionality of grid.merge()
+        The _id_columns attribute is inherited by child classes.
 
     Example:
         >>> class MyArray(FancyArray):
