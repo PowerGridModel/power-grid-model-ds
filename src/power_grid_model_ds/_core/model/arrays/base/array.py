@@ -53,6 +53,10 @@ class FancyArray(ABC):  # noqa: B024
         The default length for string columns is stored in _DEFAULT_STR_LENGTH.
         To change this, you can set the _str_lengths class attribute.
 
+    Note on id-columns:
+        Columns that contain ids or reference ids (e.g., 'id', 'from_node', etc.) should be defined in the _id_columns
+        class attribute to ensure correct functionality of grid.merge
+
     Example:
         >>> class MyArray(FancyArray):
         >>>     name: NDArray[np.str_]
