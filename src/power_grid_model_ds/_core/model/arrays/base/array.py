@@ -52,6 +52,7 @@ class FancyArray(ABC):  # noqa: B024
     Note on string-columns:
         The default length for string columns is stored in _DEFAULT_STR_LENGTH.
         To change this, you can set the _str_lengths class attribute.
+        The _str_lengths attribute is inherited by child classes.
 
     Note on id-columns:
         Columns that contain ids or reference ids (e.g., 'id', 'from_node', etc.) should be defined in the _id_columns
@@ -69,7 +70,6 @@ class FancyArray(ABC):  # noqa: B024
     _data: NDArray = np.ndarray([])
     _defaults: ClassVar[dict[str, Any]] = {}
     _str_lengths: ClassVar[dict[str, int]] = {}
-    _id_columns: ClassVar[set[str]] = set()
 
     def __init__(self, *args, data: NDArray | None = None, **kwargs):
         if data is None:
