@@ -66,17 +66,17 @@ def test_get_public_class_attrs():
     }
 
 
-def test_build_mro_attribute_set():
+def test_combine_attribute_from_parent_classes_set():
     attr = combine_attribute_from_parent_classes(_ChildClass, attribute_name="a", attribute_type=set)
     assert attr == {1, 2, 3, 4, 5}
 
 
-def test_build_mro_attribute_dict():
+def test_combine_attribute_from_parent_classes_dict():
     assert _ChildClass.b == {2: "b", 3: "ccc"}
     attr = combine_attribute_from_parent_classes(_ChildClass, attribute_name="b", attribute_type=dict)
     assert attr == {1: "a", 2: "b", 3: "ccc"}
 
 
-def test_build_mro_attribute_list():
+def test_combine_attribute_from_parent_classes_list():
     with pytest.raises(NotImplementedError):
         combine_attribute_from_parent_classes(_ChildClass, attribute_name="c", attribute_type=list)
