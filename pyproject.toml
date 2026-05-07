@@ -160,7 +160,7 @@ select = [
   # raise vanilla args
   "TRY002",
   # pytest-style
-  #"PT",
+  "PT",
 ]
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]

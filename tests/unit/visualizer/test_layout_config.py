@@ -17,7 +17,7 @@ class CoordinatedNodeArray(NodeArray):
 
 
 @pytest.mark.parametrize(
-    "name, expected",
+    ("name", "expected"),
     [
         (LayoutOptions.RANDOM, {"name": "random"}),
         (LayoutOptions.CIRCLE, {"name": "circle"}),
