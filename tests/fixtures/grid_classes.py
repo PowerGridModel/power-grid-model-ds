@@ -13,8 +13,8 @@ from power_grid_model_ds.arrays import IdArray
 from tests.fixtures.arrays import CustomLineArray, CustomNodeArray, DefaultedCustomLineArray, DefaultedCustomNodeArray
 
 
-class ExtraArray(IdArray):
-    """An extra array with referencing id columns."""
+class UserDefinedArray(FancyArray):
+    """An user defined array that does not inherit from any existing grid array with id references."""
 
     branch_id: NDArray[np.int32]
     node_id: NDArray[np.int32]
