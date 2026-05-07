@@ -136,7 +136,11 @@ def test_setitem_as_fancy_array_with_mask(fancy_test_array: FancyTestArray):
 
 def test_setitem_as_fancy_array_with_mask_too_large(fancy_test_array: FancyTestArray):
     mask = np.array([True, False, True])
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match="NumPy boolean array indexing assignment cannot assign 3 input values to the 2 output values"
+        " where the mask is true",
+    ):
         fancy_test_array[mask] = FancyTestArray.zeros(3)
 
 
