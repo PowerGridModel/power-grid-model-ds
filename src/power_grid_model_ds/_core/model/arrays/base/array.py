@@ -60,8 +60,8 @@ class FancyArray(ABC):  # noqa: B024
 
     Note on id columns:
         Columns that contain ids or reference ids (e.g., 'id', 'from_node', etc.) should be defined in the _id_columns
-        class attribute to ensure correct functionality of grid.merge()
-        The _id_columns attribute is inherited by child classes.
+        class attribute to ensure correct functionality of certain grid helper methods (e.g. grid.merge).
+        The _id_columns attribute is inherited and combined with those of the parent classes.
 
     Example:
         >>> class MyArray(FancyArray):
