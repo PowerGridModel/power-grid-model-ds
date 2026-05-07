@@ -195,7 +195,7 @@ class TestUnique:
         assert_array_equal(inverse, [0, 1, 2, 0, 1, 2])
 
 
-class TestNumpyInteraction:
+class TestNumpyOperations:
     def test_prevent_delete_numpy_attribute(self, fancy_test_array: FancyTestArray):
         with pytest.raises(AttributeError):
             del fancy_test_array.shape  # 'size' is a numpy attribute
