@@ -109,7 +109,7 @@ def test_check_ids_two_arrays_with_conflict():
 
     assert len(list(container.all_arrays())) == 2
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Duplicates found within _TwoArraysContainer!"):
         container.check_ids()
 
 
@@ -122,7 +122,7 @@ def test_check_ids_two_arrays_with_conflict_in_same_array():
 
     assert len(list(container.all_arrays())) == 2
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Duplicates found within _TwoArraysContainer!"):
         container.check_ids()
 
 
@@ -210,7 +210,7 @@ def test_rebuild_ids():
 def test_rebuild_ids_with_duplicates():
     grid = Grid.from_txt("1 2 12")
     grid.node.id = [1, 12]  # Duplicate IDs within different arrays same array
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=re.escape("Duplicate ids found between arrays (LineArray)")):
         grid.rebuild_ids()
 
 

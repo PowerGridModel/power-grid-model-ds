@@ -4,7 +4,7 @@
 
 """A set of helper functions that mimic numpy functions but are specifically designed for FancyArrays."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, overload
 
 import numpy as np
 
@@ -22,6 +22,14 @@ def concatenate[T: FancyArray](fancy_array: T, *other_arrays: T | np.ndarray) ->
     except TypeError as error:
         raise TypeError("Cannot append arrays: mismatching dtypes.") from error
     return fancy_array.__class__(data=concatenated)
+
+
+@overload
+def unique[T: FancyArray](array: T) -> T: ...
+
+
+@overload
+def unique[T: FancyArray](array: T, **kwargs): ...
 
 
 def unique[T: FancyArray](array: T, **kwargs):
