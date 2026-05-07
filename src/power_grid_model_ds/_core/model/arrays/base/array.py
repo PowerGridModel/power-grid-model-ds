@@ -95,7 +95,7 @@ class FancyArray(ABC):  # noqa: B024
     @classmethod
     @lru_cache
     def get_id_columns(cls) -> set[str]:
-        return build_mro_attribute(cls, "_id_columns", attribute_type=set)
+        return combine_attribute_from_parent_classes(cls, "_id_columns", attribute_type=set)
 
     @classmethod
     @lru_cache
