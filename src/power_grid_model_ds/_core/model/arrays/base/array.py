@@ -7,7 +7,7 @@ from collections import namedtuple
 from collections.abc import Iterable
 from copy import copy
 from functools import lru_cache
-from typing import Any, Literal, TypeVar, overload
+from typing import Any, ClassVar, Literal, TypeVar, overload
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -58,8 +58,8 @@ class FancyArray(ABC):  # noqa: B024
     """
 
     _data: NDArray = np.ndarray([])
-    _defaults: dict[str, Any] = {}
-    _str_lengths: dict[str, int] = {}
+    _defaults: ClassVar[dict[str, Any]] = {}
+    _str_lengths: ClassVar[dict[str, int]] = {}
 
     def __init__(self, *args, data: NDArray | None = None, **kwargs):
         if data is None:
@@ -272,6 +272,10 @@ class FancyArray(ABC):  # noqa: B024
         if isinstance(self._data, np.void):
             return tpl_cls(*self._data)
         return tpl_cls(*self._data[0])
+
+    @property
+    def size(self) -> int:
+        return self._data.size
 
     def filter(
         self: Self,

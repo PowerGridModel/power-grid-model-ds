@@ -110,11 +110,11 @@ select = [
   "E",
   # Pyflakes
   "F",
-  # # pyupgrade
+  # pyupgrade
   "UP",
-  # # flake8-bugbear
+  # flake8-bugbear
   "B",
-  # # flake8-simplify
+  # flake8-simplify
   "SIM",
   # isort
   "I",
@@ -152,7 +152,7 @@ select = [
   # raise
   "RSE",
   # ruff sepcific rules
-  #"RUF",
+  "RUF",
   # bandit
   "S",
   # boolean positional value in call
@@ -160,7 +160,7 @@ select = [
   # raise vanilla args
   "TRY002",
   # pytest-style
-  #"PT",
+  "PT",
 ]
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
