@@ -5,7 +5,7 @@
 """Misc utils"""
 
 from collections.abc import Sequence
-from typing import get_type_hints, overload
+from typing import get_type_hints
 
 import numpy as np
 
@@ -30,15 +30,7 @@ def get_public_annotations(cls: type):
     return {attr: type_ for attr, type_ in class_attributes.items() if not attr.startswith("_")}
 
 
-@overload
-def build_mro_attribute(cls: type, attribute_name: str, attribute_type: type[dict]) -> dict: ...
-
-
-@overload
-def build_mro_attribute(cls: type, attribute_name: str, attribute_type: type[set]) -> set: ...
-
-
-def build_mro_attribute(cls: type, attribute_name: str, attribute_type) -> dict | set:
+def combine_attribute_from_parent_classes[T: (dict, set)](cls: type, attribute_name: str, attribute_type: type[T]) -> T:
     """Combine all versions of an attribute in the Method Resolution Order (mro) of a class into a single attribute
 
     For dicts this means the dict is updated so that child classes override parent classes.
@@ -46,18 +38,19 @@ def build_mro_attribute(cls: type, attribute_name: str, attribute_type) -> dict 
 
     Types other than dict and set are not supported
     """
-    attr_value = attribute_type()
+    combined_attr = attribute_type()
     for parent in reversed(list(cls.__mro__)):
+        parent_attr = getattr(parent, attribute_name, attribute_type())
         if attribute_type is dict:
-            attr_value.update(getattr(parent, attribute_name, {}))
+            combined_attr.update(parent_attr)
         elif attribute_type is set:
-            attr_value |= getattr(parent, attribute_name, set())
+            combined_attr |= parent_attr
         else:
             raise NotImplementedError(
                 f"Type {attribute_type} cannot combine inherited for attribute {attribute_name}. "
                 f"Only dict and set are currently supported."
             )
-    return attr_value
+    return combined_attr
 
 
 def array_equal_with_nan(array1: np.ndarray, array2: np.ndarray) -> bool:

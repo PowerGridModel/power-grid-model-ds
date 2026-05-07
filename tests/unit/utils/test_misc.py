@@ -8,7 +8,7 @@ import pytest
 
 from power_grid_model_ds._core.utils.misc import (
     array_equal_with_nan,
-    build_mro_attribute,
+    combine_attribute_from_parent_classes,
     get_public_annotations,
     is_sequence,
 )
@@ -67,16 +67,16 @@ def test_get_public_class_attrs():
 
 
 def test_build_mro_attribute_set():
-    attr = build_mro_attribute(_ChildClass, attribute_name="a", attribute_type=set)
+    attr = combine_attribute_from_parent_classes(_ChildClass, attribute_name="a", attribute_type=set)
     assert attr == {1, 2, 3, 4, 5}
 
 
 def test_build_mro_attribute_dict():
     assert _ChildClass.b == {2: "b", 3: "ccc"}
-    attr = build_mro_attribute(_ChildClass, attribute_name="b", attribute_type=dict)
+    attr = combine_attribute_from_parent_classes(_ChildClass, attribute_name="b", attribute_type=dict)
     assert attr == {1: "a", 2: "b", 3: "ccc"}
 
 
 def test_build_mro_attribute_list():
     with pytest.raises(NotImplementedError):
-        build_mro_attribute(_ChildClass, attribute_name="c", attribute_type=list)
+        combine_attribute_from_parent_classes(_ChildClass, attribute_name="c", attribute_type=list)

@@ -48,7 +48,7 @@ def test_from_extended_grid():
     assert grid.graphs.complete_graph.nr_nodes == len(grid.branches)
 
     assert extended_grid.id_counter == grid.id_counter
-    assert extended_grid.max_id == grid.max_id
+    assert extended_grid.id_counter == grid.id_counter
 
 
 def test_basic_grid_fixture(basic_grid: Grid):

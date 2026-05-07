@@ -185,7 +185,7 @@ class TestGetApplianceClassification:
     """Test get_appliance_classification function."""
 
     @pytest.mark.parametrize(
-        ("array_type, component_type, status, expected_classes"),
+        ("array_type", "component_type", "status", "expected_classes"),
         [
             pytest.param(SymLoadArray, ComponentType.sym_load, 1, [StyleClass.LOADING_APPLIANCE], id="sym_load"),
             pytest.param(SymGenArray, ComponentType.sym_gen, 1, [StyleClass.GENERATING_APPLIANCE], id="sym_gen"),
