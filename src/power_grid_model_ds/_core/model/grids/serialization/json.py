@@ -33,7 +33,22 @@ def serialize_to_json[G: Grid](grid: G, path: Path, strict: bool = True, **kwarg
         Path: The path where the file was saved
     """
     path.parent.mkdir(parents=True, exist_ok=True)
+    json_data = serialize_to_dict(grid=grid, strict=strict, **kwargs)
+    with path.open("w", encoding="utf-8") as f:
+        json.dump(json_data, f, **kwargs)
+    return path
 
+
+def serialize_to_dict[G: Grid](grid: G, strict: bool = True, **kwargs) -> dict:
+    """Serialize a Grid object to a Python dict.
+
+    Args:
+        grid: The Grid object to serialize
+        strict: Whether to raise an error if the grid object is not serializable.
+        **kwargs: Keyword arguments forwarded to json.dumps for serializability checks (e.g. cls).
+    Returns:
+        dict: A PGM-compatible dict representation of the grid.
+    """
     serialized_data = {}
 
     for field in dataclasses.fields(grid):
@@ -49,16 +64,10 @@ def serialize_to_json[G: Grid](grid: G, path: Path, strict: bool = True, **kwarg
         if _is_serializable(field_value, strict, **kwargs):
             serialized_data[field.name] = field_value
 
-    # Store in a wrapper for PGM compatibility
-    json_data = {"data": serialized_data}
-
-    with Path(path).open("w", encoding="utf-8") as f:
-        json.dump(json_data, f, **kwargs)
-
-    return path
+    return {"data": serialized_data}
 
 
-def deserialize_from_json[G: Grid](path: Path, target_grid_class: type[G], **kwargs) -> G:
+def deserialize_from_json[G: Grid](path: Path, target_grid_class: type[G]) -> G:
     """Load a Grid object from JSON format with cross-type loading support.
 
     Args:
@@ -68,17 +77,52 @@ def deserialize_from_json[G: Grid](path: Path, target_grid_class: type[G], **kwa
     Returns:
         Grid: The deserialized Grid object of the specified target class
     """
-    if "decoder_cls" in kwargs:
-        kwargs["cls"] = kwargs.pop("decoder_cls")
+    with path.open(encoding="utf-8") as f:
+        json_data = json.load(f)
+    return deserialize_from_dict(data=json_data, target_grid_class=target_grid_class)
 
-    with Path(path).open("r", encoding="utf-8") as f:
-        json_data = json.load(f, **kwargs)
 
+def deserialize_from_dict[G: Grid](data: dict, target_grid_class: type[G]) -> G:
+    """Load a Grid object from a Python dict.
+
+    Args:
+        data: A dict as produced by ``serialize_to_dict``.
+        target_grid_class: Grid class to load into.
+
+    Returns:
+        Grid: The deserialized Grid object of the specified target class
+    """
     grid = target_grid_class.empty()
-    _restore_grid_values(grid, json_data["data"])
+    _restore_grid_values(grid, data["data"])
     grid.rebuild_ids()
     grid.rebuild_graphs()
     return grid
+
+
+def serialize_to_json_string[G: Grid](grid: G, strict: bool = True, **kwargs) -> str:
+    """Serialize a Grid to a JSON string (in memory, no file I/O).
+
+    Args:
+        grid: The Grid object to serialize.
+        strict: Whether to raise an error if the grid is not serializable.
+        **kwargs: Forwarded to json.dumps (e.g. indent, sort_keys, cls).
+    Returns:
+        str: A JSON string representation of the grid.
+    """
+    data = serialize_to_dict(grid=grid, strict=strict, **kwargs)
+    return json.dumps(data, **kwargs)
+
+
+def deserialize_from_json_string[G: Grid](json_string: str, target_grid_class: type[G]) -> G:
+    """Load a Grid from a JSON string.
+
+    Args:
+        json_string: A JSON string as produced by ``serialize_to_json_string``.
+        target_grid_class: Grid class to load into.
+    Returns:
+        Grid: The deserialized Grid object.
+    """
+    return deserialize_from_dict(data=json.loads(json_string), target_grid_class=target_grid_class)
 
 
 def _restore_grid_values[G: Grid](grid: G, json_data: dict) -> None:
