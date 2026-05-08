@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from copy import copy
+from typing import ClassVar
 
 import numpy as np
 import pytest
@@ -26,12 +27,12 @@ class _DefaultStrLengthArray(FancyArray):
 
 class _CustomStrLengthArray(FancyArray):
     test_str: NDArray[np.str_]
-    _str_lengths = {"test_str": 100}
+    _str_lengths: ClassVar = {"test_str": 100}
 
 
 class _InheritedStrLengthArray(_CustomStrLengthArray):
     extra_string: NDArray[np.str_]
-    _str_lengths = {"extra_string": 100}
+    _str_lengths: ClassVar = {"extra_string": 100}
 
 
 def test_get_non_existing_attribute(fancy_test_array: FancyTestArray):
@@ -106,7 +107,7 @@ def test_getitem_with_tuple_mask(fancy_test_array: FancyTestArray):
     # e.g: np.array([1,2,3])[(True, False, True)] returns an empty array (array([], shape=(0, 3), dtype=int64)
     mask = (True, False, True)
     with pytest.raises(NotImplementedError):
-        fancy_test_array[mask]  # type: ignore[call-overload]  # noqa
+        fancy_test_array[mask]  # type: ignore[call-overload]
 
 
 def test_getitem_with_empty_list_mask():
@@ -135,7 +136,11 @@ def test_setitem_as_fancy_array_with_mask(fancy_test_array: FancyTestArray):
 
 def test_setitem_as_fancy_array_with_mask_too_large(fancy_test_array: FancyTestArray):
     mask = np.array([True, False, True])
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match="NumPy boolean array indexing assignment cannot assign 3 input values to the 2 output values"
+        " where the mask is true",
+    ):
         fancy_test_array[mask] = FancyTestArray.zeros(3)
 
 

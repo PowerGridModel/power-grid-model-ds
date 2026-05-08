@@ -28,7 +28,7 @@ def load_grid_from_pickle(grid_class: type["Grid"], cache_path: Path, load_graph
 def save_grid_to_pickle(grid: "Grid", cache_dir: Path, cache_name: str, compress: bool = True):
     """See Grid.cache()"""
     tmp_graphs = copy(grid.graphs)
-    grid.graphs = None  # noqa
+    grid.graphs = None
     cache_dir.mkdir(parents=True, exist_ok=True)
 
     pickle_path = cache_dir / f"{cache_name}.pickle"
