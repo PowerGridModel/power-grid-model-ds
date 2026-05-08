@@ -4,7 +4,7 @@
 
 """Base data types"""
 
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -15,5 +15,5 @@ from power_grid_model_ds._core.model.constants import empty
 class Id:
     """Base dtype for id arrays"""
 
-    _defaults: dict[str, Any] = {"id": empty}
+    _defaults: ClassVar[dict[str, Any]] = {"id": empty}
     id: NDArray[np.int32]

@@ -52,7 +52,7 @@ def test_grid_delete_node(basic_grid: Grid):
 
 
 @pytest.mark.parametrize(
-    "three_winding_node_id,expected_length_three_winding_transformers",
+    ("three_winding_node_id", "expected_length_three_winding_transformers"),
     [
         pytest.param(101, 0, id="Three winding transformer connected to node to delete"),
         pytest.param(102, 1, id="Three winding transformer not connected to node to delete"),
@@ -166,7 +166,7 @@ def test_grid_delete_node_all(topologically_full_grid: Grid):
 
 
 @pytest.mark.parametrize(
-    "branch_array_class,branch_id_to_delete,deleted_ids",
+    ("branch_array_class", "branch_id_to_delete", "deleted_ids"),
     [
         pytest.param(
             LineArray,
@@ -266,7 +266,7 @@ def test_grid_delete_branch3_all(topologically_full_grid: Grid):
 
 
 @pytest.mark.parametrize(
-    "appliance_array_class,appliance_id_to_delete,deleted_ids",
+    ("appliance_array_class", "appliance_id_to_delete", "deleted_ids"),
     [
         pytest.param(
             SourceArray,
@@ -538,7 +538,8 @@ def test_grid_inactivate_branch(basic_grid: Grid):
     grid = basic_grid
 
     target_line = grid.line.get(202)
-    assert target_line.from_status == 1 and target_line.to_status == 1
+    assert target_line.from_status == 1
+    assert target_line.to_status == 1
     grid.make_inactive(branch=target_line)
 
     target_line_after = grid.line.get(202)
@@ -554,7 +555,8 @@ def test_grid_make_inactive_from_side(basic_grid: Grid):
 
     target_line = grid.line.get(202)
     # line 7 is expected to be active
-    assert target_line.from_status == 1 and target_line.to_status == 1
+    assert target_line.from_status == 1
+    assert target_line.to_status == 1
     grid.make_inactive(branch=target_line, at_to_side=False)
 
     target_line_after = grid.line.get(202)
@@ -566,7 +568,8 @@ def test_grid_make_inactive_to_side(basic_grid: Grid):
 
     target_line = grid.line.get(202)
     # line 7 is expected to be active
-    assert target_line.from_status == 1 and target_line.to_status == 1
+    assert target_line.from_status == 1
+    assert target_line.to_status == 1
     grid.make_inactive(branch=target_line)
 
     target_line_after = grid.line.get(202)

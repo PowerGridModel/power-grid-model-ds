@@ -254,7 +254,7 @@ class TestPathMethods:
 
 class TestFindFundamentalCycles:
     @pytest.mark.parametrize(
-        "additional_edges, nodes_in_cycles",
+        ("additional_edges", "nodes_in_cycles"),
         [
             ([], set()),
             ([(2, 5)], {1, 2, 5}),
@@ -359,7 +359,7 @@ class TestFindFirstConnected:
 
     def test_find_first_connected_same_node(self, graph_with_2_routes: BaseGraphModel):
         graph = graph_with_2_routes
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="node_id cannot be in candidate_node_ids"):
             graph.find_first_connected(1, candidate_node_ids=[1, 3, 5])
 
     def test_find_first_connected_no_match(self, graph_with_2_routes: BaseGraphModel):
