@@ -9,7 +9,7 @@ from tests.fixtures.grids import build_basic_grid
 
 @pytest.fixture
 def basic_grid(grid):
-    yield build_basic_grid(grid)
+    return build_basic_grid(grid)
 
 
 def test_save_html_defaults(tmp_path, basic_grid):
