@@ -388,7 +388,7 @@ class TestTmpRemoveBranches:
         graph = deepcopy(graph_with_2_routes)
 
         with (
-            pytest.raises(MissingBranchError, match="Branch between nodes 1 and 99 does NOT exist."),
+            pytest.raises(MissingBranchError, match="Branch between nodes 1 and 99 does NOT exist"),
             graph.tmp_remove_branches([(1, 99)]),
         ):
             pass
