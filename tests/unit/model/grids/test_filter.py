@@ -4,7 +4,8 @@
 
 import pytest
 
-from power_grid_model_ds import Grid, filter_downstream, filter_grid, filter_nodes, filter_path
+from power_grid_model_ds import Grid
+from power_grid_model_ds.utils import filter_downstream, filter_grid, filter_nodes, filter_path
 from tests.fixtures.grid_classes import ExtendedGrid
 from tests.fixtures.grids import build_basic_grid
 
