@@ -11,64 +11,6 @@ if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import Grid
 
 
-def _resolve_visible_nodes(grid: "Grid", feeder_ids: list[int]) -> set[int]:
-    feeder_nodes = grid.node.filter(feeder_branch_id=feeder_ids)
-    visible: set[int] = set(feeder_nodes.id.tolist())
-    substation_ids = {nid for nid in feeder_nodes.feeder_node_id.tolist() if nid != EMPTY_ID}
-    return visible | substation_ids
-
-
-def _expand_adjacent_nodes(grid: "Grid", visible_nodes: set[int]) -> set[int]:
-    seed = list(visible_nodes)
-    expanded = set(visible_nodes)
-
-    branches = grid.branches
-    expanded |= set(branches.filter(from_node=seed).to_node.tolist())
-    expanded |= set(branches.filter(to_node=seed).from_node.tolist())
-
-    twt = grid.three_winding_transformer
-    for node_field in ("node_1", "node_2", "node_3"):
-        matches = twt.filter(**{node_field: seed})  # type: ignore[arg-type]
-        if matches.size:
-            for other_field in ("node_1", "node_2", "node_3"):
-                if other_field != node_field:
-                    expanded |= set(getattr(matches, other_field).tolist())
-
-    return expanded
-
-
-def _build_grid_subset(grid: "Grid", visible_nodes: set[int]) -> "Grid":
-    node_list = list(visible_nodes)
-    result = type(grid).empty()
-
-    result.append(grid.node.filter(id=node_list))
-
-    for branch_array in grid.branch_arrays:
-        subset = branch_array.filter(from_node=node_list, to_node=node_list, mode_="AND")
-        if subset.size:
-            result.append(subset)
-
-    twt_subset = grid.three_winding_transformer.filter(
-        node_1=node_list, node_2=node_list, node_3=node_list, mode_="AND"
-    )
-    if twt_subset.size:
-        result.append(twt_subset)
-
-    for appliance_array in (
-        grid.sym_load,
-        grid.sym_gen,
-        grid.source,
-        grid.asym_load,
-        grid.asym_gen,
-        grid.shunt,
-    ):
-        subset = appliance_array.filter(node=node_list)
-        if subset.size:
-            result.append(subset)
-
-    return result
-
-
 def filter_grid(
     grid: "Grid",
     feeder_ids: list[int],
@@ -207,3 +149,61 @@ def filter_downstream(
     if include_adjacent_nodes:
         visible_nodes = _expand_adjacent_nodes(grid, visible_nodes)
     return _build_grid_subset(grid, visible_nodes)
+
+
+def _resolve_visible_nodes(grid: "Grid", feeder_ids: list[int]) -> set[int]:
+    feeder_nodes = grid.node.filter(feeder_branch_id=feeder_ids)
+    visible: set[int] = set(feeder_nodes.id.tolist())
+    substation_ids = {nid for nid in feeder_nodes.feeder_node_id.tolist() if nid != EMPTY_ID}
+    return visible | substation_ids
+
+
+def _expand_adjacent_nodes(grid: "Grid", visible_nodes: set[int]) -> set[int]:
+    seed = list(visible_nodes)
+    expanded = set(visible_nodes)
+
+    branches = grid.branches
+    expanded |= set(branches.filter(from_node=seed).to_node.tolist())
+    expanded |= set(branches.filter(to_node=seed).from_node.tolist())
+
+    twt = grid.three_winding_transformer
+    for node_field in ("node_1", "node_2", "node_3"):
+        matches = twt.filter(**{node_field: seed})  # type: ignore[arg-type]
+        if matches.size:
+            for other_field in ("node_1", "node_2", "node_3"):
+                if other_field != node_field:
+                    expanded |= set(getattr(matches, other_field).tolist())
+
+    return expanded
+
+
+def _build_grid_subset(grid: "Grid", visible_nodes: set[int]) -> "Grid":
+    node_list = list(visible_nodes)
+    result = type(grid).empty()
+
+    result.append(grid.node.filter(id=node_list))
+
+    for branch_array in grid.branch_arrays:
+        subset = branch_array.filter(from_node=node_list, to_node=node_list, mode_="AND")
+        if subset.size:
+            result.append(subset)
+
+    twt_subset = grid.three_winding_transformer.filter(
+        node_1=node_list, node_2=node_list, node_3=node_list, mode_="AND"
+    )
+    if twt_subset.size:
+        result.append(twt_subset)
+
+    for appliance_array in (
+        grid.sym_load,
+        grid.sym_gen,
+        grid.source,
+        grid.asym_load,
+        grid.asym_gen,
+        grid.shunt,
+    ):
+        subset = appliance_array.filter(node=node_list)
+        if subset.size:
+            result.append(subset)
+
+    return result
