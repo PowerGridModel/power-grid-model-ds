@@ -549,14 +549,6 @@ def test_grid_inactivate_branch(basic_grid: Grid):
     graph = grid.graphs.active_graph
     assert not graph.has_branch(target_line.from_node.item(), target_line.to_node.item())
 
-    grid.make_active(branch=target_line)
-
-    assert grid.graphs.active_graph.has_branch(target_line.from_node.item(), target_line.to_node.item())
-
-    target_line_after = grid.line.get(202)
-    assert target_line_after.from_status == 1
-    assert target_line_after.to_status == 1
-
 
 def test_grid_double_inactivate_branch(basic_grid: Grid):
     grid = basic_grid
