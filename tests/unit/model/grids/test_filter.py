@@ -116,7 +116,7 @@ def test_filter_path_direct_connection(basic_grid):
 
 
 def test_filter_path_multi_hop(basic_grid):
-    # 103–104 requires crossing the inactive gap: 103–202–102–201–101–204–105–601–104
+    # 103-104 requires crossing the inactive gap: 103-202-102-201-101-204-105-601-104
     result = filter_path(basic_grid, start_node_id=103, end_node_id=104)
     assert {101, 102, 103, 104, 105}.issubset(set(result.node.id.tolist()))
 
