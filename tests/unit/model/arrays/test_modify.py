@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+import re
+
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
@@ -28,7 +30,9 @@ class TestReorder:
         assert_array_equal(reordered.test_str, ["d", "a", "c"])
 
     def test_reorder_mismatched_length(self, fancy_test_array: FancyTestArray):
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ValueError, match=re.escape("Cannot re-order array: mismatch between new_order and values in 'id'-column.")
+        ):
             fancy_test_array.re_order([3, 1])
 
 
@@ -60,15 +64,27 @@ class TestUpdateById:
         assert_array_equal(fancy_test_array.test_int, [88, 0, 99])
 
     def test_update_by_id_invalid_column(self, fancy_test_array: FancyTestArray):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="no field of name non_existing_column"):
             fancy_test_array.update_by_id([1, 3], non_existing_column=123)
 
     def test_update_by_id_invalid_length(self, fancy_test_array: FancyTestArray):
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ValueError,
+            match=re.escape(
+                "Cannot update FancyTestArray. NumPy boolean array indexing assignment cannot "
+                "assign 3 input values to the 2 output values where the mask is true"
+            ),
+        ):
             fancy_test_array.update_by_id([1, 3], test_str=["e", "f", "g"])
 
     def test_update_by_id_invalid_id(self, fancy_test_array: FancyTestArray):
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ValueError,
+            match=re.escape(
+                "Cannot update FancyTestArray. One or more ids do not exist."
+                " Provide allow_missing=True if this is intended."
+            ),
+        ):
             fancy_test_array.update_by_id([1, 4], test_str="e")
 
     def test_update_by_id_invalid_id_allow_missing(self, fancy_test_array: FancyTestArray):
@@ -77,11 +93,17 @@ class TestUpdateById:
 
     def test_update_by_id_no_id_column(self):
         fancy_non_id_array = FancyNonIdArray.zeros(10)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=re.escape("Cannot update FancyNonIdArray. no field of name id")):
             fancy_non_id_array.update_by_id([1, 4], test_str="e")
 
     def test_update_by_id_non_existing_id(self, fancy_test_array: FancyTestArray):
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ValueError,
+            match=re.escape(
+                "Cannot update FancyTestArray. One or more ids do not exist. "
+                "Provide allow_missing=True if this is intended."
+            ),
+        ):
             fancy_test_array.update_by_id([1, 4], test_str="e")
 
 

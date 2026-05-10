@@ -7,7 +7,7 @@ from collections import namedtuple
 from collections.abc import Iterable
 from copy import copy
 from functools import lru_cache
-from typing import Any, Literal, TypeVar, overload
+from typing import Any, ClassVar, Literal, TypeVar, overload
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -19,7 +19,11 @@ from power_grid_model_ds._core.model.arrays.base._optional import pd
 from power_grid_model_ds._core.model.arrays.base._string import convert_array_to_string
 from power_grid_model_ds._core.model.arrays.base.errors import ArrayDefinitionError
 from power_grid_model_ds._core.model.constants import EMPTY_ID, empty
-from power_grid_model_ds._core.utils.misc import array_equal_with_nan, get_inherited_attrs
+from power_grid_model_ds._core.utils.misc import (
+    array_equal_with_nan,
+    combine_attribute_from_parent_classes,
+    get_public_annotations,
+)
 
 # pylint: disable=missing-function-docstring, too-many-public-methods
 
@@ -44,9 +48,15 @@ class FancyArray(ABC):  # noqa: B024
         >>>     name: NDArray[np.str_]
         >>>     value: NDArray[np.float64]
 
+    Note on default values:
+        Default values for columns can be defined by adding a class attribute _defaults,
+        which is a dictionary mapping column names to their default values.
+        The _defaults attribute is inherited by child classes.
+
     Note on string-columns:
         The default length for string columns is stored in _DEFAULT_STR_LENGTH.
         To change this, you can set the _str_lengths class attribute.
+        The _str_lengths attribute is inherited by child classes.
 
     Example:
         >>> class MyArray(FancyArray):
@@ -58,8 +68,8 @@ class FancyArray(ABC):  # noqa: B024
     """
 
     _data: NDArray = np.ndarray([])
-    _defaults: dict[str, Any] = {}
-    _str_lengths: dict[str, int] = {}
+    _defaults: ClassVar[dict[str, Any]] = {}
+    _str_lengths: ClassVar[dict[str, int]] = {}
 
     def __init__(self, *args, data: NDArray | None = None, **kwargs):
         if data is None:
@@ -74,13 +84,13 @@ class FancyArray(ABC):  # noqa: B024
     @classmethod
     @lru_cache
     def get_defaults(cls) -> dict[str, Any]:
-        return get_inherited_attrs(cls, "_defaults")["_defaults"]
+        return combine_attribute_from_parent_classes(cls, "_defaults", attribute_type=dict)
 
     @classmethod
     @lru_cache
     def get_dtype(cls):
-        annotations = get_inherited_attrs(cls, "_str_lengths")
-        str_lengths = annotations.pop("_str_lengths")
+        annotations = get_public_annotations(cls)
+        str_lengths = combine_attribute_from_parent_classes(cls, "_str_lengths", dict)
         dtypes = {}
         for name, dtype in annotations.items():
             if len(dtype.__args__) > 1:
