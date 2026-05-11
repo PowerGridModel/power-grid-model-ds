@@ -137,7 +137,7 @@ def test_update_layout():
 
 
 @pytest.fixture
-def _mock_cell_clicked_ctx():
+def mock_cell_clicked_ctx():
     ctx = MagicMock()
     ctx.triggered = [
         {
@@ -159,19 +159,19 @@ def test_cell_selection_graph_invalid_trigger():
     assert fig == go.Figure()
 
 
-def test_cell_selection_graph_no_data(_mock_cell_clicked_ctx):
+def test_cell_selection_graph_no_data(mock_cell_clicked_ctx):
     server_state.set_app_state(Grid.empty())
-    with patch(_CTX_PATH, _mock_cell_clicked_ctx):
+    with patch(_CTX_PATH, mock_cell_clicked_ctx):
         fig, style = cell_selection_graph(None)
     assert style == {"display": "none"}
     assert fig == go.Figure()
 
 
-def test_cell_selection_graph_with_output_data(_mock_cell_clicked_ctx):
+def test_cell_selection_graph_with_output_data(mock_cell_clicked_ctx):
     dtype = np.dtype([("id", np.int32), ("u_rated", np.float64)])
     output_data = {ComponentType.node: np.array([[(1, 400.0)], [(9, 99.0)], [(1, 410.0)]], dtype=dtype)}
     server_state.set_app_state(Grid.empty(), output_data=output_data)
-    with patch(_CTX_PATH, _mock_cell_clicked_ctx):
+    with patch(_CTX_PATH, mock_cell_clicked_ctx):
         fig, style = cell_selection_graph(None)
     assert style == {"display": "block"}
     assert len(fig.data) == 1
@@ -179,7 +179,7 @@ def test_cell_selection_graph_with_output_data(_mock_cell_clicked_ctx):
     np.testing.assert_allclose(fig.data[0].x, np.array([0, 2]))
 
 
-def test_cell_selection_graph_three_phase_output_data(_mock_cell_clicked_ctx):
+def test_cell_selection_graph_three_phase_output_data(mock_cell_clicked_ctx):
     dtype = np.dtype([("id", np.int32), ("u_rated", np.float64, (3,))])
     output_data = {
         ComponentType.node: np.array(
@@ -187,7 +187,7 @@ def test_cell_selection_graph_three_phase_output_data(_mock_cell_clicked_ctx):
         )
     }
     server_state.set_app_state(Grid.empty(), output_data=output_data)
-    with patch(_CTX_PATH, _mock_cell_clicked_ctx):
+    with patch(_CTX_PATH, mock_cell_clicked_ctx):
         fig, style = cell_selection_graph(None)
     assert style == {"display": "block"}
     assert len(fig.data) == 3  # one trace per phase
