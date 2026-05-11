@@ -39,9 +39,10 @@ class ExtendedFancyTestArrayNoDefaults(FancyTestArray):
 
 
 class ChildArray(DefaultedFancyTestArray):
-    _defaults: ClassVar = {"test_float4": 42.0}
-
+    _defaults: ClassVar[dict] = {"test_float4": 42.0}
+    _id_columns: ClassVar[set] = {"test_id2"}
     test_float4: NDArray[np.float64]
+    test_id2: NDArray[np.int32]
 
 
 class SizedDTypesArray(FancyArray):
@@ -264,3 +265,18 @@ def test_inherit_defaults_from_multiple_parents():
     assert_array_equal([4.5, 4.5, 4.5], array.test_float)
     assert_array_equal(["DEFAULT", "DEFAULT", "DEFAULT"], array.test_str)
     assert_array_equal([42.0, 42.0, 42.0], array.test_float4)
+
+
+def test_inherit_id_columns():
+    assert ChildArray.get_id_columns() == {"id", "test_id2"}
+
+
+def test_inherit_defaults():
+    assert ChildArray.get_defaults() == {
+        "id": -1,
+        "test_bool": True,
+        "test_float": 4.5,
+        "test_float4": 42.0,
+        "test_int": 4,
+        "test_str": "DEFAULT",
+    }

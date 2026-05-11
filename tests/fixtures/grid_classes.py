@@ -8,13 +8,13 @@ from typing import ClassVar
 import numpy as np
 from numpy._typing import NDArray
 
+from power_grid_model_ds import FancyArray
 from power_grid_model_ds._core.model.grids.base import Grid
-from power_grid_model_ds.arrays import IdArray
 from tests.fixtures.arrays import CustomLineArray, CustomNodeArray, DefaultedCustomLineArray, DefaultedCustomNodeArray
 
 
 class UserDefinedArray(FancyArray):
-    """An user defined array that does not inherit from any existing grid array with id references."""
+    """A user defined array that does not inherit from any existing grid array with id references."""
 
     branch_id: NDArray[np.int32]
     node_id: NDArray[np.int32]
@@ -29,7 +29,7 @@ class ExtendedGrid(Grid):
 
     node: DefaultedCustomNodeArray
     line: DefaultedCustomLineArray
-    extra: ExtraArray
+    user_defined: UserDefinedArray
     extra_value: int = 123
 
 
