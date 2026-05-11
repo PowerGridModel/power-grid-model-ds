@@ -46,7 +46,12 @@ from power_grid_model_ds._core.model.grids._search import (
     get_nearest_substation_node,
     get_typed_branches,
 )
-from power_grid_model_ds._core.model.grids.serialization.json import deserialize_from_json, serialize_to_json
+from power_grid_model_ds._core.model.grids.serialization.json import (
+    deserialize_from_json,
+    deserialize_from_json_string,
+    serialize_to_json,
+    serialize_to_json_string,
+)
 from power_grid_model_ds._core.model.grids.serialization.pickle import load_grid_from_pickle, save_grid_to_pickle
 from power_grid_model_ds._core.model.grids.serialization.string import (
     deserialize_from_str,
@@ -464,20 +469,53 @@ class Grid(FancyArrayContainer):
         """
         return merge_grids(self, other_grid, mode)
 
-    def serialize(self, path: Path, **kwargs) -> Path:
+    @overload
+    def serialize(self, path: Path, mode: Literal["json"] = "json", **kwargs) -> Path: ...
+
+    @overload
+    def serialize(self, path: None = None, *, mode: Literal["json_string"], **kwargs) -> str: ...
+
+    def serialize(self, path=None, mode: Literal["json", "json_string"] = "json", **kwargs):
         """Serialize the grid.
 
         Args:
-            path: Destination file path to write JSON to.
-            **kwargs: Additional keyword arguments forwarded to ``json.dump``
+            path: Destination file path. Required when mode is ``"json"``, ignored otherwise.
+            mode: Serialization target. Use ``"json"`` (default) to write a JSON file, or ``"json_string"`` to
+                return a JSON string.
+            **kwargs: Additional keyword arguments forwarded to ``json.dump`` / ``json.dumps``.
         Returns:
-            Path: The path where the file was saved.
+            Path when mode is ``"json"``, str when mode is ``"json_string"``.
         """
-        return serialize_to_json(grid=self, path=path, strict=True, **kwargs)
+        match mode:
+            case "json_string":
+                return serialize_to_json_string(grid=self, **kwargs)
+            case "json":
+                if not isinstance(path, Path):
+                    raise TypeError("path must be a Path when mode='json'")
+                return serialize_to_json(grid=self, path=path, strict=True, **kwargs)
+            case _:
+                raise ValueError(f"Invalid mode '{mode}'. Expected 'json' or 'json_string'.")
+
+    @classmethod
+    def from_json_string(cls: type[Self], json_string: str) -> Self:
+        """Deserialize the grid from a JSON string.
+
+        Args:
+            json_string: A JSON string as produced by ``serialize(mode="json_string")``.
+        Returns:
+            Self: The deserialized grid instance.
+        """
+        return deserialize_from_json_string(json_string=json_string, target_grid_class=cls)
 
     @classmethod
     def deserialize(cls: type[Self], path: Path) -> Self:
-        """Deserialize the grid."""
+        """Deserialize the grid from a JSON file.
+
+        Args:
+            path: Path to the JSON file.
+        Returns:
+            Self: The deserialized grid instance.
+        """
         return deserialize_from_json(path=path, target_grid_class=cls)
 
     def rebuild_graphs(self) -> None:
