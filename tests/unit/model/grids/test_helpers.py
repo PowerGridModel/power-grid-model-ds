@@ -91,7 +91,9 @@ class TestMergeGrids:
 
     def test_merge_recalculate_extended_grid(self):
         grid1 = ExtendedGrid.empty()
-        grid1.append(DefaultedCustomNodeArray.empty(3))
+
+        grid1.append(DefaultedCustomNodeArray.empty(3))  # added to create offset
+
         grid1.append(UserDefinedArray.empty(3))
         grid1.user_defined.branch_id = 10
         grid1.user_defined.node_id = 20
