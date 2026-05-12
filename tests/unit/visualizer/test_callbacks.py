@@ -90,7 +90,7 @@ def test_element_selection_callback():
 
     server_state.set_grid(grid)
 
-    node_data = [{"id": "1", "u_rated": 100.0, "group": "node"}]
+    node_data = [{"id": "1", "group": "node", "associated_ids": {"node": [1]}}]
     edge_data = []
 
     result = display_selected_element(node_data, edge_data)
@@ -114,8 +114,9 @@ def test_element_selection_callback():
             {"field": "three_phase_quantity", "headerName": "three_phase_quantity"},
         ],
     )
-    assert result.rowData == expected.rowData
-    assert result.columnDefs == expected.columnDefs
+    assert result[0].children == "node"
+    assert result[1].rowData == expected.rowData
+    assert result[1].columnDefs == expected.columnDefs
 
 
 def test_display_selected_element_none():

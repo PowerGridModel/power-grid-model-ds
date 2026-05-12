@@ -9,6 +9,7 @@ from power_grid_model import ComponentType, MeasuredTerminalType
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer.parsing_utils import (
     append_component_list_parsed_elements,
+    map_appliance_to_nodes,
 )
 from power_grid_model_ds._core.visualizer.styling_classification import (
     StyleClass,
@@ -19,13 +20,23 @@ from power_grid_model_ds._core.visualizer.styling_classification import (
 from power_grid_model_ds._core.visualizer.typing import (
     ComponentTypeAppliance,
     ComponentTypeBranch,
+    ComponentTypeFlowSensor,
     VizToComponentElements,
 )
 from power_grid_model_ds.arrays import (
     ApplianceArray,
+    AsymCurrentSensorArray,
+    AsymPowerSensorArray,
+    AsymVoltageSensorArray,
     Branch3Array,
     BranchArray,
+    FaultArray,
     NodeArray,
+    SymCurrentSensorArray,
+    SymPowerSensorArray,
+    SymVoltageSensorArray,
+    TransformerTapRegulatorArray,
+    VoltageRegulatorArray,
 )
 
 _NODE_BRANCH_TERMINAL_TYPE = [
@@ -77,6 +88,20 @@ def parse_element_data(grid: Grid) -> VizToComponentElements:
     _parse_appliances(elements, grid.asym_load, ComponentType.asym_load)
     _parse_appliances(elements, grid.asym_gen, ComponentType.asym_gen)
     _parse_appliances(elements, grid.shunt, ComponentType.shunt)
+
+    # Parse sensors
+    appliance_to_node = map_appliance_to_nodes(grid)
+    _parse_flow_sensors(elements, grid.sym_power_sensor, ComponentType.sym_power_sensor, appliance_to_node)
+    _parse_flow_sensors(elements, grid.asym_power_sensor, ComponentType.asym_power_sensor, appliance_to_node)
+    _parse_flow_sensors(elements, grid.sym_current_sensor, ComponentType.sym_current_sensor, appliance_to_node)
+    _parse_flow_sensors(elements, grid.asym_current_sensor, ComponentType.asym_current_sensor, appliance_to_node)
+    _parse_voltage_sensors(elements, grid.sym_voltage_sensor, ComponentType.sym_voltage_sensor)
+    _parse_voltage_sensors(elements, grid.asym_voltage_sensor, ComponentType.asym_voltage_sensor)
+    _parse_voltage_regulators(elements, grid.voltage_regulator)
+    _parse_faults(elements, grid.fault)
+
+    # Parse regulators
+    _parse_transformer_tap_regulators(elements, grid.transformer_tap_regulator)
 
     return elements
 
@@ -174,7 +199,6 @@ def _parse_appliances(elements: VizToComponentElements, array: ApplianceArray, g
                 "group": group.value,
                 "associated_ids": {group.value: [appliance.id.item()]},
             },
-            "selectable": False,
             "classes": get_appliance_edge_classification(appliance, group),
         }
 
@@ -185,3 +209,74 @@ def _parse_appliances(elements: VizToComponentElements, array: ApplianceArray, g
             }  # invert y-axis for visualization
 
         append_component_list_parsed_elements(elements, appliance.id.item(), node_id_str, group.value)
+
+
+def _parse_flow_sensors(
+    elements: VizToComponentElements,
+    array: SymPowerSensorArray | SymCurrentSensorArray | AsymPowerSensorArray | AsymCurrentSensorArray,
+    group: ComponentTypeFlowSensor,
+    appliance_to_node: dict[str, str],
+):
+    """Parse power sensors and return appliance-to-power-sensor mapping."""
+    for power_sensor in array:
+        measured_object_id_str = str(power_sensor.measured_object.item())
+        measured_terminal_type = power_sensor.measured_terminal_type.item()
+
+        if measured_terminal_type in _NODE_BRANCH_TERMINAL_TYPE:
+            mapping_id_strs = [measured_object_id_str]
+        elif measured_terminal_type in _BRANCH3_TERMINAL_TYPE:
+            mapping_id_strs = [f"{measured_object_id_str}_{count}" for count in range(3)]
+        elif measured_terminal_type in _APPLIANCE_TERMINAL_TYPE:
+            mapping_id_strs = [measured_object_id_str]
+            # Map appliance to both appliance and its node as both can be unvisualized
+            if measured_object_id_str in appliance_to_node:
+                mapping_id_strs.append(appliance_to_node[measured_object_id_str])
+        else:
+            raise ValueError(f"Unknown measured_terminal_type: {measured_terminal_type}")
+
+        for id_str in mapping_id_strs:
+            append_component_list_parsed_elements(elements, power_sensor.id.item(), id_str, group.value)
+
+
+def _parse_voltage_sensors(
+    elements: VizToComponentElements,
+    array: SymVoltageSensorArray | AsymVoltageSensorArray,
+    group: Literal[ComponentType.sym_voltage_sensor, ComponentType.asym_voltage_sensor],
+):
+    """Parse voltage sensors and associate them with nodes."""
+    for voltage_sensor in array:
+        node_id_str = str(voltage_sensor.measured_object.item())
+        append_component_list_parsed_elements(elements, voltage_sensor.id.item(), node_id_str, group.value)
+
+
+def _parse_transformer_tap_regulators(elements: VizToComponentElements, array: TransformerTapRegulatorArray):
+    """Parse transformer tap regulators and associate them with transformers."""
+    for tap_regulator in array:
+        regulated_object_str = str(tap_regulator.regulated_object.item())
+        if regulated_object_str in elements:
+            mapping_id_strs = [regulated_object_str]
+        else:
+            mapping_id_strs = [
+                f"{regulated_object_str}_{count}" for count in range(3) if f"{regulated_object_str}_{count}" in elements
+            ]
+
+        for id_str in mapping_id_strs:
+            append_component_list_parsed_elements(
+                elements, tap_regulator.id.item(), id_str, ComponentType.transformer_tap_regulator.value
+            )
+
+
+def _parse_voltage_regulators(elements: VizToComponentElements, array: VoltageRegulatorArray):
+    """Parse voltage regulators and associate them with nodes."""
+    for voltage_regulator in array:
+        regulated_object_str = str(voltage_regulator.regulated_object.item())
+        append_component_list_parsed_elements(
+            elements, voltage_regulator.id.item(), regulated_object_str, ComponentType.voltage_regulator.value
+        )
+
+
+def _parse_faults(elements: VizToComponentElements, array: FaultArray):
+    """Parse faults and associate them with nodes."""
+    for fault in array:
+        fault_object_str = str(fault.fault_object.item())
+        append_component_list_parsed_elements(elements, fault.id.item(), fault_object_str, ComponentType.fault.value)
