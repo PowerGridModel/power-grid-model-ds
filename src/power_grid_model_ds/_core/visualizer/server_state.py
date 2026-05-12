@@ -18,6 +18,9 @@ As such, callers should be careful to avoid unintended side effects on the share
 
 from dataclasses import dataclass
 
+from power_grid_model import ComponentType
+from power_grid_model.data_types import DenseBatchArray
+
 from power_grid_model_ds._core.model.grids.base import Grid
 
 
@@ -26,14 +29,22 @@ class _AppState:
     """Container for application-level state."""
 
     grid: Grid | None = None
+    update_data: dict[ComponentType, DenseBatchArray] | None = None
+    output_data: dict[ComponentType, DenseBatchArray] | None = None
 
 
 _state = _AppState()
 
 
-def set_grid(grid: Grid) -> None:
-    """Set the Grid instance in a thread-safe manner."""
+def set_app_state(
+    grid: Grid,
+    update_data: dict[ComponentType, DenseBatchArray] | None = None,
+    output_data: dict[ComponentType, DenseBatchArray] | None = None,
+) -> None:
+    """Set the application state in a thread-safe manner."""
     _state.grid = grid
+    _state.update_data = update_data
+    _state.output_data = output_data
 
 
 def get_grid() -> Grid:
@@ -48,3 +59,13 @@ def get_grid() -> Grid:
             "Grid state not initialized. This should not happen during normal operation. Please report this as a bug."
         )
     return _state.grid
+
+
+def get_update_data() -> dict[ComponentType, DenseBatchArray] | None:
+    """Get the update data in a thread-safe manner."""
+    return _state.update_data
+
+
+def get_output_data() -> dict[ComponentType, DenseBatchArray] | None:
+    """Get the output data in a thread-safe manner."""
+    return _state.output_data
