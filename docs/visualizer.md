@@ -39,7 +39,7 @@ This will start a local web server at http://localhost:8050
 
 #### Saving to HTML
 
-To save a visualization as a standalone HTML file that can be shared or opened later without a running Python server:
+To save a visualization as a standalone HTML file that can be shared or opened later without a running Python server, this does not contain advanced interaction but the graph only:
 
 ```python
 from power_grid_model_ds import Grid
