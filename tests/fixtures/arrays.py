@@ -9,13 +9,12 @@ from numpy._typing import NDArray
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.dtypes.typing import NDArray3
-from power_grid_model_ds.arrays import LineArray, NodeArray
+from power_grid_model_ds.arrays import IdArray, LineArray, NodeArray
 
 
-class FancyTestArray(FancyArray):
+class FancyTestArray(IdArray):
     """Test array with some attributes"""
 
-    id: NDArray[np.int32]
     test_int: NDArray[np.int64]
     test_float: NDArray[np.float64]
     test_str: NDArray[np.str_]

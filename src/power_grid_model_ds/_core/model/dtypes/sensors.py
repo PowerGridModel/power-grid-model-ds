@@ -8,6 +8,8 @@ Based on the sensors defined in power grid model:
 https://power-grid-model.readthedocs.io/en/v1.9.13/user_manual/components.html#sensor
 """
 
+from typing import ClassVar
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -19,6 +21,7 @@ class Sensor(Id):
     """Base class for sensor data type"""
 
     measured_object: NDArray[np.int32]
+    _id_columns: ClassVar[set[str]] = {"measured_object"}
 
 
 class GenericPowerSensor(Sensor):

@@ -10,27 +10,6 @@ from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.graphs.models.rustworkx import RustworkxGraphModel
-from power_grid_model_ds.arrays import (
-    AsymCurrentSensorArray,
-    AsymGenArray,
-    AsymLoadArray,
-    AsymPowerSensorArray,
-    AsymVoltageSensorArray,
-    Branch3Array,
-    BranchArray,
-    FaultArray,
-    IdArray,
-    NodeArray,
-    ShuntArray,
-    SourceArray,
-    SymCurrentSensorArray,
-    SymGenArray,
-    SymLoadArray,
-    SymPowerSensorArray,
-    SymVoltageSensorArray,
-    TransformerTapRegulatorArray,
-    VoltageRegulatorArray,
-)
 
 if TYPE_CHECKING:
     from .base import Grid
@@ -104,42 +83,10 @@ def merge_grids(grid, other_grid, mode: Literal["keep_ids", "recalculate_ids"]):
 
 def _increment_grid_ids_by_offset(all_arrays: list[FancyArray], offset: int) -> None:
     for array in all_arrays:
-        if isinstance(array, IdArray):
-            _update_id_column(array, "id", offset)
-
-        columns: list[str] = []
-        match array:
-            case (
-                SymPowerSensorArray()
-                | SymVoltageSensorArray()
-                | AsymVoltageSensorArray()
-                | SymCurrentSensorArray()
-                | AsymPowerSensorArray()
-                | AsymCurrentSensorArray()
-            ):
-                columns = ["measured_object"]
-            case NodeArray():
-                columns = ["feeder_node_id", "feeder_branch_id"]
-            case TransformerTapRegulatorArray() | VoltageRegulatorArray():
-                columns = ["regulated_object"]
-            case BranchArray():
-                columns = ["from_node", "to_node", "feeder_node_id", "feeder_branch_id"]
-            case Branch3Array():
-                columns = ["node_1", "node_2", "node_3"]
-            case SymGenArray() | SymLoadArray() | SourceArray() | AsymLoadArray() | AsymGenArray() | ShuntArray():
-                columns = ["node"]
-            case FaultArray():
-                columns = ["fault_object"]
-            case _:
-                raise NotImplementedError(
-                    f"The array of type {type(array)} is not implemented for appending. "
-                    f"Let us know if more general support is needed."
-                )
-
-        for column in columns:
+        for column in array.get_id_columns():
             _update_id_column(array, column, offset)
 
 
-def _update_id_column(array: IdArray, column: str, offset: int) -> None:
+def _update_id_column(array: FancyArray, column: str, offset: int) -> None:
     mask = array.is_empty(column)
     array[column][~mask] += offset
