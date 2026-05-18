@@ -9,7 +9,8 @@ _SELECTION_OUTPUT_STYLE = {"overflowX": "scroll", "textAlign": "center", "margin
 
 SELECTION_OUTPUT_HTML = html.Div(
     dcc.Markdown(
-        "Click on a **node** or **edge** to display all associated components and their attributes.",
+        "Click on a **node** or **edge** to display all its associated components and their attributes."
+        "\nYou can also use Ctrl+Click (or Cmd+Click on Mac) to select multiple nodes or edges.",
         style=SELECTION_OUTPUT_HEADER_STYLE,
     ),
     id="selection-output",
