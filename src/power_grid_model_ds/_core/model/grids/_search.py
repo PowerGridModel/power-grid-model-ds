@@ -22,11 +22,12 @@ if TYPE_CHECKING:
 def get_branches(grid: "Grid") -> BranchArray:
     """see Grid.get_branches()"""
     branch_dtype = BranchArray.get_dtype()
-    branches = BranchArray()
-    for array in grid.branch_arrays:
-        new_branch = BranchArray(data=array.data[list(branch_dtype.names)])
-        branches = fp.concatenate(branches, new_branch)
-    return branches
+    branch_columns = list(branch_dtype.names)
+    branch_arrays = get_branch_arrays(grid)
+    consistent_branch_arrays = [array[branch_columns] for array in branch_arrays if array.size]
+    if len(consistent_branch_arrays) == 0:
+        return BranchArray()
+    return fp.concatenate(BranchArray(), *consistent_branch_arrays)
 
 
 def get_branch_arrays(grid: "Grid") -> list[BranchArray]:

@@ -372,7 +372,7 @@ def fault_array() -> tuple[FaultArray, VizToComponentElements, VizToComponentEle
 
 
 @pytest.mark.parametrize(
-    "func, test_data, kwargs",
+    ("func", "test_data", "kwargs"),
     [
         (parse_node_array, "node_array", {}),
         (parse_node_array, "node_array_with_coordinates", {}),
@@ -390,7 +390,7 @@ def test_parsing(func, request, test_data, kwargs):
 
 
 @pytest.mark.parametrize(
-    "func, test_data, kwargs",
+    ("func", "test_data", "kwargs"),
     [
         (_parse_appliances, "appliance_array", {"group": ComponentType.sym_load}),
         (_parse_transformer_tap_regulators, "transformer_tap_regulator_array", {}),

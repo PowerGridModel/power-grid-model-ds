@@ -7,8 +7,8 @@ from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.power_grid_model_interface import PowerGridModelInterface
 
 __all__ = [
-    "Grid",
-    "GraphContainer",
-    "PowerGridModelInterface",
     "FancyArray",
+    "GraphContainer",
+    "Grid",
+    "PowerGridModelInterface",
 ]

@@ -4,6 +4,8 @@
 
 """Branch data types"""
 
+from typing import ClassVar
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -22,7 +24,7 @@ class Branch(Id):
     feeder_node_id: NDArray[np.int32]  # node id of the feeding node
     is_feeder: NDArray[np.bool_]  # whether or not this branch is from the substation
 
-    _defaults = {
+    _defaults: ClassVar = {
         "feeder_branch_id": empty,
         "feeder_node_id": empty,
         "is_feeder": False,

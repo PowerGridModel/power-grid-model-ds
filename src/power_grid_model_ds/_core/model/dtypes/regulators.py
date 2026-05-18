@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+from typing import ClassVar
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -24,7 +26,7 @@ class TransformerTapRegulator(Regulator):
     line_drop_compensation_r: NDArray[np.float64]  # compensation for voltage drop due to resistance during transport
     line_drop_compensation_x: NDArray[np.float64]  # compensation for voltage drop due to reactance during transport
 
-    _defaults = {
+    _defaults: ClassVar = {
         "line_drop_compensation_r": 0,
         "line_drop_compensation_x": 0,
     }

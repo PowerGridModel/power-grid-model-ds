@@ -39,7 +39,7 @@ def add_node(grid: "Grid", node: NodeArray) -> None:
     )
     grid._append(array=node)  # noqa # pylint: disable=protected-access
     grid.graphs.add_node_array(node_array=node)
-    _logger.debug("added node %d", node.id)
+    _logger.debug("added node %s", node.id.tolist())
 
 
 def add_branch(grid: "Grid", branch: BranchArray) -> None:
@@ -52,7 +52,9 @@ def add_branch(grid: "Grid", branch: BranchArray) -> None:
     grid._append(array=branch)  # noqa # pylint: disable=protected-access
     grid.graphs.add_branch_array(branch_array=branch)
 
-    _logger.debug("added branch %d from %d to %d", branch.id, branch.from_node, branch.to_node)
+    _logger.debug(
+        "added branch %s from %s to %s", branch.id.tolist(), branch.from_node.tolist(), branch.to_node.tolist()
+    )
 
 
 def make_active(grid: "Grid", branch: BranchArray) -> None:
@@ -60,12 +62,16 @@ def make_active(grid: "Grid", branch: BranchArray) -> None:
     array_field = grid.find_array_field(branch.__class__)
     array_attr = getattr(grid, array_field.name)
     branch_mask = array_attr.id == branch.id
+    already_active = bool(array_attr[branch_mask].is_active)
     array_attr.from_status[branch_mask] = 1
     array_attr.to_status[branch_mask] = 1
     setattr(grid, array_field.name, array_attr)
 
-    grid.graphs.make_active(branch=branch)
-    _logger.debug("activated branch %d", branch.id)
+    if not already_active:
+        grid.graphs.make_active(branch=branch)
+    else:
+        _logger.warning("Branch %s is already active", branch.id.tolist())
+    _logger.debug("activated branch %s", branch.id.tolist())
 
 
 def make_inactive(grid, branch: BranchArray, at_to_side: bool = True) -> None:
@@ -73,12 +79,16 @@ def make_inactive(grid, branch: BranchArray, at_to_side: bool = True) -> None:
     array_field = grid.find_array_field(branch.__class__)
     array_attr = getattr(grid, array_field.name)
     branch_mask = array_attr.id == branch.id
+    already_inactive = bool(~array_attr[branch_mask].is_active)
     status_side = "to_status" if at_to_side else "from_status"
     array_attr[status_side][branch_mask] = 0
     setattr(grid, array_field.name, array_attr)
 
-    grid.graphs.make_inactive(branch=branch)
-    _logger.debug("deactivated branch %d", branch.id)
+    if not already_inactive:
+        grid.graphs.make_inactive(branch=branch)
+    else:
+        _logger.warning("Branch %s is already inactive", branch.id.tolist())
+    _logger.debug("deactivated branch %s", branch.id.tolist())
 
 
 def delete_node(grid: "Grid", node: NodeArray) -> None:
@@ -123,7 +133,7 @@ def delete_node(grid: "Grid", node: NodeArray) -> None:
 
     grid.graphs.delete_node(node=node)
     grid.rebuild_ids()
-    _logger.debug("deleted node %d", node.id)
+    _logger.debug("deleted node %s", node.id.tolist())
 
 
 def delete_branch(grid: "Grid", branch: BranchArray) -> None:
@@ -131,7 +141,9 @@ def delete_branch(grid: "Grid", branch: BranchArray) -> None:
     _delete_branch_array(branch=branch, grid=grid)
     grid.graphs.delete_branch(branch=branch)
     grid.rebuild_ids()
-    _logger.debug("""deleted branch %d from %d to %d""", branch.id, branch.from_node, branch.to_node)
+    _logger.debug(
+        "deleted branch %s from %s to %s", branch.id.tolist(), branch.from_node.tolist(), branch.to_node.tolist()
+    )
 
 
 def delete_branch3(grid: "Grid", branch: Branch3Array) -> None:
@@ -139,7 +151,7 @@ def delete_branch3(grid: "Grid", branch: Branch3Array) -> None:
     _delete_branch_array(branch=branch, grid=grid)
     grid.graphs.delete_branch3(branch=branch)
     grid.rebuild_ids()
-    _logger.debug("deleted branch3 %d", branch.id)
+    _logger.debug("deleted branch3 %s", branch.id.tolist())
 
 
 def _delete_branch_array(branch: BranchArray | Branch3Array, grid: "Grid"):
@@ -166,4 +178,4 @@ def delete_appliance(grid: "Grid", appliance: ApplianceArray) -> None:
     grid.asym_power_sensor = grid.asym_power_sensor.exclude(measured_object=appliance.id)
     grid.voltage_regulator = grid.voltage_regulator.exclude(regulated_object=appliance.id)
     grid.rebuild_ids()
-    _logger.debug("deleted appliance %d", appliance.id)
+    _logger.debug("deleted appliance %s", appliance.id.tolist())

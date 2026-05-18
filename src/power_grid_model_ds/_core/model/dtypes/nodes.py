@@ -4,6 +4,8 @@
 
 """Node data types"""
 
+from typing import ClassVar
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -20,7 +22,7 @@ class Node(Id):
     feeder_branch_id: NDArray[np.int32]  # branch id of the feeder
     feeder_node_id: NDArray[np.int32]  # node id of the first substation node
 
-    _defaults = {
+    _defaults: ClassVar = {
         "node_type": NodeType.UNSPECIFIED.value,
         "feeder_branch_id": empty,
         "feeder_node_id": empty,
