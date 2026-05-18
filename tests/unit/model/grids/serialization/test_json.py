@@ -5,6 +5,7 @@
 """Comprehensive unit tests for Grid serialization with power-grid-model compatibility."""
 
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import ClassVar
@@ -108,7 +109,7 @@ def extended_grid():
 class TestSerializationRoundtrips:
     """Test serialization across different formats and configurations"""
 
-    @pytest.mark.parametrize("grid_fixture", ("basic_grid", "grid"))
+    @pytest.mark.parametrize("grid_fixture", ["basic_grid", "grid"])
     def test_serialization_roundtrip(self, request, grid_fixture: str, tmp_path: Path):
         """Test serialization roundtrip
 
@@ -124,7 +125,7 @@ class TestSerializationRoundtrips:
         loaded_grid = Grid.deserialize(path)
         assert loaded_grid == grid
 
-    @pytest.mark.parametrize("grid_fixture", ("basic_grid", "grid"))
+    @pytest.mark.parametrize("grid_fixture", ["basic_grid", "grid"])
     def test_pgm_roundtrip(self, request, grid_fixture: str, tmp_path: Path):
         """Test roundtrip serialization for PGM-compatible grid"""
         # Grid
@@ -323,7 +324,7 @@ class TestDeserialize:
         with Path(path).open("w", encoding="utf-8") as f:
             json.dump({"data": missing_array_data}, f)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=re.escape("Missing required columns: {'u_rated'}")):
             Grid.deserialize(path)
 
     def test_some_records_miss_data(self, tmp_path):
@@ -335,5 +336,43 @@ class TestDeserialize:
         with Path(path).open("w", encoding="utf-8") as f:
             json.dump({"data": incomplete_data}, f)
 
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ValueError,
+            match=r"Some records in column '(id|u_rated)' have missing values. "
+            "For defaulted columns, either provide all values or none.",
+        ):
             Grid.deserialize(path)
+
+
+class TestJsonStringRoundtrips:
+    """Test serialize/deserialize with mode="json_string"."""
+
+    def test_basic_grid_json_string_roundtrip(self, basic_grid: Grid):
+        s = basic_grid.serialize(mode="json_string")
+        assert isinstance(s, str)
+        restored = Grid.from_json_string(s)
+        assert restored == basic_grid
+
+    def test_extended_grid_json_string_roundtrip(self, extended_grid: ExtendedGrid):
+        s = extended_grid.serialize(mode="json_string")
+        restored = ExtendedGrid.from_json_string(s)
+        assert restored == extended_grid
+
+    def test_json_string_matches_json_file(self, basic_grid: Grid, tmp_path: Path):
+        s = basic_grid.serialize(mode="json_string")
+        path = basic_grid.serialize(tmp_path / "grid.json")
+        with path.open() as f:
+            assert json.loads(s) == json.load(f)
+
+    def test_json_string_kwargs_forwarded(self, basic_grid: Grid):
+        s = basic_grid.serialize(mode="json_string", indent=2)
+        assert "\n" in s
+
+    def test_cross_type_json_string_loading(self, basic_grid: Grid):
+        s = basic_grid.serialize(mode="json_string")
+        restored = ExtendedGrid.from_json_string(s)
+        assert isinstance(restored, ExtendedGrid)
+
+    def test_serialize_invalid_mode(self, basic_grid: Grid):
+        with pytest.raises(ValueError, match="Invalid mode"):
+            basic_grid.serialize(mode="xml")  # type: ignore[call-overload]

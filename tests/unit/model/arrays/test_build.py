@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+import re
 from typing import ClassVar
 
 import numpy as np
@@ -82,7 +83,7 @@ def test_build_from_kwargs():
 
 
 def test_build_from_kwargs_with_missing_input_fields():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Missing required columns"):
         FancyTestArray(
             id=[1, 2, 3],
             test_int=[3, 0, 4],
@@ -93,7 +94,7 @@ def test_build_from_kwargs_with_missing_input_fields():
 
 
 def test_build_from_kwargs_with_different_input_lengths():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=re.escape("Size of column 'test_bool' does not match other columns.")):
         FancyTestArray(
             id=[1, 2, 3],
             test_int=[3, 0, 4],
@@ -105,7 +106,7 @@ def test_build_from_kwargs_with_different_input_lengths():
 
 def test_build_from_kwargs_with_different_input_lengths_with_defaults():
     # Also fail when defaults are defined
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=re.escape("Size of column 'test_bool' does not match other columns.")):
         DefaultedFancyTestArray(
             id=[1, 2, 3],
             test_int=[3, 0, 4],
@@ -221,20 +222,20 @@ def test_from_structured_subarray_with_defaults(fancy_test_array: FancyTestArray
 
 
 def test_from_structured_subarray_no_defaults(fancy_test_array: FancyTestArray):
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Missing required columns"):
         ExtendedFancyTestArrayNoDefaults(fancy_test_array.data)
 
 
 def test_from_sub_ndarray_with_defaults(fancy_test_array: FancyTestArray):
     # defaults are not supported when working with unstructured arrays
     sub_ndarray = np.array(fancy_test_array.tolist())
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=re.escape("Cannot convert array of shape (3, 5) into 7 columns.")):
         ExtendedFancyTestArray(sub_ndarray)
 
 
 def test_from_sub_ndarray_no_defaults(fancy_test_array: FancyTestArray):
     sub_ndarray = np.array(fancy_test_array.tolist())
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=re.escape("Cannot convert array of shape (3, 5) into 7 columns.")):
         ExtendedFancyTestArrayNoDefaults(sub_ndarray)
 
 
