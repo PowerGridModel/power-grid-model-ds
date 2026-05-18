@@ -11,7 +11,7 @@ from power_grid_model_ds._core.model.dtypes.typing import NDArray3
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer import server_state
 from power_grid_model_ds._core.visualizer.callbacks.config import scale_elements, update_arrows, update_layout
-from power_grid_model_ds._core.visualizer.callbacks.element_selection import display_selected_element
+from power_grid_model_ds._core.visualizer.callbacks.element_selection import display_selected_elements
 from power_grid_model_ds._core.visualizer.callbacks.search_form import HIGHLIGHT_STYLE, search_element
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
@@ -93,7 +93,7 @@ def test_element_selection_callback():
     node_data = [{"id": "1", "group": "node", "associated_ids": {"node": [1]}}]
     edge_data = []
 
-    result = display_selected_element(node_data, edge_data)
+    result = display_selected_elements(node_data, edge_data)
     expected = dag.AgGrid(  # type: ignore[attr-defined]
         rowData=[
             {
@@ -120,7 +120,7 @@ def test_element_selection_callback():
 
 
 def test_display_selected_element_none():
-    result = display_selected_element([], [])
+    result = display_selected_elements([], [])
     assert result == SELECTION_OUTPUT_HTML.children
 
 

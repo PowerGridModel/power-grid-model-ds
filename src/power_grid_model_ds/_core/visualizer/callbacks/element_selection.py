@@ -21,7 +21,7 @@ from power_grid_model_ds.arrays import IdArray
     Input("cytoscape-graph", "selectedNodeData"),
     Input("cytoscape-graph", "selectedEdgeData"),
 )
-def display_selected_element(node_data: list[dict[str, Any]], edge_data: list[dict[str, Any]]):
+def display_selected_elements(node_data: list[dict[str, Any]], edge_data: list[dict[str, Any]]):
     """Display the tapped edge data."""
     if not node_data and not edge_data:
         return SELECTION_OUTPUT_HTML.children
