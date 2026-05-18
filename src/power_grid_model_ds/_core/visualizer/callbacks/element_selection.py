@@ -48,7 +48,7 @@ def display_selected_element(node_data: list[dict[str, Any]], edge_data: list[di
         tables.append(html.H5(comp_type, style={"marginTop": "15px", "textAlign": "left"}))
         tables.append(_to_data_table(data))
 
-    return html.Div(children=tables, style={"overflowX": "scroll", "margin": "10px"}).children
+    return tables
 
 
 def _to_data_table(array_data: IdArray):
