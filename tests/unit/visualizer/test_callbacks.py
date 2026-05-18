@@ -17,7 +17,7 @@ from power_grid_model_ds._core.visualizer import server_state
 from power_grid_model_ds._core.visualizer.callbacks.config import scale_elements, update_arrows, update_layout
 from power_grid_model_ds._core.visualizer.callbacks.element_selection import (
     cell_selection_graph,
-    display_selected_element,
+    display_selected_elements,
 )
 from power_grid_model_ds._core.visualizer.callbacks.search_form import HIGHLIGHT_STYLE, search_element
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
@@ -99,10 +99,10 @@ def test_element_selection_callback():
 
     server_state.set_app_state(grid)
 
-    node_data = [{"id": "1", "u_rated": 100.0, "group": "node"}]
+    node_data = [{"id": "1", "group": "node", "associated_ids": {"node": [1]}}]
     edge_data = []
 
-    result = display_selected_element(node_data, edge_data)
+    result = display_selected_elements(node_data, edge_data)
     expected = dag.AgGrid(  # type: ignore[attr-defined]
         rowData=[
             {
@@ -123,12 +123,13 @@ def test_element_selection_callback():
             {"field": "three_phase_quantity", "headerName": "three_phase_quantity"},
         ],
     )
-    assert result.rowData == expected.rowData
-    assert result.columnDefs == expected.columnDefs
+    assert result[0].children == "node"
+    assert result[1].rowData == expected.rowData
+    assert result[1].columnDefs == expected.columnDefs
 
 
 def test_display_selected_element_none():
-    result = display_selected_element([], [])
+    result = display_selected_elements([], [])
     assert result == SELECTION_OUTPUT_HTML.children
 
 

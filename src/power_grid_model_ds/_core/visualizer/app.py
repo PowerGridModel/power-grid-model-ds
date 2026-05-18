@@ -48,11 +48,6 @@ def get_app_layout(grid: Grid) -> html.Div:
 
     initial_elements = filter_out_appliances(viz_elements_dict.values())
 
-    # Remove associated_ids from initial element data.
-    # They will be added and used after migrating to using grid object for callbacks
-    for element in initial_elements:
-        element["data"].pop("associated_ids", None)
-
     cytoscape_html = get_cytoscape_html(layout, initial_elements, grid.source.size != 0)
 
     return html.Div(

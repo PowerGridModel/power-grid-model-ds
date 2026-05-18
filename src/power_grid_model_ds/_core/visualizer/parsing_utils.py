@@ -53,13 +53,6 @@ def map_appliance_to_nodes(grid: Grid) -> dict[str, str]:
     return appliance_to_node
 
 
-def viz_id_to_pgm_id(id_str: str) -> int:
-    """Convert a viz element ID string to a PGM ID integer."""
-    for suffix in ["_0", "_1", "_2"]:
-        id_str = id_str.replace(suffix, "")
-    return int(id_str)
-
-
 def filter_out_appliances(elements_iterable):
     """Filter out appliance elements from the VizToComponentElements structure."""
     return [element for element in elements_iterable if element["data"]["group"] not in _SHOW_APPLIANCES_GROUPS]
