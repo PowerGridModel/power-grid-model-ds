@@ -53,10 +53,15 @@ class FancyArray(ABC):  # noqa: B024
         which is a dictionary mapping column names to their default values.
         The _defaults attribute is inherited by child classes.
 
-    Note on string-columns:
+    Note on string columns:
         The default length for string columns is stored in _DEFAULT_STR_LENGTH.
         To change this, you can set the _str_lengths class attribute.
         The _str_lengths attribute is inherited by child classes.
+
+    Note on id columns:
+        Columns that contain ids or reference ids (e.g., 'id', 'from_node', etc.) should be defined in the _id_columns
+        class attribute to ensure correct functionality of certain grid helper methods (e.g. grid.merge).
+        The _id_columns attribute is inherited and combined with those of the parent classes.
 
     Example:
         >>> class MyArray(FancyArray):
@@ -70,6 +75,7 @@ class FancyArray(ABC):  # noqa: B024
     _data: NDArray = np.ndarray([])
     _defaults: ClassVar[dict[str, Any]] = {}
     _str_lengths: ClassVar[dict[str, int]] = {}
+    _id_columns: ClassVar[set[str]] = set()
 
     def __init__(self, *args, data: NDArray | None = None, **kwargs):
         if data is None:
@@ -85,6 +91,11 @@ class FancyArray(ABC):  # noqa: B024
     @lru_cache
     def get_defaults(cls) -> dict[str, Any]:
         return combine_attribute_from_parent_classes(cls, "_defaults", attribute_type=dict)
+
+    @classmethod
+    @lru_cache
+    def get_id_columns(cls) -> set[str]:
+        return combine_attribute_from_parent_classes(cls, "_id_columns", attribute_type=set)
 
     @classmethod
     @lru_cache
