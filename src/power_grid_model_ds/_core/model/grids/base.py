@@ -24,8 +24,6 @@ from power_grid_model_ds._core.model.grids._helpers import (
 )
 from power_grid_model_ds._core.model.grids._modify import (
     add_array_to_grid,
-    add_branch,
-    add_node,
     delete_branch,
     delete_branch3,
     delete_node,
@@ -214,14 +212,6 @@ class Grid(FancyArrayContainer):
         """
         return add_array_to_grid(self, array=array, check_max_id=check_max_id)
 
-    def add_branch(self, branch: BranchArray) -> None:
-        """Add a branch to the grid
-
-        Args:
-            branch (BranchArray): The branch to add
-        """
-        return add_branch(self, branch)
-
     def delete_branch(self, branch: BranchArray) -> None:
         """Remove a branch array from the grid
 
@@ -244,14 +234,6 @@ class Grid(FancyArrayContainer):
             branch (Branch3Array): The branch3 array to remove
         """
         return delete_branch3(self, branch=branch)
-
-    def add_node(self, node: NodeArray) -> None:
-        """Add a new node to the grid
-
-        Args:
-            node (NodeArray): The node to add
-        """
-        return add_node(self, node=node)
 
     def delete_node(self, node: NodeArray) -> None:
         """Remove a node array from the grid
