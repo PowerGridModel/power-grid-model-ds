@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import logging
-import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -28,33 +27,6 @@ def add_array_to_grid(grid: "Grid", array: FancyArray, check_max_id: bool = True
     grid._append(array, check_max_id=check_max_id)  # noqa # pylint: disable=protected-access
     # pylint: disable=protected-access
     grid.graphs._append(array)  # noqa: SLF001
-
-
-def add_node(grid: "Grid", node: NodeArray) -> None:
-    """See Grid.add_node()"""
-    warnings.warn(
-        "Grid.add_node is deprecated and will be removed in a future release. Use Grid.append instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    grid._append(array=node)  # noqa # pylint: disable=protected-access
-    grid.graphs.add_node_array(node_array=node)
-    _logger.debug("added node %s", node.id.tolist())
-
-
-def add_branch(grid: "Grid", branch: BranchArray) -> None:
-    """See Grid.add_branch()"""
-    warnings.warn(
-        "Grid.add_branch is deprecated and will be removed in a future release. Use Grid.append instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    grid._append(array=branch)  # noqa # pylint: disable=protected-access
-    grid.graphs.add_branch_array(branch_array=branch)
-
-    _logger.debug(
-        "added branch %s from %s to %s", branch.id.tolist(), branch.from_node.tolist(), branch.to_node.tolist()
-    )
 
 
 def make_active(grid: "Grid", branch: BranchArray) -> None:

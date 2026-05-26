@@ -38,9 +38,9 @@ def perftest_rebuild_graphs():
     do_performance_test(code_to_test, GRAPH_SIZES, 100, setup_codes=GRAPH_SETUP_CODES)
 
 
-def perftest_add_node():
+def perftest_append_node():
     code_to_test = (
-        "from power_grid_model_ds.arrays import NodeArray;new_node = NodeArray.zeros(1);grid.add_node(node=new_node)"
+        "from power_grid_model_ds.arrays import NodeArray;new_node = NodeArray.zeros(1);grid.append(new_node)"
     )
     do_performance_test(code_to_test, GRAPH_SIZES, 100, setup_codes=GRAPH_SETUP_CODES)
 
@@ -50,5 +50,5 @@ if __name__ == "__main__":
     perftest_set_feeder_ids()
     perftest_get_components()
     perftest_delete_node()
-    perftest_add_node()
+    perftest_append_node()
     perftest_rebuild_graphs()
