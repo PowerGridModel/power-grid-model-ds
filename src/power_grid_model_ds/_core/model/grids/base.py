@@ -4,7 +4,6 @@
 
 """Base grid classes"""
 
-import warnings
 from dataclasses import dataclass, fields
 from pathlib import Path
 from typing import Literal, Self, TypeVar, overload
@@ -52,7 +51,6 @@ from power_grid_model_ds._core.model.grids.serialization.json import (
     serialize_to_json,
     serialize_to_json_string,
 )
-from power_grid_model_ds._core.model.grids.serialization.pickle import load_grid_from_pickle, save_grid_to_pickle
 from power_grid_model_ds._core.model.grids.serialization.string import (
     deserialize_from_str,
     deserialize_from_txt_file,
@@ -166,29 +164,6 @@ class Grid(FancyArrayContainer):
             Grid: An empty grid
         """
         return create_empty_grid(cls, graph_model=graph_model)
-
-    @classmethod
-    # pylint: disable=arguments-differ
-    def from_cache(cls: type[Self], cache_path: Path, load_graphs: bool = True) -> Self:
-        """Read from cache and build .graphs from arrays
-
-        WARNING: This function uses pickle.load() which can execute arbitrary code.
-        Only load pickle files from trusted sources. Never load pickle files from
-        untrusted or unauthenticated sources as this could lead to arbitrary code execution.
-
-        Args:
-            cache_path (Path): The path to the cache
-            load_graphs (bool, optional): Whether to load the graphs. Defaults to True.
-
-        Returns:
-            G: The grid loaded from cache
-        """
-        warnings.warn(
-            "Grid.from_cache() is deprecated and will be removed in a future version. Use deserialize() instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return load_grid_from_pickle(cls, cache_path=cache_path, load_graphs=load_graphs)
 
     @classmethod
     def from_txt(cls: type[G], *args: str) -> G:
@@ -427,24 +402,6 @@ class Grid(FancyArrayContainer):
             list[int]: The downstream nodes.
         """
         return get_downstream_nodes(self, node_id=node_id, inclusive=inclusive)
-
-    def cache(self, cache_dir: Path, cache_name: str, compress: bool = True):
-        """Cache Grid to a folder using pickle format.
-
-        Note: Consider using serialize() for better
-        interoperability and standardized format.
-
-        Args:
-            cache_dir (Path): The directory to save the cache to.
-            cache_name (str): The name of the cache.
-            compress (bool, optional): Whether to compress the cache. Defaults to True.
-        """
-        warnings.warn(
-            "grid.cache() is deprecated and will be removed in a future version. Use grid.serialize() instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return save_grid_to_pickle(self, cache_dir=cache_dir, cache_name=cache_name, compress=compress)
 
     @overload
     def merge(self: Self, other_grid: G, mode: Literal["recalculate_ids"]) -> int: ...
