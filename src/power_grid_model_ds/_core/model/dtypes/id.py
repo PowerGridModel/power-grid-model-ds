@@ -16,4 +16,5 @@ class Id:
     """Base dtype for id arrays"""
 
     _defaults: ClassVar[dict[str, Any]] = {"id": empty}
+    _id_columns: ClassVar[set[str]] = {"id"}
     id: NDArray[np.int32]
