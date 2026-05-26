@@ -207,10 +207,10 @@ control.expr = "check"
 args = [{name = "check", type="boolean", help= "Does not correct files, only warns"}]
   [[tool.poe.tasks.all.switch]]
   case     = "True"
-  sequence = ["format --check", "lint --check", "lock", "type", "cover", "report", "clean_notebook --check"]
+  sequence = ["format --check", "lint --check", "lock", "type", "cover", "report", "clean_notebooks --check", "test_notebooks"]
 
   [[tool.poe.tasks.all.switch]]
-  sequence = ["format", "lint", "lock", "type", "cover", "report", "clean_notebook"]
+  sequence = ["format", "lint", "lock", "type", "cover", "report", "clean_notebooks", "test_notebooks"]
 
 
 [tool.poe.tasks.lint]
@@ -240,6 +240,11 @@ cmd = "mypy src tests"
 help = "Run tests"
 cmd = "pytest"
 
+[tool.poe.tasks.test_notebooks]
+help = "Run notebooks (to test)"
+shell = 'uv run sphinx-build -T -Q -b html docs docs/_build/html; [ $? -eq 0 ] && echo "No issues found in notebooks"'
+
+
 [tool.poe.tasks.lock]
 help = "Asserts that dependencies are locked"
 cmd = "uv lock --check"
@@ -256,15 +261,15 @@ cmd = "coverage report"
 help = "Run coverage *and* generate report"
 sequence = ["cover", "report"]
 
-[tool.poe.tasks.clean_notebook]
+[tool.poe.tasks.clean_notebooks]
 help = "Clear all metadata from notebooks"
 args=[{name = "check", type="boolean", help= "Does not correct files, only warns"}]
 control.expr = "check"
 
-  [[tool.poe.tasks.clean_notebook.switch]]
+  [[tool.poe.tasks.clean_notebooks.switch]]
   case = "True"
   cmd = 'nb-clean check docs/'
 
-  [[tool.poe.tasks.clean_notebook.switch]]
+  [[tool.poe.tasks.clean_notebooks.switch]]
   cmd = 'nb-clean clean docs/'
 
