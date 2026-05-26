@@ -28,11 +28,11 @@ from tests.fixtures.arrays import DefaultedCustomLineArray, DefaultedCustomNodeA
 from tests.fixtures.grid_classes import ExtendedGrid
 
 
-def test_grid_add_node(basic_grid: Grid):
+def test_grid_append_node(basic_grid: Grid):
     grid = basic_grid
 
     new_node = NodeArray.zeros(1)
-    grid.add_node(node=new_node)
+    grid.append(new_node)
 
     assert len(grid.node) == 7
     assert EMPTY_ID not in grid.node.id
