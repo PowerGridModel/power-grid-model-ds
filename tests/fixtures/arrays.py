@@ -2,18 +2,19 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+from typing import ClassVar
+
 import numpy as np
 from numpy._typing import NDArray
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.dtypes.typing import NDArray3
-from power_grid_model_ds.arrays import LineArray, NodeArray
+from power_grid_model_ds.arrays import IdArray, LineArray, NodeArray
 
 
-class FancyTestArray(FancyArray):
+class FancyTestArray(IdArray):
     """Test array with some attributes"""
 
-    id: NDArray[np.int32]
     test_int: NDArray[np.int64]
     test_float: NDArray[np.float64]
     test_str: NDArray[np.str_]
@@ -23,7 +24,7 @@ class FancyTestArray(FancyArray):
 class DefaultedFancyTestArray(FancyTestArray):
     """Test array with some defaulted attributes"""
 
-    _defaults = {"id": -1, "test_int": 4, "test_float": 4.5, "test_str": "DEFAULT", "test_bool": True}
+    _defaults: ClassVar = {"id": -1, "test_int": 4, "test_float": 4.5, "test_str": "DEFAULT", "test_bool": True}
 
 
 class DifferentFancyTestArray(FancyArray):
@@ -73,7 +74,7 @@ class CustomLineArray(LineArray):
 class DefaultedCustomNodeArray(NodeArray):
     """Extends the node array with an output value"""
 
-    _defaults = {"u": 0}
+    _defaults: ClassVar = {"u": 0}
 
     u: NDArray[np.float64]
 
@@ -81,6 +82,6 @@ class DefaultedCustomNodeArray(NodeArray):
 class DefaultedCustomLineArray(LineArray):
     """Extends the line array with a defaulted output value"""
 
-    _defaults = {"i_from": 0}
+    _defaults: ClassVar = {"i_from": 0}
 
     i_from: NDArray[np.float64]

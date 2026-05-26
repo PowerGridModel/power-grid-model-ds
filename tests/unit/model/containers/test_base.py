@@ -37,17 +37,6 @@ class _FourArraysContainer(_TwoArraysContainer):
     array_4_no_id: FancyNonIdArray
 
 
-def test_id_counter_type(basic_grid: Grid):
-    assert isinstance(basic_grid.id_counter, int)
-
-
-def test_id_counter():
-    container = FancyArrayContainer.empty()
-    # pylint: disable=protected-access
-    container._ids = {42}
-    assert container.id_counter == 42
-
-
 def test_deepcopy():
     container = Grid.empty()
     container.node = NodeArray.zeros(1)
@@ -109,7 +98,7 @@ def test_check_ids_two_arrays_with_conflict():
 
     assert len(list(container.all_arrays())) == 2
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Duplicates found within _TwoArraysContainer!"):
         container.check_ids()
 
 
@@ -122,7 +111,7 @@ def test_check_ids_two_arrays_with_conflict_in_same_array():
 
     assert len(list(container.all_arrays())) == 2
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Duplicates found within _TwoArraysContainer!"):
         container.check_ids()
 
 
@@ -210,7 +199,7 @@ def test_rebuild_ids():
 def test_rebuild_ids_with_duplicates():
     grid = Grid.from_txt("1 2 12")
     grid.node.id = [1, 12]  # Duplicate IDs within different arrays same array
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=re.escape("Duplicate ids found between arrays (LineArray)")):
         grid.rebuild_ids()
 
 

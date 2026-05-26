@@ -23,22 +23,34 @@ def is_sequence(seq):
     return isinstance(seq, Sequence)
 
 
-def get_inherited_attrs(cls: type, *private_attributes):
+def get_public_annotations(cls: type):
+    """Get the public annotations for a class"""
+    # Note: include_extras=True for annotated types like NDArray3
+    class_attributes = get_type_hints(cls, include_extras=True)
+    return {attr: type_ for attr, type_ in class_attributes.items() if not attr.startswith("_")}
+
+
+def combine_attribute_from_parent_classes[T: (dict, set)](cls: type, attribute_name: str, attribute_type: type[T]) -> T:
+    """Combine all versions of an attribute in the Method Resolution Order (mro) of a class into a single attribute
+
+    For dicts this means the dict is updated so that child classes override parent classes.
+    For sets this means the sets are unioned together.
+
+    Types other than dict and set are not supported
     """
-    Get the attribute from the object and all its parents
-    """
-
-    # The extras are needed for annotated types like NDArray3
-    retrieved_attributes = get_type_hints(cls, include_extras=True)
-    retrieved_attributes = {attr: type for attr, type in retrieved_attributes.items() if not attr.startswith("_")}
-
-    for private_attr in private_attributes:
-        for parent in reversed(list(cls.__mro__)):
-            attr_dict = retrieved_attributes.get(private_attr, {})
-            attr_dict.update(getattr(parent, private_attr, {}))
-            retrieved_attributes[private_attr] = attr_dict
-
-    return retrieved_attributes
+    combined_attr = attribute_type()
+    for parent in reversed(list(cls.__mro__)):
+        parent_attr = getattr(parent, attribute_name, attribute_type())
+        if attribute_type is dict:
+            combined_attr.update(parent_attr)
+        elif attribute_type is set:
+            combined_attr |= parent_attr
+        else:
+            raise NotImplementedError(
+                f"Type {attribute_type} cannot combine inherited for attribute {attribute_name}. "
+                f"Only dict and set are currently supported."
+            )
+    return combined_attr
 
 
 def array_equal_with_nan(array1: np.ndarray, array2: np.ndarray) -> bool:

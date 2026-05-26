@@ -353,7 +353,7 @@ class TestCreateGridFromInputData:
 
         core_interface = PowerGridModelInterface(grid=grid, input_data=input_data_pgm)
 
-        with pytest.raises(ValueError, match="Missing required columns: {'u'}"):
+        with pytest.raises(ValueError, match=r"Missing required columns: {'u'}"):
             core_interface.create_grid_from_input_data()
 
     def test_with_additional_component_type_in_input_data(self, input_data_pgm):

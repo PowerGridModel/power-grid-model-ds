@@ -8,4 +8,4 @@ from power_grid_model_ds._core.data_source.generator.arrays.source import Source
 from power_grid_model_ds._core.data_source.generator.arrays.transformer import TransformerGenerator
 from power_grid_model_ds._core.data_source.generator.grid_generators import RadialGridGenerator
 
-__all__ = ["RadialGridGenerator", "NodeGenerator", "LineGenerator", "TransformerGenerator", "SourceGenerator"]
+__all__ = ["LineGenerator", "NodeGenerator", "RadialGridGenerator", "SourceGenerator", "TransformerGenerator"]
