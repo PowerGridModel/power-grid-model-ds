@@ -12,6 +12,7 @@ try:
     from power_grid_model_ds import Grid
     from power_grid_model_ds._core.visualizer import server_state
     from power_grid_model_ds._core.visualizer.app import GOOGLE_FONTS, MDBOOTSTRAP, get_app_layout
+    from power_grid_model_ds._core.visualizer.grid_utils import dynamic_grid_obj_from_grid, extend_grid_dynamically
     from power_grid_model_ds._core.visualizer.html_export import generate_standalone_html
     from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
     from power_grid_model_ds._core.visualizer.layout.header_config import LayoutOptions
@@ -59,7 +60,7 @@ def save_html(
     Path(path).write_text(html_content, encoding="utf-8")
 
 
-def visualize(grid: Grid, debug: bool = False, port: int = 8050) -> None:
+def visualize(grid: Grid, update_data=None, output_data=None, debug: bool = False, port: int = 8050) -> None:
     """Visualize the Grid.
 
     grid: Grid
@@ -80,8 +81,18 @@ def visualize(grid: Grid, debug: bool = False, port: int = 8050) -> None:
             - "grid": A layout that places the nodes in a grid matrix.
             - "cose": A layout that uses the CompoundSpring Embedder algorithm (force-directed layout)
     """
-    # Store Grid object on server side (thread-safe)
-    server_state.set_grid(grid)
+    if update_data is not None and output_data is not None:
+        dynamic_class_update = extend_grid_dynamically(type(grid), extra_dataset=update_data)
+        dynamic_class_update_output = extend_grid_dynamically(dynamic_class_update, extra_dataset=output_data)
+        grid_obj = dynamic_grid_obj_from_grid(dynamic_class_update_output, grid)
+    elif update_data is None and output_data is not None:
+        grid_obj = dynamic_grid_obj_from_grid(extend_grid_dynamically(type(grid), extra_dataset=output_data), grid)
+    elif output_data is None and update_data is not None:
+        grid_obj = dynamic_grid_obj_from_grid(extend_grid_dynamically(type(grid), extra_dataset=update_data), grid)
+    else:
+        grid_obj = grid
+
+    server_state.set_app_state(grid_obj, update_data, output_data)
 
     app = Dash(
         external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, MDBOOTSTRAP, FONT_AWESOME, GOOGLE_FONTS]

@@ -2,10 +2,16 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+import sys
+from pathlib import Path
+
+# Add repo root to path so tests module can be imported
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from dataclasses import dataclass
 
 import numpy as np
+from power_grid_model import ComponentType, DatasetType, initialize_array
 
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.dtypes.typing import NDArray3
@@ -90,9 +96,32 @@ def visualize_grid_with_all_open_types():
     visualize(grid=grid, debug=True)
 
 
+def visualize_grid_with_batch_data():
+    grid = get_coordinated_three_phase_grid()
+    lines_update = initialize_array(DatasetType.update, ComponentType.line, (4, 2))
+    lines_update["id"] = grid.line.id[:2]
+    lines_update["from_status"][:] = 1
+    lines_update["from_status"][1, 0] = 0
+    update_data = {ComponentType.line: lines_update}
+
+    nodes_output = initialize_array(DatasetType.asym_output, ComponentType.node, (4, 3))
+    nodes_output["id"] = grid.node.id[:3]
+    nodes_output["u"] = [
+        [[401.0, 402.0, 403.0], [404.0, 405.0, 406.0], [407.0, 408.0, 409.0]],
+        [[410.0, 411.0, 412.0], [413.0, 414.0, 415.0], [416.0, 417.0, 418.0]],
+        [[419.0, 420.0, 421.0], [422.0, 423.0, 424.0], [425.0, 426.0, 427.0]],
+        [[428.0, 429.0, 430.0], [431.0, 432.0, 433.0], [434.0, 435.0, 436.0]],
+    ]
+    nodes_output["energized"][:] = 1
+    nodes_output["energized"][1, 2] = 0
+    output_data = {ComponentType.node: nodes_output}
+    visualize(grid=grid, update_data=update_data, output_data=output_data, debug=True)
+
+
 if __name__ == "__main__":
     # visualize_grid()
     # visualize_coordinated_three_phase_grid()
     # visualize_grid_with_links()
     # visualize_grid_with_all_types()
+    # visualize_grid_with_batch_data()
     visualize_grid_with_all_open_types()
