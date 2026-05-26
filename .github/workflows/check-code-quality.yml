@@ -55,6 +55,9 @@ jobs:
       - name: format
         if: ${{ always() }}
         run: poe format --check
+      - name: notebook format
+        if: ${{ always() }}
+        run: poe clean_notebooks --check
       - name: lock
         if: ${{ always() }}
         run: poe lock
