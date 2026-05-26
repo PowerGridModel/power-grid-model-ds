@@ -22,13 +22,14 @@ class Branch(Id):
     to_status: NDArray[np.int8]  # 1 = closed, 0 = open
     feeder_branch_id: NDArray[np.int32]  # branch id of the feeding branch
     feeder_node_id: NDArray[np.int32]  # node id of the feeding node
-    is_feeder: NDArray[np.bool_]  # whether or not this branch is from the substation
+    is_feeder: NDArray[np.bool_]  # whether this branch is from the substation
 
     _defaults: ClassVar = {
         "feeder_branch_id": empty,
         "feeder_node_id": empty,
         "is_feeder": False,
     }
+    _id_columns: ClassVar[set[str]] = {"from_node", "to_node", "feeder_branch_id", "feeder_node_id"}
 
 
 class Link(Branch):
@@ -88,6 +89,8 @@ class Branch3(Id):
     status_1: NDArray[np.int8]
     status_2: NDArray[np.int8]
     status_3: NDArray[np.int8]
+
+    _id_columns: ClassVar[set[str]] = {"node_1", "node_2", "node_3"}
 
 
 class ThreeWindingTransformer(Branch3):

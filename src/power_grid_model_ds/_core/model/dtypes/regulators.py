@@ -16,6 +16,8 @@ class Regulator(Id):
     regulated_object: NDArray[np.int32]  # a valid regulated object ID
     status: NDArray[np.int8]  # connection status of regulated object
 
+    _id_columns: ClassVar[set[str]] = {"regulated_object"}
+
 
 class TransformerTapRegulator(Regulator):
     """Transformer tap regulator data type"""
