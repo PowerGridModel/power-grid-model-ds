@@ -550,6 +550,58 @@ def test_grid_inactivate_branch(basic_grid: Grid):
     assert not graph.has_branch(target_line.from_node.item(), target_line.to_node.item())
 
 
+def test_grid_double_inactivate_branch(basic_grid: Grid):
+    grid = basic_grid
+
+    # Add a parallel line alongside line 202 (102 -> 103)
+    parallel_line = LineArray.zeros(1)
+    parallel_line.from_node = 102
+    parallel_line.to_node = 103
+    parallel_line.from_status = 1
+    parallel_line.to_status = 1
+    grid.append(parallel_line)
+
+    target_line = grid.line.get(202)
+    graph = grid.graphs.active_graph
+    # Both lines are active, branch 102->103 should be in graph
+    assert graph.has_branch(target_line.from_node.item(), target_line.to_node.item())
+
+    grid.make_inactive(branch=target_line)
+    grid.make_inactive(branch=target_line)
+
+    target_line_after = grid.line.get(202)
+    assert target_line_after.from_status == 1
+    assert target_line_after.to_status == 0
+
+    # The parallel line is still active, so the branch should still exist in the graph
+    assert graph.has_branch(target_line.from_node.item(), target_line.to_node.item())
+
+
+def test_grid_double_activate_branch(basic_grid: Grid):
+    grid = basic_grid
+
+    target_line = grid.line.get(202)
+    assert target_line.from_status == 1
+    assert target_line.to_status == 1
+    grid.make_active(branch=target_line)
+    grid.make_active(branch=target_line)
+
+    target_line_after = grid.line.get(202)
+    assert target_line_after.from_status == 1
+    assert target_line_after.to_status == 1
+
+    graph = grid.graphs.active_graph
+    assert graph.has_branch(target_line.from_node.item(), target_line.to_node.item())
+
+    # now make inactive and check that it is properly inactivated and not reactivated by the second activation
+    grid.make_inactive(branch=target_line)
+    target_line_after = grid.line.get(202)
+    assert target_line_after.from_status == 1
+    assert target_line_after.to_status == 0
+
+    assert not graph.has_branch(target_line.from_node.item(), target_line.to_node.item())
+
+
 def test_grid_make_inactive_from_side(basic_grid: Grid):
     grid = basic_grid
 
