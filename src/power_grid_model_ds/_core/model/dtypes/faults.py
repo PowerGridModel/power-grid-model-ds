@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
+from typing import ClassVar
 
 import numpy as np
 from numpy.typing import NDArray
@@ -17,3 +18,5 @@ class Fault(Id):
     fault_phase: NDArray[np.int8]  # the phase(s) affected by the fault (e.g. A, B, C, AB, BC, AC, ABC)
     r_f: NDArray[np.float64]  # the fault resistance
     x_f: NDArray[np.float64]  # the fault reactance
+
+    _id_columns: ClassVar[set[str]] = {"fault_object"}
