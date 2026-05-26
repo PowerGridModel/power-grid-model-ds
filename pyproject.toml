@@ -73,6 +73,12 @@ doc = [
   "numpydoc",
 ]
 
+[tool.uv]
+default-groups = [
+    "dev",
+    "doc",
+]
+
 [project.urls]
 Home-page = "https://lfenergy.org/projects/power-grid-model/"
 GitHub = "https://github.com/PowerGridModel/power-grid-model-ds"
