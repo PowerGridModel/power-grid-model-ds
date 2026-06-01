@@ -123,7 +123,7 @@ class TestBasicGraphFunctions:
         assert graph._has_node(internal_id_1)
         assert graph._has_node(internal_id_2)
 
-        # now delete node 2, this can change the internal mapping
+        # now delete node 2, this can change the internal mapping%
         graph.delete_node(2)
 
         internal_id_0 = graph.external_to_internal(1)
@@ -143,39 +143,53 @@ class TestBasicGraphFunctions:
         assert list(graph.in_branches(2)) == [(1, 2), (1, 2), (1, 2)]
 
 
-def test_tmp_remove_nodes(graph_with_2_routes: BaseGraphModel) -> None:
-    graph = graph_with_2_routes
+class TestTmpRemoveNodes:
+    def test_tmp_remove_nodes(self, graph_with_2_routes: BaseGraphModel) -> None:
+        graph = graph_with_2_routes
 
-    assert graph.nr_branches == 4
+        assert graph.nr_branches == 4
 
-    # add parallel branches to test whether they are restored correctly
-    graph.add_branch(1, 5)
-    graph.add_branch(5, 1)
+        # add parallel branches to test whether they are restored correctly
+        graph.add_branch(1, 5)
+        graph.add_branch(5, 1)
 
-    assert graph.nr_nodes == 5
-    assert graph.nr_branches == 6
+        assert graph.nr_nodes == 5
+        assert graph.nr_branches == 6
 
-    before_sets = [frozenset(branch) for branch in graph.all_branches]
-    counter_before = Counter(before_sets)
+        before_sets = [frozenset(branch) for branch in graph.all_branches]
+        counter_before = Counter(before_sets)
 
-    with graph.tmp_remove_nodes([1, 2]):
-        assert graph.nr_nodes == 3
-        assert list(graph.all_branches) == [(5, 4)]
+        with graph.tmp_remove_nodes([1, 2]):
+            assert graph.nr_nodes == 3
+            assert list(graph.all_branches) == [(5, 4)]
 
-    assert graph.nr_nodes == 5
-    assert graph.nr_branches == 6
+        assert graph.nr_nodes == 5
+        assert graph.nr_branches == 6
 
-    after_sets = [frozenset(branch) for branch in graph.all_branches]
-    counter_after = Counter(after_sets)
-    assert counter_before == counter_after
+        after_sets = [frozenset(branch) for branch in graph.all_branches]
+        counter_after = Counter(after_sets)
+        assert counter_before == counter_after
 
+    def test_tmp_remove_nodes_array_input(self, graph_with_2_routes: BaseGraphModel) -> None:
+        with graph_with_2_routes.tmp_remove_nodes(np.array([1, 2])):  # type: ignore[arg-type]
+            pass
 
-def test_tmp_remove_nodes_array_input(graph_with_2_routes: BaseGraphModel) -> None:
-    with graph_with_2_routes.tmp_remove_nodes(np.array([1, 2])):  # type: ignore[arg-type]
-        pass
+        # check that the external ids are still all integers instead of e.g. np.int
+        assert all([isinstance(e_id, int) for e_id in graph_with_2_routes.external_ids])
 
-    # check that the external ids are still all integers instead of e.g. np.int
-    assert all([isinstance(e_id, int) for e_id in graph_with_2_routes.external_ids])
+    def test_invalid_tmp_remove_nodes(self, graph_with_2_routes: BaseGraphModel) -> None:
+        original_graph = deepcopy(graph_with_2_routes)
+        assert graph_with_2_routes.nr_nodes == 5
+        assert graph_with_2_routes.nr_branches == 4
+
+        # When we remove node 1 and then an non-existing node that crashes the process
+        with pytest.raises(MissingNodeError), graph_with_2_routes.tmp_remove_nodes([1, 99]):
+            pass
+
+        # The remaining graph object should still contain the same nodes and edges.
+        assert graph_with_2_routes.nr_nodes == 5
+        assert graph_with_2_routes.nr_branches == 4
+        assert graph_with_2_routes == original_graph
 
 
 def test_get_components(graph_with_2_routes: BaseGraphModel):
