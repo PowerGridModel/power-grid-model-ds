@@ -469,7 +469,7 @@ class BaseGraphModel(ABC):
         return True
 
     def _get_branch3_nodes(self, branch3_array: Branch3Array) -> tuple[int, int, int]:
-        """Get the nodes of the branch3 array as a set of tuples"""
+        """Get the node ids of the branch3 array as a tuple"""
         if len(branch3_array) != 1:
             raise ValueError("branch3_array must be of length one element")
         return (branch3_array.node_1.item(), branch3_array.node_2.item(), branch3_array.node_3.item())
