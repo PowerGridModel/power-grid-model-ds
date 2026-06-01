@@ -223,6 +223,28 @@ class BaseGraphModel(ABC):
         for source, target in edge_list:
             self.add_branch(source, target)
 
+    @contextmanager
+    def tmp_remove_branches(self, branches: list[tuple[int, int]]) -> Generator:
+        """Context manager that temporarily removes branches from the graph.
+
+        Example:
+            >>> with graph.tmp_remove_branches([(1, 2), (2, 3)]):
+            >>>    assert not graph.has_branch(1, 2)
+            >>>    assert not graph.has_branch(2, 3)
+            >>> assert graph.has_branch(1, 2)
+            >>> assert graph.has_branch(2, 3)
+        """
+        removed_branches = []
+        try:
+            for from_node, to_node in branches:
+                self.delete_branch(from_node, to_node)
+                removed_branches.append((from_node, to_node))
+
+            yield
+        finally:
+            for from_node, to_node in removed_branches:
+                self.add_branch(from_node, to_node)
+
     def get_shortest_path(self, ext_start_node_id: int, ext_end_node_id: int) -> tuple[list[int], int]:
         """Calculate the shortest path between two nodes
 
