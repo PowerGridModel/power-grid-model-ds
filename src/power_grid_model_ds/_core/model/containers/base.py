@@ -7,7 +7,6 @@
 import dataclasses
 import inspect
 import logging
-import warnings
 from dataclasses import dataclass
 from typing import TypeVar
 
@@ -38,16 +37,6 @@ class FancyArrayContainer:
         if not isinstance(other, self.__class__):
             return False
         return container_equal(self, other, ignore_extras=False, early_exit=True)
-
-    @property
-    def id_counter(self):
-        """Returns the max id in self._ids"""
-        warnings.warn(
-            "self.id_counter is deprecated, use self.max_id or self.ids instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.max_id
 
     @property
     def ids(self):

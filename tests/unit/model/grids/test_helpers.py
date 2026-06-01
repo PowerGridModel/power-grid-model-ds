@@ -2,12 +2,14 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 import re
+from copy import deepcopy
 
 import pytest
 
 from power_grid_model_ds import Grid
 from power_grid_model_ds.arrays import SourceArray
-from tests.fixtures.grid_classes import ExtendedGrid
+from tests.fixtures.arrays import DefaultedCustomNodeArray
+from tests.fixtures.grid_classes import ExtendedGrid, UserDefinedArray
 
 
 @pytest.fixture
@@ -86,3 +88,20 @@ class TestMergeGrids:
     def test_merging_with_incorrect_mode(self, grid1: Grid, grid2: Grid):
         with pytest.raises(NotImplementedError):
             grid1.merge(grid2, mode="invalid_mode")  # type: ignore[call-overload]
+
+    def test_merge_recalculate_extended_grid(self):
+        grid1 = ExtendedGrid.empty()
+
+        grid1.append(DefaultedCustomNodeArray.empty(3))  # added to create offset
+
+        grid1.append(UserDefinedArray.empty(3))
+        grid1.user_defined.branch_id = 10
+        grid1.user_defined.node_id = 20
+        grid2 = deepcopy(grid1)
+
+        offset = grid1.merge(grid2, mode="recalculate_ids")
+        assert grid1.user_defined.size == 6
+
+        assert offset == 3
+        assert grid1.user_defined.branch_id.tolist() == [10, 10, 10, 10 + offset, 10 + offset, 10 + offset]
+        assert grid1.user_defined.node_id.tolist() == [20, 20, 20, 20 + offset, 20 + offset, 20 + offset]

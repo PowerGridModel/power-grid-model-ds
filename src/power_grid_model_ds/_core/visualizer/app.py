@@ -16,7 +16,7 @@ from power_grid_model_ds._core.visualizer.layout.cytoscape_html import get_cytos
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
 from power_grid_model_ds._core.visualizer.layout.header import HEADER_HTML
 from power_grid_model_ds._core.visualizer.layout.layout_config import get_default_graph_layout
-from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_OUTPUT_HTML
+from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_GRAPH_HTML, SELECTION_OUTPUT_HTML
 from power_grid_model_ds._core.visualizer.parsers import parse_element_data
 from power_grid_model_ds._core.visualizer.parsing_utils import filter_out_appliances
 
@@ -48,11 +48,6 @@ def get_app_layout(grid: Grid) -> html.Div:
 
     initial_elements = filter_out_appliances(viz_elements_dict.values())
 
-    # Remove associated_ids from initial element data.
-    # They will be added and used after migrating to using grid object for callbacks
-    for element in initial_elements:
-        element["data"].pop("associated_ids", None)
-
     cytoscape_html = get_cytoscape_html(layout, initial_elements, grid.source.size != 0)
 
     return html.Div(
@@ -66,5 +61,6 @@ def get_app_layout(grid: Grid) -> html.Div:
             html.Hr(style={"border-color": "white", "margin": "0"}),
             cytoscape_html,
             SELECTION_OUTPUT_HTML,
+            SELECTION_GRAPH_HTML,
         ],
     )

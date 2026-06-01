@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+from pathlib import Path
+
 try:
     import dash_bootstrap_components as dbc
     from dash import Dash
@@ -10,13 +12,55 @@ try:
     from power_grid_model_ds import Grid
     from power_grid_model_ds._core.visualizer import server_state
     from power_grid_model_ds._core.visualizer.app import GOOGLE_FONTS, MDBOOTSTRAP, get_app_layout
+    from power_grid_model_ds._core.visualizer.grid_utils import dynamic_grid_obj_from_grid, extend_grid_dynamically
+    from power_grid_model_ds._core.visualizer.html_export import generate_standalone_html
+    from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
+    from power_grid_model_ds._core.visualizer.layout.header_config import LayoutOptions
+    from power_grid_model_ds._core.visualizer.layout.layout_config import get_default_graph_layout, layout_with_config
+    from power_grid_model_ds._core.visualizer.parsers import parse_element_data
+    from power_grid_model_ds._core.visualizer.parsing_utils import filter_out_appliances
 except ImportError as error:
     raise ImportError(
         "Missing dependencies for visualizer: install with 'pip install power-grid-model-ds[visualizer]'"
     ) from error
 
 
-def visualize(grid: Grid, debug: bool = False, port: int = 8050) -> None:
+def save_html(
+    grid: Grid,
+    path: str | Path,
+    *,
+    layout: str = "",
+    include_appliances: bool = False,
+) -> None:
+    """Save the Grid visualization as a standalone HTML file.
+
+    The file can be opened in any browser without a running Python server
+    and supports pan, zoom, and click interactions via Cytoscape.js.
+
+    grid: Grid
+        The grid to visualize.
+    path: str | Path
+        Output path for the HTML file.
+    layout: str
+        Layout algorithm to use. If not provided, uses preset (when x/y coords are present)
+        or breadthfirst. Other options: "random", "circle", "concentric", "grid", "cose".
+    include_appliances: bool
+        Whether to include appliance nodes (loads, generators, sources). Default: False.
+    """
+    viz_elements_dict = parse_element_data(grid)
+    all_elements = viz_elements_dict.values()
+    elements = list(all_elements if include_appliances else filter_out_appliances(all_elements))
+    for element in elements:
+        element["data"].pop("associated_ids", None)
+
+    layout_option = LayoutOptions(layout) if layout else get_default_graph_layout(grid.node)
+    layout_config = layout_with_config(layout_option, source_available=grid.source.size != 0)
+
+    html_content = generate_standalone_html(elements, DEFAULT_STYLESHEET, layout_config)
+    Path(path).write_text(html_content, encoding="utf-8")
+
+
+def visualize(grid: Grid, update_data=None, output_data=None, debug: bool = False, port: int = 8050) -> None:
     """Visualize the Grid.
 
     grid: Grid
@@ -37,8 +81,18 @@ def visualize(grid: Grid, debug: bool = False, port: int = 8050) -> None:
             - "grid": A layout that places the nodes in a grid matrix.
             - "cose": A layout that uses the CompoundSpring Embedder algorithm (force-directed layout)
     """
-    # Store Grid object on server side (thread-safe)
-    server_state.set_grid(grid)
+    if update_data is not None and output_data is not None:
+        dynamic_class_update = extend_grid_dynamically(type(grid), extra_dataset=update_data)
+        dynamic_class_update_output = extend_grid_dynamically(dynamic_class_update, extra_dataset=output_data)
+        grid_obj = dynamic_grid_obj_from_grid(dynamic_class_update_output, grid)
+    elif update_data is None and output_data is not None:
+        grid_obj = dynamic_grid_obj_from_grid(extend_grid_dynamically(type(grid), extra_dataset=output_data), grid)
+    elif output_data is None and update_data is not None:
+        grid_obj = dynamic_grid_obj_from_grid(extend_grid_dynamically(type(grid), extra_dataset=update_data), grid)
+    else:
+        grid_obj = grid
+
+    server_state.set_app_state(grid_obj, update_data, output_data)
 
     app = Dash(
         external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, MDBOOTSTRAP, FONT_AWESOME, GOOGLE_FONTS]
