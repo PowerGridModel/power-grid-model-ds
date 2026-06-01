@@ -23,7 +23,7 @@ class UserDefinedArray(FancyArray):
     _defaults: ClassVar[dict[str, int]] = {"branch_id": 42, "node_id": 43}
 
 
-@dataclass
+@dataclass(repr=False)
 class ExtendedGrid(Grid):
     """ExtendedGrid class for testing purposes."""
 
@@ -33,7 +33,7 @@ class ExtendedGrid(Grid):
     extra_value: int = 123
 
 
-@dataclass
+@dataclass(repr=False)
 class ExtendedGridNoDefaults(Grid):
     node: CustomNodeArray
     line: CustomLineArray
