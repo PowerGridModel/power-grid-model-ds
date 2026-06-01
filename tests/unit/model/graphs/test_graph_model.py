@@ -123,7 +123,7 @@ class TestBasicGraphFunctions:
         assert graph._has_node(internal_id_1)
         assert graph._has_node(internal_id_2)
 
-        # now delete node 2, this can change the internal mapping%
+        # now delete node 2, this can change the internal mapping
         graph.delete_node(2)
 
         internal_id_0 = graph.external_to_internal(1)
