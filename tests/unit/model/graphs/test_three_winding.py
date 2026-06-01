@@ -94,14 +94,27 @@ class TestThreeWindingRegistration:
 
 @pytest.mark.usefixtures("graph")
 class TestThreeWindingHelpers:
-    def test_branches_to_remove(self, graph, active_only):
-        expected = [] if active_only else [(3, 5), (30, 50)]
-        assert sorted(graph._branches_to_remove_from_three_winding_transformers()) == expected
+    def test_without_three_winding_cycles(self, graph, active_only):
+        original_branches = set(graph.all_branches)
 
-    def test_squash_of_paths(self, graph):
-        paths = [[1, 2, 3, 5, 6], [10, 20, 50, 60]]
-        expected_paths = [[1, 2, 5, 6], [10, 20, 50, 60]]
-        assert graph._squash_paths_inside_three_winding_transformers(paths) == expected_paths
+        # If we correct for three winding transformers
+        with graph._without_three_winding_cycles() as correct_for_three_winding:
+            if active_only:
+                assert correct_for_three_winding is False
+            else:
+                assert correct_for_three_winding is True
+                # We no longer expect the first branches of each three winding transformer to be removed.
+                assert set(graph.all_branches) == original_branches - {(3, 5), (30, 50)}
+
+        # After exiting the context manager, branches are restored
+        assert set(graph.all_branches) == original_branches
+
+    def test_to_external_path_with_three_winding_correction(self, graph):
+        internal_path = [graph.external_to_internal(id) for id in [1, 2, 3, 5, 6]]
+        assert graph._to_external_path(internal_path=internal_path, correct_for_three_winding=True) == [1, 2, 5, 6]
+
+        internal_path = [graph.external_to_internal(id) for id in [10, 20, 50, 60]]
+        assert graph._to_external_path(internal_path=internal_path, correct_for_three_winding=True) == [10, 20, 50, 60]
 
 
 @pytest.mark.usefixtures("graph")
