@@ -208,7 +208,7 @@ class BaseGraphModel(ABC):
         """Delete all branch3s in the branch3 array from the graph."""
         for branch3 in branch3_array:
             self.delete_branch_array(branch3.as_branches(), raise_on_fail=raise_on_fail)
-            self._three_winding_nodes.remove(self._get_branch3_nodes(branch3))
+            self._three_winding_nodes.discard(self._get_branch3_nodes(branch3))
 
     @contextmanager
     def tmp_remove_nodes(self, nodes: list[int]) -> Generator:

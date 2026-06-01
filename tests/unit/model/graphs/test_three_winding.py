@@ -81,6 +81,16 @@ class TestThreeWindingRegistration:
         assert graph.delete_branch3_array(branch3_array.filter(node_1=20)) is None
         assert graph._three_winding_nodes == set()
 
+    def test_missing_three_winding_transformer_group_removed_no_raise_on_fail(self, graph, branch3_array):
+        branch3_array = branch3_array.filter(node_1=2)
+
+        graph.delete_branch3_array(branch3_array)
+        assert graph._three_winding_nodes == {(20, 30, 50)}
+
+        # If we remove the same branch3 array again, it should not raise an error, but just do nothing.
+        graph.delete_branch3_array(branch3_array, raise_on_fail=False)
+        assert graph._three_winding_nodes == {(20, 30, 50)}
+
 
 @pytest.mark.usefixtures("graph")
 class TestThreeWindingHelpers:
