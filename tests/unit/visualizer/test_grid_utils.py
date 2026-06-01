@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MPL-2.0
 import numpy as np
 import pytest
-from power_grid_model import ComponentType, DatasetType, initialize_array
+from power_grid_model import AttributeType, ComponentType, DatasetType, initialize_array
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.constants import empty
@@ -85,23 +85,23 @@ def test_dynamic_grid_obj_from_grid(dataset_type):
 
 def test_get_attr_data_from_dataset():
     loads = initialize_array(DatasetType.update, ComponentType.sym_load, (4, 3))
-    loads["p_specified"] = [[21, 22, 23], [31, 32, 33], [41, 42, 43], [51, 52, 53]]
+    loads[AttributeType.p_specified] = [[21, 22, 23], [31, 32, 33], [41, 42, 43], [51, 52, 53]]
 
     # Normal case with matching pgm_id=12
-    loads["id"] = [[11, 12, 13], [11, 12, 13], [11, 12, 13], [11, 12, 13]]
+    loads[AttributeType.id] = [[11, 12, 13], [11, 12, 13], [11, 12, 13], [11, 12, 13]]
     batch_dataset = {ComponentType.sym_load: loads}
     x_actual, y_actual = get_attr_data_from_dataset(batch_dataset, ComponentType.sym_load, "p_specified", pgm_id=12)
     assert np.array_equal(y_actual, np.array([22, 32, 42, 52]))
     assert np.array_equal(x_actual, np.array([0, 1, 2, 3]))
 
     # Order changed
-    loads["id"] = [[11, 12, 13], [13, 11, 12], [11, 12, 13], [13, 11, 12]]
+    loads[AttributeType.id] = [[11, 12, 13], [13, 11, 12], [11, 12, 13], [13, 11, 12]]
     x_actual, y_actual = get_attr_data_from_dataset(batch_dataset, ComponentType.sym_load, "p_specified", pgm_id=12)
     assert np.array_equal(y_actual, np.array([22, 33, 42, 53]))
     assert np.array_equal(x_actual, np.array([0, 1, 2, 3]))
 
     # Missing scenario for pgm_id=12
-    loads["id"] = [[11, 12, 13], [14, 15, 16], [11, 12, 13], [14, 15, 16]]
+    loads[AttributeType.id] = [[11, 12, 13], [14, 15, 16], [11, 12, 13], [14, 15, 16]]
     x_actual, y_actual = get_attr_data_from_dataset(batch_dataset, ComponentType.sym_load, "p_specified", pgm_id=12)
     assert np.array_equal(y_actual, np.array([22, 42]))
     assert np.array_equal(x_actual, np.array([0, 2]))
@@ -109,7 +109,7 @@ def test_get_attr_data_from_dataset():
 
 def test_get_attr_data_from_dataset_3ph():
     loads = initialize_array(DatasetType.update, ComponentType.asym_load, (4, 3))
-    loads["p_specified"] = [
+    loads[AttributeType.p_specified] = [
         [[21.1, 21.2, 21.3], [22.1, 22.2, 22.3], [23.1, 23.2, 23.3]],
         [[31.1, 31.2, 31.3], [32.1, 32.2, 32.3], [33.1, 33.2, 33.3]],
         [[41.1, 41.2, 41.3], [42.1, 42.2, 42.3], [43.1, 43.2, 43.3]],
@@ -117,7 +117,7 @@ def test_get_attr_data_from_dataset_3ph():
     ]
 
     # Normal case with matching pgm_id=12
-    loads["id"] = [[11, 12, 13], [11, 12, 13], [11, 12, 13], [11, 12, 13]]
+    loads[AttributeType.id] = [[11, 12, 13], [11, 12, 13], [11, 12, 13], [11, 12, 13]]
     batch_dataset = {ComponentType.asym_load: loads}
     x_actual, y_actual = get_attr_data_from_dataset(batch_dataset, ComponentType.asym_load, "p_specified", pgm_id=12)
     assert np.array_equal(
