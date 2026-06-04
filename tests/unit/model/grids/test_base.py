@@ -83,7 +83,9 @@ def test_basic_grid_fixture(basic_grid: Grid):
     assert len(grid.line) + len(grid.transformer) + len(grid.link) == grid.graphs.complete_graph.nr_branches
 
 
-def test_repr_includes_graph_and_arrays(basic_grid: Grid):
+@pytest.mark.parametrize("grid_class", [Grid, ExtendedGrid])
+def test_repr_includes_graph_and_arrays(grid_class: type[Grid]):
+    basic_grid = build_basic_grid(grid_class.empty())
     repr_str = repr(basic_grid)
 
     assert "graphs=GraphContainer(" in repr_str
