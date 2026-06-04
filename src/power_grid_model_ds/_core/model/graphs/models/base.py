@@ -221,16 +221,21 @@ class BaseGraphModel(ABC):
         considering certain nodes.
         """
         edge_list = []
-        for node in nodes:
-            edge_list += list(self.in_branches(node))
-            self.delete_node(node)
+        node_list = []
 
-        yield
+        try:
+            for node in nodes:
+                edge_list += list(self.in_branches(node))
 
-        for node in nodes:
-            self.add_node(int(node))  # convert to int to avoid type issues when input is e.g. a numpy array
-        for source, target in edge_list:
-            self.add_branch(source, target)
+                self.delete_node(node)
+                node_list.append(node)
+
+            yield
+        finally:
+            for node in node_list:
+                self.add_node(int(node))  # convert to int to avoid type issues when input is e.g. a numpy array
+            for source, target in edge_list:
+                self.add_branch(source, target)
 
     @contextmanager
     def tmp_remove_branches(self, branches: list[tuple[int, int]]) -> Generator:
