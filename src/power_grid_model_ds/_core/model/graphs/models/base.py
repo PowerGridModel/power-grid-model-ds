@@ -254,27 +254,6 @@ class BaseGraphModel(ABC):
             for from_node, to_node in removed_branches:
                 self.add_branch(from_node, to_node)
 
-    @contextmanager
-    def _without_three_winding_cycles(self) -> Generator[bool, None, None]:
-        """Context manager that temporarily removes cycles introduced by three winding transformers in the graph.
-
-        Three winding transformers are represented as a cycle. To make graph algorithms valid,
-        we temporarily remove one branch per three winding transformer to break the cycle.
-        The graph still has the same components after removing these branches.
-        We just force the path through the three winding transformers.
-
-        NOTE: we only remove branches for a three winding transformer if all three branches are active.
-
-        Yields True if branches were removed (and correction for three-winding transformers is needed).
-        """
-        branches_to_remove = [
-            (group[1], group[2])
-            for group in self._three_winding_nodes
-            if all(self.has_branch(from_node, to_node) for from_node, to_node in combinations(group, 2))
-        ]
-        with self.tmp_remove_branches(branches_to_remove):
-            yield bool(branches_to_remove)
-
     def get_shortest_path(self, ext_start_node_id: int, ext_end_node_id: int) -> tuple[list[int], int]:
         """Calculate the shortest path between two nodes
 
@@ -431,6 +410,35 @@ class BaseGraphModel(ABC):
         new_graph.add_branch3_array(grid.three_winding_transformer)
         return new_graph
 
+    def _internals_to_externals(self, internal_nodes: list[int]) -> list[int]:
+        """Convert a list of internal node ids to external node ids"""
+        return [self.internal_to_external(node_id) for node_id in internal_nodes]
+
+    def _externals_to_internals(self, external_nodes: list[int] | NDArray) -> list[int]:
+        """Convert a list of external nodes to internal nodes"""
+        return [self.external_to_internal(node_id) for node_id in external_nodes]
+
+    @contextmanager
+    def _without_three_winding_cycles(self) -> Generator[bool, None, None]:
+        """Context manager that temporarily removes cycles introduced by three winding transformers in the graph.
+
+        Three winding transformers are represented as a cycle. To make graph algorithms valid,
+        we temporarily remove one branch per three winding transformer to break the cycle.
+        The graph still has the same components after removing these branches.
+        We just force the path through the three winding transformers.
+
+        NOTE: we only remove branches for a three winding transformer if all three branches are active.
+
+        Yields True if branches were removed (and correction for three-winding transformers is needed).
+        """
+        branches_to_remove = [
+            (group[1], group[2])
+            for group in self._three_winding_nodes
+            if all(self.has_branch(from_node, to_node) for from_node, to_node in combinations(group, 2))
+        ]
+        with self.tmp_remove_branches(branches_to_remove):
+            yield bool(branches_to_remove)
+
     def _to_external_path(self, internal_path: list[int], correct_for_three_winding: bool = False) -> list[int]:
         """Convert a path of internal node ids to external node ids.
 
@@ -454,14 +462,6 @@ class BaseGraphModel(ABC):
             for index, node in enumerate(path)
             if (index in (0, len(path) - 1) or frozenset([path[index - 1], node, path[index + 1]]) not in replacements)
         ]
-
-    def _internals_to_externals(self, internal_nodes: list[int]) -> list[int]:
-        """Convert a list of internal node ids to external node ids"""
-        return [self.internal_to_external(node_id) for node_id in internal_nodes]
-
-    def _externals_to_internals(self, external_nodes: list[int] | NDArray) -> list[int]:
-        """Convert a list of external nodes to internal nodes"""
-        return [self.external_to_internal(node_id) for node_id in external_nodes]
 
     def _branch_is_relevant(self, branch: BranchArray) -> bool:
         """Check if a branch is relevant"""
