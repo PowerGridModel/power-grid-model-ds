@@ -192,6 +192,35 @@ class TestTmpRemoveNodes:
         assert graph_with_2_routes == original_graph
 
 
+class TestTmpRemoveBranches:
+    def test_tmp_remove_branches(self, graph_with_2_routes: BaseGraphModel):
+        graph = deepcopy(graph_with_2_routes)
+
+        assert graph.has_branch(1, 2)
+        assert graph.has_branch(2, 3)
+
+        with graph.tmp_remove_branches([(1, 2), (2, 3)]):
+            assert not graph.has_branch(1, 2)
+            assert not graph.has_branch(2, 3)
+
+        assert graph == graph_with_2_routes
+        assert graph.has_branch(1, 2)
+        assert graph.has_branch(2, 3)
+
+    def test_tmp_remove_branches_non_existent_branch_keeps_graph_as_is(self, graph_with_2_routes: BaseGraphModel):
+        graph = deepcopy(graph_with_2_routes)
+
+        # If we remove a branch and then a non-existing branch, we should raise an error.
+        with (
+            pytest.raises(MissingBranchError, match="Branch between nodes 1 and 4 does NOT exist"),
+            graph.tmp_remove_branches([(1, 2), (1, 4)]),
+        ):
+            pass
+
+        # And the graph should still be the same as the original afterwards.
+        assert graph == graph_with_2_routes
+
+
 def test_get_components(graph_with_2_routes: BaseGraphModel):
     graph = graph_with_2_routes
     graph.add_node(99)

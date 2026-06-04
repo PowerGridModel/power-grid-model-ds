@@ -5,7 +5,7 @@
 """Helper np.arrays used by various tests."""
 
 import pytest
-from power_grid_model import initialize_array
+from power_grid_model import AttributeType, ComponentType, DatasetType, initialize_array
 
 from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
@@ -71,58 +71,58 @@ def topologically_full_grid(grid: Grid):
 
 @pytest.fixture
 def input_data_pgm():
-    node = initialize_array("input", "node", 3)
-    node["id"] = [1, 2, 7]
-    node["u_rated"] = [10500.0, 10500.0, 10500.0]
+    node = initialize_array(DatasetType.input, ComponentType.node, 3)
+    node[AttributeType.id] = [1, 2, 7]
+    node[AttributeType.u_rated] = [10500.0, 10500.0, 10500.0]
 
-    line = initialize_array("input", "line", 2)
-    line["id"] = [9, 10]
-    line["from_node"] = [7, 7]
-    line["to_node"] = [2, 1]
-    line["from_status"] = [1, 1]
-    line["to_status"] = [1, 1]
-    line["r1"] = [0.00396133, 0.32598809]
-    line["x1"] = [4.53865336e-05, 1.34716591e-02]
-    line["c1"] = [0.0, 0.0]
-    line["tan1"] = [0.0, 0.0]
-    line["i_n"] = [303.91942029, 210.06857453]
+    line = initialize_array(DatasetType.input, ComponentType.line, 2)
+    line[AttributeType.id] = [9, 10]
+    line[AttributeType.from_node] = [7, 7]
+    line[AttributeType.to_node] = [2, 1]
+    line[AttributeType.from_status] = [1, 1]
+    line[AttributeType.to_status] = [1, 1]
+    line[AttributeType.r1] = [0.00396133, 0.32598809]
+    line[AttributeType.x1] = [4.53865336e-05, 1.34716591e-02]
+    line[AttributeType.c1] = [0.0, 0.0]
+    line[AttributeType.tan1] = [0.0, 0.0]
+    line[AttributeType.i_n] = [303.91942029, 210.06857453]
 
-    link = initialize_array("input", "link", 0)
-    transformer = initialize_array("input", "transformer", 0)
-    three_winding_transformer = initialize_array("input", "three_winding_transformer", 0)
+    link = initialize_array(DatasetType.input, ComponentType.link, 0)
+    transformer = initialize_array(DatasetType.input, ComponentType.transformer, 0)
+    three_winding_transformer = initialize_array(DatasetType.input, ComponentType.three_winding_transformer, 0)
 
-    sym_load = initialize_array("input", "sym_load", 2)
-    sym_load["id"] = [5, 6]
-    sym_load["node"] = [1, 2]
-    sym_load["status"] = [1, 1]
-    sym_load["type"] = [0, 0]
-    sym_load["p_specified"] = [-287484.0, 26558.0]
-    sym_load["q_specified"] = [40640.0, 28148.0]
+    sym_load = initialize_array(DatasetType.input, ComponentType.sym_load, 2)
+    sym_load[AttributeType.id] = [5, 6]
+    sym_load[AttributeType.node] = [1, 2]
+    sym_load[AttributeType.status] = [1, 1]
+    sym_load[AttributeType.type] = [0, 0]
+    sym_load[AttributeType.p_specified] = [-287484.0, 26558.0]
+    sym_load[AttributeType.q_specified] = [40640.0, 28148.0]
 
-    sym_gen = initialize_array("input", "sym_gen", 0)
+    sym_gen = initialize_array(DatasetType.input, ComponentType.sym_gen, 0)
 
-    source = initialize_array("input", "source", 1)
-    source["id"] = [8]
-    source["node"] = [7]
-    source["status"] = [1]
-    source["u_ref"] = [1.0]
+    source = initialize_array(DatasetType.input, ComponentType.source, 1)
+    source[AttributeType.id] = [8]
+    source[AttributeType.node] = [7]
+    source[AttributeType.status] = [1]
+    source[AttributeType.u_ref] = [1.0]
 
-    transformer_tap_regulator = initialize_array("input", "transformer_tap_regulator", 0)
-    sym_power_sensor = initialize_array("input", "sym_power_sensor", 0)
-    sym_voltage_sensor = initialize_array("input", "sym_voltage_sensor", 0)
-    asym_voltage_sensor = initialize_array("input", "asym_voltage_sensor", 0)
+    transformer_tap_regulator = initialize_array(DatasetType.input, ComponentType.transformer_tap_regulator, 0)
+    sym_power_sensor = initialize_array(DatasetType.input, ComponentType.sym_power_sensor, 0)
+    sym_voltage_sensor = initialize_array(DatasetType.input, ComponentType.sym_voltage_sensor, 0)
+    asym_voltage_sensor = initialize_array(DatasetType.input, ComponentType.asym_voltage_sensor, 0)
 
     return {
-        "node": node,
-        "line": line,
-        "link": link,
-        "transformer": transformer,
-        "three_winding_transformer": three_winding_transformer,
-        "sym_load": sym_load,
-        "sym_gen": sym_gen,
-        "source": source,
-        "transformer_tap_regulator": transformer_tap_regulator,
-        "sym_power_sensor": sym_power_sensor,
-        "sym_voltage_sensor": sym_voltage_sensor,
-        "asym_voltage_sensor": asym_voltage_sensor,
+        ComponentType.node: node,
+        ComponentType.line: line,
+        ComponentType.link: link,
+        ComponentType.transformer: transformer,
+        ComponentType.three_winding_transformer: three_winding_transformer,
+        ComponentType.sym_load: sym_load,
+        ComponentType.sym_gen: sym_gen,
+        ComponentType.source: source,
+        ComponentType.transformer_tap_regulator: transformer_tap_regulator,
+        ComponentType.sym_power_sensor: sym_power_sensor,
+        ComponentType.sym_voltage_sensor: sym_voltage_sensor,
+        ComponentType.asym_voltage_sensor: asym_voltage_sensor,
     }
