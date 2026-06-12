@@ -4,7 +4,7 @@
 import warnings
 from abc import ABC, abstractmethod
 from collections import Counter
-from collections.abc import Generator
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from itertools import combinations
 from typing import TYPE_CHECKING
@@ -382,6 +382,17 @@ class BaseGraphModel(ABC):
 
         return self.get_connected(node_id, [upstream_node], inclusive)
 
+    def dfs(self, source: int | Sequence[int]) -> list[int]:
+        """Depth first search from the source(s).
+
+        Args:
+            source(int | Sequence[int]): the source(s) the start the search from.
+
+        Returns:
+            list[int]: the nodes in the order they were found"""
+        internal_sources = self._externals_to_internals([source] if isinstance(source, int) else source)
+        return self._internals_to_externals(self._dfs(internal_sources))
+
     def find_fundamental_cycles(self) -> list[list[int]]:
         """Find all fundamental cycles in the graph.
         Returns:
@@ -419,7 +430,7 @@ class BaseGraphModel(ABC):
         """Convert a list of internal node ids to external node ids"""
         return [self.internal_to_external(node_id) for node_id in internal_nodes]
 
-    def _externals_to_internals(self, external_nodes: list[int] | NDArray) -> list[int]:
+    def _externals_to_internals(self, external_nodes: Sequence[int] | NDArray) -> list[int]:
         """Convert a list of external nodes to internal nodes"""
         return [self.external_to_internal(node_id) for node_id in external_nodes]
 
@@ -525,6 +536,9 @@ class BaseGraphModel(ABC):
 
     @abstractmethod
     def _get_components(self) -> list[list[int]]: ...
+
+    @abstractmethod
+    def _dfs(self, source: list[int]) -> list[int]: ...
 
     @abstractmethod
     def _find_fundamental_cycles(self) -> list[list[int]]: ...

@@ -476,3 +476,22 @@ class TestEq:
         assert not graph.has_parallel_edges()
         graph.add_branch(2, 1)
         assert graph.has_parallel_edges()
+
+
+class TestDfsSearch:
+    @pytest.mark.parametrize(
+        ("source", "expected"),
+        [
+            pytest.param(1, [1, 5, 4, 2, 3], id="source: 1"),
+            pytest.param({1}, [1, 5, 4, 2, 3], id="source {1}"),
+            pytest.param([1, 2], [1, 5, 4, 2, 3], id="source [1,2]"),
+            pytest.param([2, 1], [2, 3, 1, 5, 4], id="source [2,1]"),
+            pytest.param({}, [], id="empty source"),
+        ],
+    )
+    def test_dfs_int_source(self, graph_with_2_routes, source, expected):
+        assert graph_with_2_routes.dfs(source) == expected
+
+    def test_dfs_non_existing_node(self, graph_with_2_routes):
+        with pytest.raises(MissingNodeError, match="External node id '10' does NOT exist"):
+            assert graph_with_2_routes.dfs(10)
