@@ -385,8 +385,8 @@ class BaseGraphModel(ABC):
     def bfs(self, source: int | Sequence[int]) -> list[int]:
         """Breadth first search from the source(s).
 
-        Args: 
-            source(int | Sequence[int]): the source(s) the start the breadth first search from. 
+        Args:
+            source(int | Sequence[int]): the source(s) the start the breadth first search from.
 
         Returns:
             list[int]: the nodes in the order they were found"""
