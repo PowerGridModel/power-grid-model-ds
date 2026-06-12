@@ -476,3 +476,22 @@ class TestEq:
         assert not graph.has_parallel_edges()
         graph.add_branch(2, 1)
         assert graph.has_parallel_edges()
+
+
+class TestBfsSearch:
+    @pytest.mark.parametrize(
+        ("source", "expected"),
+        [
+            pytest.param(1, [1, 5, 2, 4, 3], id="source: 1"),
+            pytest.param({1}, [1, 5, 2, 4, 3], id="source {1}"),
+            pytest.param([1, 2], [1, 5, 2, 4, 3], id="source [1,2]"),
+            pytest.param([2, 1], [2, 3, 1, 5, 4], id="source [1,2]"),
+            pytest.param({}, [], id="empty source"),
+        ],
+    )
+    def test_bfs_int_source(self, graph_with_2_routes, source, expected):
+        assert graph_with_2_routes.bfs(source) == expected
+
+    def test_bfs_non_existing_node(self, graph_with_2_routes):
+        with pytest.raises(MissingNodeError, match="External node id '10' does NOT exist"):
+            assert graph_with_2_routes.bfs(10)

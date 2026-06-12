@@ -88,6 +88,11 @@ class RustworkxGraphModel(BaseGraphModel):
         except NoEdgeBetweenNodes as error:
             raise MissingBranchError(f"No edge between (internal) nodes {from_node_id} and {to_node_id}") from error
 
+    def _bfs(self, source: list[int]) -> list[int]:
+        visitor = _NodeVisitor(nodes_to_ignore=[])
+        rx.bfs_search(self._graph, source, visitor)
+        return visitor.nodes
+
     def _get_shortest_path(self, source: int, target: int) -> tuple[list[int], int]:
         path_mapping = rx.dijkstra_shortest_paths(self._graph, source, target)
 
