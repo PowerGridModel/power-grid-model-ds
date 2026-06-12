@@ -7,7 +7,7 @@ from collections.abc import Generator
 
 import rustworkx as rx
 from rustworkx import NoEdgeBetweenNodes
-from rustworkx.visit import BFSVisitor, PruneSearch, StopSearch
+from rustworkx.visit import BFSVisitor, DFSVisitor, PruneSearch, StopSearch
 
 from power_grid_model_ds._core.model.graphs.errors import MissingBranchError, MissingNodeError, NoPathBetweenNodes
 from power_grid_model_ds._core.model.graphs.models._rustworkx_search import find_fundamental_cycles_rustworkx
@@ -88,6 +88,11 @@ class RustworkxGraphModel(BaseGraphModel):
         except NoEdgeBetweenNodes as error:
             raise MissingBranchError(f"No edge between (internal) nodes {from_node_id} and {to_node_id}") from error
 
+    def _dfs(self, source: list[int]) -> list[int]:
+        visitor = _DfsNodeVisitor()
+        rx.dfs_search(self._graph, source, visitor)
+        return visitor.nodes
+
     def _get_shortest_path(self, source: int, target: int) -> tuple[list[int], int]:
         path_mapping = rx.dijkstra_shortest_paths(self._graph, source, target)
 
@@ -133,6 +138,14 @@ class RustworkxGraphModel(BaseGraphModel):
 
     def _all_branches(self) -> Generator[tuple[int, int], None, None]:
         return ((source, target) for source, target in self._graph.edge_list())
+
+
+class _DfsNodeVisitor(DFSVisitor):
+    def __init__(self):
+        self.nodes = []
+
+    def discover_vertex(self, v, _):
+        self.nodes.append(v)
 
 
 class _NodeVisitor(BFSVisitor):
