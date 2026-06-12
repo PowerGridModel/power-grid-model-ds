@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import numpy as np
 import pytest
-from power_grid_model import ComponentType, TapChangingStrategy, initialize_array
+from power_grid_model import ComponentType, MeasuredTerminalType, TapChangingStrategy, initialize_array
 
 from power_grid_model_ds._core.data_source.generator.grid_generators import RadialGridGenerator
 from power_grid_model_ds._core.model.grids.base import Grid
@@ -112,6 +112,39 @@ class TestCalculatePowerFlow:
         assert output["node"]["u"][1] > 390
         assert output["node"]["u"][1] < 410
         assert output["transformer_tap_regulator"]["tap_pos"][0] > 0
+
+
+class TestCalculateStateEstimation:
+    def test_simple_grid_with_sensors(self, simple_loadflow_grid: Grid):
+        core_interface = PowerGridModelInterface(grid=simple_loadflow_grid)
+        input_data = core_interface.create_input_from_grid()
+
+        voltage_sensors = initialize_array("input", "sym_voltage_sensor", 2)
+        voltage_sensors["id"] = [10, 11]
+        voltage_sensors["measured_object"] = [0, 1]
+        voltage_sensors["u_sigma"] = [1.0, 1.0]
+        voltage_sensors["u_measured"] = [10_500.0, 10_497.5]
+        voltage_sensors["u_angle_measured"] = [0.0, -0.0002]
+
+        power_sensors = initialize_array("input", "sym_power_sensor", 2)
+        power_sensors["id"] = [12, 13]
+        power_sensors["measured_object"] = [3, 4]
+        power_sensors["measured_terminal_type"] = [MeasuredTerminalType.source, MeasuredTerminalType.load]
+        power_sensors["power_sigma"] = [100.0, 100.0]
+        power_sensors["p_measured"] = [-250_000.0, 250_000.0]
+        power_sensors["q_measured"] = [-50_000.0, 50_000.0]
+        power_sensors["p_sigma"] = [100.0, 100.0]
+        power_sensors["q_sigma"] = [100.0, 100.0]
+
+        input_data["sym_voltage_sensor"] = voltage_sensors
+        input_data["sym_power_sensor"] = power_sensors
+
+        output = core_interface.calculate_state_estimation()
+
+        assert output is core_interface.output_data
+        assert output["node"]["u"][0] == pytest.approx(10_498.75, 0.1)
+        assert output["node"]["u"][1] == pytest.approx(10_498.75, 0.1)
+        assert all(output["line"]["i_from"] > 0)
 
 
 @pytest.fixture
