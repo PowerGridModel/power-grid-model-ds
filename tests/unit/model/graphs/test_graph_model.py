@@ -170,8 +170,8 @@ class TestAdjacent:
         [
             pytest.param({2}, [5], id="exlude 2"),
             pytest.param({}, [2, 5], id="empty exclude"),
-            pytest.param({4}, [2,5], id="exclude irrelevant node"),
-            pytest.param([2 , 5], [], id="exclude all (as list)"),
+            pytest.param({4}, [2, 5], id="exclude irrelevant node"),
+            pytest.param([2, 5], [], id="exclude all (as list)"),
         ],
     )
     def test_adjacent_with_excluding(self, graph_with_2_routes, excluding, neighbours):
