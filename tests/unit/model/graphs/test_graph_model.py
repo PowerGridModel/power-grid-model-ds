@@ -489,7 +489,7 @@ class TestBfsSearch:
             pytest.param({}, [], id="empty source"),
         ],
     )
-    def test_bfs_int_source(self, graph_with_2_routes, source, expected):
+    def test_bfs(self, graph_with_2_routes, source, expected):
         assert graph_with_2_routes.bfs(source) == expected
 
     def test_bfs_non_existing_node(self, graph_with_2_routes):
