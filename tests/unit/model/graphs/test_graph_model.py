@@ -485,7 +485,7 @@ class TestBfsSearch:
             pytest.param(1, [(1, None), (5, 1), (2, 1), (4, 5), (3, 2)], id="source: 1"),
             pytest.param({1}, [(1, None), (5, 1), (2, 1), (4, 5), (3, 2)], id="source {1}"),
             pytest.param([1, 2], [(1, None), (5, 1), (2, 1), (4, 5), (3, 2)], id="source [1,2]"),
-            pytest.param([2, 1], [(2, None), (3, 2), (1, 2), (5, 1), (4, 5)], id="source [1,2]"),
+            pytest.param([2, 1], [(2, None), (3, 2), (1, 2), (5, 1), (4, 5)], id="source [2,1]"),
             pytest.param({}, [], id="empty source"),
         ],
     )
