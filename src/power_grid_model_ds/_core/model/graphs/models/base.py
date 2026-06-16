@@ -389,7 +389,9 @@ class BaseGraphModel(ABC):
             source(int | Sequence[int]): the source(s) the start the search from.
 
         Returns:
-            list[int]: the nodes in the order they were found"""
+            list[tuple[int, int | None]]: the (node, parent) by the order in which we found the nodes.
+                The parent is None for a source that has not been found via another source yet.
+        """
         internal_sources = self._externals_to_internals([source] if isinstance(source, int) else source)
         internal_result = self._dfs(internal_sources)
         return [
