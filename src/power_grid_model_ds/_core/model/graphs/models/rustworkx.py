@@ -116,6 +116,9 @@ class RustworkxGraphModel(BaseGraphModel):
     def _in_branches(self, int_node_id: int) -> Generator[tuple[int, int], None, None]:
         return ((source, target) for source, target, _ in self._graph.in_edges(int_node_id))
 
+    def _adjacent(self, int_node_id: int) -> list[int]:
+        return list(self._graph.neighbors(int_node_id))
+
     def _find_first_connected(self, node_id: int, candidate_node_ids: list[int]) -> int:
         visitor = _NodeFinder(candidate_nodes=candidate_node_ids)
         rx.bfs_search(self._graph, [node_id], visitor)
