@@ -143,6 +143,42 @@ class TestBasicGraphFunctions:
         assert list(graph.in_branches(2)) == [(1, 2), (1, 2), (1, 2)]
 
 
+class TestAdjacent:
+    @pytest.mark.parametrize(
+        ("node", "neighbours"),
+        [
+            pytest.param(1, [2, 5], id="neighbours node 1"),
+            pytest.param(2, [1, 3], id="neighbours node 2"),
+            pytest.param(3, [2], id="neighbours node 3"),
+            pytest.param(4, [5], id="neighbours node 4"),
+            pytest.param(5, [1, 4], id="neighbours node 5"),
+        ],
+    )
+    def test_adjacent_no_excluding(self, graph_with_2_routes, node, neighbours):
+        actual_neighbours = graph_with_2_routes.adjacent(node)
+        assert sorted(actual_neighbours) == neighbours
+
+    def test_adjacent_no_neighbours(self, graph_with_2_routes):
+        # When we have a node with no neighbours
+        graph_with_2_routes.add_node(10)
+
+        # We should get an empty list
+        assert graph_with_2_routes.adjacent(10) == []
+
+    @pytest.mark.parametrize(
+        ("excluding", "neighbours"),
+        [
+            pytest.param({2}, [5], id="exlude 2"),
+            pytest.param({}, [2, 5], id="empty exclude"),
+            pytest.param({4}, [2, 5], id="exclude irrelevant node"),
+            pytest.param([2, 5], [], id="exclude all (as list)"),
+        ],
+    )
+    def test_adjacent_with_excluding(self, graph_with_2_routes, excluding, neighbours):
+        actual_neighbours = graph_with_2_routes.adjacent(node_id=1, excluding=excluding)
+        assert sorted(actual_neighbours) == neighbours
+
+
 class TestTmpRemoveNodes:
     def test_tmp_remove_nodes(self, graph_with_2_routes: BaseGraphModel) -> None:
         graph = graph_with_2_routes
