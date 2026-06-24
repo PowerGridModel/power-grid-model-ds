@@ -107,8 +107,7 @@ jobs:
     needs:
       - build-python
       - tests
-    permissions:
-      contents: write
+    environment: release
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
@@ -131,6 +130,13 @@ jobs:
       - name: Display tag
         run: echo "${{ steps.tag.outputs.tag }}"
 
+      - name: generate GitHub App token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: generate-token
+        with:
+          client-id: ${{ secrets.RELEASE_BOT_APP_ID }}
+          private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+
       - name: Release
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
@@ -139,14 +145,15 @@ jobs:
           tag_name: ${{ steps.tag.outputs.tag }}
           generate_release_notes: true
           target_commitish: ${{ github.sha }}
+          token: ${{ steps.generate-token.outputs.token }}
 
   publish:
     name: Publish to PyPI
     if: ${{ github.ref == 'refs/heads/main' && inputs.create_release }}
     needs: github-release
     runs-on: ubuntu-latest
+    environment: release
     permissions:
-      contents: write
       id-token: write  # Required for Trusted Publishing
     steps:
       - name: Download assets from latest GitHub release using gh CLI

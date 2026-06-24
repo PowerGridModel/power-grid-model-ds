@@ -17,8 +17,7 @@ concurrency:
 
 jobs:
   sonar-cloud:
-    permissions:
-      contents: write
+
     runs-on: ubuntu-latest
     steps:
 
