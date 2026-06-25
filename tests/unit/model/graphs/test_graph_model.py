@@ -482,11 +482,11 @@ class TestDfsSearch:
     @pytest.mark.parametrize(
         ("source", "expected"),
         [
-            pytest.param(1, [(1, None), (5, 1), (4, 5), (2, 1), (3, 2)], id="source: 1"),
-            pytest.param({1}, [(1, None), (5, 1), (4, 5), (2, 1), (3, 2)], id="source {1}"),
-            pytest.param([1, 2], [(1, None), (5, 1), (4, 5), (2, 1), (3, 2)], id="source [1,2]"),
-            pytest.param([2, 1], [(2, None), (3, 2), (1, 2), (5, 1), (4, 5)], id="source [2,1]"),
-            pytest.param({}, [], id="empty source"),
+            pytest.param(1, {1: None, 5: 1, 4: 5, 2: 1, 3: 2}, id="source: 1"),
+            pytest.param({1}, {1: None, 5: 1, 4: 5, 2: 1, 3: 2}, id="source {1}"),
+            pytest.param([1, 2], {1: None, 5: 1, 4: 5, 2: 1, 3: 2}, id="source [1,2]"),
+            pytest.param([2, 1], {2: None, 3: 2, 1: 2, 5: 1, 4: 5}, id="source [2,1]"),
+            pytest.param({}, {}, id="empty source"),
         ],
     )
     def test_dfs(self, graph_with_2_routes, source, expected):
@@ -498,4 +498,4 @@ class TestDfsSearch:
 
     def test_second_source_in_different_component(self, graph_with_2_routes):
         graph_with_2_routes.add_node(8)
-        assert graph_with_2_routes.dfs([1, 8]) == [(1, None), (5, 1), (4, 5), (2, 1), (3, 2), (8, None)]
+        assert graph_with_2_routes.dfs([1, 8]) == {1: None, 5: 1, 4: 5, 2: 1, 3: 2, 8: None}

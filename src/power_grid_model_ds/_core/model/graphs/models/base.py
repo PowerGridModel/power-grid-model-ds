@@ -382,22 +382,23 @@ class BaseGraphModel(ABC):
 
         return self.get_connected(node_id, [upstream_node], inclusive)
 
-    def dfs(self, source: int | Sequence[int]) -> list[tuple[int, int | None]]:
+    def dfs(self, source: int | Sequence[int]) -> dict[int, int | None]:
         """Depth first search from the source(s).
 
         Args:
             source(int | Sequence[int]): the source(s) the start the search from.
 
         Returns:
-            list[tuple[int, int | None]]: the (node, parent) by the order in which we found the nodes.
+            dict[int, int | None]: a dict with node:parent structure.
+                The keys of the dict represent the nodes in the order that they are found.
                 The parent is None for a source that has not been found via another source yet.
         """
         internal_sources = self._externals_to_internals([source] if isinstance(source, int) else source)
         internal_result = self._dfs(internal_sources)
-        return [
-            (self.internal_to_external(node), None if parent is None else self.internal_to_external(parent))
-            for node, parent in internal_result
-        ]
+        return {
+            self.internal_to_external(node): None if parent is None else self.internal_to_external(parent)
+            for node, parent in internal_result.items()
+        }
 
     def find_fundamental_cycles(self) -> list[list[int]]:
         """Find all fundamental cycles in the graph.
@@ -544,7 +545,7 @@ class BaseGraphModel(ABC):
     def _get_components(self) -> list[list[int]]: ...
 
     @abstractmethod
-    def _dfs(self, source: list[int]) -> list[tuple[int, int | None]]: ...
+    def _dfs(self, source: list[int]) -> dict[int, int | None]: ...
 
     @abstractmethod
     def _find_fundamental_cycles(self) -> list[list[int]]: ...
