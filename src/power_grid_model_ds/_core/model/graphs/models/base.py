@@ -4,7 +4,7 @@
 import warnings
 from abc import ABC, abstractmethod
 from collections import Counter
-from collections.abc import Generator, Sequence
+from collections.abc import Container, Generator, Sequence
 from contextlib import contextmanager
 from itertools import combinations
 from typing import TYPE_CHECKING
@@ -102,6 +102,16 @@ class BaseGraphModel(ABC):
         return (
             (self.internal_to_external(source), self.internal_to_external(target)) for source, target in internal_edges
         )
+
+    def adjacent(self, node_id: int, excluding: Container[int] | None = None) -> list[int]:
+        """Return all nodes connected to the given node.
+
+        Args:
+            excluding(Container[int]|None): exclude certain node ids frm the output of this function. Defaults to None.
+        """
+        internal_adjacent_nodes = self._adjacent(self.external_to_internal(node_id))
+        external_nodes = self._internals_to_externals(internal_adjacent_nodes)
+        return [node for node in external_nodes if node not in excluding] if excluding else external_nodes
 
     def add_node(self, ext_node_id: int, raise_on_fail: bool = True) -> None:
         """Add a node to the graph."""
@@ -500,6 +510,9 @@ class BaseGraphModel(ABC):
 
     @abstractmethod
     def _in_branches(self, int_node_id: int) -> Generator[tuple[int, int], None, None]: ...
+
+    @abstractmethod
+    def _adjacent(self, int_node_id: int) -> list[int]: ...
 
     @abstractmethod
     def _get_connected(self, node_id: int, nodes_to_ignore: list[int], inclusive: bool = False) -> list[int]: ...
