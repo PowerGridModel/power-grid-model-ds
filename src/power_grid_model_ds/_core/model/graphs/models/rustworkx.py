@@ -88,6 +88,11 @@ class RustworkxGraphModel(BaseGraphModel):
         except NoEdgeBetweenNodes as error:
             raise MissingBranchError(f"No edge between (internal) nodes {from_node_id} and {to_node_id}") from error
 
+    def _bfs(self, source: list[int]) -> dict[int, int | None]:
+        visitor = _BfsParentVisitor()
+        rx.bfs_search(self._graph, source, visitor)
+        return {node: visitor.parents.get(node) for node in visitor.nodes}
+
     def _get_shortest_path(self, source: int, target: int) -> tuple[list[int], int]:
         path_mapping = rx.dijkstra_shortest_paths(self._graph, source, target)
 
@@ -136,6 +141,19 @@ class RustworkxGraphModel(BaseGraphModel):
 
     def _all_branches(self) -> Generator[tuple[int, int], None, None]:
         return ((source, target) for source, target in self._graph.edge_list())
+
+
+class _BfsParentVisitor(BFSVisitor):
+    def __init__(self):
+        self.nodes = []
+        self.parents = {}
+
+    def discover_vertex(self, v):
+        self.nodes.append(v)
+
+    def tree_edge(self, e):
+        (u, v, _) = e
+        self.parents[v] = u
 
 
 class _NodeVisitor(BFSVisitor):
