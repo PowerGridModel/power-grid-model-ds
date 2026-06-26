@@ -100,7 +100,7 @@ class FancyArray(ABC):  # noqa: B024
 
     @classmethod
     @lru_cache
-    def get_dtype(cls): # noqa: python:S3776
+    def get_dtype(cls):  # noqa: python:S3776
         annotations = get_public_annotations(cls)
         str_lengths = combine_attribute_from_parent_classes(cls, "_str_lengths", dict)
         dtypes = {}
@@ -119,7 +119,7 @@ class FancyArray(ABC):  # noqa: B024
             elif is_before_numpy_25 and len(type_args) == 2 and get_origin(type_args[1]) is Literal:  # noqa: PLR2004
                 dtypes[name] = (get_args(get_args(type_args[0])[1])[0], get_args(type_args[1])[0])
             # Expected type_args post-2.5 for NDArray: (numpy.int32,)
-            elif len(type_args) == 1: # pragma: no cover
+            elif len(type_args) == 1:  # pragma: no cover
                 dtypes[name] = type_args[0]
             # Expected type_args post-2.5 for NDArray3: (NDArray[numpy.float64], typing.Literal[3])
             elif len(type_args) == 2:  # noqa: PLR2004 # pragma: no cover
