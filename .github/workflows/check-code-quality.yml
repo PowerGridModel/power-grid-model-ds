@@ -9,14 +9,14 @@ on:
   # run pipeline from another workflow
   workflow_call:
     inputs:
-      update_dependencies:
-        type: boolean
-        description: Update dependencies to their latest version
-        default: false
+      update_resolution:
+        type: string
+        description: Strategy to use when upgrade. If empty nu upgrade is performed
+        default: ""
         required: false
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-code-quality
+  group: ${{ github.workflow }}-${{ github.ref }}-code-quality-${{ inputs.update_resolution || 'none' }}
   cancel-in-progress: true
 
 jobs:
@@ -46,8 +46,8 @@ jobs:
         run: uv sync --frozen --dev
 
       - name: Update dependencies
-        if: ${{ inputs.update_dependencies && always() }}
-        run: uv sync --upgrade --dev
+        if: ${{ inputs.update_dependencies != '' && always() }}
+        run: uv sync --upgrade --resolution ${{ inputs.update_dependencies }} --dev
 
       - name: lint
         if: ${{ always() }}
