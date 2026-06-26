@@ -100,7 +100,7 @@ class FancyArray(ABC):  # noqa: B024
 
     @classmethod
     @lru_cache
-    def get_dtype(cls):
+    def get_dtype(cls): # noqa: python:S3776
         annotations = get_public_annotations(cls)
         str_lengths = combine_attribute_from_parent_classes(cls, "_str_lengths", dict)
         dtypes = {}
@@ -108,24 +108,24 @@ class FancyArray(ABC):  # noqa: B024
         # Numpy 2.5 changed the typing interface, so we need to treat these differently
         is_before_numpy_25 = version.parse(np.__version__) < version.parse("2.5.0")
 
-        for name, dtype in annotations.items():
-            dtype_args = get_args(dtype)
+        for name, type_def in annotations.items():
+            type_args = get_args(type_def)
 
-            # Expected dtype_args pre-2.5 for NDArray[]: (tuple[typing.Any, ...], numpy.dtype[numpy.int32])
-            if is_before_numpy_25 and len(dtype_args) == 2 and get_origin(dtype_args[1]) is np.dtype:  # noqa: PLR2004
-                dtypes[name] = get_args(dtype_args[1])[0]
-            # Expected dtype_args pre-2.5 for NDArray3[]:
+            # Expected type_args pre-2.5 for NDArray[]: (tuple[typing.Any, ...], numpy.dtype[numpy.int32])
+            if is_before_numpy_25 and len(type_args) == 2 and get_origin(type_args[1]) is np.dtype:  # noqa: PLR2004
+                dtypes[name] = get_args(type_args[1])[0]
+            # Expected type_args pre-2.5 for NDArray3[]:
             # (numpy.ndarray[tuple[typing.Any, ...], numpy.dtype[numpy.float64]], typing.Literal[3])
-            elif is_before_numpy_25 and len(dtype_args) == 2 and get_origin(dtype_args[1]) is Literal:  # noqa: PLR2004
-                dtypes[name] = (get_args(get_args(dtype_args[0])[1])[0], get_args(dtype_args[1])[0])
-            # Expected dtype_args post-2.5 for NDArray: (numpy.int32,)
-            elif len(dtype_args) == 1:
-                dtypes[name] = dtype_args[0]
-            # Expected dtype_args post-2.5 for NDArray3: (NDArray[numpy.float64], typing.Literal[3])
-            elif len(dtype_args) == 2:  # noqa: PLR2004
-                dtypes[name] = (get_args(dtype_args[0])[0], get_args(dtype_args[1])[0])
+            elif is_before_numpy_25 and len(type_args) == 2 and get_origin(type_args[1]) is Literal:  # noqa: PLR2004
+                dtypes[name] = (get_args(get_args(type_args[0])[1])[0], get_args(type_args[1])[0])
+            # Expected type_args post-2.5 for NDArray: (numpy.int32,)
+            elif len(type_args) == 1:
+                dtypes[name] = type_args[0]
+            # Expected type_args post-2.5 for NDArray3: (NDArray[numpy.float64], typing.Literal[3])
+            elif len(type_args) == 2:  # noqa: PLR2004
+                dtypes[name] = (get_args(type_args[0])[0], get_args(type_args[1])[0])
             else:
-                raise ValueError(f"dtype {dtype} not understood or supported")
+                raise ValueError(f"dtype {type_def} not understood or supported")
 
         if not dtypes:
             raise ArrayDefinitionError("Array has no defined Columns")
@@ -133,14 +133,14 @@ class FancyArray(ABC):  # noqa: B024
             raise ArrayDefinitionError(f"Columns cannot be reserved names: {reserved}")
 
         dtype_list = []
-        for name, dtype in dtypes.items():
-            if dtype is np.str_:
+        for name, type_def in dtypes.items():
+            if type_def is np.str_:
                 string_length = str_lengths.get(name, _DEFAULT_STR_LENGTH)
                 dtype_list.append((name, np.dtype(f"U{string_length}")))
-            elif dtype is tuple:
-                dtype_list.append((name, *dtype))
+            elif type_def is tuple:
+                dtype_list.append((name, *type_def))
             else:
-                dtype_list.append((name, dtype))
+                dtype_list.append((name, type_def))
         return np.dtype(dtype_list)
 
     def __repr__(self) -> str:
