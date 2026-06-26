@@ -16,7 +16,7 @@ on:
         required: false
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-code-quality-{{ inputs.update_resolution || 'none' }}
+  group: ${{ github.workflow }}-${{ github.ref }}-code-quality-${{ inputs.update_resolution || 'none' }}
   cancel-in-progress: true
 
 jobs:
