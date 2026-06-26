@@ -136,7 +136,11 @@ class FancyArray(ABC):  # noqa: B024
 
         # Change the np.str_ types to include a max length:
         dtype_list = [
-            (name, np.dtype(f"U{str_lengths.get(name, _DEFAULT_STR_LENGTH)}") if dtype is np.str_ else dtype, *rest)
+            (
+                name,
+                np.dtype(f"U{str_lengths.get(name, _DEFAULT_STR_LENGTH)}") if dtype is np.str_ else dtype,
+                *rest,
+            )
             for (name, dtype, *rest) in dtype_list
         ]
 
