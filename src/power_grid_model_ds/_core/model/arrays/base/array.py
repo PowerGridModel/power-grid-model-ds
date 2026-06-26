@@ -7,10 +7,11 @@ from collections import namedtuple
 from collections.abc import Iterable
 from copy import copy
 from functools import lru_cache
-from typing import Any, ClassVar, Literal, TypeVar, overload
+from typing import Any, ClassVar, Literal, TypeVar, get_args, get_origin, overload
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
+from packaging import version
 
 from power_grid_model_ds._core.model.arrays.base._build import build_array
 from power_grid_model_ds._core.model.arrays.base._filters import apply_exclude, apply_filter, apply_get, get_filter_mask
@@ -103,17 +104,26 @@ class FancyArray(ABC):  # noqa: B024
         annotations = get_public_annotations(cls)
         str_lengths = combine_attribute_from_parent_classes(cls, "_str_lengths", dict)
         dtypes = {}
+
+        # Numpy 2.5 changed the typing interface, so we need to treat these differently
+        is_before_numpy_25 = version.parse(np.__version__) < version.parse("2.5.0")
+
         for name, dtype in annotations.items():
-            if len(dtype.__args__) > 1:
-                # regular numpy dtype (i.e. without shape)
-                dtypes[name] = dtype.__args__[1].__args__[0]
-            elif hasattr(dtype, "__metadata__"):
-                # metadata annotation contains shape
-                # define dtype using a (type, shape) tuple
-                # see: #1 in https://numpy.org/doc/stable/user/basics.rec.html#structured-datatype-creation
-                dtype_type = dtype.__args__[0].__args__[1].__args__[0]
-                dtype_shape = dtype.__metadata__[0].__args__
-                dtypes[name] = (dtype_type, dtype_shape)
+            dtype_args = get_args(dtype)
+
+            # Expected dtype_args pre-2.5 for NDArray[]: (tuple[typing.Any, ...], numpy.dtype[numpy.int32])
+            if is_before_numpy_25 and len(dtype_args) == 2 and get_origin(dtype_args[1]) is np.dtype:  # noqa: PLR2004
+                dtypes[name] = get_args(dtype_args[1])[0]
+            # Expected dtype_args pre-2.5 for NDArray3[]:
+            # (numpy.ndarray[tuple[typing.Any, ...], numpy.dtype[numpy.float64]], typing.Literal[3])
+            elif is_before_numpy_25 and len(dtype_args) == 2 and get_origin(dtype_args[1]) is Literal:  # noqa: PLR2004
+                dtypes[name] = (get_args(get_args(dtype_args[0])[1])[0], get_args(dtype_args[1])[0])
+            # Expected dtype_args post-2.5 for NDArray: (numpy.int32,)
+            elif len(dtype_args) == 1:
+                dtypes[name] = dtype_args[0]
+            # Expected dtype_args post-2.5 for NDArray3: (NDArray[numpy.float64], typing.Literal[3])
+            elif len(dtype_args) == 2:  # noqa: PLR2004
+                dtypes[name] = (get_args(dtype_args[0])[0], get_args(dtype_args[1])[0])
             else:
                 raise ValueError(f"dtype {dtype} not understood or supported")
 
