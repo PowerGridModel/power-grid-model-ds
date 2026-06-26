@@ -133,14 +133,14 @@ class FancyArray(ABC):  # noqa: B024
             raise ArrayDefinitionError(f"Columns cannot be reserved names: {reserved}")
 
         dtype_list = []
-        for name, type_def in dtypes.items():
-            if type_def is np.str_:
+        for name, dtype in dtypes.items():
+            if dtype is np.str_:
                 string_length = str_lengths.get(name, _DEFAULT_STR_LENGTH)
                 dtype_list.append((name, np.dtype(f"U{string_length}")))
-            elif type_def is tuple:
-                dtype_list.append((name, *type_def))
+            elif dtype is tuple:
+                dtype_list.append((name, *dtype))
             else:
-                dtype_list.append((name, type_def))
+                dtype_list.append((name, dtype))
         return np.dtype(dtype_list)
 
     def __repr__(self) -> str:
