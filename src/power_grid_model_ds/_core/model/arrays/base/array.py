@@ -31,10 +31,49 @@ from power_grid_model_ds._core.utils.misc import (
 _RESERVED_COLUMN_NAMES: set = set(dir(np.array([]))).union({"data"})
 _DEFAULT_STR_LENGTH: int = 50
 _MAX_DATA_SIZE: int = 3
+_NDARRAY_TYPE_ARGS: int = 2
 
 Column = NDArray
 
 Self = TypeVar("Self", bound="FancyArray")
+
+
+def _resolve_str_dtype(name: str, dtype: Any, str_lengths: dict[str, int]) -> Any:
+    """Replace np.str_ with a fixed-length unicode dtype, leaving other dtypes untouched."""
+    if dtype is np.str_:
+        return np.dtype(f"U{str_lengths.get(name, _DEFAULT_STR_LENGTH)}")
+    return dtype
+
+
+def _parse_annotation_pre_25(name: str, type_def: Any, type_args: tuple, str_lengths: dict[str, int]) -> tuple:
+    """Parse an NDArray annotation into a numpy dtype tuple for NumPy < 2.5."""
+    # Expected type_args for NDArray[]: (tuple[typing.Any, ...], numpy.dtype[numpy.int32])
+    if len(type_args) == _NDARRAY_TYPE_ARGS and get_origin(type_args[1]) is np.dtype:
+        dtype = get_args(type_args[1])[0]
+        return (name, _resolve_str_dtype(name, dtype, str_lengths))
+    # Expected type_args for NDArray3[]:
+    # (numpy.ndarray[tuple[typing.Any, ...], numpy.dtype[numpy.float64]], typing.Literal[3])
+    if len(type_args) == _NDARRAY_TYPE_ARGS and get_origin(type_args[1]) is Literal:
+        try:
+            dtype = get_args(get_args(type_args[0])[1])[0]
+            size = get_args(type_args[1])[0]
+        except IndexError:
+            raise ValueError(f"dtype {type_def} not understood or supported") from None
+        return (name, _resolve_str_dtype(name, dtype, str_lengths), size)
+    raise ValueError(f"dtype {type_def} not understood or supported")
+
+
+def _parse_annotation_post_25(name: str, type_def: Any, type_args: tuple, str_lengths: dict[str, int]) -> tuple:
+    """Parse an NDArray annotation into a numpy dtype tuple for NumPy >= 2.5."""
+    # Expected type_args for NDArray: (numpy.int32,)
+    if len(type_args) == 1:
+        dtype = type_args[0]
+        return (name, _resolve_str_dtype(name, dtype, str_lengths))
+    # Expected type_args for NDArray3: (NDArray[numpy.float64], typing.Literal[3])
+    if len(type_args) == _NDARRAY_TYPE_ARGS:
+        dtype = get_args(type_args[0])[0]
+        return (name, _resolve_str_dtype(name, dtype, str_lengths), get_args(type_args[1])[0])
+    raise ValueError(f"dtype {type_def} not understood or supported")
 
 
 class FancyArray(ABC):  # noqa: B024
@@ -100,48 +139,30 @@ class FancyArray(ABC):  # noqa: B024
 
     @classmethod
     @lru_cache
-    def get_dtype(cls):
+    def get_dtype(cls) -> np.dtype:
         annotations = get_public_annotations(cls)
 
         if not annotations.keys():
-            raise ArrayDefinitionError("Array has no defined Columns")
+            raise ArrayDefinitionError(f"Array '{cls.__name__}' has no defined Columns")
 
         if reserved := set(annotations.keys()) & _RESERVED_COLUMN_NAMES:
-            raise ArrayDefinitionError(f"Columns cannot be reserved names: {reserved}")
+            raise ArrayDefinitionError(
+                f"Columns of '{cls.__name__}' cannot be reserved names: {reserved} "
+                f"(reserved names are: {_RESERVED_COLUMN_NAMES})"
+            )
 
         str_lengths = combine_attribute_from_parent_classes(cls, "_str_lengths", dict)
-        dtype_list = []
 
         # Numpy 2.5 changed the typing interface, so we need to treat these differently
-        is_before_numpy_25 = version.parse(np.__version__) < version.parse("2.5.0")
+        parse_annotation = (
+            _parse_annotation_pre_25
+            if version.parse(np.__version__) < version.parse("2.5.0")
+            else _parse_annotation_post_25
+        )
 
-        for name, type_def in annotations.items():
-            type_args = get_args(type_def)
-
-            # Expected type_args pre-2.5 for NDArray[]: (tuple[typing.Any, ...], numpy.dtype[numpy.int32])
-            if is_before_numpy_25 and len(type_args) == 2 and get_origin(type_args[1]) is np.dtype:  # noqa: PLR2004
-                dtype_list.append((name, get_args(type_args[1])[0]))
-            # Expected type_args pre-2.5 for NDArray3[]:
-            # (numpy.ndarray[tuple[typing.Any, ...], numpy.dtype[numpy.float64]], typing.Literal[3])
-            elif is_before_numpy_25 and len(type_args) == 2 and get_origin(type_args[1]) is Literal:  # noqa: PLR2004
-                dtype_list.append((name, get_args(get_args(type_args[0])[1])[0], get_args(type_args[1])[0]))
-            # Expected type_args post-2.5 for NDArray: (numpy.int32,)
-            elif len(type_args) == 1:  # pragma: no cover
-                dtype_list.append((name, type_args[0]))
-            # Expected type_args post-2.5 for NDArray3: (NDArray[numpy.float64], typing.Literal[3])
-            elif len(type_args) == 2:  # noqa: PLR2004 # pragma: no cover
-                dtype_list.append((name, get_args(type_args[0])[0], get_args(type_args[1])[0]))
-            else:
-                raise ValueError(f"dtype {type_def} not understood or supported")
-
-        # Change the np.str_ types to include a max length:
         dtype_list = [
-            (
-                name,
-                np.dtype(f"U{str_lengths.get(name, _DEFAULT_STR_LENGTH)}") if dtype is np.str_ else dtype,
-                *rest,
-            )
-            for (name, dtype, *rest) in dtype_list
+            parse_annotation(name, type_def, get_args(type_def), str_lengths)
+            for name, type_def in annotations.items()
         ]
 
         return np.dtype(dtype_list)
