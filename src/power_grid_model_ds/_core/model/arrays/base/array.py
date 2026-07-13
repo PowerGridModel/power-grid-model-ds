@@ -100,7 +100,7 @@ class FancyArray(ABC):  # noqa: B024
 
     @classmethod
     @lru_cache
-    def get_dtype(cls):
+    def get_dtype(cls):  # noqa: python:S3776
         annotations = get_public_annotations(cls)
 
         if not annotations.keys():
