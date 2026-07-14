@@ -160,8 +160,7 @@ class FancyArray(ABC):  # noqa: B024
         )
 
         dtype_list = [
-            parse_annotation(name, type_def, get_args(type_def), str_lengths)
-            for name, type_def in annotations.items()
+            parse_annotation(name, type_def, get_args(type_def), str_lengths) for name, type_def in annotations.items()
         ]
 
         return np.dtype(dtype_list)
