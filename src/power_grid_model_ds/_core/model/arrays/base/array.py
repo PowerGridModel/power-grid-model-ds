@@ -31,7 +31,6 @@ from power_grid_model_ds._core.utils.misc import (
 _RESERVED_COLUMN_NAMES: set = set(dir(np.array([]))).union({"data"})
 _DEFAULT_STR_LENGTH: int = 50
 _MAX_DATA_SIZE: int = 3
-_NDARRAY_TYPE_ARGS: int = 2
 
 Column = NDArray
 
@@ -48,17 +47,17 @@ def _resolve_str_dtype(name: str, dtype: Any, str_lengths: dict[str, int]) -> An
 def _parse_annotation_pre_25(name: str, type_def: Any, type_args: tuple, str_lengths: dict[str, int]) -> tuple:
     """Parse an NDArray annotation into a numpy dtype tuple for NumPy < 2.5."""
     # Expected type_args for NDArray[]: (tuple[typing.Any, ...], numpy.dtype[numpy.int32])
-    if len(type_args) == _NDARRAY_TYPE_ARGS and get_origin(type_args[1]) is np.dtype:
+    if len(type_args) == 2 and get_origin(type_args[1]) is np.dtype:  # noqa: PLR2004
         dtype = get_args(type_args[1])[0]
         return (name, _resolve_str_dtype(name, dtype, str_lengths))
     # Expected type_args for NDArray3[]:
     # (numpy.ndarray[tuple[typing.Any, ...], numpy.dtype[numpy.float64]], typing.Literal[3])
-    if len(type_args) == _NDARRAY_TYPE_ARGS and get_origin(type_args[1]) is Literal:
+    if len(type_args) == 2 and get_origin(type_args[1]) is Literal:  # noqa: PLR2004
         try:
             dtype = get_args(get_args(type_args[0])[1])[0]
             size = get_args(type_args[1])[0]
-        except IndexError:
-            raise ValueError(f"dtype {type_def} not understood or supported") from None
+        except IndexError as error:
+            raise ValueError(f"dtype {type_def} not understood or supported") from error
         return (name, _resolve_str_dtype(name, dtype, str_lengths), size)
     raise ValueError(f"dtype {type_def} not understood or supported")
 
@@ -70,7 +69,7 @@ def _parse_annotation_post_25(name: str, type_def: Any, type_args: tuple, str_le
         dtype = type_args[0]
         return (name, _resolve_str_dtype(name, dtype, str_lengths))
     # Expected type_args for NDArray3: (NDArray[numpy.float64], typing.Literal[3])
-    if len(type_args) == _NDARRAY_TYPE_ARGS:
+    if len(type_args) == 2:  # noqa: PLR2004
         dtype = get_args(type_args[0])[0]
         return (name, _resolve_str_dtype(name, dtype, str_lengths), get_args(type_args[1])[0])
     raise ValueError(f"dtype {type_def} not understood or supported")
