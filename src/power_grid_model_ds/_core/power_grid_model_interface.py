@@ -29,13 +29,13 @@ class PowerGridModelInterface:
     def __init__(
         self,
         grid: Grid | None = None,
-        input_data: dict | None = None,
+        input_data: dict[str, NDArray] | None = None,
         system_frequency: float = 50.0,
     ):
         self.grid = grid or Grid.empty()
         self.system_frequency = system_frequency
 
-        self._input_data = input_data or {}
+        self._input_data: dict[str, NDArray] = input_data or {}
         self.output_data: dict[str, NDArray] = {}
         self.model: PowerGridModel | None = None
 
@@ -50,7 +50,7 @@ class PowerGridModelInterface:
         )
         return self._input_data
 
-    def create_input_from_grid(self):
+    def create_input_from_grid(self) -> dict[str, NDArray]:
         """
         Create input for the PowerGridModel
         """
@@ -84,9 +84,9 @@ class PowerGridModelInterface:
     def calculate_power_flow(
         self,
         calculation_method: CalculationMethod = CalculationMethod.newton_raphson,
-        update_data: dict | None = None,
+        update_data: dict[str, NDArray] | None = None,
         **kwargs,
-    ):
+    ) -> dict[str, NDArray]:
         """Initialize the PowerGridModel and calculate power flow over input data.
 
         If input data is not available, self.create_input_from_grid() will be called to create it.
@@ -100,7 +100,7 @@ class PowerGridModelInterface:
         )
         return self.output_data
 
-    def _create_power_grid_array(self, array_name: str) -> np.ndarray:
+    def _create_power_grid_array(self, array_name: str) -> NDArray:
         """Create power grid model array"""
         internal_array = getattr(self.grid, array_name)
         pgm_array = initialize_array("input", array_name, internal_array.size)
@@ -108,7 +108,7 @@ class PowerGridModelInterface:
         pgm_array[fields] = internal_array.data[fields]
         return pgm_array
 
-    def update_model(self, update_data: dict):
+    def update_model(self, update_data: dict[str, NDArray]) -> None:
         """
         Updates the power-grid-model using update_data, this allows for batch calculations
 
@@ -150,10 +150,10 @@ class PowerGridModelInterface:
             internal_array[fields] = pgm_output_array[fields]
 
     @staticmethod
-    def _match_dtypes(first_dtype: np.dtype, second_dtype: np.dtype):
+    def _match_dtypes(first_dtype: np.dtype, second_dtype: np.dtype) -> list[str]:
         return list(set(first_dtype.names).intersection(set(second_dtype.names)))  # type: ignore[arg-type]
 
-    def setup_model(self):
+    def setup_model(self) -> PowerGridModel:
         """Setup the PowerGridModel with the input data."""
         self._input_data = self._input_data or self.create_input_from_grid()
         self.model = PowerGridModel(self._input_data, system_frequency=self.system_frequency)
