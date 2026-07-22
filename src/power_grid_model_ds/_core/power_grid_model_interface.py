@@ -9,6 +9,7 @@ import warnings
 import numpy as np
 from numpy.typing import NDArray
 from power_grid_model import CalculationMethod, ComponentType, PowerGridModel, initialize_array
+from power_grid_model.data_types import Dataset, SingleDataset
 
 from power_grid_model_ds._core.model.grids.base import Grid
 
@@ -29,18 +30,18 @@ class PowerGridModelInterface:
     def __init__(
         self,
         grid: Grid | None = None,
-        input_data: dict[str, NDArray] | None = None,
+        input_data: SingleDataset | None = None,
         system_frequency: float = 50.0,
     ):
         self.grid = grid or Grid.empty()
         self.system_frequency = system_frequency
 
-        self._input_data: dict[str, NDArray] = input_data or {}
-        self.output_data: dict[str, NDArray] = {}
+        self._input_data: SingleDataset = input_data or {}
+        self.output_data: Dataset = {}
         self.model: PowerGridModel | None = None
 
     @property
-    def input_data(self) -> dict[str, NDArray]:
+    def input_data(self) -> SingleDataset:
         """Get the input data for the PowerGridModel."""
         warnings.warn(
             "Input data has been made private and will be removed as public properety in a future version. "
@@ -50,7 +51,7 @@ class PowerGridModelInterface:
         )
         return self._input_data
 
-    def create_input_from_grid(self) -> dict[str, NDArray]:
+    def create_input_from_grid(self) -> SingleDataset:
         """
         Create input for the PowerGridModel
         """
@@ -84,9 +85,9 @@ class PowerGridModelInterface:
     def calculate_power_flow(
         self,
         calculation_method: CalculationMethod = CalculationMethod.newton_raphson,
-        update_data: dict[str, NDArray] | None = None,
+        update_data: Dataset | None = None,
         **kwargs,
-    ) -> dict[str, NDArray]:
+    ) -> Dataset:
         """Initialize the PowerGridModel and calculate power flow over input data.
 
         If input data is not available, self.create_input_from_grid() will be called to create it.
@@ -108,7 +109,7 @@ class PowerGridModelInterface:
         pgm_array[fields] = internal_array.data[fields]
         return pgm_array
 
-    def update_model(self, update_data: dict[str, NDArray]) -> None:
+    def update_model(self, update_data: Dataset) -> None:
         """
         Updates the power-grid-model using update_data, this allows for batch calculations
 
