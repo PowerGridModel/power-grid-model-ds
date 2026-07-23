@@ -7,9 +7,8 @@
 import warnings
 
 import numpy as np
-from numpy.typing import NDArray
 from power_grid_model import CalculationMethod, ComponentType, PowerGridModel, initialize_array
-from power_grid_model.data_types import Dataset, SingleDataset
+from power_grid_model.data_types import Dataset, SingleArray, SingleDataset
 
 from power_grid_model_ds._core.model.grids.base import Grid
 
@@ -101,7 +100,7 @@ class PowerGridModelInterface:
         )
         return self.output_data
 
-    def _create_power_grid_array(self, array_name: str) -> NDArray:
+    def _create_power_grid_array(self, array_name: str) -> SingleArray:
         """Create power grid model array"""
         internal_array = getattr(self.grid, array_name)
         pgm_array = initialize_array("input", array_name, internal_array.size)
