@@ -100,6 +100,25 @@ class PowerGridModelInterface:
         )
         return self.output_data
 
+    def calculate_state_estimation(
+        self,
+        calculation_method: CalculationMethod = CalculationMethod.iterative_linear,
+        update_data: dict | None = None,
+        **kwargs,
+    ):
+        """Initialize the PowerGridModel and calculate state estimation over input data.
+
+        If input data is not available, self.create_input_from_grid() will be called to create it.
+
+        Returns output of the state estimation calculation (also stored in self.output_data)
+        """
+        self.model = self.model or self.setup_model()
+
+        self.output_data = self.model.calculate_state_estimation(
+            calculation_method=calculation_method, update_data=update_data, **kwargs
+        )
+        return self.output_data
+
     def _create_power_grid_array(self, array_name: str) -> np.ndarray:
         """Create power grid model array"""
         internal_array = getattr(self.grid, array_name)
