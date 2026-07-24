@@ -155,13 +155,14 @@ class PowerGridModelInterface:
         return pgm_array
 
     def _create_pgm_ds_array(self, pgm_name: str) -> FancyArray:
+        input_component = self._input_data[pgm_name]
         pgm_ds_array_class: type[FancyArray] = getattr(self.grid, pgm_name).__class__
 
-        input_component = self._input_data[pgm_name]
+        # If a dict, then the keys are the column names and the values the array for that column.
         if isinstance(input_component, dict):
             return pgm_ds_array_class(**input_component)
 
-        # input_component is a normale array tha we can directly convert to a pgm_ds_array_class
+        # Otherwise it should be a structured array that can be passed directly to the constructor.
         return pgm_ds_array_class(input_component)
 
     @staticmethod
