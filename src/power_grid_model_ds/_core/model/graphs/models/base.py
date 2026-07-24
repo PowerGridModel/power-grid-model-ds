@@ -4,7 +4,7 @@
 import warnings
 from abc import ABC, abstractmethod
 from collections import Counter
-from collections.abc import Container, Generator
+from collections.abc import Container, Generator, Sequence
 from contextlib import contextmanager
 from itertools import combinations
 from typing import TYPE_CHECKING
@@ -392,6 +392,24 @@ class BaseGraphModel(ABC):
 
         return self.get_connected(node_id, [upstream_node], inclusive)
 
+    def bfs(self, source: int | Sequence[int]) -> dict[int, int | None]:
+        """Breadth first search from the source(s).
+
+        Args:
+            source(int | Sequence[int]): the source(s) the start the breadth first search from.
+
+        Returns:
+            dict[int, int | None]: a dict with node:parent structure.
+                The keys of the dict represent the nodes in the order that they are found.
+                The parent is None for a source that has not been found via another source yet.
+        """
+        internal_sources = self._externals_to_internals([source] if isinstance(source, int) else source)
+        internal_parents = self._bfs(internal_sources)
+        return {
+            self.internal_to_external(node): None if parent is None else self.internal_to_external(parent)
+            for node, parent in internal_parents.items()
+        }
+
     def find_fundamental_cycles(self) -> list[list[int]]:
         """Find all fundamental cycles in the graph.
         Returns:
@@ -429,7 +447,7 @@ class BaseGraphModel(ABC):
         """Convert a list of internal node ids to external node ids"""
         return [self.internal_to_external(node_id) for node_id in internal_nodes]
 
-    def _externals_to_internals(self, external_nodes: list[int] | NDArray) -> list[int]:
+    def _externals_to_internals(self, external_nodes: Sequence[int] | NDArray) -> list[int]:
         """Convert a list of external nodes to internal nodes"""
         return [self.external_to_internal(node_id) for node_id in external_nodes]
 
@@ -538,6 +556,9 @@ class BaseGraphModel(ABC):
 
     @abstractmethod
     def _get_components(self) -> list[list[int]]: ...
+
+    @abstractmethod
+    def _bfs(self, source: list[int]) -> dict[int, int | None]: ...
 
     @abstractmethod
     def _find_fundamental_cycles(self) -> list[list[int]]: ...
