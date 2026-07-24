@@ -4,7 +4,7 @@
 import warnings
 from abc import ABC, abstractmethod
 from collections import Counter
-from collections.abc import Generator, Sequence
+from collections.abc import Container, Generator, Sequence
 from contextlib import contextmanager
 from itertools import combinations
 from typing import TYPE_CHECKING
@@ -102,6 +102,16 @@ class BaseGraphModel(ABC):
         return (
             (self.internal_to_external(source), self.internal_to_external(target)) for source, target in internal_edges
         )
+
+    def adjacent(self, node_id: int, excluding: Container[int] | None = None) -> list[int]:
+        """Return all nodes connected to the given node.
+
+        Args:
+            excluding(Container[int]|None): exclude certain node ids frm the output of this function. Defaults to None.
+        """
+        internal_adjacent_nodes = self._adjacent(self.external_to_internal(node_id))
+        external_nodes = self._internals_to_externals(internal_adjacent_nodes)
+        return [node for node in external_nodes if node not in excluding] if excluding else external_nodes
 
     def add_node(self, ext_node_id: int, raise_on_fail: bool = True) -> None:
         """Add a node to the graph."""
@@ -400,6 +410,24 @@ class BaseGraphModel(ABC):
             for node, parent in internal_result.items()
         }
 
+    def bfs(self, source: int | Sequence[int]) -> dict[int, int | None]:
+        """Breadth first search from the source(s).
+
+        Args:
+            source(int | Sequence[int]): the source(s) the start the breadth first search from.
+
+        Returns:
+            dict[int, int | None]: a dict with node:parent structure.
+                The keys of the dict represent the nodes in the order that they are found.
+                The parent is None for a source that has not been found via another source yet.
+        """
+        internal_sources = self._externals_to_internals([source] if isinstance(source, int) else source)
+        internal_parents = self._bfs(internal_sources)
+        return {
+            self.internal_to_external(node): None if parent is None else self.internal_to_external(parent)
+            for node, parent in internal_parents.items()
+        }
+
     def find_fundamental_cycles(self) -> list[list[int]]:
         """Find all fundamental cycles in the graph.
         Returns:
@@ -502,6 +530,9 @@ class BaseGraphModel(ABC):
     def _in_branches(self, int_node_id: int) -> Generator[tuple[int, int], None, None]: ...
 
     @abstractmethod
+    def _adjacent(self, int_node_id: int) -> list[int]: ...
+
+    @abstractmethod
     def _get_connected(self, node_id: int, nodes_to_ignore: list[int], inclusive: bool = False) -> list[int]: ...
 
     @abstractmethod
@@ -546,6 +577,9 @@ class BaseGraphModel(ABC):
 
     @abstractmethod
     def _dfs(self, source: list[int]) -> dict[int, int | None]: ...
+
+    @abstractmethod
+    def _bfs(self, source: list[int]) -> dict[int, int | None]: ...
 
     @abstractmethod
     def _find_fundamental_cycles(self) -> list[list[int]]: ...

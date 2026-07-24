@@ -93,6 +93,11 @@ class RustworkxGraphModel(BaseGraphModel):
         rx.dfs_search(self._graph, source, visitor)
         return {node: visitor.parents.get(node) for node in visitor.nodes}
 
+    def _bfs(self, source: list[int]) -> dict[int, int | None]:
+        visitor = _BfsParentVisitor()
+        rx.bfs_search(self._graph, source, visitor)
+        return {node: visitor.parents.get(node) for node in visitor.nodes}
+
     def _get_shortest_path(self, source: int, target: int) -> tuple[list[int], int]:
         path_mapping = rx.dijkstra_shortest_paths(self._graph, source, target)
 
@@ -121,6 +126,9 @@ class RustworkxGraphModel(BaseGraphModel):
     def _in_branches(self, int_node_id: int) -> Generator[tuple[int, int], None, None]:
         return ((source, target) for source, target, _ in self._graph.in_edges(int_node_id))
 
+    def _adjacent(self, int_node_id: int) -> list[int]:
+        return list(self._graph.neighbors(int_node_id))
+
     def _find_first_connected(self, node_id: int, candidate_node_ids: list[int]) -> int:
         visitor = _NodeFinder(candidate_nodes=candidate_node_ids)
         rx.bfs_search(self._graph, [node_id], visitor)
@@ -146,6 +154,19 @@ class _DfsNodeVisitor(DFSVisitor):
         self.parents = {}
 
     def discover_vertex(self, v, _):
+        self.nodes.append(v)
+
+    def tree_edge(self, e):
+        (u, v, _) = e
+        self.parents[v] = u
+
+
+class _BfsParentVisitor(BFSVisitor):
+    def __init__(self):
+        self.nodes = []
+        self.parents = {}
+
+    def discover_vertex(self, v):
         self.nodes.append(v)
 
     def tree_edge(self, e):
