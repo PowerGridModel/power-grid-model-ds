@@ -5,14 +5,15 @@
 """Helper np.arrays used by various tests."""
 
 import pytest
-from power_grid_model import AttributeType, ComponentType, DatasetType, initialize_array
+from power_grid_model import  ComponentType, DatasetType, initialize_array, attribute_dtype
+from power_grid_model._core.dataset_definitions import AttributeType
 
 from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.grids.base import Grid
 from tests.fixtures.arrays import FancyTestArray
 from tests.fixtures.grids import build_basic_grid, build_basic_grid_with_three_winding, build_topologically_full_grid
-
+import numpy as np
 # pylint: disable=missing-function-docstring
 
 IMPLEMENTED_GRAPH_MODELS: dict[str, type[BaseGraphModel]] = {
@@ -101,11 +102,14 @@ def input_data_pgm():
 
     sym_gen = initialize_array(DatasetType.input, ComponentType.sym_gen, 0)
 
-    source = initialize_array(DatasetType.input, ComponentType.source, 1)
-    source[AttributeType.id] = [8]
-    source[AttributeType.node] = [7]
-    source[AttributeType.status] = [1]
-    source[AttributeType.u_ref] = [1.0]
+    # Columnar way to define a pgm-array
+    source = {
+        AttributeType.id: np.array([8], dtype=attribute_dtype(DatasetType.input, ComponentType.source, AttributeType.id)),
+        AttributeType.node: np.array([7], dtype = attribute_dtype(DatasetType.input, ComponentType.source, AttributeType.node)),
+        AttributeType.status: np.array([1], dtype=attribute_dtype(DatasetType.input, ComponentType.source, AttributeType.status)),
+        AttributeType.u_ref: np.array([1.0], dtype=attribute_dtype(DatasetType.input, ComponentType.source, AttributeType.u_ref)),
+    }
+
 
     transformer_tap_regulator = initialize_array(DatasetType.input, ComponentType.transformer_tap_regulator, 0)
     sym_power_sensor = initialize_array(DatasetType.input, ComponentType.sym_power_sensor, 0)

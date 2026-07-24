@@ -11,6 +11,7 @@ from power_grid_model import CalculationMethod, ComponentType, PowerGridModel, i
 from power_grid_model.data_types import Dataset, SingleArray, SingleDataset
 
 from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 
 
 class PGMCoreException(Exception):
@@ -74,12 +75,21 @@ class PowerGridModelInterface:
         """
         for pgm_name in ComponentType:
             if pgm_name in self._input_data and hasattr(self.grid, pgm_name):
-                pgm_ds_array_class = getattr(self.grid, pgm_name).__class__
-                pgm_ds_array = pgm_ds_array_class(self._input_data[pgm_name])
-                self.grid.append(pgm_ds_array, check_max_id=False)
+                self.grid.append(self._parse_input_component_to_array(pgm_name), check_max_id=False)
         if check_ids:
             self.grid.check_ids()
         return self.grid
+
+    def _parse_input_component_to_array(self, pgm_name: str) -> FancyArray:
+        pgm_ds_array_class :type[FancyArray]= getattr(self.grid, pgm_name).__class__
+
+        input_component = self._input_data[pgm_name]
+        if isinstance(input_component, dict):
+            return  pgm_ds_array_class(**input_component)
+
+        # input_component is a normale array tha we can directly convert to a pgm_ds_array_class
+        return pgm_ds_array_class(input_component)
+
 
     def calculate_power_flow(
         self,
