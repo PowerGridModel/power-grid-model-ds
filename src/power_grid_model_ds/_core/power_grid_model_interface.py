@@ -10,8 +10,8 @@ import numpy as np
 from power_grid_model import CalculationMethod, ComponentType, PowerGridModel, initialize_array
 from power_grid_model.data_types import Dataset, SingleArray, SingleDataset
 
-from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
+from power_grid_model_ds._core.model.grids.base import Grid
 
 
 class PGMCoreException(Exception):
@@ -79,7 +79,6 @@ class PowerGridModelInterface:
         if check_ids:
             self.grid.check_ids()
         return self.grid
-
 
     def calculate_power_flow(
         self,
@@ -168,5 +167,3 @@ class PowerGridModelInterface:
     @staticmethod
     def _match_dtypes(first_dtype: np.dtype, second_dtype: np.dtype) -> list[str]:
         return list(set(first_dtype.names).intersection(set(second_dtype.names)))  # type: ignore[arg-type]
-
-
