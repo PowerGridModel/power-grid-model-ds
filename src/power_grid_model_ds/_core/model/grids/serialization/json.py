@@ -65,7 +65,7 @@ def serialize_to_dict[G: Grid](grid: G, strict: bool = True, **kwargs) -> dict:
         if _is_serializable(field_value, strict, **kwargs):
             serialized_data[field.name] = field_value
 
-    return {"data": _replace_nan_with_none(serialized_data)}
+    return {"data": serialized_data}
 
 
 def deserialize_from_json[G: Grid](path: Path, target_grid_class: type[G]) -> G:
@@ -145,7 +145,7 @@ def _restore_grid_values[G: Grid](grid: G, json_data: dict) -> None:
 
 
 def _serialize_array(array: FancyArray) -> list[dict[str, Any]]:
-    return [{name: record[name].item() for name in array.columns} for record in array]
+    return [{name: _replace_nan_with_none(record[name].item()) for name in array.columns} for record in array]
 
 
 def _deserialize_array(array_data: list[dict[str, Any]], array_class: type[FancyArray]) -> FancyArray:
@@ -186,11 +186,7 @@ def _is_serializable(value: Any, strict: bool, **kwargs) -> bool:
 
 
 def _replace_nan_with_none(value: Any) -> Any:
-    """Recursively replace NaN values with JSON-compatible null values."""
+    """Replace a NaN value with a JSON-compatible null value."""
     if isinstance(value, float) and math.isnan(value):
         return None
-    if isinstance(value, dict):
-        return {key: _replace_nan_with_none(item) for key, item in value.items()}
-    if isinstance(value, list):
-        return [_replace_nan_with_none(item) for item in value]
     return value
