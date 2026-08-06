@@ -46,7 +46,7 @@ class FancyArrayContainer:
 
     @property
     def max_id(self) -> int:
-        """Returns the max id across all arrays within the container."""
+        """Returns the cached max id across all arrays within the container."""
         return self._max_id
 
     def rebuild_ids(self) -> None:
