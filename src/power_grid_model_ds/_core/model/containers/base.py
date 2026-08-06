@@ -31,6 +31,7 @@ class FancyArrayContainer:
     """
 
     _ids: set[int]
+    _max_id: int
     __hash__ = None
 
     def __eq__(self, other) -> bool:
@@ -46,7 +47,7 @@ class FancyArrayContainer:
     @property
     def max_id(self) -> int:
         """Returns the max id across all arrays within the container."""
-        return max(self._ids) if self._ids else 0
+        return self._max_id
 
     def rebuild_ids(self) -> None:
         """Rebuild self._ids based on the arrays in the container.
@@ -66,6 +67,7 @@ class FancyArrayContainer:
             new_ids |= array_ids
 
         self._ids = new_ids
+        self._max_id = max(new_ids) if new_ids else 0
 
     def check_ids(self, check_between_arrays: bool = True, check_within_arrays: bool = True) -> None:
         """Checks for duplicate id values across all arrays in the container.
@@ -142,6 +144,7 @@ class FancyArrayContainer:
         end = start + len(array)
         array.id = np.arange(start, end)
         self._ids |= set(array.id.tolist())
+        self._max_id = end - 1
         return array
 
     def search_for_id(self, record_id: int) -> list[FancyArray]:
@@ -222,7 +225,7 @@ class FancyArrayContainer:
         empty_fields = {}
 
         empty_fields.update(cls._get_empty_arrays())
-        empty_fields.update({"_ids": set()})
+        empty_fields.update({"_ids": set(), "_max_id": 0})
         return empty_fields
 
     @classmethod
@@ -245,6 +248,8 @@ class FancyArrayContainer:
         if check_max_id and (overlap := self._ids & new_ids):
             raise ValueError(f"Cannot append, array contains ids that already exist: {overlap}")
         self._ids |= new_ids
+        if new_ids:
+            self._max_id = max(self._max_id, max(new_ids))
 
     @staticmethod
     def _get_duplicates_between_arrays(id_arrays: list[FancyArray], check: bool) -> np.ndarray:

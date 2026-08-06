@@ -192,8 +192,10 @@ def test_rebuild_ids():
     expected_ids = {1, 2, 3, 10, 11, 20, 21, 22}
     assert grid.ids == expected_ids
     grid._ids = set()
+    grid._max_id = 0
     grid.rebuild_ids()
     assert grid.ids == expected_ids
+    assert grid.max_id == max(expected_ids)
 
 
 def test_rebuild_ids_with_duplicates():
@@ -206,3 +208,111 @@ def test_rebuild_ids_with_duplicates():
 def test_ids():
     grid = Grid.from_txt("1 2 20", "2 3 21", "10 11 22")
     assert grid.ids == {1, 2, 3, 10, 11, 20, 21, 22}
+
+
+def test_max_id_empty_container():
+    container = FancyArrayContainer.empty()
+    assert container.max_id == 0
+    assert container._max_id == 0
+
+
+def test_max_id_after_append_with_explicit_ids():
+    grid = Grid.empty()
+    nodes = NodeArray.zeros(3)
+    nodes.id = [1, 2, 5]
+    grid.append(nodes)
+    assert grid.max_id == 5
+    assert grid._max_id == 5
+
+
+def test_max_id_after_append_with_lower_ids():
+    grid = Grid.empty()
+    nodes = NodeArray.zeros(2)
+    nodes.id = [10, 20]
+    grid.append(nodes)
+    assert grid.max_id == 20
+
+    lines = LineArray.zeros(2)
+    lines.id = [3, 4]
+    lines.from_node = [10, 10]
+    lines.to_node = [20, 20]
+    grid.append(lines)
+    assert grid.max_id == 20
+    assert grid._max_id == 20
+
+
+def test_max_id_after_append_with_higher_ids():
+    grid = Grid.empty()
+    nodes = NodeArray.zeros(2)
+    nodes.id = [1, 2]
+    grid.append(nodes)
+    assert grid.max_id == 2
+
+    more_nodes = NodeArray.zeros(2)
+    more_nodes.id = [8, 9]
+    grid.append(more_nodes)
+    assert grid.max_id == 9
+    assert grid._max_id == 9
+
+
+def test_max_id_after_attach_ids():
+    grid = Grid.empty()
+    nodes = NodeArray.zeros(3)
+    grid.append(nodes)  # empty ids -> attach_ids
+    assert set(grid.node.id.tolist()) == {1, 2, 3}
+    assert grid.max_id == 3
+    assert grid._max_id == 3
+
+    more_nodes = NodeArray.zeros(2)
+    grid.append(more_nodes)
+    assert set(more_nodes.id.tolist()) == {4, 5}
+    assert grid.max_id == 5
+    assert grid._max_id == 5
+
+
+def test_max_id_attach_ids_directly():
+    grid = Grid.empty()
+    nodes = NodeArray.zeros(2)
+    grid.attach_ids(nodes)
+    assert nodes.id.tolist() == [1, 2]
+    assert grid.max_id == 2
+    assert grid.ids == {1, 2}
+
+
+def test_max_id_after_rebuild_ids_decreases():
+    grid = Grid.from_txt("1 2 20", "2 3 21", "10 11 22")
+    assert grid.max_id == 22
+
+    grid.node = grid.node.exclude(id=11)
+    grid.line = grid.line.exclude(id=22)
+    grid.rebuild_ids()
+
+    assert grid.ids == {1, 2, 3, 10, 20, 21}
+    assert grid.max_id == 21
+    assert grid._max_id == 21
+
+
+def test_max_id_after_rebuild_ids_empty():
+    grid = Grid.empty()
+    grid._ids = {99}
+    grid._max_id = 99
+    grid.rebuild_ids()
+    assert grid.ids == set()
+    assert grid.max_id == 0
+
+
+def test_max_id_after_delete_via_grid_api():
+    grid = Grid.from_txt("1 2 20", "2 3 21", "10 11 22")
+    assert grid.max_id == 22
+
+    branch = grid.line.get(id=22)
+    grid.delete_branch(branch)
+    assert 22 not in grid.ids
+    assert grid.max_id == 21
+
+
+def test_max_id_deepcopy():
+    grid = Grid.from_txt("1 2 20", "2 3 21")
+    copied = deepcopy(grid)
+    assert copied.max_id == grid.max_id
+    assert copied._max_id == grid._max_id

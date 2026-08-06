@@ -53,7 +53,7 @@ def serialize_to_dict[G: Grid](grid: G, strict: bool = True, **kwargs) -> dict:
     serialized_data = {}
 
     for field in dataclasses.fields(grid):
-        if field.name in ["graphs", "_ids"]:
+        if field.name in ["graphs", "_ids", "_max_id"]:
             continue
 
         field_value = getattr(grid, field.name)
