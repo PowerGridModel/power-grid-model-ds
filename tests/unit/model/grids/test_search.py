@@ -165,10 +165,11 @@ class TestGridDiff:
         grid2 = Grid.from_txt("1 2 10", "2 3 11", "3 4 12")
 
         diff_dict = find_differences_between_grids(grid1, grid2)
-        assert len(diff_dict) == 4
+        assert len(diff_dict) == 5
         assert "line" in diff_dict
         assert not diff_dict["line"]["grid1"].size
         assert diff_dict["line"]["grid2"].size
+        assert diff_dict["_max_id"] == {"grid1": 11, "grid2": 12}
 
     def test_different_grid_types(self):
         grid1 = Grid.from_txt("1 2 10", "2 4 11")
