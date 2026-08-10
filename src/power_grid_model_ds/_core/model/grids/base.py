@@ -239,7 +239,7 @@ class Grid(FancyArrayContainer):
         """Remove a node array from the grid
 
         Supports removing multiple nodes at once.
-        Also removes assets connected to the node (e.g. branches, sensors, loads, etc.) 
+        Also removes assets connected to the node (e.g., branches, sensors, loads, etc.)
         and updates the graphs accordingly.
 
         Args:
