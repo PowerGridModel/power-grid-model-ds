@@ -72,13 +72,19 @@ class PowerGridModelInterface:
 
         Returns a Grid object with the arrays filled with the PowerGridModel input.
         """
+        graph_model_type = type(self.grid.graphs.active_graph)
+        new_grid = self.grid.__class__.empty(graph_model=graph_model_type)
+
         for pgm_name in ComponentType:
-            if pgm_name in self._input_data and hasattr(self.grid, pgm_name):
-                pgm_ds_array_class = getattr(self.grid, pgm_name).__class__
+            if pgm_name in self._input_data and hasattr(new_grid, pgm_name):
+                pgm_ds_array_class = getattr(new_grid, pgm_name).__class__
                 pgm_ds_array = pgm_ds_array_class(self._input_data[pgm_name])
-                self.grid.append(pgm_ds_array, check_max_id=False)
+                new_grid.append(pgm_ds_array, check_max_id=False)
+
         if check_ids:
-            self.grid.check_ids()
+            new_grid.check_ids()
+
+        self.grid = new_grid
         return self.grid
 
     def calculate_power_flow(
