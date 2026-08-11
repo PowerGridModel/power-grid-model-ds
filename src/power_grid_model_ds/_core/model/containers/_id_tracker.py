@@ -8,6 +8,8 @@
 class IdTracker:
     """Wrapper around a set of ids that keeps track of the maximum id."""
 
+    __hash__ = None
+
     def __init__(self, ids: set[int] | None = None) -> None:
         self._ids = set(ids) if ids is not None else set()
         self._max_id = max(self._ids) if self._ids else 0
@@ -25,7 +27,7 @@ class IdTracker:
         if max_new_id is not None:
             self._max_id = max(self._max_id, max_new_id)
         elif new_ids:
-            self._max_id = max(self._max_id, max(new_ids))
+            self._max_id = max(self._max_id, *new_ids)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, self.__class__):
