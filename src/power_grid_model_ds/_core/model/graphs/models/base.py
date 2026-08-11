@@ -392,6 +392,24 @@ class BaseGraphModel(ABC):
 
         return self.get_connected(node_id, [upstream_node], inclusive)
 
+    def dfs(self, source: int | Sequence[int]) -> dict[int, int | None]:
+        """Depth first search from the source(s).
+
+        Args:
+            source(int | Sequence[int]): the source(s) the start the search from.
+
+        Returns:
+            dict[int, int | None]: a dict with node:parent structure.
+                The keys of the dict represent the nodes in the order that they are found.
+                The parent is None for a source that has not been found via another source yet.
+        """
+        internal_sources = self._externals_to_internals([source] if isinstance(source, int) else source)
+        internal_result = self._dfs(internal_sources)
+        return {
+            self.internal_to_external(node): None if parent is None else self.internal_to_external(parent)
+            for node, parent in internal_result.items()
+        }
+
     def bfs(self, source: int | Sequence[int]) -> dict[int, int | None]:
         """Breadth first search from the source(s).
 
@@ -556,6 +574,9 @@ class BaseGraphModel(ABC):
 
     @abstractmethod
     def _get_components(self) -> list[list[int]]: ...
+
+    @abstractmethod
+    def _dfs(self, source: list[int]) -> dict[int, int | None]: ...
 
     @abstractmethod
     def _bfs(self, source: list[int]) -> dict[int, int | None]: ...
