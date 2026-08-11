@@ -6,8 +6,7 @@
 
 import numpy as np
 import pytest
-from power_grid_model import ComponentType, DatasetType, attribute_dtype, initialize_array
-from power_grid_model._core.dataset_definitions import AttributeType
+from power_grid_model import AttributeType, ComponentType, DatasetType, attribute_dtype, initialize_array
 
 from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
