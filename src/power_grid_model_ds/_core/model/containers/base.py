@@ -16,6 +16,7 @@ from power_grid_model_ds._core import fancypy as fp
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.constants import EMPTY_ID
+from power_grid_model_ds._core.model.containers._id_tracker import IdTracker
 from power_grid_model_ds._core.model.containers.helpers import container_equal
 
 _logger = logging.getLogger(__name__)
@@ -30,8 +31,7 @@ class FancyArrayContainer:
     Contains general functionality that is nonspecific to the type of array being stored.
     """
 
-    _ids: set[int]
-    _max_id: int
+    _id_tracker: IdTracker
     __hash__ = None
 
     def __eq__(self, other) -> bool:
@@ -42,15 +42,15 @@ class FancyArrayContainer:
     @property
     def ids(self):
         """Returns the ids across all arrays"""
-        return self._ids
+        return self._id_tracker.ids
 
     @property
     def max_id(self) -> int:
         """Returns the cached max id across all arrays within the container."""
-        return self._max_id
+        return self._id_tracker.max_id
 
     def rebuild_ids(self) -> None:
-        """Rebuild self._ids based on the arrays in the container.
+        """Rebuild the id tracker based on the arrays in the container.
 
         Raises:
             ValueError: if duplicate ids are found between or within arrays.
@@ -66,8 +66,7 @@ class FancyArrayContainer:
                 raise ValueError(f"Duplicate ids found between arrays ({array.__class__.__name__})")
             new_ids |= array_ids
 
-        self._ids = new_ids
-        self._max_id = max(new_ids) if new_ids else 0
+        self._id_tracker = IdTracker(new_ids)
 
     def check_ids(self, check_between_arrays: bool = True, check_within_arrays: bool = True) -> None:
         """Checks for duplicate id values across all arrays in the container.
@@ -126,7 +125,7 @@ class FancyArrayContainer:
         self._append(array=array, check_max_id=check_max_id)
 
     def attach_ids(self, array: FancyArray) -> FancyArray:
-        """Generate and attach ids to the given FancyArray. Also updates _ids.
+        """Generate and attach ids to the given FancyArray. Also updates the id tracker.
 
         Args:
             array(FancyArray): the array of which the id column is set.
@@ -143,8 +142,7 @@ class FancyArrayContainer:
         start = self.max_id + 1
         end = start + len(array)
         array.id = np.arange(start, end)
-        self._ids |= set(array.id.tolist())
-        self._max_id = end - 1
+        self._id_tracker.add(set(array.id.tolist()), max_new_id=end - 1)
         return array
 
     def search_for_id(self, record_id: int) -> list[FancyArray]:
@@ -225,7 +223,7 @@ class FancyArrayContainer:
         empty_fields = {}
 
         empty_fields.update(cls._get_empty_arrays())
-        empty_fields.update({"_ids": set(), "_max_id": 0})
+        empty_fields.update({"_id_tracker": IdTracker()})
         return empty_fields
 
     @classmethod
@@ -245,11 +243,9 @@ class FancyArrayContainer:
 
         new_ids = set(array.id.tolist())
 
-        if check_max_id and (overlap := self._ids & new_ids):
+        if check_max_id and (overlap := self._id_tracker.ids & new_ids):
             raise ValueError(f"Cannot append, array contains ids that already exist: {overlap}")
-        self._ids |= new_ids
-        if new_ids:
-            self._max_id = max(self._max_id, max(new_ids))
+        self._id_tracker.add(new_ids)
 
     @staticmethod
     def _get_duplicates_between_arrays(id_arrays: list[FancyArray], check: bool) -> np.ndarray:
