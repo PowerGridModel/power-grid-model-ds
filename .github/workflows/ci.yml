@@ -49,7 +49,7 @@ jobs:
         run: uv sync --frozen
 
       - name: Set PyPI version
-        uses: PowerGridModel/pgm-version-bump@00b541a2eeb64ac1537e3a531b50a3175313822d # v0.1.4
+        uses: PowerGridModel/pgm-version-bump@65909ad17d7dd3d5330b31894bb17b57024d593f # v0.1.5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -170,7 +170,7 @@ jobs:
         run: ls -la assets-to-publish
 
       - name: Upload assets to PyPI
-        uses: pypa/gh-action-pypi-publish@ba38be9e461d3875417946c167d0b5f3d385a247 # v1.14.1
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
         with:
           # To test, use the TestPyPI:
           # repository-url: https://test.pypi.org/legacy/
