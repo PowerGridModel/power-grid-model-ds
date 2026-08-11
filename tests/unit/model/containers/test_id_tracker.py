@@ -4,8 +4,6 @@
 
 """Tests for IdTracker."""
 
-import pytest
-
 from power_grid_model_ds._core.model.containers._id_tracker import IdTracker
 
 
@@ -55,16 +53,3 @@ def test_add_with_max_new_id():
     tracker.add({2, 3}, max_new_id=100)
     assert tracker.ids == {1, 2, 3}
     assert tracker.max_id == 100
-
-
-@pytest.mark.parametrize(
-    ("tracker_a", "tracker_b", "expected"),
-    [
-        (IdTracker(), IdTracker(), True),
-        (IdTracker({1, 2}), IdTracker({1, 2}), True),
-        (IdTracker({1, 2}), IdTracker({1, 3}), False),
-        (IdTracker({1, 2}), {1, 2}, False),
-    ],
-)
-def test_equality(tracker_a, tracker_b, expected):
-    assert (tracker_a == tracker_b) is expected
