@@ -11,18 +11,22 @@ class IdTracker:
     __hash__ = None
 
     def __init__(self, ids: set[int] | None = None) -> None:
+        """Initialize the tracker with an optional set of ids."""
         self._ids = set(ids) if ids is not None else set()
         self._max_id = max(self._ids) if self._ids else 0
 
     @property
     def ids(self) -> set[int]:
+        """Return the tracked ids."""
         return self._ids
 
     @property
     def max_id(self) -> int:
+        """Return the cached maximum id."""
         return self._max_id
 
     def add(self, new_ids: set[int], max_new_id: int | None = None) -> None:
+        """Add ids and update the cached maximum id."""
         self._ids |= new_ids
         if max_new_id is not None:
             self._max_id = max(self._max_id, max_new_id)
