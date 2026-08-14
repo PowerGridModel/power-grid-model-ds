@@ -67,12 +67,23 @@ class PowerGridModelInterface:
         Create Grid object from PowerGridModel input.
         Note that for some arrays, not all fields are available in the PowerGridModel input.
         In this case, the default values are used.
+        If this function is called multiple times, it will overwrite the grid with the new data.
 
         Args:
             check_ids: if True, check if the ids are unique
 
         Returns a Grid object with the arrays filled with the PowerGridModel input.
         """
+        for pgm_name in ComponentType:
+            if hasattr(self.grid, pgm_name) and getattr(self.grid, pgm_name).size() > 0:
+                warnings.warn(
+                    "PowerGridModelInterface.grid already contains some data. "
+                    "create_grid_from_input_data will clear the existing data.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+                break
+
         graph_model_type = type(self.grid.graphs.active_graph)
         new_grid = self.grid.__class__.empty(graph_model=graph_model_type)
 
