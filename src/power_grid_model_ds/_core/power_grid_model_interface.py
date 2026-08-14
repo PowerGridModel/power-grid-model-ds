@@ -75,7 +75,7 @@ class PowerGridModelInterface:
         Returns a Grid object with the arrays filled with the PowerGridModel input.
         """
         for pgm_name in ComponentType:
-            if hasattr(self.grid, pgm_name) and getattr(self.grid, pgm_name).size() > 0:
+            if hasattr(self.grid, pgm_name) and getattr(self.grid, pgm_name).size > 0:
                 warnings.warn(
                     "PowerGridModelInterface.grid already contains some data. "
                     "create_grid_from_input_data will clear the existing data.",
