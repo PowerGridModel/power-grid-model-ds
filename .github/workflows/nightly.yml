@@ -15,7 +15,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check-code-quality:
+  check-code-quality-highest:
     uses: "./.github/workflows/check-code-quality.yml"
     with:
-      update_dependencies: true
+      update_resolution: "highest"
+
+  check-code-quality-lowest:
+    uses: "./.github/workflows/check-code-quality.yml"
+    with:
+      update_resolution: "lowest"
