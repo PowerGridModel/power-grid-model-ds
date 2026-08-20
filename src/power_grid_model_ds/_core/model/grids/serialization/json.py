@@ -7,6 +7,7 @@
 import dataclasses
 import json
 import logging
+import math
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -52,7 +53,7 @@ def serialize_to_dict[G: Grid](grid: G, strict: bool = True, **kwargs) -> dict:
     serialized_data = {}
 
     for field in dataclasses.fields(grid):
-        if field.name in ["graphs", "_ids"]:
+        if field.name in ["graphs", "_id_tracker"]:
             continue
 
         field_value = getattr(grid, field.name)
@@ -144,7 +145,7 @@ def _restore_grid_values[G: Grid](grid: G, json_data: dict) -> None:
 
 
 def _serialize_array(array: FancyArray) -> list[dict[str, Any]]:
-    return [{name: record[name].item() for name in array.columns} for record in array]
+    return [{name: _replace_nan_with_none(record[name].item()) for name in array.columns} for record in array]
 
 
 def _deserialize_array(array_data: list[dict[str, Any]], array_class: type[FancyArray]) -> FancyArray:
@@ -182,3 +183,10 @@ def _is_serializable(value: Any, strict: bool, **kwargs) -> bool:
         _logger.warning(msg)
         return False
     return True
+
+
+def _replace_nan_with_none(value: Any) -> Any:
+    """Replace a NaN value with a JSON-compatible null value."""
+    if isinstance(value, float) and math.isnan(value):
+        return None
+    return value

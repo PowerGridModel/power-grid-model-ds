@@ -7,9 +7,10 @@
 import warnings
 
 import numpy as np
-from numpy.typing import NDArray
 from power_grid_model import CalculationMethod, ComponentType, PowerGridModel, initialize_array
+from power_grid_model.data_types import Dataset, SingleArray, SingleDataset
 
+from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.grids.base import Grid
 
 
@@ -29,18 +30,18 @@ class PowerGridModelInterface:
     def __init__(
         self,
         grid: Grid | None = None,
-        input_data: dict | None = None,
+        input_data: SingleDataset | None = None,
         system_frequency: float = 50.0,
     ):
         self.grid = grid or Grid.empty()
         self.system_frequency = system_frequency
 
-        self._input_data = input_data or {}
-        self.output_data: dict[str, NDArray] = {}
+        self._input_data: SingleDataset = input_data or {}
+        self.output_data: Dataset = {}
         self.model: PowerGridModel | None = None
 
     @property
-    def input_data(self) -> dict[str, NDArray]:
+    def input_data(self) -> SingleDataset:
         """Get the input data for the PowerGridModel."""
         warnings.warn(
             "Input data has been made private and will be removed as public properety in a future version. "
@@ -50,7 +51,7 @@ class PowerGridModelInterface:
         )
         return self._input_data
 
-    def create_input_from_grid(self):
+    def create_input_from_grid(self) -> SingleDataset:
         """
         Create input for the PowerGridModel
         """
@@ -74,9 +75,7 @@ class PowerGridModelInterface:
         """
         for pgm_name in ComponentType:
             if pgm_name in self._input_data and hasattr(self.grid, pgm_name):
-                pgm_ds_array_class = getattr(self.grid, pgm_name).__class__
-                pgm_ds_array = pgm_ds_array_class(self._input_data[pgm_name])
-                self.grid.append(pgm_ds_array, check_max_id=False)
+                self.grid.append(self._create_pgm_ds_array(pgm_name), check_max_id=False)
         if check_ids:
             self.grid.check_ids()
         return self.grid
@@ -84,9 +83,9 @@ class PowerGridModelInterface:
     def calculate_power_flow(
         self,
         calculation_method: CalculationMethod = CalculationMethod.newton_raphson,
-        update_data: dict | None = None,
+        update_data: Dataset | None = None,
         **kwargs,
-    ):
+    ) -> Dataset:
         """Initialize the PowerGridModel and calculate power flow over input data.
 
         If input data is not available, self.create_input_from_grid() will be called to create it.
@@ -100,15 +99,7 @@ class PowerGridModelInterface:
         )
         return self.output_data
 
-    def _create_power_grid_array(self, array_name: str) -> np.ndarray:
-        """Create power grid model array"""
-        internal_array = getattr(self.grid, array_name)
-        pgm_array = initialize_array("input", array_name, internal_array.size)
-        fields = self._match_dtypes(pgm_array.dtype, internal_array.dtype)
-        pgm_array[fields] = internal_array.data[fields]
-        return pgm_array
-
-    def update_model(self, update_data: dict):
+    def update_model(self, update_data: Dataset) -> None:
         """
         Updates the power-grid-model using update_data, this allows for batch calculations
 
@@ -149,12 +140,31 @@ class PowerGridModelInterface:
             fields = self._match_dtypes(pgm_output_array.dtype, internal_array.dtype)
             internal_array[fields] = pgm_output_array[fields]
 
-    @staticmethod
-    def _match_dtypes(first_dtype: np.dtype, second_dtype: np.dtype):
-        return list(set(first_dtype.names).intersection(set(second_dtype.names)))  # type: ignore[arg-type]
-
-    def setup_model(self):
-        """Setup the PowerGridModel with the input data."""
+    def setup_model(self) -> PowerGridModel:
+        """Set up the PowerGridModel with the input data."""
         self._input_data = self._input_data or self.create_input_from_grid()
         self.model = PowerGridModel(self._input_data, system_frequency=self.system_frequency)
         return self.model
+
+    def _create_power_grid_array(self, array_name: str) -> SingleArray:
+        """Create power grid model array"""
+        internal_array = getattr(self.grid, array_name)
+        pgm_array = initialize_array("input", array_name, internal_array.size)
+        fields = self._match_dtypes(pgm_array.dtype, internal_array.dtype)
+        pgm_array[fields] = internal_array.data[fields]
+        return pgm_array
+
+    def _create_pgm_ds_array(self, pgm_name: str) -> FancyArray:
+        input_component = self._input_data[pgm_name]
+        pgm_ds_array_class: type[FancyArray] = getattr(self.grid, pgm_name).__class__
+
+        # If a dict, then the keys are the column names and the values the array for that column.
+        if isinstance(input_component, dict):
+            return pgm_ds_array_class(**input_component)
+
+        # Otherwise it should be a structured array that can be passed directly to the constructor.
+        return pgm_ds_array_class(input_component)
+
+    @staticmethod
+    def _match_dtypes(first_dtype: np.dtype, second_dtype: np.dtype) -> list[str]:
+        return list(set(first_dtype.names).intersection(set(second_dtype.names)))  # type: ignore[arg-type]

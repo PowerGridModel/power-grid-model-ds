@@ -155,6 +155,25 @@ class TestSerializationRoundtrips:
 
             assert array_equal_with_nan(original_array, loaded_array), f"Array '{array_name}' does not match"
 
+    def test_nan_serializes_as_json_null(self, basic_grid: Grid, tmp_path: Path):
+        basic_grid.node.u_rated[0] = np.nan
+
+        path = basic_grid.serialize(tmp_path / "grid.json")
+        with path.open(encoding="utf-8") as file:
+            file_data = json.load(file)
+
+        string_data = json.loads(basic_grid.serialize(mode="json_string"))
+
+        assert file_data["data"]["node"][0]["u_rated"] is None
+        assert string_data["data"]["node"][0]["u_rated"] is None
+
+    def test_deserialize_legacy_nan_json(self):
+        path = Path(__file__).parent / "data" / "legacy_nan.json"
+
+        grid = Grid.deserialize(path)
+
+        assert np.isnan(grid.node.u_rated[0])
+
 
 class TestCrossTypeCompatibility:
     """Test cross-type loading and compatibility"""
