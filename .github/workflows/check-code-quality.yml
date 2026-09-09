@@ -25,6 +25,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.12", "3.13", "3.14"]
+        numpy_range: ["<2.5", ">=2.5"]
     steps:
       - name: Checkout source code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -48,6 +49,10 @@ jobs:
       - name: Update dependencies
         if: ${{ inputs.update_dependencies && always() }}
         run: uv sync --upgrade --dev
+
+      - name: Install NumPy version
+        if: ${{ always() }}
+        run: uv pip install "numpy${{ matrix.numpy_range }}"
 
       - name: lint
         if: ${{ always() }}
