@@ -11,7 +11,6 @@ from typing import Any, ClassVar, Literal, TypeVar, get_args, get_origin, overlo
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
-from packaging import version
 
 from power_grid_model_ds._core.model.arrays.base._build import build_array
 from power_grid_model_ds._core.model.arrays.base._filters import apply_exclude, apply_filter, apply_get, get_filter_mask
@@ -35,6 +34,35 @@ _MAX_DATA_SIZE: int = 3
 Column = NDArray
 
 Self = TypeVar("Self", bound="FancyArray")
+
+
+def _get_dtype(type_def):
+    """Extract the scalar dtype and optional shape from a NumPy array annotation.
+
+    NumPy versions before 2.5 represent an array annotation as
+    ``(tuple[Any, ...], np.dtype[dtype])``. Starting with NumPy 2.5, the
+    representation is ``(dtype,)``. ``NDArray3`` adds a ``Literal[3]`` around
+    either representation.
+    """
+    type_args = get_args(type_def)
+    shape = None
+
+    # NDArray3 wraps the NumPy array annotation in Literal[3] on all supported versions.
+    if len(type_args) == 2 and get_origin(type_args[1]) is Literal:  # noqa: PLR2004
+        type_def = type_args[0]
+        shape = get_args(type_args[1])[0]
+
+    type_args = get_args(type_def)
+    # NumPy 2.5 and later expose the scalar dtype directly.
+    if len(type_args) == 1:
+        dtype = type_args[0]
+    # NumPy versions before 2.5 expose the shape and np.dtype separately.
+    elif len(type_args) == 2 and get_origin(type_args[1]) is np.dtype:  # noqa: PLR2004
+        dtype = get_args(type_args[1])[0]
+    else:
+        raise ValueError(f"dtype {type_def} not understood or supported")
+
+    return (dtype, shape) if shape is not None else dtype
 
 
 class FancyArray(ABC):  # noqa: B024
@@ -105,27 +133,8 @@ class FancyArray(ABC):  # noqa: B024
         str_lengths = combine_attribute_from_parent_classes(cls, "_str_lengths", dict)
         dtypes = {}
 
-        # Numpy 2.5 changed the typing interface, so we need to treat these differently
-        is_before_numpy_25 = version.parse(np.__version__) < version.parse("2.5.0")
-
         for name, type_def in annotations.items():
-            type_args = get_args(type_def)
-
-            # Expected type_args pre-2.5 for NDArray[]: (tuple[typing.Any, ...], numpy.dtype[numpy.int32])
-            if is_before_numpy_25 and len(type_args) == 2 and get_origin(type_args[1]) is np.dtype:  # noqa: PLR2004
-                dtypes[name] = get_args(type_args[1])[0]
-            # Expected type_args pre-2.5 for NDArray3[]:
-            # (numpy.ndarray[tuple[typing.Any, ...], numpy.dtype[numpy.float64]], typing.Literal[3])
-            elif is_before_numpy_25 and len(type_args) == 2 and get_origin(type_args[1]) is Literal:  # noqa: PLR2004
-                dtypes[name] = (get_args(get_args(type_args[0])[1])[0], get_args(type_args[1])[0])
-            # Expected type_args post-2.5 for NDArray: (numpy.int32,)
-            elif len(type_args) == 1:  # pragma: no cover
-                dtypes[name] = type_args[0]
-            # Expected type_args post-2.5 for NDArray3: (NDArray[numpy.float64], typing.Literal[3])
-            elif len(type_args) == 2:  # noqa: PLR2004 # pragma: no cover
-                dtypes[name] = (get_args(type_args[0])[0], get_args(type_args[1])[0])
-            else:
-                raise ValueError(f"dtype {type_def} not understood or supported")
+            dtypes[name] = _get_dtype(type_def)
 
         if not dtypes:
             raise ArrayDefinitionError("Array has no defined Columns")
