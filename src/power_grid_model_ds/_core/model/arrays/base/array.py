@@ -57,7 +57,8 @@ def _get_dtype(type_def):
     if len(type_args) == 1:
         dtype = type_args[0]
     # NumPy versions before 2.5 expose the shape and np.dtype separately.
-    elif len(type_args) == 2 and get_origin(type_args[1]) is np.dtype:  # noqa: PLR2004
+    # This path is covered by the CI NumPy <2.5 job, but not by local coverage.
+    elif len(type_args) == 2 and get_origin(type_args[1]) is np.dtype:  # pragma: no cover  # noqa: PLR2004
         dtype = get_args(type_args[1])[0]
     else:
         raise ValueError(f"dtype {type_def} not understood or supported")
