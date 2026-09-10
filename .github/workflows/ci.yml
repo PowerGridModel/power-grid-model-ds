@@ -55,7 +55,9 @@ jobs:
 
       - name: Save version
         id: version
-        run: echo "version=$(cat PYPI_VERSION)" >> $GITHUB_OUTPUT
+        run: |
+          cp VERSION PYPI_VERSION
+          echo "version=$(cat PYPI_VERSION)" >> $GITHUB_OUTPUT
 
       - name: Build
         run: |
