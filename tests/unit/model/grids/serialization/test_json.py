@@ -314,7 +314,8 @@ class TestExtensionHandling:
 
 
 class TestDeserialize:
-    def test_deserialize(self, tmp_path: Path):
+    def test_deserialize_without_metadata(self, tmp_path: Path):
+        """Legacy JSON without version or type metadata remains supported."""
         path = tmp_path / "json_data.json"
 
         data = {"node": [{"id": 1, "u_rated": 10000}, {"id": 2, "u_rated": 20000}]}
