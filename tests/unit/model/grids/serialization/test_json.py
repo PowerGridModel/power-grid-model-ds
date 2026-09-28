@@ -13,6 +13,7 @@ from typing import ClassVar
 import numpy as np
 import pytest
 from numpy.typing import NDArray
+from power_grid_model import DatasetType
 from power_grid_model.utils import json_serialize_to_file
 
 from power_grid_model_ds import Grid, PowerGridModelInterface
@@ -175,6 +176,49 @@ class TestSerializationRoundtrips:
         assert np.isnan(grid.node.u_rated[0])
 
 
+class TestSerializationMetadata:
+    """Test serialization metadata and backward-compatible loading."""
+
+    def test_serializes_grid_metadata(self, basic_grid: Grid, tmp_path: Path):
+        path = basic_grid.serialize(tmp_path / "grid.json")
+        with path.open(encoding="utf-8") as file:
+            file_data = json.load(file)
+
+        string_data = json.loads(basic_grid.serialize(mode="json_string"))
+
+        expected_metadata = {"version": "1.0", "type": "grid"}
+        assert set(file_data) == {"version", "type", "data"}
+        assert set(string_data) == {"version", "type", "data"}
+        assert {key: file_data[key] for key in expected_metadata} == expected_metadata
+        assert {key: string_data[key] for key in expected_metadata} == expected_metadata
+
+    @pytest.mark.parametrize("serialization_type", ["grid", DatasetType.input.value])
+    def test_deserializes_supported_metadata_types(self, serialization_type: str):
+        data = {
+            "version": "1.0",
+            "type": serialization_type,
+            "data": {"node": [{"id": 1, "u_rated": 10000}]},
+        }
+
+        grid = Grid.from_json_string(json.dumps(data))
+
+        assert grid.node.id.tolist() == [1]
+
+    @pytest.mark.parametrize("version", ["2.0", None])
+    def test_rejects_unsupported_version(self, version: str | None):
+        data: dict[str, object] = {"version": version, "type": "grid", "data": {}}
+
+        with pytest.raises(ValueError, match="Unsupported serialization version"):
+            Grid.from_json_string(json.dumps(data))
+
+    @pytest.mark.parametrize("serialization_type", ["output", None])
+    def test_rejects_unsupported_type(self, serialization_type: str | None):
+        data: dict[str, object] = {"version": "1.0", "type": serialization_type, "data": {}}
+
+        with pytest.raises(ValueError, match="Unsupported serialization type"):
+            Grid.from_json_string(json.dumps(data))
+
+
 class TestCrossTypeCompatibility:
     """Test cross-type loading and compatibility"""
 
@@ -270,7 +314,8 @@ class TestExtensionHandling:
 
 
 class TestDeserialize:
-    def test_deserialize(self, tmp_path: Path):
+    def test_deserialize_without_metadata(self, tmp_path: Path):
+        """Legacy JSON without version or type metadata remains supported."""
         path = tmp_path / "json_data.json"
 
         data = {"node": [{"id": 1, "u_rated": 10000}, {"id": 2, "u_rated": 20000}]}
