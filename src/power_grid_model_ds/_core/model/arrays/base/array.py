@@ -129,7 +129,7 @@ class FancyArray(ABC):  # noqa: B024
 
     @classmethod
     @lru_cache
-    def get_dtype(cls):  # noqa: python:S3776
+    def get_dtype(cls):
         annotations = get_public_annotations(cls)
         str_lengths = combine_attribute_from_parent_classes(cls, "_str_lengths", dict)
         dtypes = {}
