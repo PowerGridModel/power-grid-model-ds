@@ -11,7 +11,7 @@ on:
     inputs:
       update_resolution:
         type: string
-        description: Strategy to use when upgrade. If empty nu upgrade is performed
+        description: Strategy to use when upgrade. If empty no upgrade is performed
         default: ""
         required: false
 
@@ -47,7 +47,9 @@ jobs:
 
       - name: Update dependencies
         if: ${{ inputs.update_dependencies != '' && always() }}
-        run: uv sync --upgrade --resolution ${{ inputs.update_dependencies }} --dev
+        run: |
+          export UV_RESOLUTION=${{ inputs.update_dependencies }}
+          uv sync --upgrade --dev
 
       - name: lint
         if: ${{ always() }}
