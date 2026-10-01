@@ -46,9 +46,9 @@ jobs:
         run: uv sync --frozen --dev
 
       - name: Update dependencies
-        if: ${{ inputs.${{ inputs.update_dependencies }} != '' && always() }}
+        if: ${{ inputs.${{ inputs.update_resolution }} != '' && always() }}
         run: |
-          export UV_RESOLUTION=${{ inputs.update_dependencies }}
+          export UV_RESOLUTION=${{ inputs.update_resolution }}
           uv sync --upgrade --dev
 
       - name: lint
