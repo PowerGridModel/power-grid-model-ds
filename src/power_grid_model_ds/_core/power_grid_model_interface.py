@@ -55,11 +55,13 @@ class PowerGridModelInterface:
         """
         Create input for the PowerGridModel
         """
+        self._input_data = {}
         for array_name in ComponentType:
             if not hasattr(self.grid, array_name):
                 continue
             pgm_array = self._create_power_grid_array(array_name=array_name)
-            self._input_data[array_name] = pgm_array
+            if pgm_array.size > 0:
+                self._input_data[array_name] = pgm_array
         return self._input_data
 
     def create_grid_from_input_data(self, check_ids: bool = True) -> Grid:
