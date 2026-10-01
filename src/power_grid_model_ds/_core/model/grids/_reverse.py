@@ -5,7 +5,7 @@
 
 from typing import TYPE_CHECKING
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+from power_grid_model_ds.arrays import (
     AsymLineArray,
     BranchArray,
     GenericBranchArray,

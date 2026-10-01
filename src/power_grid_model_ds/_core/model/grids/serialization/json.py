@@ -7,8 +7,11 @@
 import dataclasses
 import json
 import logging
+import math
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any
+
+from power_grid_model import DatasetType
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 
@@ -17,13 +20,14 @@ if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import Grid
 
 
-G = TypeVar("G", bound="Grid")
+_logger = logging.getLogger(__name__)
+
+_SERIALIZATION_VERSION = "1.0"
+_GRID_SERIALIZATION_TYPE = "grid"
+_SUPPORTED_SERIALIZATION_TYPES = {_GRID_SERIALIZATION_TYPE, DatasetType.input.value}
 
 
-logger = logging.getLogger(__name__)
-
-
-def serialize_to_json(grid: G, path: Path, strict: bool = True, **kwargs) -> Path:
+def serialize_to_json[G: Grid](grid: G, path: Path, strict: bool = True, **kwargs) -> Path:
     """Save a Grid object to JSON format using power-grid-model serialization with extensions support.
 
     Args:
@@ -36,11 +40,26 @@ def serialize_to_json(grid: G, path: Path, strict: bool = True, **kwargs) -> Pat
         Path: The path where the file was saved
     """
     path.parent.mkdir(parents=True, exist_ok=True)
+    json_data = serialize_to_dict(grid=grid, strict=strict, **kwargs)
+    with path.open("w", encoding="utf-8") as f:
+        json.dump(json_data, f, **kwargs)
+    return path
 
+
+def serialize_to_dict[G: Grid](grid: G, strict: bool = True, **kwargs) -> dict:
+    """Serialize a Grid object to a Python dict.
+
+    Args:
+        grid: The Grid object to serialize
+        strict: Whether to raise an error if the grid object is not serializable.
+        **kwargs: Keyword arguments forwarded to json.dumps for serializability checks (e.g. cls).
+    Returns:
+        dict: A PGM-DS dict representation of the grid.
+    """
     serialized_data = {}
 
     for field in dataclasses.fields(grid):
-        if field.name in ["graphs"]:
+        if field.name in ["graphs", "_id_tracker"]:
             continue
 
         field_value = getattr(grid, field.name)
@@ -49,19 +68,17 @@ def serialize_to_json(grid: G, path: Path, strict: bool = True, **kwargs) -> Pat
             serialized_data[field.name] = _serialize_array(field_value)
             continue
 
-        if _is_serializable(field_value, strict):
+        if _is_serializable(field_value, strict, **kwargs):
             serialized_data[field.name] = field_value
 
-    # Store in a wrapper for PGM compatibility
-    json_data = {"data": serialized_data}
-
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(json_data, f, **kwargs)
-
-    return path
+    return {
+        "version": _SERIALIZATION_VERSION,
+        "type": _GRID_SERIALIZATION_TYPE,
+        "data": serialized_data,
+    }
 
 
-def deserialize_from_json(path: Path, target_grid_class: type[G]) -> G:
+def deserialize_from_json[G: Grid](path: Path, target_grid_class: type[G]) -> G:
     """Load a Grid object from JSON format with cross-type loading support.
 
     Args:
@@ -71,21 +88,61 @@ def deserialize_from_json(path: Path, target_grid_class: type[G]) -> G:
     Returns:
         Grid: The deserialized Grid object of the specified target class
     """
-    with open(path, "r", encoding="utf-8") as f:
+    with path.open(encoding="utf-8") as f:
         json_data = json.load(f)
+    return deserialize_from_dict(data=json_data, target_grid_class=target_grid_class)
+
+
+def deserialize_from_dict[G: Grid](data: dict, target_grid_class: type[G]) -> G:
+    """Load a Grid object from a Python dict.
+
+    Args:
+        data: A dict as produced by ``serialize_to_dict``.
+        target_grid_class: Grid class to load into.
+
+    Returns:
+        Grid: The deserialized Grid object of the specified target class
+    """
+    _validate_serialization_metadata(data)
 
     grid = target_grid_class.empty()
-    _restore_grid_values(grid, json_data["data"])
-    graph_class = grid.graphs.__class__
-    grid.graphs = graph_class.from_arrays(grid)
+    _restore_grid_values(grid, data["data"])
+    grid.rebuild_ids()
+    grid.rebuild_graphs()
     return grid
 
 
-def _restore_grid_values(grid: G, json_data: dict) -> None:
+def serialize_to_json_string[G: Grid](grid: G, strict: bool = True, **kwargs) -> str:
+    """Serialize a Grid to a JSON string (in memory, no file I/O).
+
+    Args:
+        grid: The Grid object to serialize.
+        strict: Whether to raise an error if the grid is not serializable.
+        **kwargs: Forwarded to json.dumps (e.g. indent, sort_keys, cls).
+    Returns:
+        str: A JSON string representation of the grid.
+    """
+    data = serialize_to_dict(grid=grid, strict=strict, **kwargs)
+    return json.dumps(data, **kwargs)
+
+
+def deserialize_from_json_string[G: Grid](json_string: str, target_grid_class: type[G]) -> G:
+    """Load a Grid from a JSON string.
+
+    Args:
+        json_string: A JSON string as produced by ``serialize_to_json_string``.
+        target_grid_class: Grid class to load into.
+    Returns:
+        Grid: The deserialized Grid object.
+    """
+    return deserialize_from_dict(data=json.loads(json_string), target_grid_class=target_grid_class)
+
+
+def _restore_grid_values[G: Grid](grid: G, json_data: dict) -> None:
     """Restore arrays to the grid."""
     for attr_name, attr_values in json_data.items():
         if not hasattr(grid, attr_name):
-            logger.warning(f"Unexpected attribute '{attr_name}'")
+            _logger.warning("Unexpected attribute '%s'", attr_name)
             continue
 
         grid_attr = getattr(grid, attr_name)
@@ -99,8 +156,19 @@ def _restore_grid_values(grid: G, json_data: dict) -> None:
         setattr(grid, attr_name, attr_class(attr_values))
 
 
+def _validate_serialization_metadata(data: dict) -> None:
+    """Validate serialization metadata when present, while accepting legacy files."""
+    version = data.get("version")
+    if "version" in data and version != _SERIALIZATION_VERSION:
+        raise ValueError(f"Unsupported serialization version: {version!r}")
+
+    serialization_type = data.get("type")
+    if "type" in data and serialization_type not in _SUPPORTED_SERIALIZATION_TYPES:
+        raise ValueError(f"Unsupported serialization type: {serialization_type!r}")
+
+
 def _serialize_array(array: FancyArray) -> list[dict[str, Any]]:
-    return [{name: record[name].item() for name in array.columns} for record in array]
+    return [{name: _replace_nan_with_none(record[name].item()) for name in array.columns} for record in array]
 
 
 def _deserialize_array(array_data: list[dict[str, Any]], array_class: type[FancyArray]) -> FancyArray:
@@ -123,18 +191,25 @@ def _deserialize_array(array_data: list[dict[str, Any]], array_class: type[Fancy
     all_columns_in_array_data = set().union(*(row.keys() for row in array_data))
     extra_columns = all_columns_in_array_data - array_columns
     if extra_columns:
-        logger.warning(f"Ignoring extra columns {extra_columns} from array data for {array_class.__name__}.")
+        _logger.warning("Ignoring extra columns %s from array data for %s.", extra_columns, array_class.__name__)
     return array_class(**data_as_dict_of_lists)
 
 
-def _is_serializable(value: Any, strict: bool) -> bool:
+def _is_serializable(value: Any, strict: bool, **kwargs) -> bool:
     # Check if a value is JSON serializable.
     try:
-        json.dumps(value)
+        json.dumps(value, **kwargs)
     except TypeError as error:
         msg = f"Failed to serialize '{value}'. You can set strict=False to ignore this attribute."
         if strict:
             raise TypeError(msg) from error
-        logger.warning(msg)
+        _logger.warning(msg)
         return False
     return True
+
+
+def _replace_nan_with_none(value: Any) -> Any:
+    """Replace a NaN value with a JSON-compatible null value."""
+    if isinstance(value, float) and math.isnan(value):
+        return None
+    return value

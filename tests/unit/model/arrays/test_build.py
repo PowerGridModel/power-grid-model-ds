@@ -2,6 +2,9 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+import re
+from typing import ClassVar
+
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
@@ -10,8 +13,8 @@ from numpy.typing import NDArray
 from power_grid_model_ds._core import fancypy as fp
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.base.errors import ArrayDefinitionError
-from power_grid_model_ds._core.model.arrays.pgm_arrays import AsymVoltageSensorArray
 from power_grid_model_ds._core.model.constants import EMPTY_ID
+from power_grid_model_ds.arrays import AsymVoltageSensorArray
 from tests.fixtures.arrays import DefaultedFancyTestArray, FancyTestArray
 
 # pylint: disable=missing-function-docstring,missing-class-docstring,duplicate-code
@@ -24,7 +27,7 @@ class InvalidArray(FancyArray):
 
 
 class ExtendedFancyTestArray(FancyTestArray):
-    _defaults = {"test_float2": np.nan, "test_float3": 42.0}
+    _defaults: ClassVar = {"test_float2": np.nan, "test_float3": 42.0}
 
     test_float2: NDArray[np.float64]
     test_float3: NDArray[np.float64]
@@ -36,9 +39,10 @@ class ExtendedFancyTestArrayNoDefaults(FancyTestArray):
 
 
 class ChildArray(DefaultedFancyTestArray):
-    _defaults = {"test_float4": 42.0}
-
+    _defaults: ClassVar[dict] = {"test_float4": 42.0}
+    _id_columns: ClassVar[set] = {"test_id2"}
     test_float4: NDArray[np.float64]
+    test_id2: NDArray[np.int32]
 
 
 class SizedDTypesArray(FancyArray):
@@ -60,7 +64,7 @@ def test_build_without_array_definition():
 def test_build_without_args_or_kwargs():
     array = FancyTestArray()
     assert_array_equal(array.id, [])
-    assert 0 == array.size
+    assert array.size == 0
 
 
 def test_build_from_kwargs():
@@ -80,7 +84,7 @@ def test_build_from_kwargs():
 
 
 def test_build_from_kwargs_with_missing_input_fields():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Missing required columns"):
         FancyTestArray(
             id=[1, 2, 3],
             test_int=[3, 0, 4],
@@ -91,7 +95,7 @@ def test_build_from_kwargs_with_missing_input_fields():
 
 
 def test_build_from_kwargs_with_different_input_lengths():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=re.escape("Size of column 'test_bool' does not match other columns.")):
         FancyTestArray(
             id=[1, 2, 3],
             test_int=[3, 0, 4],
@@ -103,7 +107,7 @@ def test_build_from_kwargs_with_different_input_lengths():
 
 def test_build_from_kwargs_with_different_input_lengths_with_defaults():
     # Also fail when defaults are defined
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=re.escape("Size of column 'test_bool' does not match other columns.")):
         DefaultedFancyTestArray(
             id=[1, 2, 3],
             test_int=[3, 0, 4],
@@ -139,18 +143,18 @@ def test_build_from_numpy_array_with_data_kwarg(fancy_test_array: FancyTestArray
 
 def test_build_from_numpy_2d_shape_2_4():
     numpy_array = np.array([[1, 2, 3, 4, 5], [9, 9, 9, 9, 9]])
-    assert (2, 5) == numpy_array.shape
+    assert numpy_array.shape == (2, 5)
     array = FancyTestArray(numpy_array)
     assert_array_equal([2, 9], array.test_int)
-    assert 2 == array.size
+    assert array.size == 2
 
 
 def test_build_from_numpy_2d_shape_4_2():
     numpy_array = np.array([[15, 9], [2, 9], [3, 9], [4, 9], [7, 9]])
-    assert (5, 2) == numpy_array.shape
+    assert numpy_array.shape == (5, 2)
     array = FancyTestArray(numpy_array)
     assert_array_equal([2, 9], array.test_int)
-    assert 2 == array.size
+    assert array.size == 2
 
 
 def test_array_invalid_columns_before_initialization():
@@ -160,15 +164,15 @@ def test_array_invalid_columns_before_initialization():
 
 def test_some_zeros():
     array = FancyTestArray.zeros(3)
-    assert 3 == array.size
+    assert array.size == 3
     assert_array_equal([np.iinfo(np.int32).min] * 3, array.id)
     assert_array_equal([0, 0, 0], array.test_int)
-    assert 3 == array.size
-    assert 3 == len(array)
-    assert 3 == len(array.data)
-    assert 3 == len(array.id)
-    assert 3 == len(array.test_int)
-    assert 3 == len(array.test_float)
+    assert array.size == 3
+    assert len(array) == 3
+    assert len(array.data) == 3
+    assert len(array.id) == 3
+    assert len(array.test_int) == 3
+    assert len(array.test_float) == 3
 
 
 def test_many_zeros():
@@ -183,7 +187,7 @@ def test_many_zeros():
 
 def test_empty():
     array = FancyTestArray.empty(3)
-    assert 3 == array.size
+    assert array.size == 3
     assert_array_equal([EMPTY_ID, EMPTY_ID, EMPTY_ID], array.id)
     min_int64 = np.iinfo(np.int64).min
     assert_array_equal([min_int64] * 3, array.test_int)
@@ -204,7 +208,7 @@ def test_empty_with_sized_dtypes():
 
 def test_empty_with_defaults():
     array = DefaultedFancyTestArray.empty(3)
-    assert 3 == array.size
+    assert array.size == 3
     assert_array_equal([-1, -1, -1], array.id)
     assert_array_equal([4, 4, 4], array.test_int)
     assert_array_equal([4.5, 4.5, 4.5], array.test_float)
@@ -213,26 +217,26 @@ def test_empty_with_defaults():
 
 def test_from_structured_subarray_with_defaults(fancy_test_array: FancyTestArray):
     array = ExtendedFancyTestArray(fancy_test_array.data)
-    assert 3 == array.size
+    assert array.size == 3
     assert all(np.isnan(array.test_float2))
     assert_array_equal([42.0, 42.0, 42.0], array.test_float3)
 
 
 def test_from_structured_subarray_no_defaults(fancy_test_array: FancyTestArray):
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Missing required columns"):
         ExtendedFancyTestArrayNoDefaults(fancy_test_array.data)
 
 
 def test_from_sub_ndarray_with_defaults(fancy_test_array: FancyTestArray):
     # defaults are not supported when working with unstructured arrays
     sub_ndarray = np.array(fancy_test_array.tolist())
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=re.escape("Cannot convert array of shape (3, 5) into 7 columns.")):
         ExtendedFancyTestArray(sub_ndarray)
 
 
 def test_from_sub_ndarray_no_defaults(fancy_test_array: FancyTestArray):
     sub_ndarray = np.array(fancy_test_array.tolist())
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=re.escape("Cannot convert array of shape (3, 5) into 7 columns.")):
         ExtendedFancyTestArrayNoDefaults(sub_ndarray)
 
 
@@ -248,16 +252,31 @@ def test_asymmetric_sensor_array():
     array_length = 2
     # test if asymmetric array has NDArray3 fields, i.e. with 3 floats per element (one per phase)
     asym_volt_sens = AsymVoltageSensorArray.empty(array_length)
-    nd3_fields = ["u_sigma", "u_measured", "u_angle_measured"]
+    nd3_fields = ["u_measured", "u_angle_measured"]
     for field in nd3_fields:
         assert asym_volt_sens[field].shape == (array_length, 3)
 
 
 def test_inherit_defaults_from_multiple_parents():
     array = ChildArray.empty(3)
-    assert 3 == array.size
+    assert array.size == 3
     assert_array_equal([-1, -1, -1], array.id)
     assert_array_equal([4, 4, 4], array.test_int)
     assert_array_equal([4.5, 4.5, 4.5], array.test_float)
     assert_array_equal(["DEFAULT", "DEFAULT", "DEFAULT"], array.test_str)
     assert_array_equal([42.0, 42.0, 42.0], array.test_float4)
+
+
+def test_inherit_id_columns():
+    assert ChildArray.get_id_columns() == {"id", "test_id2"}
+
+
+def test_inherit_defaults():
+    assert ChildArray.get_defaults() == {
+        "id": -1,
+        "test_bool": True,
+        "test_float": 4.5,
+        "test_float4": 42.0,
+        "test_int": 4,
+        "test_str": "DEFAULT",
+    }

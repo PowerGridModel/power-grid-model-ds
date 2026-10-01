@@ -40,7 +40,6 @@ htmlcov
 coverage.xml
 
 # caching
-*.pickle
 *.gz
 *.zip
 

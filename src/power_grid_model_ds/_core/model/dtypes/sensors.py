@@ -8,6 +8,8 @@ Based on the sensors defined in power grid model:
 https://power-grid-model.readthedocs.io/en/v1.9.13/user_manual/components.html#sensor
 """
 
+from typing import ClassVar
+
 import numpy as np
 from numpy.typing import NDArray
 
@@ -19,12 +21,13 @@ class Sensor(Id):
     """Base class for sensor data type"""
 
     measured_object: NDArray[np.int32]
+    _id_columns: ClassVar[set[str]] = {"measured_object"}
 
 
 class GenericPowerSensor(Sensor):
     """Base class for power sensor data type"""
 
-    measured_terminal_type: NDArray[np.int32]
+    measured_terminal_type: NDArray[np.int8]
     power_sigma: NDArray[np.float64]  # std of total power
 
 
@@ -61,7 +64,7 @@ class SymVoltageSensor(GenericVoltageSensor):
 class AsymVoltageSensor(GenericVoltageSensor):
     """AsymVoltageSensor data type"""
 
-    u_sigma: NDArray3[np.float64]  # std of 3 voltages
+    u_sigma: NDArray[np.float64]  # std of voltages
     u_measured: NDArray3[np.float64]  # measured 3 voltages
     u_angle_measured: NDArray3[np.float64]  # measured 3 phases
 
@@ -69,8 +72,8 @@ class AsymVoltageSensor(GenericVoltageSensor):
 class GenericCurrentSensor(Sensor):
     """Base class for current sensor data type"""
 
-    measured_terminal_type: NDArray[np.int32]
-    angle_measurement_type: NDArray[np.int32]
+    measured_terminal_type: NDArray[np.int8]
+    angle_measurement_type: NDArray[np.int8]
     i_sigma: NDArray[np.float64]
     i_angle_sigma: NDArray[np.float64]
 

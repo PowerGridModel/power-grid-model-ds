@@ -4,9 +4,10 @@
 
 from abc import ABC
 from collections import namedtuple
+from collections.abc import Iterable
 from copy import copy
 from functools import lru_cache
-from typing import Any, Iterable, Literal, Type, TypeVar, overload
+from typing import Any, ClassVar, Literal, TypeVar, get_args, get_origin, overload
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -14,23 +15,58 @@ from numpy.typing import ArrayLike, NDArray
 from power_grid_model_ds._core.model.arrays.base._build import build_array
 from power_grid_model_ds._core.model.arrays.base._filters import apply_exclude, apply_filter, apply_get, get_filter_mask
 from power_grid_model_ds._core.model.arrays.base._modify import check_ids, re_order, update_by_id
-from power_grid_model_ds._core.model.arrays.base._optional import pandas
+from power_grid_model_ds._core.model.arrays.base._optional import pd
 from power_grid_model_ds._core.model.arrays.base._string import convert_array_to_string
 from power_grid_model_ds._core.model.arrays.base.errors import ArrayDefinitionError
 from power_grid_model_ds._core.model.constants import EMPTY_ID, empty
-from power_grid_model_ds._core.utils.misc import array_equal_with_nan, get_inherited_attrs
+from power_grid_model_ds._core.utils.misc import (
+    array_equal_with_nan,
+    combine_attribute_from_parent_classes,
+    get_public_annotations,
+)
 
 # pylint: disable=missing-function-docstring, too-many-public-methods
 
 _RESERVED_COLUMN_NAMES: set = set(dir(np.array([]))).union({"data"})
 _DEFAULT_STR_LENGTH: int = 50
+_MAX_DATA_SIZE: int = 3
 
 Column = NDArray
 
 Self = TypeVar("Self", bound="FancyArray")
 
 
-class FancyArray(ABC):
+def _get_dtype(type_def):
+    """Extract the scalar dtype and optional shape from a NumPy array annotation.
+
+    NumPy versions before 2.5 represent an array annotation as
+    ``(tuple[Any, ...], np.dtype[dtype])``. Starting with NumPy 2.5, the
+    representation is ``(dtype,)``. ``NDArray3`` adds a ``Literal[3]`` around
+    either representation.
+    """
+    type_args = get_args(type_def)
+    shape = None
+
+    # NDArray3 wraps the NumPy array annotation in Literal[3] on all supported versions.
+    if len(type_args) == 2 and get_origin(type_args[1]) is Literal:  # noqa: PLR2004
+        type_def = type_args[0]
+        shape = get_args(type_args[1])[0]
+
+    type_args = get_args(type_def)
+    # NumPy 2.5 and later expose the scalar dtype directly.
+    if len(type_args) == 1:
+        dtype = type_args[0]
+    # NumPy versions before 2.5 expose the shape and np.dtype separately.
+    # This path is covered by the CI NumPy <2.5 job, but not by local coverage.
+    elif len(type_args) == 2 and get_origin(type_args[1]) is np.dtype:  # pragma: no cover  # noqa: PLR2004
+        dtype = get_args(type_args[1])[0]
+    else:
+        raise ValueError(f"dtype {type_def} not understood or supported")
+
+    return (dtype, shape) if shape is not None else dtype
+
+
+class FancyArray(ABC):  # noqa: B024
     """Base class for all arrays.
 
     You can create your own array by subclassing FancyArray.
@@ -42,9 +78,20 @@ class FancyArray(ABC):
         >>>     name: NDArray[np.str_]
         >>>     value: NDArray[np.float64]
 
-    Note on string-columns:
+    Note on default values:
+        Default values for columns can be defined by adding a class attribute _defaults,
+        which is a dictionary mapping column names to their default values.
+        The _defaults attribute is inherited by child classes.
+
+    Note on string columns:
         The default length for string columns is stored in _DEFAULT_STR_LENGTH.
         To change this, you can set the _str_lengths class attribute.
+        The _str_lengths attribute is inherited by child classes.
+
+    Note on id columns:
+        Columns that contain ids or reference ids (e.g., 'id', 'from_node', etc.) should be defined in the _id_columns
+        class attribute to ensure correct functionality of certain grid helper methods (e.g. grid.merge).
+        The _id_columns attribute is inherited and combined with those of the parent classes.
 
     Example:
         >>> class MyArray(FancyArray):
@@ -56,8 +103,9 @@ class FancyArray(ABC):
     """
 
     _data: NDArray = np.ndarray([])
-    _defaults: dict[str, Any] = {}
-    _str_lengths: dict[str, int] = {}
+    _defaults: ClassVar[dict[str, Any]] = {}
+    _str_lengths: ClassVar[dict[str, int]] = {}
+    _id_columns: ClassVar[set[str]] = set()
 
     def __init__(self, *args, data: NDArray | None = None, **kwargs):
         if data is None:
@@ -72,27 +120,22 @@ class FancyArray(ABC):
     @classmethod
     @lru_cache
     def get_defaults(cls) -> dict[str, Any]:
-        return get_inherited_attrs(cls, "_defaults")["_defaults"]
+        return combine_attribute_from_parent_classes(cls, "_defaults", attribute_type=dict)
 
     @classmethod
     @lru_cache
-    def get_dtype(cls):
-        annotations = get_inherited_attrs(cls, "_str_lengths")
-        str_lengths = annotations.pop("_str_lengths")
+    def get_id_columns(cls) -> set[str]:
+        return combine_attribute_from_parent_classes(cls, "_id_columns", attribute_type=set)
+
+    @classmethod
+    @lru_cache
+    def get_dtype(cls):  # noqa: python:S3776
+        annotations = get_public_annotations(cls)
+        str_lengths = combine_attribute_from_parent_classes(cls, "_str_lengths", dict)
         dtypes = {}
-        for name, dtype in annotations.items():
-            if len(dtype.__args__) > 1:
-                # regular numpy dtype (i.e. without shape)
-                dtypes[name] = dtype.__args__[1].__args__[0]
-            elif hasattr(dtype, "__metadata__"):
-                # metadata annotation contains shape
-                # define dtype using a (type, shape) tuple
-                # see: #1 in https://numpy.org/doc/stable/user/basics.rec.html#structured-datatype-creation
-                dtype_type = dtype.__args__[0].__args__[1].__args__[0]
-                dtype_shape = dtype.__metadata__[0].__args__
-                dtypes[name] = (dtype_type, dtype_shape)
-            else:
-                raise ValueError(f"dtype {dtype} not understood or supported")
+
+        for name, type_def in annotations.items():
+            dtypes[name] = _get_dtype(type_def)
 
         if not dtypes:
             raise ArrayDefinitionError("Array has no defined Columns")
@@ -112,8 +155,8 @@ class FancyArray(ABC):
 
     def __repr__(self) -> str:
         try:
-            data = getattr(self, "data")
-            if data.size > 3:
+            data = self.data
+            if data.size > _MAX_DATA_SIZE:
                 return f"{self.__class__.__name__}([{data[:3]}]... + {data.size - 3} more rows)"
             return f"{self.__class__.__name__}([{data}])"
         except AttributeError:
@@ -206,7 +249,7 @@ class FancyArray(ABC):
         return copy(self)
 
     @classmethod
-    def zeros(cls: Type[Self], num: int, empty_id: bool = True) -> Self:
+    def zeros(cls: type[Self], num: int, empty_id: bool = True) -> Self:
         """Construct an array filled with zeros.
 
         If 'empty_id' is True, the 'id' column will be filled with EMPTY_ID values.
@@ -218,7 +261,7 @@ class FancyArray(ABC):
         return cls(data=zeros_array)
 
     @classmethod
-    def empty(cls: Type[Self], num: int, use_defaults: bool = True) -> Self:
+    def empty(cls: type[Self], num: int, use_defaults: bool = True) -> Self:
         """Construct an array filled with 'empty' values.
 
         'empty' values differs per dtype:
@@ -242,7 +285,7 @@ class FancyArray(ABC):
     def is_empty(self, column: str) -> NDArray[np.bool_]:
         """Check if a column is filled with 'empty' values."""
         empty_value = self.get_empty_value(column)
-        if empty_value is np.nan:
+        if isinstance(empty_value, float) and np.isnan(empty_value):
             return np.isnan(self._data[column])
         return np.isin(self._data[column], empty_value)
 
@@ -270,6 +313,10 @@ class FancyArray(ABC):
         if isinstance(self._data, np.void):
             return tpl_cls(*self._data)
         return tpl_cls(*self._data[0])
+
+    @property
+    def size(self) -> int:
+        return self._data.size
 
     def filter(
         self: Self,
@@ -335,12 +382,12 @@ class FancyArray(ABC):
 
     def as_df(self):
         """Convert to pandas DataFrame"""
-        if pandas is None:
+        if pd is None:
             raise ImportError("pandas is not installed")
-        return pandas.DataFrame(self._data)
+        return pd.DataFrame(self._data)
 
     @classmethod
-    def from_extended(cls: Type[Self], extended: Self) -> Self:
+    def from_extended(cls: type[Self], extended: Self) -> Self:
         """Create an instance from an extended array."""
         if not isinstance(extended, cls):
             raise TypeError(f"Extended array must be of type {cls.__name__}, got {type(extended).__name__}")

@@ -9,11 +9,9 @@ from copy import deepcopy
 
 import numpy as np
 import pytest
-from numpy.testing import assert_array_equal
 
 from power_grid_model_ds._core.model.graphs.errors import GraphError
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
-from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds.errors import MissingBranchError, MissingNodeError, NoPathBetweenNodes
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
@@ -29,8 +27,8 @@ class TestBasicGraphFunctions:
         assert 1 in graph.external_ids
         assert 2 in graph.external_ids
         # the graph has the correct size
-        assert 2 == graph.nr_nodes
-        assert 1 == graph.nr_branches
+        assert graph.nr_nodes == 2
+        assert graph.nr_branches == 1
 
     def test_add_node_already_there(self, graph: BaseGraphModel):
         graph.add_node(1)
@@ -65,7 +63,7 @@ class TestBasicGraphFunctions:
         graph.add_node(2)
         graph.add_branch(1, 2)
 
-        assert [(1, 2)] == list(graph.all_branches)
+        assert list(graph.all_branches) == [(1, 2)]
 
     def test_graph_all_branches_parallel(self, graph: BaseGraphModel):
         graph.add_node(1)
@@ -74,7 +72,7 @@ class TestBasicGraphFunctions:
         graph.add_branch(1, 2)
         graph.add_branch(2, 1)
 
-        assert [(1, 2), (1, 2), (2, 1)] == list(graph.all_branches)
+        assert list(graph.all_branches) == [(1, 2), (1, 2), (2, 1)]
 
     def test_delete_invalid_node_without_error(self, graph: BaseGraphModel):
         graph.delete_node(3, raise_on_fail=False)
@@ -89,8 +87,8 @@ class TestBasicGraphFunctions:
 
         graph.delete_node(1)  # also deletes branch 1-2
 
-        assert 1 == graph.nr_nodes
-        assert 0 == graph.nr_branches
+        assert graph.nr_nodes == 1
+        assert graph.nr_branches == 0
         assert 2 in graph.external_ids
         assert 1 not in graph.external_ids
         assert not graph.has_branch(1, 2)
@@ -141,43 +139,122 @@ class TestBasicGraphFunctions:
         graph.add_branch(1, 2)
         graph.add_branch(2, 1)
 
-        assert [(2, 1), (2, 1), (2, 1)] == list(graph.in_branches(1))
-        assert [(1, 2), (1, 2), (1, 2)] == list(graph.in_branches(2))
+        assert list(graph.in_branches(1)) == [(2, 1), (2, 1), (2, 1)]
+        assert list(graph.in_branches(2)) == [(1, 2), (1, 2), (1, 2)]
 
 
-def test_tmp_remove_nodes(graph_with_2_routes: BaseGraphModel) -> None:
-    graph = graph_with_2_routes
+class TestAdjacent:
+    @pytest.mark.parametrize(
+        ("node", "neighbours"),
+        [
+            pytest.param(1, [2, 5], id="neighbours node 1"),
+            pytest.param(2, [1, 3], id="neighbours node 2"),
+            pytest.param(3, [2], id="neighbours node 3"),
+            pytest.param(4, [5], id="neighbours node 4"),
+            pytest.param(5, [1, 4], id="neighbours node 5"),
+        ],
+    )
+    def test_adjacent_no_excluding(self, graph_with_2_routes, node, neighbours):
+        actual_neighbours = graph_with_2_routes.adjacent(node)
+        assert sorted(actual_neighbours) == neighbours
 
-    assert graph.nr_branches == 4
+    def test_adjacent_no_neighbours(self, graph_with_2_routes):
+        # When we have a node with no neighbours
+        graph_with_2_routes.add_node(10)
 
-    # add parallel branches to test whether they are restored correctly
-    graph.add_branch(1, 5)
-    graph.add_branch(5, 1)
+        # We should get an empty list
+        assert graph_with_2_routes.adjacent(10) == []
 
-    assert graph.nr_nodes == 5
-    assert graph.nr_branches == 6
-
-    before_sets = [frozenset(branch) for branch in graph.all_branches]
-    counter_before = Counter(before_sets)
-
-    with graph.tmp_remove_nodes([1, 2]):
-        assert graph.nr_nodes == 3
-        assert list(graph.all_branches) == [(5, 4)]
-
-    assert graph.nr_nodes == 5
-    assert graph.nr_branches == 6
-
-    after_sets = [frozenset(branch) for branch in graph.all_branches]
-    counter_after = Counter(after_sets)
-    assert counter_before == counter_after
+    @pytest.mark.parametrize(
+        ("excluding", "neighbours"),
+        [
+            pytest.param({2}, [5], id="exlude 2"),
+            pytest.param({}, [2, 5], id="empty exclude"),
+            pytest.param({4}, [2, 5], id="exclude irrelevant node"),
+            pytest.param([2, 5], [], id="exclude all (as list)"),
+        ],
+    )
+    def test_adjacent_with_excluding(self, graph_with_2_routes, excluding, neighbours):
+        actual_neighbours = graph_with_2_routes.adjacent(node_id=1, excluding=excluding)
+        assert sorted(actual_neighbours) == neighbours
 
 
-def test_tmp_remove_nodes_array_input(graph_with_2_routes: BaseGraphModel) -> None:
-    with graph_with_2_routes.tmp_remove_nodes(np.array([1, 2])):  # type: ignore[arg-type]
-        pass
+class TestTmpRemoveNodes:
+    def test_tmp_remove_nodes(self, graph_with_2_routes: BaseGraphModel) -> None:
+        graph = graph_with_2_routes
 
-    # check that the external ids are still all integers instead of e.g. np.int
-    assert all([isinstance(e_id, int) for e_id in graph_with_2_routes.external_ids])
+        assert graph.nr_branches == 4
+
+        # add parallel branches to test whether they are restored correctly
+        graph.add_branch(1, 5)
+        graph.add_branch(5, 1)
+
+        assert graph.nr_nodes == 5
+        assert graph.nr_branches == 6
+
+        before_sets = [frozenset(branch) for branch in graph.all_branches]
+        counter_before = Counter(before_sets)
+
+        with graph.tmp_remove_nodes([1, 2]):
+            assert graph.nr_nodes == 3
+            assert list(graph.all_branches) == [(5, 4)]
+
+        assert graph.nr_nodes == 5
+        assert graph.nr_branches == 6
+
+        after_sets = [frozenset(branch) for branch in graph.all_branches]
+        counter_after = Counter(after_sets)
+        assert counter_before == counter_after
+
+    def test_tmp_remove_nodes_array_input(self, graph_with_2_routes: BaseGraphModel) -> None:
+        with graph_with_2_routes.tmp_remove_nodes(np.array([1, 2])):  # type: ignore[arg-type]
+            pass
+
+        # check that the external ids are still all integers instead of e.g. np.int
+        assert all([isinstance(e_id, int) for e_id in graph_with_2_routes.external_ids])
+
+    def test_invalid_tmp_remove_nodes(self, graph_with_2_routes: BaseGraphModel) -> None:
+        original_graph = deepcopy(graph_with_2_routes)
+        assert graph_with_2_routes.nr_nodes == 5
+        assert graph_with_2_routes.nr_branches == 4
+
+        # When we remove node 1 and then an non-existing node that crashes the process
+        with pytest.raises(MissingNodeError), graph_with_2_routes.tmp_remove_nodes([1, 99]):
+            pass
+
+        # The remaining graph object should still contain the same nodes and edges.
+        assert graph_with_2_routes.nr_nodes == 5
+        assert graph_with_2_routes.nr_branches == 4
+        assert graph_with_2_routes == original_graph
+
+
+class TestTmpRemoveBranches:
+    def test_tmp_remove_branches(self, graph_with_2_routes: BaseGraphModel):
+        graph = deepcopy(graph_with_2_routes)
+
+        assert graph.has_branch(1, 2)
+        assert graph.has_branch(2, 3)
+
+        with graph.tmp_remove_branches([(1, 2), (2, 3)]):
+            assert not graph.has_branch(1, 2)
+            assert not graph.has_branch(2, 3)
+
+        assert graph == graph_with_2_routes
+        assert graph.has_branch(1, 2)
+        assert graph.has_branch(2, 3)
+
+    def test_tmp_remove_branches_non_existent_branch_keeps_graph_as_is(self, graph_with_2_routes: BaseGraphModel):
+        graph = deepcopy(graph_with_2_routes)
+
+        # If we remove a branch and then a non-existing branch, we should raise an error.
+        with (
+            pytest.raises(MissingBranchError, match="Branch between nodes 1 and 4 does NOT exist"),
+            graph.tmp_remove_branches([(1, 2), (1, 4)]),
+        ):
+            pass
+
+        # And the graph should still be the same as the original afterwards.
+        assert graph == graph_with_2_routes
 
 
 def test_get_components(graph_with_2_routes: BaseGraphModel):
@@ -206,11 +283,6 @@ def test_get_components_with_tmp_removed_substation_nodes(graph_with_2_routes):
     assert set(components[0]) == {2, 3}
     assert set(components[1]) == {4, 5}
     assert set(components[2]) == {99}
-
-
-def test_from_arrays(basic_grid: Grid):
-    new_graph = basic_grid.graphs.complete_graph.__class__.from_arrays(basic_grid)
-    assert_array_equal(new_graph.external_ids, basic_grid.node.id)
 
 
 class TestPathMethods:
@@ -261,7 +333,7 @@ class TestPathMethods:
 
 class TestFindFundamentalCycles:
     @pytest.mark.parametrize(
-        "additional_edges, nodes_in_cycles",
+        ("additional_edges", "nodes_in_cycles"),
         [
             ([], set()),
             ([(2, 5)], {1, 2, 5}),
@@ -362,11 +434,11 @@ class TestGetConnected:
 class TestFindFirstConnected:
     def test_find_first_connected(self, graph_with_2_routes: BaseGraphModel):
         graph = graph_with_2_routes
-        assert 2 == graph.find_first_connected(1, candidate_node_ids=[2, 3, 4])
+        assert graph.find_first_connected(1, candidate_node_ids=[2, 3, 4]) == 2
 
     def test_find_first_connected_same_node(self, graph_with_2_routes: BaseGraphModel):
         graph = graph_with_2_routes
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="node_id cannot be in candidate_node_ids"):
             graph.find_first_connected(1, candidate_node_ids=[1, 3, 5])
 
     def test_find_first_connected_no_match(self, graph_with_2_routes: BaseGraphModel):
@@ -440,3 +512,49 @@ class TestEq:
         assert not graph.has_parallel_edges()
         graph.add_branch(2, 1)
         assert graph.has_parallel_edges()
+
+
+class TestBfsSearch:
+    @pytest.mark.parametrize(
+        ("source", "expected"),
+        [
+            pytest.param(1, {1: None, 5: 1, 2: 1, 4: 5, 3: 2}, id="source: 1"),
+            pytest.param({1}, {1: None, 5: 1, 2: 1, 4: 5, 3: 2}, id="source {1}"),
+            pytest.param([1, 2], {1: None, 5: 1, 2: 1, 4: 5, 3: 2}, id="source [1,2]"),
+            pytest.param([2, 1], {2: None, 3: 2, 1: 2, 5: 1, 4: 5}, id="source [2,1]"),
+            pytest.param({}, {}, id="empty source"),
+        ],
+    )
+    def test_bfs(self, graph_with_2_routes, source, expected):
+        assert graph_with_2_routes.bfs(source) == expected
+
+    def test_bfs_non_existing_node(self, graph_with_2_routes):
+        with pytest.raises(MissingNodeError, match="External node id '10' does NOT exist"):
+            assert graph_with_2_routes.bfs(10)
+
+    def test_second_source_in_different_component(self, graph_with_2_routes):
+        graph_with_2_routes.add_node(8)
+        assert graph_with_2_routes.bfs([1, 8]) == {1: None, 5: 1, 2: 1, 4: 5, 3: 2, 8: None}
+
+
+class TestDfsSearch:
+    @pytest.mark.parametrize(
+        ("source", "expected"),
+        [
+            pytest.param(1, {1: None, 5: 1, 4: 5, 2: 1, 3: 2}, id="source: 1"),
+            pytest.param({1}, {1: None, 5: 1, 4: 5, 2: 1, 3: 2}, id="source {1}"),
+            pytest.param([1, 2], {1: None, 5: 1, 4: 5, 2: 1, 3: 2}, id="source [1,2]"),
+            pytest.param([2, 1], {2: None, 3: 2, 1: 2, 5: 1, 4: 5}, id="source [2,1]"),
+            pytest.param({}, {}, id="empty source"),
+        ],
+    )
+    def test_dfs(self, graph_with_2_routes, source, expected):
+        assert graph_with_2_routes.dfs(source) == expected
+
+    def test_dfs_non_existing_node(self, graph_with_2_routes):
+        with pytest.raises(MissingNodeError, match="External node id '10' does NOT exist"):
+            assert graph_with_2_routes.dfs(10)
+
+    def test_second_source_in_different_component(self, graph_with_2_routes):
+        graph_with_2_routes.add_node(8)
+        assert graph_with_2_routes.dfs([1, 8]) == {1: None, 5: 1, 4: 5, 2: 1, 3: 2, 8: None}

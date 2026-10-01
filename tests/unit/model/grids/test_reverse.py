@@ -4,10 +4,9 @@
 import numpy as np
 import pytest
 
-from power_grid_model_ds import Grid
-from power_grid_model_ds import fancypy as fp
+from power_grid_model_ds import Grid, fancypy as fp
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
-from power_grid_model_ds._core.model.arrays.pgm_arrays import BranchArray, SourceArray
+from power_grid_model_ds.arrays import BranchArray, SourceArray
 
 
 class TestGetReversedBranches:
@@ -99,7 +98,7 @@ class TestSetBranchOrientations:
         assert grid.branches.to_node.tolist() == [2, 3]
 
     @pytest.mark.parametrize(
-        "txt_grid,expected_txt_grid",
+        ("txt_grid", "expected_txt_grid"),
         [
             pytest.param(["1 2", "3 2", "3 1"], ["1 2", "2 3", "1 3"], id="simple cycle"),
             pytest.param(
@@ -123,7 +122,7 @@ class TestSetBranchOrientations:
         assert fp.array_equal(grid.branches, expected_grid.branches)
 
     @pytest.mark.parametrize(
-        "txt_grid,expected_txt_grid",
+        ("txt_grid", "expected_txt_grid"),
         [
             pytest.param(["2 1", "3 2"], ["1 2", "2 3"], id="simple path"),
             pytest.param(["1 2", "3 2", "3 1"], ["1 2", "2 3", "1 3"], id="simple path with extra node"),
@@ -147,7 +146,7 @@ class TestSetBranchOrientations:
         assert grid == expected_grid
 
     @pytest.mark.parametrize(
-        "txt_grid,n_reversed",
+        ("txt_grid", "n_reversed"),
         [
             pytest.param(["1 2", "2 3", "2 3"], 0, id="no parallel lines"),
             pytest.param(["2 1", "2 3", "2 3"], 1, id="reversed non-parallel"),

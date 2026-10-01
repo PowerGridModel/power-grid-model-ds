@@ -24,7 +24,7 @@ extensions = [
     "sphinx.ext.napoleon",  # allow for google style docstrings
 ]
 templates_path = ["_templates"]
-exclude_patterns: list[str] = []
+exclude_patterns: list[str] = ["_build"]
 
 # -- Options for myst_nb (Jupyter notebook execution) ---
 # Fail the build if notebook cells have errors

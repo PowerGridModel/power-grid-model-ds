@@ -27,10 +27,10 @@ jobs:
         python-version: ["3.12", "3.13", "3.14"]
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         if: ${{ always() }}
         with:
           activate-environment: true
@@ -55,6 +55,12 @@ jobs:
       - name: format
         if: ${{ always() }}
         run: poe format --check
+      - name: clean notebooks
+        if: ${{ always() }}
+        run: poe clean_notebooks --check
+      - name: test notebooks
+        if: ${{ always() }}
+        run: poe test_notebooks
       - name: lock
         if: ${{ always() }}
         run: poe lock

@@ -15,7 +15,7 @@ GROUP_INPUT = dbc.Select(
         {"label": "line", "value": "line"},
         {"label": "link", "value": "link"},
         {"label": "transformer", "value": "transformer"},
-        {"label": "branch", "value": "branch"},
+        {"label": "branch", "value": "branches"},
     ],
     value="node",  # Default value
     style=_INPUT_STYLE,

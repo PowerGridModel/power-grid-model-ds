@@ -4,16 +4,57 @@
 
 """Base grid classes"""
 
-import warnings
 from dataclasses import dataclass, fields
 from pathlib import Path
-from typing import Literal, Self, Type, TypeVar
+from typing import Literal, Self, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
+from power_grid_model_ds._core.model.graphs.container import GraphContainer
+from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
+from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
+from power_grid_model_ds._core.model.grids._feeders import set_feeder_ids
+from power_grid_model_ds._core.model.grids._helpers import (
+    create_empty_grid,
+    create_grid_from_extended_grid,
+    merge_grids,
+)
+from power_grid_model_ds._core.model.grids._modify import (
+    add_array_to_grid,
+    delete_branch,
+    delete_branch3,
+    delete_node,
+    make_active,
+    make_inactive,
+)
+from power_grid_model_ds._core.model.grids._reverse import (
+    get_reversed_branches,
+    reverse_branches,
+    set_branch_orientations,
+)
+from power_grid_model_ds._core.model.grids._search import (
+    find_differences_between_grids,
+    get_branch_arrays,
+    get_branches,
+    get_downstream_nodes,
+    get_nearest_substation_node,
+    get_typed_branches,
+)
+from power_grid_model_ds._core.model.grids.serialization.json import (
+    deserialize_from_json,
+    deserialize_from_json_string,
+    serialize_to_json,
+    serialize_to_json_string,
+)
+from power_grid_model_ds._core.model.grids.serialization.string import (
+    deserialize_from_str,
+    deserialize_from_txt_file,
+    serialize_to_str,
+)
+from power_grid_model_ds.arrays import (
     AsymCurrentSensorArray,
     AsymGenArray,
     AsymLineArray,
@@ -38,45 +79,6 @@ from power_grid_model_ds._core.model.arrays.pgm_arrays import (
     TransformerArray,
     TransformerTapRegulatorArray,
     VoltageRegulatorArray,
-)
-from power_grid_model_ds._core.model.containers.base import FancyArrayContainer
-from power_grid_model_ds._core.model.graphs.container import GraphContainer
-from power_grid_model_ds._core.model.graphs.models import RustworkxGraphModel
-from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
-from power_grid_model_ds._core.model.grids._feeders import set_feeder_ids
-from power_grid_model_ds._core.model.grids._helpers import (
-    create_empty_grid,
-    create_grid_from_extended_grid,
-    merge_grids,
-)
-from power_grid_model_ds._core.model.grids._modify import (
-    add_array_to_grid,
-    add_branch,
-    add_node,
-    delete_branch,
-    delete_branch3,
-    delete_node,
-    make_active,
-    make_inactive,
-)
-from power_grid_model_ds._core.model.grids._reverse import (
-    get_reversed_branches,
-    reverse_branches,
-    set_branch_orientations,
-)
-from power_grid_model_ds._core.model.grids._search import (
-    get_branch_arrays,
-    get_branches,
-    get_downstream_nodes,
-    get_nearest_substation_node,
-    get_typed_branches,
-)
-from power_grid_model_ds._core.model.grids.serialization.json import deserialize_from_json, serialize_to_json
-from power_grid_model_ds._core.model.grids.serialization.pickle import load_grid_from_pickle, save_grid_to_pickle
-from power_grid_model_ds._core.model.grids.serialization.string import (
-    deserialize_from_str,
-    deserialize_from_txt_file,
-    serialize_to_str,
 )
 
 G = TypeVar("G", bound="Grid")
@@ -150,7 +152,7 @@ class Grid(FancyArrayContainer):
         return serialize_to_str(self)
 
     @classmethod
-    def empty(cls: Type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
+    def empty(cls: type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
         """Create an empty grid
 
         Args:
@@ -162,30 +164,7 @@ class Grid(FancyArrayContainer):
         return create_empty_grid(cls, graph_model=graph_model)
 
     @classmethod
-    # pylint: disable=arguments-differ
-    def from_cache(cls: Type[Self], cache_path: Path, load_graphs: bool = True) -> Self:
-        """Read from cache and build .graphs from arrays
-
-        WARNING: This function uses pickle.load() which can execute arbitrary code.
-        Only load pickle files from trusted sources. Never load pickle files from
-        untrusted or unauthenticated sources as this could lead to arbitrary code execution.
-
-        Args:
-            cache_path (Path): The path to the cache
-            load_graphs (bool, optional): Whether to load the graphs. Defaults to True.
-
-        Returns:
-            G: The grid loaded from cache
-        """
-        warnings.warn(
-            "Grid.from_cache() is deprecated and will be removed in a future version. Use deserialize() instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return load_grid_from_pickle(cls, cache_path=cache_path, load_graphs=load_graphs)
-
-    @classmethod
-    def from_txt(cls: Type[G], *args: str) -> G:
+    def from_txt(cls: type[G], *args: str) -> G:
         """Build a grid from a list of strings
 
         See the documentation for the expected format of the txt_lines
@@ -201,7 +180,7 @@ class Grid(FancyArrayContainer):
 
     @classmethod
     # pylint: disable=arguments-differ
-    def from_txt_file(cls: Type[G], txt_file_path: Path) -> G:
+    def from_txt_file(cls: type[G], txt_file_path: Path) -> G:
         """Load grid from txt file
 
         Args:
@@ -210,7 +189,7 @@ class Grid(FancyArrayContainer):
         return deserialize_from_txt_file(cls, txt_file_path)
 
     @classmethod
-    def from_extended(cls: Type[G], extended: G) -> G:
+    def from_extended(cls: type[G], extended: G) -> G:
         """Create a grid from an extended Grid object."""
         return create_grid_from_extended_grid(cls, extended=extended)
 
@@ -233,43 +212,38 @@ class Grid(FancyArrayContainer):
         """
         return add_array_to_grid(self, array=array, check_max_id=check_max_id)
 
-    def add_branch(self, branch: BranchArray) -> None:
-        """Add a branch to the grid
-
-        Args:
-            branch (BranchArray): The branch to add
-        """
-        return add_branch(self, branch)
-
     def delete_branch(self, branch: BranchArray) -> None:
-        """Remove a branch from the grid
+        """Remove a branch array from the grid
+
+        Supports removing multiple branches at once.
+        Also removes assets connected to the branch (e.g. sensors) and updates the graphs accordingly.
 
         Args:
-            branch (BranchArray): The branch to remove
+            branch (BranchArray): The branch array to remove
         """
         return delete_branch(self, branch=branch)
 
     def delete_branch3(self, branch: Branch3Array) -> None:
-        """Remove a branch3 from the grid
+        """Remove a branch3 array from the grid
+
+        Supports removing multiple branch3 records at once
+        Also removes assets connected to the branch3 (e.g. sensors) and updates the graphs accordingly.
+
 
         Args:
-            branch (Branch3Array): The branch3 to remove
+            branch (Branch3Array): The branch3 array to remove
         """
         return delete_branch3(self, branch=branch)
 
-    def add_node(self, node: NodeArray) -> None:
-        """Add a new node to the grid
-
-        Args:
-            node (NodeArray): The node to add
-        """
-        return add_node(self, node=node)
-
     def delete_node(self, node: NodeArray) -> None:
-        """Remove a node from the grid
+        """Remove a node array from the grid
+
+        Supports removing multiple nodes at once.
+        Also removes assets connected to the node (e.g., branches, sensors, loads, etc.)
+        and updates the graphs accordingly.
 
         Args:
-            node (NodeArray): The node to remove
+            node (NodeArray): node array to remove
         """
         return delete_node(self, node=node)
 
@@ -412,50 +386,92 @@ class Grid(FancyArrayContainer):
         """
         return get_downstream_nodes(self, node_id=node_id, inclusive=inclusive)
 
-    def cache(self, cache_dir: Path, cache_name: str, compress: bool = True):
-        """Cache Grid to a folder using pickle format.
+    @overload
+    def merge(self: Self, other_grid: G, mode: Literal["recalculate_ids"]) -> int: ...
 
-        Note: Consider using serialize() for better
-        interoperability and standardized format.
+    @overload
+    def merge(self: Self, other_grid: G, mode: Literal["keep_ids"]) -> None: ...
 
-        Args:
-            cache_dir (Path): The directory to save the cache to.
-            cache_name (str): The name of the cache.
-            compress (bool, optional): Whether to compress the cache. Defaults to True.
-        """
-        warnings.warn(
-            "grid.cache() is deprecated and will be removed in a future version. Use grid.serialize() instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return save_grid_to_pickle(self, cache_dir=cache_dir, cache_name=cache_name, compress=compress)
-
-    def merge(self, other_grid: Self, mode: Literal["recalculate_ids", "keep_ids"]) -> None:
+    def merge(self, other_grid, mode: Literal["keep_ids", "recalculate_ids"]):
         """Merge another grid into this grid.
 
         Args:
             other_grid (Grid): The grid to merge into this grid.
-            mode (str): The merge mode:
+            mode (Literal["keep_ids", "recalculate_ids"]): The merge mode:
                 - "recalculate_ids": ids in the arrays of other_grid are offset to avoid conflicts.
                 IMPORTANT: we currently only update any `id` column and all id references in the default PGM-DS grid.
-
                 - "keep_ids": Keep ids of other_grid. Raises an error if grids contain overlapping indices.
+        Returns:
+            int: The offset of the IDs in the merged grid.
+                If mode is "keep_ids", the offset will be 0.
+                If mode is "recalculate_ids", the offset will be the value that was added
+                to the other_grid ids to avoid conflicts.
         """
+        return merge_grids(self, other_grid, mode)
 
-        merge_grids(self, other_grid, mode)
+    @overload
+    def serialize(self, path: Path, mode: Literal["json"] = "json", **kwargs) -> Path: ...
 
-    def serialize(self, path: Path, **kwargs) -> Path:
+    @overload
+    def serialize(self, path: None = None, *, mode: Literal["json_string"], **kwargs) -> str: ...
+
+    def serialize(self, path=None, mode: Literal["json", "json_string"] = "json", **kwargs):
         """Serialize the grid.
 
         Args:
-            path: Destination file path to write JSON to.
-            **kwargs: Additional keyword arguments forwarded to ``json.dump``
+            path: Destination file path. Required when mode is ``"json"``, ignored otherwise.
+            mode: Serialization target. Use ``"json"`` (default) to write a JSON file, or ``"json_string"`` to
+                return a JSON string.
+            **kwargs: Additional keyword arguments forwarded to ``json.dump`` / ``json.dumps``.
         Returns:
-            Path: The path where the file was saved.
+            Path when mode is ``"json"``, str when mode is ``"json_string"``.
         """
-        return serialize_to_json(grid=self, path=path, strict=True, **kwargs)
+        match mode:
+            case "json_string":
+                return serialize_to_json_string(grid=self, **kwargs)
+            case "json":
+                if not isinstance(path, Path):
+                    raise TypeError("path must be a Path when mode='json'")
+                return serialize_to_json(grid=self, path=path, strict=True, **kwargs)
+            case _:
+                raise ValueError(f"Invalid mode '{mode}'. Expected 'json' or 'json_string'.")
 
     @classmethod
-    def deserialize(cls: Type[Self], path: Path) -> Self:
-        """Deserialize the grid."""
+    def from_json_string(cls: type[Self], json_string: str) -> Self:
+        """Deserialize the grid from a JSON string.
+
+        Args:
+            json_string: A JSON string as produced by ``serialize(mode="json_string")``.
+        Returns:
+            Self: The deserialized grid instance.
+        """
+        return deserialize_from_json_string(json_string=json_string, target_grid_class=cls)
+
+    @classmethod
+    def deserialize(cls: type[Self], path: Path) -> Self:
+        """Deserialize the grid from a JSON file.
+
+        Args:
+            path: Path to the JSON file.
+        Returns:
+            Self: The deserialized grid instance.
+        """
         return deserialize_from_json(path=path, target_grid_class=cls)
+
+    def rebuild_graphs(self) -> None:
+        """(Re)build the graphs in the grid."""
+        self.graphs = GraphContainer.from_grid(self)
+
+    def diff(self, other_grid: Self) -> None:
+        """Print the differences between two grids
+
+        Intended for debugging.
+
+        Note: Only the content of the arrays is compared. Differences in the ordering within arrays are ignored.
+
+        Args:
+            other_grid (Grid): The grid to compare with.
+        """
+        diffs = find_differences_between_grids(grid1=self, grid2=other_grid, print_diff=True)
+        if not diffs:
+            print("Grids are identical")

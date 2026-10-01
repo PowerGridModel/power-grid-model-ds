@@ -10,9 +10,9 @@ from tests.performance._helpers import do_performance_test
 def perf_test_add_nodes():
     setup_code = {
         "grid": "from power_grid_model_ds import Grid;"
-        + "from power_grid_model_ds._core.model.arrays.pgm_arrays import NodeArray;"
-        + "grid = Grid.empty();"
-        + "nodes = NodeArray.zeros({size});"
+        "from power_grid_model_ds._core.model.arrays.pgm_arrays import NodeArray;"
+        "grid = Grid.empty();"
+        "nodes = NodeArray.zeros({size});"
     }
 
     code_to_test = ["grid.append(nodes, check_max_id=False);"]
@@ -23,13 +23,13 @@ def perf_test_add_nodes():
 def perf_test_add_lines():
     setup_code = {
         "grid": "from power_grid_model_ds import Grid;"
-        + "from power_grid_model_ds._core.model.arrays.pgm_arrays import NodeArray, LineArray;"
-        + "grid = Grid.empty();"
-        + "nodes = NodeArray.zeros({size});"
-        + "grid.append(nodes);"
-        + "lines = LineArray.zeros({size});"
-        + "lines.from_node = nodes.id;"
-        + "lines.to_node = nodes.id;"
+        "from power_grid_model_ds._core.model.arrays.pgm_arrays import NodeArray, LineArray;"
+        "grid = Grid.empty();"
+        "nodes = NodeArray.zeros({size});"
+        "grid.append(nodes);"
+        "lines = LineArray.zeros({size});"
+        "lines.from_node = nodes.id;"
+        "lines.to_node = nodes.id;"
     }
 
     code_to_test = ["grid.append(lines, check_max_id=False);"]
@@ -40,13 +40,13 @@ def perf_test_add_lines():
 def perf_test_get_downstream_nodes_performance():
     setup_code = {
         "grid": "import numpy as np;"
-        + "from power_grid_model_ds.enums import NodeType;"
-        + "from power_grid_model_ds import Grid;"
-        + "from power_grid_model_ds.generators import RadialGridGenerator;"
-        + "from power_grid_model_ds.graph_models import RustworkxGraphModel;"
-        + "grid=RadialGridGenerator(nr_nodes={size}, grid_class=Grid, graph_model=RustworkxGraphModel).run();"
-        + "non_substation_node = grid.node.filter(node_type=NodeType.UNSPECIFIED).id;"
-        + "node_id = np.random.choice(non_substation_node)"
+        "from power_grid_model_ds.enums import NodeType;"
+        "from power_grid_model_ds import Grid;"
+        "from power_grid_model_ds.generators import RadialGridGenerator;"
+        "from power_grid_model_ds.graph_models import RustworkxGraphModel;"
+        "grid=RadialGridGenerator(nr_nodes={size}, grid_class=Grid, graph_model=RustworkxGraphModel).run();"
+        "non_substation_node = grid.node.filter(node_type=NodeType.UNSPECIFIED).id;"
+        "node_id = np.random.choice(non_substation_node)"
     }
 
     code_to_test = [

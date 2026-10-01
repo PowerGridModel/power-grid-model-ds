@@ -35,7 +35,7 @@ _RIGHT_COLUMN_STYLE = {
 }
 
 
-CONFIG_DIV = html.Div(CONFIG_ELEMENTS, style=_RIGHT_COLUMN_STYLE | {"justify-content": "space-between"})
+CONFIG_DIV = html.Div(CONFIG_ELEMENTS, style=_RIGHT_COLUMN_STYLE | {"justify-content": "flex-start"})
 SEARCH_DIV = html.Div(SEARCH_ELEMENTS, style=_RIGHT_COLUMN_STYLE | {"justify-content": "center"})
 LEGENDA_DIV = html.Div(LEGENDA_ELEMENTS, style=_RIGHT_COLUMN_STYLE | LEGENDA_STYLE)
 

@@ -3,11 +3,11 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import logging
-from typing import Generator
+from collections.abc import Generator
 
 import rustworkx as rx
 from rustworkx import NoEdgeBetweenNodes
-from rustworkx.visit import BFSVisitor, PruneSearch, StopSearch
+from rustworkx.visit import BFSVisitor, DFSVisitor, PruneSearch, StopSearch
 
 from power_grid_model_ds._core.model.graphs.errors import MissingBranchError, MissingNodeError, NoPathBetweenNodes
 from power_grid_model_ds._core.model.graphs.models._rustworkx_search import find_fundamental_cycles_rustworkx
@@ -57,7 +57,7 @@ class RustworkxGraphModel(BaseGraphModel):
 
     def _add_nodes(self, ext_node_ids: list[int]) -> None:
         graph_node_ids = self._graph.add_nodes_from(ext_node_ids)
-        for ext_node_id, graph_node_id in zip(ext_node_ids, graph_node_ids):
+        for ext_node_id, graph_node_id in zip(ext_node_ids, graph_node_ids, strict=True):
             self._external_to_internal[ext_node_id] = graph_node_id
             self._internal_to_external[graph_node_id] = ext_node_id
 
@@ -76,7 +76,10 @@ class RustworkxGraphModel(BaseGraphModel):
         self._graph.add_edge(from_node_id, to_node_id, None)
 
     def _add_branches(self, from_node_ids: list[int], to_node_ids: list[int]):
-        edge_list = [(from_node_id, to_node_id, None) for from_node_id, to_node_id in zip(from_node_ids, to_node_ids)]
+        edge_list = [
+            (from_node_id, to_node_id, None)
+            for from_node_id, to_node_id in zip(from_node_ids, to_node_ids, strict=True)
+        ]
         self._graph.add_edges_from(edge_list)
 
     def _delete_branch(self, from_node_id: int, to_node_id: int) -> None:
@@ -84,6 +87,16 @@ class RustworkxGraphModel(BaseGraphModel):
             self._graph.remove_edge(from_node_id, to_node_id)
         except NoEdgeBetweenNodes as error:
             raise MissingBranchError(f"No edge between (internal) nodes {from_node_id} and {to_node_id}") from error
+
+    def _dfs(self, source: list[int]) -> dict[int, int | None]:
+        visitor = _DfsNodeVisitor()
+        rx.dfs_search(self._graph, source, visitor)
+        return {node: visitor.parents.get(node) for node in visitor.nodes}
+
+    def _bfs(self, source: list[int]) -> dict[int, int | None]:
+        visitor = _BfsParentVisitor()
+        rx.bfs_search(self._graph, source, visitor)
+        return {node: visitor.parents.get(node) for node in visitor.nodes}
 
     def _get_shortest_path(self, source: int, target: int) -> tuple[list[int], int]:
         path_mapping = rx.dijkstra_shortest_paths(self._graph, source, target)
@@ -113,6 +126,9 @@ class RustworkxGraphModel(BaseGraphModel):
     def _in_branches(self, int_node_id: int) -> Generator[tuple[int, int], None, None]:
         return ((source, target) for source, target, _ in self._graph.in_edges(int_node_id))
 
+    def _adjacent(self, int_node_id: int) -> list[int]:
+        return list(self._graph.neighbors(int_node_id))
+
     def _find_first_connected(self, node_id: int, candidate_node_ids: list[int]) -> int:
         visitor = _NodeFinder(candidate_nodes=candidate_node_ids)
         rx.bfs_search(self._graph, [node_id], visitor)
@@ -130,6 +146,32 @@ class RustworkxGraphModel(BaseGraphModel):
 
     def _all_branches(self) -> Generator[tuple[int, int], None, None]:
         return ((source, target) for source, target in self._graph.edge_list())
+
+
+class _DfsNodeVisitor(DFSVisitor):
+    def __init__(self):
+        self.nodes = []
+        self.parents = {}
+
+    def discover_vertex(self, v, _):
+        self.nodes.append(v)
+
+    def tree_edge(self, e):
+        (u, v, _) = e
+        self.parents[v] = u
+
+
+class _BfsParentVisitor(BFSVisitor):
+    def __init__(self):
+        self.nodes = []
+        self.parents = {}
+
+    def discover_vertex(self, v):
+        self.nodes.append(v)
+
+    def tree_edge(self, e):
+        (u, v, _) = e
+        self.parents[v] = u
 
 
 class _NodeVisitor(BFSVisitor):

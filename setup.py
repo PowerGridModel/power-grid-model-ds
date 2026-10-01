@@ -12,9 +12,9 @@ def set_version(pkg_dir: Path):
     # if PYPI_VERSION does not exist, copy from VERSION
     pypi_file = pkg_dir / "PYPI_VERSION"
     if not pypi_file.exists():
-        with open(pkg_dir / "VERSION") as f:
+        with Path(pkg_dir / "VERSION").open() as f:
             version = f.read().strip().strip("\n")
-        with open(pypi_file, "w") as f:
+        with Path(pypi_file).open("w") as f:
             f.write(version)
 
 

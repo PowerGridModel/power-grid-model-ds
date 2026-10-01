@@ -8,8 +8,8 @@ import numpy as np
 
 from power_grid_model_ds._core import fancypy as fp
 from power_grid_model_ds._core.data_source.generator.arrays.base import BaseGenerator
-from power_grid_model_ds._core.model.arrays.pgm_arrays import LineArray, TransformerArray
 from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds.arrays import LineArray, TransformerArray
 
 AVERAGE_ROUTE_SIZE = 20
 
@@ -85,7 +85,7 @@ class LineGenerator(BaseGenerator):
         from_node = self.rng.choice(np.array(self.connected_nodes)[options_mask])
         capacity = 100 + self.rng.exponential(200, 1)
         new_line = self.grid.line.__class__.zeros(1)
-        new_line.id = 1 + max(max(self.line_array.id), self.grid.max_id)  # pylint: disable=nested-min-max
+        new_line.id = 1 + max(self.line_array.id.max(), self.grid.max_id)
         new_line.from_node = from_node
         new_line.to_node = to_node
         new_line.from_status = [1]

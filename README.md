@@ -23,7 +23,7 @@ SPDX-License-Identifier: MPL-2.0
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14825565.svg)](https://zenodo.org/record/14825565)
 
-[![Power Grid Model logo](https://github.com/PowerGridModel/.github/blob/main/artwork/svg/color.svg)](#)
+[![Power Grid Model logo](https://raw.githubusercontent.com/PowerGridModel/.github/main/artwork/svg/color.svg)](#)
 
 # Power Grid Model Data Science (DS)
 

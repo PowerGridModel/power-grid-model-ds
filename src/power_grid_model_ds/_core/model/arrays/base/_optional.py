@@ -5,7 +5,8 @@
 """Optional dependencies for the arrays module."""
 
 try:
-    # pylint: disable=unused-import
-    import pandas
+    import pandas as pd
 except ImportError:
-    pandas = None
+    pd = None  # pylint: disable=invalid-name
+
+__all__ = ["pd"]

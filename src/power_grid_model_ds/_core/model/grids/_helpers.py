@@ -4,30 +4,9 @@
 import copy
 import logging
 from dataclasses import fields
-from typing import TYPE_CHECKING, Literal, Type, TypeVar
+from typing import TYPE_CHECKING, Literal, overload
 
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
-    AsymCurrentSensorArray,
-    AsymGenArray,
-    AsymLoadArray,
-    AsymPowerSensorArray,
-    AsymVoltageSensorArray,
-    Branch3Array,
-    BranchArray,
-    FaultArray,
-    IdArray,
-    NodeArray,
-    ShuntArray,
-    SourceArray,
-    SymCurrentSensorArray,
-    SymGenArray,
-    SymLoadArray,
-    SymPowerSensorArray,
-    SymVoltageSensorArray,
-    TransformerTapRegulatorArray,
-    VoltageRegulatorArray,
-)
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.graphs.models.rustworkx import RustworkxGraphModel
@@ -36,12 +15,10 @@ if TYPE_CHECKING:
     from .base import Grid
 
 
-G = TypeVar("G", bound="Grid")
-
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
-def create_grid_from_extended_grid(grid_class: type[G], extended: G) -> G:
+def create_grid_from_extended_grid[G: Grid](grid_class: type[G], extended: G) -> G:
     """See Grid.from_extended()"""
     new_grid = grid_class.empty()
 
@@ -58,14 +35,22 @@ def create_grid_from_extended_grid(grid_class: type[G], extended: G) -> G:
     return new_grid
 
 
-def create_empty_grid(grid_class: Type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
+def create_empty_grid[G: Grid](grid_class: type[G], graph_model: type[BaseGraphModel] = RustworkxGraphModel) -> G:
     """See Grid.empty()"""
     empty_fields = grid_class._get_empty_fields()  # noqa # pylint: disable=protected-access
     empty_fields["graphs"] = GraphContainer.empty(graph_model=graph_model)
     return grid_class(**empty_fields)
 
 
-def merge_grids(grid: G, other_grid: G, mode: Literal["recalculate_ids", "keep_ids"]) -> None:
+@overload
+def merge_grids[G: Grid](grid: G, other_grid: G, mode: Literal["recalculate_ids"]) -> int: ...
+
+
+@overload
+def merge_grids[G: Grid](grid: G, other_grid: G, mode: Literal["keep_ids"]) -> None: ...
+
+
+def merge_grids(grid, other_grid, mode: Literal["keep_ids", "recalculate_ids"]):
     """See Grid.merge()"""
 
     if type(grid) is not type(other_grid):
@@ -76,10 +61,10 @@ def merge_grids(grid: G, other_grid: G, mode: Literal["recalculate_ids", "keep_i
     match mode:
         case "recalculate_ids":
             other_grid_all_arrays = copy.deepcopy(other_grid_all_arrays)
-            offset = grid.id_counter
+            offset = grid.max_id
             _increment_grid_ids_by_offset(other_grid_all_arrays, offset)
         case "keep_ids":
-            pass
+            offset = None
         case _:
             raise NotImplementedError(f"Merge mode {mode} is not implemented")
 
@@ -93,45 +78,15 @@ def merge_grids(grid: G, other_grid: G, mode: Literal["recalculate_ids", "keep_i
         except ValueError as e:
             raise ValueError("Asset ids are not unique after merging! Use mode='recalculate_ids' to avoid this.") from e
 
+    return offset
+
 
 def _increment_grid_ids_by_offset(all_arrays: list[FancyArray], offset: int) -> None:
     for array in all_arrays:
-        if isinstance(array, IdArray):
-            _update_id_column(array, "id", offset)
-
-        columns: list[str] = []
-        match array:
-            case (
-                SymPowerSensorArray()
-                | SymVoltageSensorArray()
-                | AsymVoltageSensorArray()
-                | SymCurrentSensorArray()
-                | AsymPowerSensorArray()
-                | AsymCurrentSensorArray()
-            ):
-                columns = ["measured_object"]
-            case NodeArray():
-                columns = ["feeder_node_id", "feeder_branch_id"]
-            case TransformerTapRegulatorArray() | VoltageRegulatorArray():
-                columns = ["regulated_object"]
-            case BranchArray():
-                columns = ["from_node", "to_node", "feeder_node_id", "feeder_branch_id"]
-            case Branch3Array():
-                columns = ["node_1", "node_2", "node_3"]
-            case SymGenArray() | SymLoadArray() | SourceArray() | AsymLoadArray() | AsymGenArray() | ShuntArray():
-                columns = ["node"]
-            case FaultArray():
-                columns = ["fault_object"]
-            case _:
-                raise NotImplementedError(
-                    f"The array of type {type(array)} is not implemented for appending. "
-                    f"Let us know if more general support is needed."
-                )
-
-        for column in columns:
+        for column in array.get_id_columns():
             _update_id_column(array, column, offset)
 
 
-def _update_id_column(array: IdArray, column: str, offset: int) -> None:
+def _update_id_column(array: FancyArray, column: str, offset: int) -> None:
     mask = array.is_empty(column)
     array[column][~mask] += offset

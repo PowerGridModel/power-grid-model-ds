@@ -27,7 +27,7 @@ class TestContainerEqual:
         grid2 = Grid.from_extended(grid1)
         assert not container_equal(grid1, grid2, fields_to_ignore=["graphs"])
 
-    def test_ignore_extras(self, basic_grid: Grid):
+    def test_ignore_extras(self):
         grid1 = build_basic_grid(ExtendedGrid.empty())
         grid2 = Grid.from_extended(grid1)
         assert container_equal(grid1, grid2, ignore_extras=True, fields_to_ignore=["graphs"])

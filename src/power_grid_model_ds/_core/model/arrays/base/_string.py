@@ -22,10 +22,7 @@ def convert_array_to_string(array: "FancyArray", rows: int = 10, column_width: i
         rows: the number of rows to show. If the array is larger than this, the middle rows are hidden.
     """
     start_rows, end_rows = _get_start_and_end_rows(array, rows)
-    if end_rows is not None:
-        rows_to_print = fp.concatenate(start_rows, end_rows)
-    else:
-        rows_to_print = start_rows
+    rows_to_print = fp.concatenate(start_rows, end_rows) if end_rows is not None else start_rows
 
     match column_width:
         case "auto":
@@ -50,7 +47,7 @@ def _rows_to_strings(rows: "FancyArray", column_widths: list[tuple[str, int]]) -
     rows_as_strings = []
     for row in rows.data:
         row_as_strings = []
-        for attr, (_, width) in zip(row.tolist(), column_widths):
+        for attr, (_, width) in zip(row.tolist(), column_widths, strict=True):
             row_as_strings.append(_center_and_truncate(str(attr), width))
         rows_as_strings.append("|".join(row_as_strings))
     return rows_as_strings

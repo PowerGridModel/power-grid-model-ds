@@ -11,7 +11,7 @@ from power_grid_model_ds._core.visualizer.styling_classification import StyleCla
 
 NODE_SCALE_HTML = [
     html.I(className="fas fa-circle", style={"color": CYTO_COLORS[StyleClass.NODE], "margin-right": "10px"}),
-    dcc.Input(
+    dbc.Input(
         id="node-scale-input",
         type="number",
         value=1,
@@ -26,7 +26,7 @@ EDGE_SCALE_HTML = [
     html.I(
         className="fas fa-arrow-right-long", style={"color": CYTO_COLORS[StyleClass.BRANCH], "margin-right": "10px"}
     ),
-    dcc.Input(
+    dbc.Input(
         id="edge-scale-input",
         type="number",
         value=1,
@@ -36,7 +36,10 @@ EDGE_SCALE_HTML = [
     ),
 ]
 
-_SCALING_DIV = html.Div(NODE_SCALE_HTML + EDGE_SCALE_HTML, style={"margin": "0 20px 0 10px"})
+_SCALING_DIV = html.Div(
+    NODE_SCALE_HTML + EDGE_SCALE_HTML,
+    style={"margin": "0 20px 0 10px", "display": "flex", "align-items": "center"},
+)
 
 
 class LayoutOptions(Enum):
@@ -48,15 +51,23 @@ class LayoutOptions(Enum):
     GRID = "grid"
     COSE = "cose"
     BREADTHFIRST = "breadthfirst"
+    PRESET = "preset"  # x,y-coordinates
+
+    @classmethod
+    def dropdown_options(cls):
+        """Dropdown options (without PRESET)"""
+        return [option for option in cls if option is not cls.PRESET]
 
 
+_LAYOUT_DROPDOWN_OPTIONS = [
+    {"label": option.value, "value": option.value} for option in LayoutOptions.dropdown_options()
+]
 _LAYOUT_DROPDOWN = html.Div(
     dcc.Dropdown(
         id="dropdown-update-layout",
         placeholder="Select layout",
-        value=LayoutOptions.BREADTHFIRST.value,
         clearable=False,
-        options=[{"label": option.value, "value": option.value} for option in LayoutOptions],  # type: ignore[arg-type]
+        options=_LAYOUT_DROPDOWN_OPTIONS,  # type: ignore[arg-type]
         style={"width": "200px"},
     ),
     style={"margin": "0 20px 0 10px", "color": "black"},
@@ -68,7 +79,15 @@ _ARROWS_CHECKBOX = dbc.Checkbox(
     label="Show arrows",
     value=True,
     label_style={"color": "white"},
-    style={"margin-top": "10px"},
+    style={"margin-top": "10px", "margin-left": "50px"},
 )
 
-CONFIG_ELEMENTS = [_LAYOUT_DROPDOWN, _ARROWS_CHECKBOX, _SCALING_DIV]
+_SHOW_APPLIANCES_CHECKBOX = dbc.Checkbox(
+    id="show-appliances",
+    label="Show appliances",
+    value=False,
+    label_style={"color": "white"},
+    style={"margin-top": "10px", "margin-left": "10px", "margin-right": "50px"},
+)
+
+CONFIG_ELEMENTS = [_LAYOUT_DROPDOWN, _ARROWS_CHECKBOX, _SHOW_APPLIANCES_CHECKBOX, _SCALING_DIV]

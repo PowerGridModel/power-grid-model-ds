@@ -1,11 +1,15 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
+import re
+from copy import deepcopy
+
 import pytest
 
 from power_grid_model_ds import Grid
-from power_grid_model_ds._core.model.arrays.pgm_arrays import SourceArray
-from tests.fixtures.grid_classes import ExtendedGrid
+from power_grid_model_ds.arrays import SourceArray
+from tests.fixtures.arrays import DefaultedCustomNodeArray
+from tests.fixtures.grid_classes import ExtendedGrid, UserDefinedArray
 
 
 @pytest.fixture
@@ -25,7 +29,9 @@ class TestMergeGrids:
         grid1 = Grid.from_txt("S1 2", "S1 3 link", "3 4 transformer")
         grid2 = Grid.from_txt("S11 12", "S11 13 link", "13 14 transformer")
 
-        grid1.merge(grid2, mode="keep_ids")
+        offset = grid1.merge(grid2, mode="keep_ids")
+
+        assert offset is None
 
         assert grid1.node.id.tolist() == [1, 2, 3, 4, 11, 12, 13, 14], (
             "Merged node ids should be equal to those of grid1 and grid2 combined"
@@ -37,7 +43,8 @@ class TestMergeGrids:
         grid1.append(source)
         grid2.append(source)
 
-        grid1.merge(grid2, mode="recalculate_ids")
+        offset = grid1.merge(grid2, mode="recalculate_ids")
+        assert offset == 501
         grid1.check_ids()
 
         # The node ids of the second grid should be offset by 501:
@@ -54,12 +61,15 @@ class TestMergeGrids:
 
     def test_merge_grid_with_some_identical_lines(self, grid1: Grid, grid2: Grid):
         # Now both grids have 14 as highest node id, so both will have branch ids 15, 16 and 17:
-
-        grid1.merge(grid2, mode="recalculate_ids")
+        offset = grid1.merge(grid2, mode="recalculate_ids")
+        assert offset == 17
         grid1.check_ids()
 
     def test_merge_grid_with_some_identical_lines_failing(self, grid1: Grid, grid2: Grid):
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ValueError,
+            match=re.escape("Asset ids are not unique after merging! Use mode='recalculate_ids' to avoid this."),
+        ):
             grid1.merge(grid2, mode="keep_ids")
 
     def test_merge_grid_into_a_grid_of_a_different_class(self, grid1: Grid):
@@ -77,4 +87,21 @@ class TestMergeGrids:
 
     def test_merging_with_incorrect_mode(self, grid1: Grid, grid2: Grid):
         with pytest.raises(NotImplementedError):
-            grid1.merge(grid2, mode="invalid_mode")  # type: ignore[arg-type]
+            grid1.merge(grid2, mode="invalid_mode")  # type: ignore[call-overload]
+
+    def test_merge_recalculate_extended_grid(self):
+        grid1 = ExtendedGrid.empty()
+
+        grid1.append(DefaultedCustomNodeArray.empty(3))  # added to create offset
+
+        grid1.append(UserDefinedArray.empty(3))
+        grid1.user_defined.branch_id = 10
+        grid1.user_defined.node_id = 20
+        grid2 = deepcopy(grid1)
+
+        offset = grid1.merge(grid2, mode="recalculate_ids")
+        assert grid1.user_defined.size == 6
+
+        assert offset == 3
+        assert grid1.user_defined.branch_id.tolist() == [10, 10, 10, 10 + offset, 10 + offset, 10 + offset]
+        assert grid1.user_defined.node_id.tolist() == [20, 20, 20, 20 + offset, 20 + offset, 20 + offset]

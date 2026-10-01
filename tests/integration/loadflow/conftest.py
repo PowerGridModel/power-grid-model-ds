@@ -6,7 +6,7 @@ import pytest
 from power_grid_model import BranchSide, LoadGenType, WindingType
 
 from power_grid_model_ds import Grid
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+from power_grid_model_ds.arrays import (
     LineArray,
     LinkArray,
     NodeArray,
@@ -116,7 +116,7 @@ def loadflow_grid_with_transformer(grid: Grid) -> Grid:
 
 
 @pytest.fixture
-def grid_with_three_winding_transformer(grid: Grid) -> Grid:
+def grid_with_three_winding_transformer(grid: Grid) -> Grid:  # noqa: PLR0915
     nodes = NodeArray.zeros(3)
     nodes.id = [0, 1, 2]
     nodes.u_rated = [150_000, 20_000, 10_000]
@@ -210,7 +210,7 @@ def grid_with_link(grid: Grid) -> Grid:
 
 
 @pytest.fixture
-def grid_with_tap_regulator(grid: Grid) -> Grid:
+def grid_with_tap_regulator(grid: Grid) -> Grid:  # noqa: PLR0915
     """
     Network:
                         (tap_side)  (control side)

@@ -38,7 +38,7 @@ def test_str_long_column_name():
 
     splits = array_str.replace("\n", "|").split("|")
     split_lengths = (len(split) for split in splits)
-    assert all((length == 15 for length in split_lengths))
+    assert all(length == 15 for length in split_lengths)
     assert "this_is_a_ver.." in array_str
 
 
@@ -50,7 +50,7 @@ def test_str_long_values():
 
     splits = array_str.replace("\n", "|").split("|")
     split_lengths = (len(split) for split in splits)
-    assert all((length == 15 for length in split_lengths))
+    assert all(length == 15 for length in split_lengths)
     assert "|1122334455667..|" in array_str
     assert "|this_is_a_ver.." in array_str
 

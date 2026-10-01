@@ -1,20 +1,23 @@
 # SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
-
+import warnings
 from abc import ABC, abstractmethod
+from collections import Counter
+from collections.abc import Container, Generator, Sequence
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Counter, Generator
+from itertools import combinations
+from typing import TYPE_CHECKING
 
 from numpy._typing import NDArray
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import Branch3Array, BranchArray, NodeArray
 from power_grid_model_ds._core.model.graphs.errors import (
     GraphError,
     MissingBranchError,
     MissingNodeError,
     NoPathBetweenNodes,
 )
+from power_grid_model_ds.arrays import Branch3Array, BranchArray, NodeArray
 
 if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import Grid
@@ -24,8 +27,16 @@ if TYPE_CHECKING:
 class BaseGraphModel(ABC):
     """Base class for graph models"""
 
+    __hash__ = None
+
     def __init__(self, active_only=False) -> None:
         self.active_only = active_only
+
+        # Three winding transformers are represented as a cycle in our graph ((1,2), (2,3) and (1,3))
+        # This makes certain graph algorithms invalid.
+        # With self._three_winding_nodes we keep track of the three winding transformers in the graph.
+        # This is used to correct the graph state before we perform these graph algorithms.
+        self._three_winding_nodes: set[tuple[int, int, int]] = set()
 
     def __repr__(self) -> str:
         return (
@@ -91,6 +102,16 @@ class BaseGraphModel(ABC):
         return (
             (self.internal_to_external(source), self.internal_to_external(target)) for source, target in internal_edges
         )
+
+    def adjacent(self, node_id: int, excluding: Container[int] | None = None) -> list[int]:
+        """Return all nodes connected to the given node.
+
+        Args:
+            excluding(Container[int]|None): exclude certain node ids frm the output of this function. Defaults to None.
+        """
+        internal_adjacent_nodes = self._adjacent(self.external_to_internal(node_id))
+        external_nodes = self._internals_to_externals(internal_adjacent_nodes)
+        return [node for node in external_nodes if node not in excluding] if excluding else external_nodes
 
     def add_node(self, ext_node_id: int, raise_on_fail: bool = True) -> None:
         """Add a node to the graph."""
@@ -185,6 +206,7 @@ class BaseGraphModel(ABC):
         """Add all branch3s in the branch3 array to the graph."""
         for branch3 in branch3_array:
             self.add_branch_array(branch3.as_branches())
+            self._three_winding_nodes.add(self._get_branch3_nodes(branch3))
 
     def delete_branch_array(self, branch_array: BranchArray, raise_on_fail: bool = True) -> None:
         """Delete all branches in branch_array from the graph."""
@@ -196,6 +218,7 @@ class BaseGraphModel(ABC):
         """Delete all branch3s in the branch3 array from the graph."""
         for branch3 in branch3_array:
             self.delete_branch_array(branch3.as_branches(), raise_on_fail=raise_on_fail)
+            self._three_winding_nodes.discard(self._get_branch3_nodes(branch3))
 
     @contextmanager
     def tmp_remove_nodes(self, nodes: list[int]) -> Generator:
@@ -208,16 +231,43 @@ class BaseGraphModel(ABC):
         considering certain nodes.
         """
         edge_list = []
-        for node in nodes:
-            edge_list += list(self.in_branches(node))
-            self.delete_node(node)
+        node_list = []
 
-        yield
+        try:
+            for node in nodes:
+                edge_list += list(self.in_branches(node))
 
-        for node in nodes:
-            self.add_node(int(node))  # convert to int to avoid type issues when input is e.g. a numpy array
-        for source, target in edge_list:
-            self.add_branch(source, target)
+                self.delete_node(node)
+                node_list.append(node)
+
+            yield
+        finally:
+            for node in node_list:
+                self.add_node(int(node))  # convert to int to avoid type issues when input is e.g. a numpy array
+            for source, target in edge_list:
+                self.add_branch(source, target)
+
+    @contextmanager
+    def tmp_remove_branches(self, branches: list[tuple[int, int]]) -> Generator:
+        """Context manager that temporarily removes branches from the graph.
+
+        Example:
+            >>> with graph.tmp_remove_branches([(1, 2), (2, 3)]):
+            >>>    assert not graph.has_branch(1, 2)
+            >>>    assert not graph.has_branch(2, 3)
+            >>> assert graph.has_branch(1, 2)
+            >>> assert graph.has_branch(2, 3)
+        """
+        removed_branches = []
+        try:
+            for from_node, to_node in branches:
+                self.delete_branch(from_node, to_node)
+                removed_branches.append((from_node, to_node))
+
+            yield
+        finally:
+            for from_node, to_node in removed_branches:
+                self.add_branch(from_node, to_node)
 
     def get_shortest_path(self, ext_start_node_id: int, ext_end_node_id: int) -> tuple[list[int], int]:
         """Calculate the shortest path between two nodes
@@ -242,7 +292,7 @@ class BaseGraphModel(ABC):
             internal_path, distance = self._get_shortest_path(
                 source=self.external_to_internal(ext_start_node_id), target=self.external_to_internal(ext_end_node_id)
             )
-            return self._internals_to_externals(internal_path), distance
+            return self._to_external_path(internal_path), distance
         except NoPathBetweenNodes as e:
             raise NoPathBetweenNodes(f"No path between nodes {ext_start_node_id} and {ext_end_node_id}") from e
 
@@ -253,12 +303,16 @@ class BaseGraphModel(ABC):
         if ext_start_node_id == ext_end_node_id:
             return []
 
-        internal_paths = self._get_all_paths(
-            source=self.external_to_internal(ext_start_node_id),
-            target=self.external_to_internal(ext_end_node_id),
-        )
+        with self._without_three_winding_cycles() as correct_for_three_winding:
+            internal_paths = self._get_all_paths(
+                source=self.external_to_internal(ext_start_node_id),
+                target=self.external_to_internal(ext_end_node_id),
+            )
 
-        return [self._internals_to_externals(path) for path in internal_paths]
+        return [
+            self._to_external_path(internal_path=path, correct_for_three_winding=correct_for_three_winding)
+            for path in internal_paths
+        ]
 
     def get_components(self) -> list[list[int]]:
         """Returns all separate components of the graph as lists
@@ -338,32 +392,127 @@ class BaseGraphModel(ABC):
 
         return self.get_connected(node_id, [upstream_node], inclusive)
 
+    def dfs(self, source: int | Sequence[int]) -> dict[int, int | None]:
+        """Depth first search from the source(s).
+
+        Args:
+            source(int | Sequence[int]): the source(s) the start the search from.
+
+        Returns:
+            dict[int, int | None]: a dict with node:parent structure.
+                The keys of the dict represent the nodes in the order that they are found.
+                The parent is None for a source that has not been found via another source yet.
+        """
+        internal_sources = self._externals_to_internals([source] if isinstance(source, int) else source)
+        internal_result = self._dfs(internal_sources)
+        return {
+            self.internal_to_external(node): None if parent is None else self.internal_to_external(parent)
+            for node, parent in internal_result.items()
+        }
+
+    def bfs(self, source: int | Sequence[int]) -> dict[int, int | None]:
+        """Breadth first search from the source(s).
+
+        Args:
+            source(int | Sequence[int]): the source(s) the start the breadth first search from.
+
+        Returns:
+            dict[int, int | None]: a dict with node:parent structure.
+                The keys of the dict represent the nodes in the order that they are found.
+                The parent is None for a source that has not been found via another source yet.
+        """
+        internal_sources = self._externals_to_internals([source] if isinstance(source, int) else source)
+        internal_parents = self._bfs(internal_sources)
+        return {
+            self.internal_to_external(node): None if parent is None else self.internal_to_external(parent)
+            for node, parent in internal_parents.items()
+        }
+
     def find_fundamental_cycles(self) -> list[list[int]]:
         """Find all fundamental cycles in the graph.
         Returns:
             list[list[int]]: list of cycles, each cycle is a list of (external) node ids
         """
-        internal_cycles = self._find_fundamental_cycles()
-        return [self._internals_to_externals(nodes) for nodes in internal_cycles]
+        with self._without_three_winding_cycles() as correct_for_three_winding:
+            internal_cycles = self._find_fundamental_cycles()
+
+        return [
+            self._to_external_path(internal_path=cycle, correct_for_three_winding=correct_for_three_winding)
+            for cycle in internal_cycles
+        ]
 
     @classmethod
     def from_arrays(cls, arrays: "Grid", active_only=False) -> "BaseGraphModel":
-        """Build from arrays"""
+        """Build from arrays. DEPRECATED: Use .from_grid instead."""
+        warnings.warn(
+            f"{cls.__name__}.from_arrays is deprecated and will be removed in a future release. "
+            f"Use {cls.__name__}.from_grid instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return cls.from_grid(arrays, active_only=active_only)
+
+    @classmethod
+    def from_grid(cls, grid: "Grid", active_only=False) -> "BaseGraphModel":
+        """Build from grid."""
         new_graph = cls(active_only=active_only)
-
-        new_graph.add_node_array(node_array=arrays.node, raise_on_fail=False)
-        new_graph.add_branch_array(arrays.branches)
-        new_graph.add_branch3_array(arrays.three_winding_transformer)
-
+        new_graph.add_node_array(node_array=grid.node, raise_on_fail=False)
+        new_graph.add_branch_array(grid.branches)
+        new_graph.add_branch3_array(grid.three_winding_transformer)
         return new_graph
 
     def _internals_to_externals(self, internal_nodes: list[int]) -> list[int]:
-        """Convert a list of internal nodes to external nodes"""
+        """Convert a list of internal node ids to external node ids"""
         return [self.internal_to_external(node_id) for node_id in internal_nodes]
 
-    def _externals_to_internals(self, external_nodes: list[int] | NDArray) -> list[int]:
+    def _externals_to_internals(self, external_nodes: Sequence[int] | NDArray) -> list[int]:
         """Convert a list of external nodes to internal nodes"""
         return [self.external_to_internal(node_id) for node_id in external_nodes]
+
+    @contextmanager
+    def _without_three_winding_cycles(self) -> Generator[bool, None, None]:
+        """Context manager that temporarily removes cycles introduced by three winding transformers in the graph.
+
+        Three winding transformers are represented as a cycle. To make graph algorithms valid,
+        we temporarily remove one branch per three winding transformer to break the cycle.
+        The graph still has the same components after removing these branches.
+        We just force the path through the three winding transformers.
+
+        NOTE: we only remove branches for a three winding transformer if all three branches are active.
+
+        Yields True if branches were removed (and correction for three-winding transformers is needed).
+        """
+        branches_to_remove = [
+            (group[1], group[2])
+            for group in self._three_winding_nodes
+            if all(self.has_branch(from_node, to_node) for from_node, to_node in combinations(group, 2))
+        ]
+        with self.tmp_remove_branches(branches_to_remove):
+            yield bool(branches_to_remove)
+
+    def _to_external_path(self, internal_path: list[int], correct_for_three_winding: bool = False) -> list[int]:
+        """Convert a path of internal node ids to external node ids.
+
+        If correct_for_three_winding is True, also removes detours through three winding transformers.
+        This should be used together with _without_three_winding_cycles.
+
+        If a path contains all nodes of a three winding transformer after each other, we can remove the middle node.
+        Since if we hadn't removed the third branch of the three winding transformer, we would have gone directly.
+
+        NOTE: if a node has an inactive status, we can never have a situation where
+        we go through 3 nodes of the transformer directly after each other.
+        So this also works for inactive three winding transformers.
+        """
+        path = self._internals_to_externals(internal_path)
+        if not correct_for_three_winding:
+            return path
+
+        replacements = {frozenset(group) for group in self._three_winding_nodes}
+        return [
+            node
+            for index, node in enumerate(path)
+            if (index in (0, len(path) - 1) or frozenset([path[index - 1], node, path[index + 1]]) not in replacements)
+        ]
 
     def _branch_is_relevant(self, branch: BranchArray) -> bool:
         """Check if a branch is relevant"""
@@ -371,8 +520,17 @@ class BaseGraphModel(ABC):
             return branch.is_active.item()
         return True
 
+    def _get_branch3_nodes(self, branch3_array: Branch3Array) -> tuple[int, int, int]:
+        """Get the node ids of the branch3 array as a tuple"""
+        if len(branch3_array) != 1:
+            raise ValueError("branch3_array must be of length one element")
+        return (branch3_array.node_1.item(), branch3_array.node_2.item(), branch3_array.node_3.item())
+
     @abstractmethod
     def _in_branches(self, int_node_id: int) -> Generator[tuple[int, int], None, None]: ...
+
+    @abstractmethod
+    def _adjacent(self, int_node_id: int) -> list[int]: ...
 
     @abstractmethod
     def _get_connected(self, node_id: int, nodes_to_ignore: list[int], inclusive: bool = False) -> list[int]: ...
@@ -418,6 +576,12 @@ class BaseGraphModel(ABC):
     def _get_components(self) -> list[list[int]]: ...
 
     @abstractmethod
+    def _dfs(self, source: list[int]) -> dict[int, int | None]: ...
+
+    @abstractmethod
+    def _bfs(self, source: list[int]) -> dict[int, int | None]: ...
+
+    @abstractmethod
     def _find_fundamental_cycles(self) -> list[list[int]]: ...
 
     @abstractmethod
@@ -432,7 +596,7 @@ class BaseGraphModel(ABC):
             set(self.external_ids) == set(other.external_ids)
             and self.active_only == other.active_only
             and (
-                Counter((frozenset(branch) for branch in self.all_branches))
-                == Counter((frozenset(branch) for branch in other.all_branches))
+                Counter(frozenset(branch) for branch in self.all_branches)
+                == Counter(frozenset(branch) for branch in other.all_branches)
             )
         )

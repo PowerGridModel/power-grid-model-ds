@@ -3,57 +3,30 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import logging
-import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
 
-from power_grid_model_ds._core.model.arrays.pgm_arrays import (
+from power_grid_model_ds._core.model.arrays.base.array import FancyArray
+from power_grid_model_ds.arrays import (
     ApplianceArray,
     Branch3Array,
     BranchArray,
     NodeArray,
 )
 
-from ..arrays.base.array import FancyArray
-
 if TYPE_CHECKING:
     from .base import Grid
 
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 def add_array_to_grid(grid: "Grid", array: FancyArray, check_max_id: bool = True) -> None:
     """See Grid.append()"""
     grid._append(array, check_max_id=check_max_id)  # noqa # pylint: disable=protected-access
     # pylint: disable=protected-access
-    grid.graphs._append(array)
-
-
-def add_node(grid: "Grid", node: NodeArray) -> None:
-    """See Grid.add_node()"""
-    warnings.warn(
-        "Grid.add_node is deprecated and will be removed in a future release. Use Grid.append instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    grid._append(array=node)  # noqa # pylint: disable=protected-access
-    grid.graphs.add_node_array(node_array=node)
-    logging.debug(f"added node {node.id}")
-
-
-def add_branch(grid: "Grid", branch: BranchArray) -> None:
-    """See Grid.add_branch()"""
-    warnings.warn(
-        "Grid.add_branch is deprecated and will be removed in a future release. Use Grid.append instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    grid._append(array=branch)  # noqa # pylint: disable=protected-access
-    grid.graphs.add_branch_array(branch_array=branch)
-
-    logging.debug(f"added branch {branch.id} from {branch.from_node} to {branch.to_node}")
+    grid.graphs._append(array)  # noqa: SLF001
 
 
 def make_active(grid: "Grid", branch: BranchArray) -> None:
@@ -61,12 +34,16 @@ def make_active(grid: "Grid", branch: BranchArray) -> None:
     array_field = grid.find_array_field(branch.__class__)
     array_attr = getattr(grid, array_field.name)
     branch_mask = array_attr.id == branch.id
+    already_active = bool(array_attr[branch_mask].is_active)
     array_attr.from_status[branch_mask] = 1
     array_attr.to_status[branch_mask] = 1
     setattr(grid, array_field.name, array_attr)
 
-    grid.graphs.make_active(branch=branch)
-    logging.debug(f"activated branch {branch.id}")
+    if not already_active:
+        grid.graphs.make_active(branch=branch)
+    else:
+        _logger.warning("Branch %s is already active", branch.id.tolist())
+    _logger.debug("activated branch %s", branch.id.tolist())
 
 
 def make_inactive(grid, branch: BranchArray, at_to_side: bool = True) -> None:
@@ -74,12 +51,16 @@ def make_inactive(grid, branch: BranchArray, at_to_side: bool = True) -> None:
     array_field = grid.find_array_field(branch.__class__)
     array_attr = getattr(grid, array_field.name)
     branch_mask = array_attr.id == branch.id
+    already_inactive = bool(~array_attr[branch_mask].is_active)
     status_side = "to_status" if at_to_side else "from_status"
     array_attr[status_side][branch_mask] = 0
     setattr(grid, array_field.name, array_attr)
 
-    grid.graphs.make_inactive(branch=branch)
-    logging.debug(f"deactivated branch {branch.id}")
+    if not already_inactive:
+        grid.graphs.make_inactive(branch=branch)
+    else:
+        _logger.warning("Branch %s is already inactive", branch.id.tolist())
+    _logger.debug("deactivated branch %s", branch.id.tolist())
 
 
 def delete_node(grid: "Grid", node: NodeArray) -> None:
@@ -115,31 +96,34 @@ def delete_node(grid: "Grid", node: NodeArray) -> None:
 
     for branch_array in grid.branch_arrays:
         matching_branches = branch_array.filter(from_node=node.id, to_node=node.id, mode_="OR")
-        for branch in matching_branches:
-            grid.delete_branch(branch)
+        grid.delete_branch(matching_branches)
 
     matching_three_winding_transformers = grid.three_winding_transformer.filter(
         node_1=node.id, node_2=node.id, node_3=node.id, mode_="OR"
     )
-    for three_winding_transformer in matching_three_winding_transformers:
-        grid.delete_branch3(three_winding_transformer)
+    grid.delete_branch3(matching_three_winding_transformers)
 
     grid.graphs.delete_node(node=node)
-    logging.debug(f"deleted rail {node.id}")
+    grid.rebuild_ids()
+    _logger.debug("deleted node %s", node.id.tolist())
 
 
 def delete_branch(grid: "Grid", branch: BranchArray) -> None:
     """See Grid.delete_branch()"""
     _delete_branch_array(branch=branch, grid=grid)
     grid.graphs.delete_branch(branch=branch)
-    logging.debug(f"""deleted branch {branch.id.item()} from {branch.from_node.item()} to {branch.to_node.item()}""")
+    grid.rebuild_ids()
+    _logger.debug(
+        "deleted branch %s from %s to %s", branch.id.tolist(), branch.from_node.tolist(), branch.to_node.tolist()
+    )
 
 
 def delete_branch3(grid: "Grid", branch: Branch3Array) -> None:
     """See Grid.delete_branch3()"""
     _delete_branch_array(branch=branch, grid=grid)
     grid.graphs.delete_branch3(branch=branch)
-    logging.debug(f"deleted branch3 {branch.id}")
+    grid.rebuild_ids()
+    _logger.debug("deleted branch3 %s", branch.id.tolist())
 
 
 def _delete_branch_array(branch: BranchArray | Branch3Array, grid: "Grid"):
@@ -165,4 +149,5 @@ def delete_appliance(grid: "Grid", appliance: ApplianceArray) -> None:
     grid.sym_power_sensor = grid.sym_power_sensor.exclude(measured_object=appliance.id)
     grid.asym_power_sensor = grid.asym_power_sensor.exclude(measured_object=appliance.id)
     grid.voltage_regulator = grid.voltage_regulator.exclude(regulated_object=appliance.id)
-    logging.debug(f"deleted appliance {appliance.id}")
+    grid.rebuild_ids()
+    _logger.debug("deleted appliance %s", appliance.id.tolist())
