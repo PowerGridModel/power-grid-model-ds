@@ -38,7 +38,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         if: ${{ always() }}
         with:
           activate-environment: true
@@ -49,13 +49,15 @@ jobs:
         run: uv sync --frozen
 
       - name: Set PyPI version
-        uses: PowerGridModel/pgm-version-bump@00b541a2eeb64ac1537e3a531b50a3175313822d # v0.1.4
+        uses: PowerGridModel/pgm-version-bump@1ce256bfac45fbe070832712db500b3060c01c27 # v0.1.9
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Save version
         id: version
-        run: echo "version=$(cat PYPI_VERSION)" >> $GITHUB_OUTPUT
+        run: |
+          cp VERSION PYPI_VERSION
+          echo "version=$(cat PYPI_VERSION)" >> $GITHUB_OUTPUT
 
       - name: Build
         run: |
@@ -81,7 +83,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         if: ${{ always() }}
         with:
           activate-environment: true
@@ -140,7 +142,7 @@ jobs:
           permission-contents: write
 
       - name: Release
-        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           files: |
             ./dist/*
@@ -170,7 +172,7 @@ jobs:
         run: ls -la assets-to-publish
 
       - name: Upload assets to PyPI
-        uses: pypa/gh-action-pypi-publish@ba38be9e461d3875417946c167d0b5f3d385a247 # v1.14.1
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
         with:
           # To test, use the TestPyPI:
           # repository-url: https://test.pypi.org/legacy/

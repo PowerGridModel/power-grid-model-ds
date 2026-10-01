@@ -11,6 +11,8 @@ import math
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from power_grid_model import DatasetType
+
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 
 if TYPE_CHECKING:
@@ -19,6 +21,10 @@ if TYPE_CHECKING:
 
 
 _logger = logging.getLogger(__name__)
+
+_SERIALIZATION_VERSION = "1.0"
+_GRID_SERIALIZATION_TYPE = "grid"
+_SUPPORTED_SERIALIZATION_TYPES = {_GRID_SERIALIZATION_TYPE, DatasetType.input.value}
 
 
 def serialize_to_json[G: Grid](grid: G, path: Path, strict: bool = True, **kwargs) -> Path:
@@ -48,12 +54,12 @@ def serialize_to_dict[G: Grid](grid: G, strict: bool = True, **kwargs) -> dict:
         strict: Whether to raise an error if the grid object is not serializable.
         **kwargs: Keyword arguments forwarded to json.dumps for serializability checks (e.g. cls).
     Returns:
-        dict: A PGM-compatible dict representation of the grid.
+        dict: A PGM-DS dict representation of the grid.
     """
     serialized_data = {}
 
     for field in dataclasses.fields(grid):
-        if field.name in ["graphs", "_ids"]:
+        if field.name in ["graphs", "_id_tracker"]:
             continue
 
         field_value = getattr(grid, field.name)
@@ -65,7 +71,11 @@ def serialize_to_dict[G: Grid](grid: G, strict: bool = True, **kwargs) -> dict:
         if _is_serializable(field_value, strict, **kwargs):
             serialized_data[field.name] = field_value
 
-    return {"data": serialized_data}
+    return {
+        "version": _SERIALIZATION_VERSION,
+        "type": _GRID_SERIALIZATION_TYPE,
+        "data": serialized_data,
+    }
 
 
 def deserialize_from_json[G: Grid](path: Path, target_grid_class: type[G]) -> G:
@@ -93,6 +103,8 @@ def deserialize_from_dict[G: Grid](data: dict, target_grid_class: type[G]) -> G:
     Returns:
         Grid: The deserialized Grid object of the specified target class
     """
+    _validate_serialization_metadata(data)
+
     grid = target_grid_class.empty()
     _restore_grid_values(grid, data["data"])
     grid.rebuild_ids()
@@ -142,6 +154,17 @@ def _restore_grid_values[G: Grid](grid: G, json_data: dict) -> None:
 
         # load other values
         setattr(grid, attr_name, attr_class(attr_values))
+
+
+def _validate_serialization_metadata(data: dict) -> None:
+    """Validate serialization metadata when present, while accepting legacy files."""
+    version = data.get("version")
+    if "version" in data and version != _SERIALIZATION_VERSION:
+        raise ValueError(f"Unsupported serialization version: {version!r}")
+
+    serialization_type = data.get("type")
+    if "type" in data and serialization_type not in _SUPPORTED_SERIALIZATION_TYPES:
+        raise ValueError(f"Unsupported serialization type: {serialization_type!r}")
 
 
 def _serialize_array(array: FancyArray) -> list[dict[str, Any]]:
