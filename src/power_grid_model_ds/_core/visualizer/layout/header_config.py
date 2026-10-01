@@ -6,39 +6,34 @@ from enum import Enum
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
-from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
-from power_grid_model_ds._core.visualizer.styling_classification import StyleClass
-
 NODE_SCALE_HTML = [
-    html.I(className="fas fa-circle", style={"color": CYTO_COLORS[StyleClass.NODE], "margin-right": "10px"}),
+    html.I(className="fas fa-circle pgm-control-icon pgm-node-color"),
     dbc.Input(
         id="node-scale-input",
         type="number",
         value=1,
         min=0.1,
         step=0.1,
-        style={"width": "75px"},
+        className="pgm-scale-input",
     ),
-    html.Span(style={"margin-right": "10px"}),
+    html.Span(className="pgm-scale-spacer"),
 ]
 
 EDGE_SCALE_HTML = [
-    html.I(
-        className="fas fa-arrow-right-long", style={"color": CYTO_COLORS[StyleClass.BRANCH], "margin-right": "10px"}
-    ),
+    html.I(className="fas fa-arrow-right-long pgm-control-icon pgm-branch-color"),
     dbc.Input(
         id="edge-scale-input",
         type="number",
         value=1,
         min=0.1,
         step=0.1,
-        style={"width": "75px"},
+        className="pgm-scale-input",
     ),
 ]
 
 _SCALING_DIV = html.Div(
     NODE_SCALE_HTML + EDGE_SCALE_HTML,
-    style={"margin": "0 20px 0 10px", "display": "flex", "align-items": "center"},
+    className="pgm-scaling-controls",
 )
 
 
@@ -68,9 +63,9 @@ _LAYOUT_DROPDOWN = html.Div(
         placeholder="Select layout",
         clearable=False,
         options=_LAYOUT_DROPDOWN_OPTIONS,  # type: ignore[arg-type]
-        style={"width": "200px"},
+        className="pgm-layout-dropdown",
     ),
-    style={"margin": "0 20px 0 10px", "color": "black"},
+    className="pgm-layout-dropdown-container",
 )
 
 
@@ -78,16 +73,14 @@ _ARROWS_CHECKBOX = dbc.Checkbox(
     id="show-arrows",
     label="Show arrows",
     value=True,
-    label_style={"color": "white"},
-    style={"margin-top": "10px", "margin-left": "50px"},
+    className="pgm-config-checkbox pgm-arrows-checkbox",
 )
 
 _SHOW_APPLIANCES_CHECKBOX = dbc.Checkbox(
     id="show-appliances",
     label="Show appliances",
     value=False,
-    label_style={"color": "white"},
-    style={"margin-top": "10px", "margin-left": "10px", "margin-right": "50px"},
+    className="pgm-config-checkbox pgm-appliances-checkbox",
 )
 
 CONFIG_ELEMENTS = [_LAYOUT_DROPDOWN, _ARROWS_CHECKBOX, _SHOW_APPLIANCES_CHECKBOX, _SCALING_DIV]

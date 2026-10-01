@@ -49,7 +49,7 @@ def display_selected_elements(node_data: list[dict[str, Any]], edge_data: list[d
         # (e.g. appliance and node selected together, branch3 edges selected together)
         unique_ids = list(set(ids))
         data = getattr(grid, comp_type).filter(id=unique_ids)
-        tables.append(html.H5(comp_type, style={"marginTop": "15px", "textAlign": "left"}))
+        tables.append(html.H5(comp_type, className="pgm-selection-table-heading"))
         tables.append(_to_data_table(array_data=data, group=comp_type))
 
     return tables
@@ -83,7 +83,7 @@ def _to_data_table(array_data: IdArray, group):
 
 @callback(
     Output("selection-graph", "figure"),
-    Output("selection-graph", "style"),
+    Output("selection-graph", "className"),
     Input({"type": "selection-table", "group": ALL}, "cellClicked"),  # Capture change
     prevent_initial_call=True,
 )
@@ -97,7 +97,7 @@ def cell_selection_graph(_):
         and triggered_ctx["value"] is not None
         and callback_context.triggered_id is not None
     ):
-        return go.Figure(), {"display": "none"}
+        return go.Figure(), "pgm-selection-graph-hidden"
 
     group = callback_context.triggered_id["group"]
     pgm_id = np.int32(triggered_ctx["value"]["rowId"])
@@ -106,7 +106,7 @@ def cell_selection_graph(_):
     x_array, y_array = _get_y_data_for_cell_selection(ComponentType(group), int(pgm_id), column_id)
 
     if x_array is None or y_array is None:
-        return go.Figure(), {"display": "none"}
+        return go.Figure(), "pgm-selection-graph-hidden"
 
     fig = go.Figure()
     if y_array.ndim == 1:
@@ -139,7 +139,7 @@ def cell_selection_graph(_):
         showlegend=False,
     )
 
-    return fig, {"display": "block"}
+    return fig, "pgm-selection-graph-visible"
 
 
 def _get_y_data_for_cell_selection(

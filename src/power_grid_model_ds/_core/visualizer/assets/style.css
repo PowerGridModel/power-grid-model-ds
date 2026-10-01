@@ -1,0 +1,176 @@
+/* SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org> */
+/* SPDX-License-Identifier: MPL-2.0 */
+
+.pgm-header {
+    background-color: #343a40;
+    color: white;
+    padding: 1rem 0;
+    margin: 0;
+    height: 90px;
+    width: 100%;
+}
+
+.pgm-header-left {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid white;
+}
+
+.pgm-header-right {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.pgm-header-config {
+    justify-content: flex-start;
+}
+
+.pgm-header-search {
+    justify-content: center;
+}
+
+.pgm-header-legend {
+    justify-content: center;
+    margin: 0 10px;
+    text-shadow: 0 0 5px #000;
+}
+
+.pgm-header-divider {
+    border-color: white;
+    margin: 0;
+}
+
+.pgm-legend-icon {
+    font-size: 2.5em;
+    margin: 0 10px;
+}
+
+.pgm-control-icon {
+    margin-right: 10px;
+}
+
+.pgm-node-color,
+.pgm-branch-color {
+    color: #facc37;
+}
+
+.pgm-substation-color {
+    color: purple;
+}
+
+.pgm-link-color {
+    color: #008000;
+}
+
+.pgm-transformer-color {
+    color: #4290f5;
+}
+
+.pgm-generic-branch-color {
+    color: #dddddd;
+}
+
+.pgm-asym-line-color {
+    color: #2de2ca;
+}
+
+.pgm-open-branch-color {
+    color: #c9c9c9;
+}
+
+.pgm-scale-input {
+    width: 75px;
+}
+
+.pgm-scale-spacer {
+    margin-right: 10px;
+}
+
+.pgm-scaling-controls {
+    display: flex;
+    align-items: center;
+    margin: 0 20px 0 10px;
+}
+
+.pgm-layout-dropdown-container {
+    margin: 0 20px 0 10px;
+    color: black;
+}
+
+.pgm-layout-dropdown {
+    width: 200px;
+}
+
+.pgm-config-checkbox {
+    margin-top: 10px;
+}
+
+.pgm-config-checkbox label {
+    color: white;
+}
+
+.pgm-arrows-checkbox {
+    margin-left: 50px;
+}
+
+.pgm-appliances-checkbox {
+    margin-left: 10px;
+    margin-right: 50px;
+}
+
+.pgm-search-label {
+    color: white;
+    margin-right: 8px;
+    font-weight: bold;
+    text-shadow: 0 0 5px #000;
+}
+
+.pgm-search-input {
+    display: inline-block;
+    width: 150px;
+}
+
+.pgm-search-operator {
+    display: inline-block;
+    width: 60px;
+    margin: 0 8px;
+}
+
+.pgm-selection-header {
+    margin: 20px 0 10px;
+}
+
+.pgm-selection-output {
+    overflow-x: scroll;
+    text-align: center;
+    margin: 10px;
+}
+
+.pgm-selection-table-heading {
+    margin-top: 15px;
+    text-align: left;
+}
+
+.pgm-selection-graph-container {
+    margin: 10px;
+}
+
+.pgm-selection-graph-hidden {
+    display: none;
+}
+
+.pgm-selection-graph-visible {
+    display: block;
+}
+
+.pgm-cytoscape-container {
+    height: 80vh;
+}
+
+.pgm-cytoscape {
+    width: 100%;
+    height: 100%;
+    background-color: #555555;
+}

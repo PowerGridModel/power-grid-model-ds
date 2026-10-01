@@ -5,8 +5,6 @@
 import dash_bootstrap_components as dbc
 from dash import html
 
-SPAN_TEXT_STYLE = {"color": "white", "margin-right": "8px", "font-weight": "bold", "text-shadow": "0 0 5px #000"}
-_INPUT_STYLE = {"width": "150px", "display": "inline-block"}
 # Create your form components
 GROUP_INPUT = dbc.Select(
     id="search-form-group-input",
@@ -18,17 +16,19 @@ GROUP_INPUT = dbc.Select(
         {"label": "branch", "value": "branches"},
     ],
     value="node",  # Default value
-    style=_INPUT_STYLE,
+    className="pgm-search-input",
 )
 
 COLUMN_INPUT = dbc.Select(
     id="search-form-column-input",
     options=[{"label": "id", "value": "id"}],
     value="id",  # Default value
-    style=_INPUT_STYLE,
+    className="pgm-search-input",
 )
 
-VALUE_INPUT = dbc.Input(id="search-form-value-input", placeholder="Enter value", type="text", style=_INPUT_STYLE)
+VALUE_INPUT = dbc.Input(
+    id="search-form-value-input", placeholder="Enter value", type="text", className="pgm-search-input"
+)
 
 OPERATOR_INPUT = dbc.Select(
     id="search-form-operator-input",
@@ -39,7 +39,7 @@ OPERATOR_INPUT = dbc.Select(
         {"label": "!=", "value": "!="},
     ],
     value="=",  # Default value
-    style={"width": "60px", "display": "inline-block", "margin": "0 8px"},
+    className="pgm-search-operator",
 )
 
 
@@ -47,9 +47,9 @@ OPERATOR_INPUT = dbc.Select(
 SEARCH_ELEMENTS = [
     html.Div(
         [
-            html.Span("Search ", style=SPAN_TEXT_STYLE),
+            html.Span("Search ", className="pgm-search-label"),
             GROUP_INPUT,
-            html.Span(" with ", style=SPAN_TEXT_STYLE),
+            html.Span(" with ", className="pgm-search-label"),
             COLUMN_INPUT,
             OPERATOR_INPUT,
             VALUE_INPUT,

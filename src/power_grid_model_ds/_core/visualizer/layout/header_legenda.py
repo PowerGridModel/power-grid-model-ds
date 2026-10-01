@@ -5,43 +5,25 @@
 import dash_bootstrap_components as dbc
 from dash import html
 
-from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
-from power_grid_model_ds._core.visualizer.styling_classification import StyleClass
-
 _BOOTSTRAP_ARROW_ICON_CLASS = "fas fa-arrow-right-long"
-_MARGIN = "0 10px"
-
-LEGENDA_STYLE = {"margin": _MARGIN, "text-shadow": "0 0 5px #000", "justify-content": "center"}
-
-_FONT_SIZE = "2.5em"
-
-NODE_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.NODE]}
-_SUBSTATION_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.SUBSTATION_NODE]}
-_LINE_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.BRANCH]}
-_LINK_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.LINK]}
-_TRANSFORMER_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.TRANSFORMER]}
-_GENERIC_BRANCH_ICON_STYLE = {
-    "font-size": _FONT_SIZE,
-    "margin": _MARGIN,
-    "color": CYTO_COLORS[StyleClass.GENERIC_BRANCH],
-}
-_ASYM_LINE_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.ASYM_LINE]}
-_OPEN_BRANCH_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.OPEN_BRANCH]}
 LEGENDA_ELEMENTS = [
-    html.I(className="fas fa-circle", id="node-icon", style=NODE_ICON_STYLE),
+    html.I(className="fas fa-circle pgm-legend-icon pgm-node-color", id="node-icon"),
     dbc.Tooltip("Node", target="node-icon", placement="bottom"),
-    html.I(className="fas fa-diamond", id="substation-icon", style=_SUBSTATION_ICON_STYLE),
+    html.I(className="fas fa-diamond pgm-legend-icon pgm-substation-color", id="substation-icon"),
     dbc.Tooltip("Substation", target="substation-icon", placement="bottom"),
-    html.I(className=_BOOTSTRAP_ARROW_ICON_CLASS, id="line-icon", style=_LINE_ICON_STYLE),
+    html.I(className=f"{_BOOTSTRAP_ARROW_ICON_CLASS} pgm-legend-icon pgm-node-color", id="line-icon"),
     dbc.Tooltip("Line", target="line-icon", placement="bottom"),
-    html.I(className=_BOOTSTRAP_ARROW_ICON_CLASS, id="transformer-icon", style=_TRANSFORMER_ICON_STYLE),
+    html.I(className=f"{_BOOTSTRAP_ARROW_ICON_CLASS} pgm-legend-icon pgm-transformer-color", id="transformer-icon"),
     dbc.Tooltip("Transformer", target="transformer-icon", placement="bottom"),
-    html.I(className=_BOOTSTRAP_ARROW_ICON_CLASS, id="link-icon", style=_LINK_ICON_STYLE),
+    html.I(className=f"{_BOOTSTRAP_ARROW_ICON_CLASS} pgm-legend-icon pgm-link-color", id="link-icon"),
     dbc.Tooltip("Link", target="link-icon", placement="bottom"),
-    html.I(className=_BOOTSTRAP_ARROW_ICON_CLASS, id="generic-branch-icon", style=_GENERIC_BRANCH_ICON_STYLE),
+    html.I(
+        className=f"{_BOOTSTRAP_ARROW_ICON_CLASS} pgm-legend-icon pgm-generic-branch-color",
+        id="generic-branch-icon",
+    ),
     dbc.Tooltip("Generic Branch", target="generic-branch-icon", placement="bottom"),
-    html.I(className=_BOOTSTRAP_ARROW_ICON_CLASS, id="asym-line-icon", style=_ASYM_LINE_ICON_STYLE),
+    html.I(className=f"{_BOOTSTRAP_ARROW_ICON_CLASS} pgm-legend-icon pgm-asym-line-color", id="asym-line-icon"),
     dbc.Tooltip("Asymmetrical Line", target="asym-line-icon", placement="bottom"),
-    html.I(className="fas fa-ellipsis", id="open-branch-icon", style=_OPEN_BRANCH_ICON_STYLE),
+    html.I(className="fas fa-ellipsis pgm-legend-icon pgm-open-branch-color", id="open-branch-icon"),
     dbc.Tooltip("Open Branch", target="open-branch-icon", placement="bottom"),
 ]

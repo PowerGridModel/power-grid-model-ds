@@ -30,6 +30,8 @@ settings.json
 *.html
 *.js
 *.css
+!src/power_grid_model_ds/_core/visualizer/assets/
+!src/power_grid_model_ds/_core/visualizer/assets/*.css
 
 # MacOS
 .DS_Store

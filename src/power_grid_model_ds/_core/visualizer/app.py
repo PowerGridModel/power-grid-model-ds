@@ -58,7 +58,7 @@ def get_app_layout(grid: Grid) -> html.Div:
             dcc.Store(id="source-available-store", data=grid.source.size != 0),
             dcc.Store(id="show-appliances-store", data=False, storage_type="session"),
             HEADER_HTML,
-            html.Hr(style={"border-color": "white", "margin": "0"}),
+            html.Hr(className="pgm-header-divider"),
             cytoscape_html,
             SELECTION_OUTPUT_HTML,
             SELECTION_GRAPH_HTML,

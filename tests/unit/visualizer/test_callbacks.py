@@ -155,16 +155,16 @@ def test_cell_selection_graph_invalid_trigger():
     ctx.triggered = [{"prop_id": "some-other.input", "value": None}]
     ctx.triggered_id = None
     with patch(_CTX_PATH, ctx):
-        fig, style = cell_selection_graph(None)
-    assert style == {"display": "none"}
+        fig, class_name = cell_selection_graph(None)
+    assert class_name == "pgm-selection-graph-hidden"
     assert fig == go.Figure()
 
 
 def test_cell_selection_graph_no_data(mock_cell_clicked_ctx):
     server_state.set_app_state(Grid.empty())
     with patch(_CTX_PATH, mock_cell_clicked_ctx):
-        fig, style = cell_selection_graph(None)
-    assert style == {"display": "none"}
+        fig, class_name = cell_selection_graph(None)
+    assert class_name == "pgm-selection-graph-hidden"
     assert fig == go.Figure()
 
 
@@ -173,8 +173,8 @@ def test_cell_selection_graph_with_output_data(mock_cell_clicked_ctx):
     output_data = {ComponentType.node: np.array([[(1, 400.0)], [(9, 99.0)], [(1, 410.0)]], dtype=dtype)}
     server_state.set_app_state(Grid.empty(), output_data=output_data)
     with patch(_CTX_PATH, mock_cell_clicked_ctx):
-        fig, style = cell_selection_graph(None)
-    assert style == {"display": "block"}
+        fig, class_name = cell_selection_graph(None)
+    assert class_name == "pgm-selection-graph-visible"
     assert len(fig.data) == 1
     np.testing.assert_allclose(fig.data[0].y, np.array([400.0, 410.0]))
     np.testing.assert_allclose(fig.data[0].x, np.array([0, 2]))
@@ -189,8 +189,8 @@ def test_cell_selection_graph_three_phase_output_data(mock_cell_clicked_ctx):
     }
     server_state.set_app_state(Grid.empty(), output_data=output_data)
     with patch(_CTX_PATH, mock_cell_clicked_ctx):
-        fig, style = cell_selection_graph(None)
-    assert style == {"display": "block"}
+        fig, class_name = cell_selection_graph(None)
+    assert class_name == "pgm-selection-graph-visible"
     assert len(fig.data) == 3  # one trace per phase
     np.testing.assert_allclose(fig.data[0].y, np.array([400.0, 410.0]))
     np.testing.assert_allclose(fig.data[1].y, np.array([401.0, 411.0]))

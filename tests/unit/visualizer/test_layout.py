@@ -12,6 +12,8 @@ def test_get_cytoscape_html():
     elements = [{"data": {"id": "1", "group": "node"}}]
     cyto_html = get_cytoscape_html(LayoutOptions.PRESET, elements, [])
     assert cyto_html.children.elements == elements
+    assert cyto_html.className == "pgm-cytoscape-container"
+    assert cyto_html.children.className == "pgm-cytoscape"
 
 
 def test_get_app_layout():
