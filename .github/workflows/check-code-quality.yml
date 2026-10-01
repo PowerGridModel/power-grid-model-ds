@@ -46,7 +46,7 @@ jobs:
         run: uv sync --frozen --dev
 
       - name: Update dependencies
-        if: ${{ inputs.update_dependencies != '' && always() }}
+        if: ${{ inputs.${{ inputs.update_dependencies }} != '' && always() }}
         run: |
           export UV_RESOLUTION=${{ inputs.update_dependencies }}
           uv sync --upgrade --dev
