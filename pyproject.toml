@@ -41,7 +41,7 @@ visualizer = [
   "dash>=3.0.0",
   "dash-bootstrap-components>=2.0.0",
   "dash-cytoscape>=1.0.2",
-  "dash-ag-grid",
+  "dash-ag-grid >= 35.0.0",
 ]
 pandas = ["pandas>=2.2.1"]
 
@@ -52,7 +52,7 @@ dev = [
   "pylint>=4.0",
   "pytest>=9.0",
   "coverage>=7.0",
-  "ruff>=0.16.0",
+  "ruff>=0.16.9",
   "mypy>=2.0",
   "pre-commit>=4.6.2",
   "poethepoet>=0.48.0",
