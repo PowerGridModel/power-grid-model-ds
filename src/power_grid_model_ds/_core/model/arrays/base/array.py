@@ -7,7 +7,7 @@ from collections import namedtuple
 from collections.abc import Iterable
 from copy import copy
 from functools import lru_cache
-from typing import Any, ClassVar, Literal, TypeVar, overload
+from typing import Any, ClassVar, Literal, TypeVar, get_args, get_origin, overload
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -34,6 +34,36 @@ _MAX_DATA_SIZE: int = 3
 Column = NDArray
 
 Self = TypeVar("Self", bound="FancyArray")
+
+
+def _get_dtype(type_def):
+    """Extract the scalar dtype and optional shape from a NumPy array annotation.
+
+    NumPy versions before 2.5 represent an array annotation as
+    ``(tuple[Any, ...], np.dtype[dtype])``. Starting with NumPy 2.5, the
+    representation is ``(dtype,)``. ``NDArray3`` adds a ``Literal[3]`` around
+    either representation.
+    """
+    type_args = get_args(type_def)
+    shape = None
+
+    # NDArray3 wraps the NumPy array annotation in Literal[3] on all supported versions.
+    if len(type_args) == 2 and get_origin(type_args[1]) is Literal:  # noqa: PLR2004
+        type_def = type_args[0]
+        shape = get_args(type_args[1])[0]
+
+    type_args = get_args(type_def)
+    # NumPy 2.5 and later expose the scalar dtype directly.
+    if len(type_args) == 1:
+        dtype = type_args[0]
+    # NumPy versions before 2.5 expose the shape and np.dtype separately.
+    # This path is covered by the CI NumPy <2.5 job, but not by local coverage.
+    elif len(type_args) == 2 and get_origin(type_args[1]) is np.dtype:  # pragma: no cover  # noqa: PLR2004
+        dtype = get_args(type_args[1])[0]
+    else:
+        raise ValueError(f"dtype {type_def} not understood or supported")
+
+    return (dtype, shape) if shape is not None else dtype
 
 
 class FancyArray(ABC):  # noqa: B024
@@ -103,19 +133,9 @@ class FancyArray(ABC):  # noqa: B024
         annotations = get_public_annotations(cls)
         str_lengths = combine_attribute_from_parent_classes(cls, "_str_lengths", dict)
         dtypes = {}
-        for name, dtype in annotations.items():
-            if len(dtype.__args__) > 1:
-                # regular numpy dtype (i.e. without shape)
-                dtypes[name] = dtype.__args__[1].__args__[0]
-            elif hasattr(dtype, "__metadata__"):
-                # metadata annotation contains shape
-                # define dtype using a (type, shape) tuple
-                # see: #1 in https://numpy.org/doc/stable/user/basics.rec.html#structured-datatype-creation
-                dtype_type = dtype.__args__[0].__args__[1].__args__[0]
-                dtype_shape = dtype.__metadata__[0].__args__
-                dtypes[name] = (dtype_type, dtype_shape)
-            else:
-                raise ValueError(f"dtype {dtype} not understood or supported")
+
+        for name, type_def in annotations.items():
+            dtypes[name] = _get_dtype(type_def)
 
         if not dtypes:
             raise ArrayDefinitionError("Array has no defined Columns")

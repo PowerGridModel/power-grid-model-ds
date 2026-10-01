@@ -9,6 +9,7 @@ import pytest
 
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
+from power_grid_model_ds._core.model.containers._id_tracker import IdTracker
 from power_grid_model_ds._core.model.enums.nodes import NodeType
 from power_grid_model_ds._core.model.grids._search import find_differences_between_grids
 from power_grid_model_ds.arrays import LineArray, LinkArray, NodeArray, TransformerArray
@@ -169,6 +170,10 @@ class TestGridDiff:
         assert "line" in diff_dict
         assert not diff_dict["line"]["grid1"].size
         assert diff_dict["line"]["grid2"].size
+        assert diff_dict["_id_tracker"] == {
+            "grid1": IdTracker({1, 2, 3, 10, 11}),
+            "grid2": IdTracker({1, 2, 3, 4, 10, 11, 12}),
+        }
 
     def test_different_grid_types(self):
         grid1 = Grid.from_txt("1 2 10", "2 4 11")
@@ -181,7 +186,7 @@ class TestGridDiff:
         grid2 = Grid.from_txt("1 2 10", "2 4 11")
         grid1.diff(grid2)
         captured = capsys.readouterr()
-        assert "There are differences in 'grid._ids'" in captured.out
+        assert "There are differences in 'grid._id_tracker'" in captured.out
         assert "There are differences in 'grid.graphs'" in captured.out
         assert "There are differences in 'grid.node'" in captured.out
         assert "There are differences in 'grid.line'" in captured.out
