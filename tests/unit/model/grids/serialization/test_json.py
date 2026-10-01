@@ -144,7 +144,7 @@ class TestSerializationRoundtrips:
         input_data = PowerGridModelInterface(grid).create_input_from_grid()
 
         path = tmp_path / "input.json"
-        json_serialize_to_file(path, input_data)
+        json_serialize_to_file(path, input_data, dataset_type=DatasetType.input)
 
         loaded_grid = Grid.deserialize(path)
 
