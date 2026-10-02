@@ -46,7 +46,7 @@ jobs:
         run: uv sync --frozen --dev
 
       - name: Update dependencies
-        if: ${{ inputs.update_resolution != '' }} && always() }}
+        if: ${{ inputs.update_resolution != '' && always() }}
         run: |
           # Set as environment variable, so that any subsequent uv commands uses this resolution as well.
           export UV_RESOLUTION=${{ inputs.update_resolution }}
