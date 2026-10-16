@@ -9,6 +9,7 @@ from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExis
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds.arrays import NodeArray, ThreeWindingTransformerArray
+from tests.fixtures.graph_models import CustomTestGraphModel
 
 # pylint: disable=missing-function-docstring
 
@@ -20,6 +21,26 @@ def test_rebuild_graphs(basic_grid: Grid):
     assert basic_grid.graphs != orig_graphs
     basic_grid.rebuild_graphs()
     assert orig_graphs == basic_grid.graphs
+
+
+def test_empty_with_custom_graph_model():
+    graphs = GraphContainer.empty(graph_model=CustomTestGraphModel)
+
+    assert isinstance(graphs.active_graph, CustomTestGraphModel)
+    assert graphs.active_graph.active_only
+    assert isinstance(graphs.complete_graph, CustomTestGraphModel)
+    assert not graphs.complete_graph.active_only
+
+
+def test_from_grid_preserves_custom_graph_model(basic_grid: Grid):
+    basic_grid.graphs = GraphContainer.empty(graph_model=CustomTestGraphModel)
+
+    basic_grid.rebuild_graphs()
+
+    assert isinstance(basic_grid.graphs.active_graph, CustomTestGraphModel)
+    assert isinstance(basic_grid.graphs.complete_graph, CustomTestGraphModel)
+    assert basic_grid.graphs.active_graph.active_only
+    assert not basic_grid.graphs.complete_graph.active_only
 
 
 @pytest.fixture
