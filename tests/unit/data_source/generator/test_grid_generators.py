@@ -43,6 +43,7 @@ def test_graph_generate_random_grid_with_different_graph_engines(graph: BaseGrap
     grid_generator = RadialGridGenerator(grid_class=Grid, graph_model=graph.__class__)
     grid = grid_generator.run(seed=0)
     assert isinstance(grid.graphs.active_graph, graph.__class__)
+    assert isinstance(grid.graphs.complete_graph, graph.__class__)
 
 
 def test_generate_random_nodes(grid: Grid):

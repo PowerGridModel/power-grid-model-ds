@@ -135,7 +135,8 @@ class GraphContainer:
         """Build from grid"""
         cls._validate_branches(arrays=grid)
 
-        new_container = cls.empty()
+        graph_model_type = type(grid.graphs.active_graph)
+        new_container = cls.empty(graph_model=graph_model_type)
         for graph_field in new_container.graph_attributes:
             graph: BaseGraphModel = getattr(new_container, graph_field.name)
             new_graph = graph.from_grid(grid, active_only=graph.active_only)
