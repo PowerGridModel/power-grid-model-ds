@@ -17,7 +17,7 @@ from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.arrays.base.errors import RecordDoesNotExist
 from power_grid_model_ds._core.model.constants import EMPTY_ID
 from power_grid_model_ds._core.model.containers._id_tracker import IdTracker
-from power_grid_model_ds._core.model.containers.helpers import container_equal
+from power_grid_model_ds._core.model.containers.helpers import container_equal, recalculate_ids
 
 _logger = logging.getLogger(__name__)
 
@@ -67,6 +67,16 @@ class FancyArrayContainer:
             new_ids |= array_ids
 
         self._id_tracker = IdTracker(new_ids)
+
+    def recalculate_ids(self) -> dict[int, int]:
+        """
+        Recalculates the IDs in a FancyArrayContainer in place to be sequential starting from 1.
+        EMPTY_ID values are ignored and not included in the mapping.
+
+        Returns:
+            A dictionary mapping old IDs to new sequential IDs.
+        """
+        return recalculate_ids(self)
 
     def check_ids(self, check_between_arrays: bool = True, check_within_arrays: bool = True) -> None:
         """Checks for duplicate id values across all arrays in the container.
