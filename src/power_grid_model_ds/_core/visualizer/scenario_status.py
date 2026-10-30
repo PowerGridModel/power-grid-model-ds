@@ -60,41 +60,27 @@ def scenario_status_from_batch_error(
         raise ValueError("Scenario count must not be negative.")
 
     if batch_error is None:
-        succeeded = (
-            frozenset(range(scenario_count))
-            if scenario_count is not None
-            else frozenset()
-        )
+        succeeded = frozenset(range(scenario_count)) if scenario_count is not None else frozenset()
         return ScenarioStatus(
             succeeded_scenarios=succeeded,
             failed_scenarios=frozenset(),
         )
 
-    failed_indices = tuple(
-        int(index) for index in batch_error.failed_scenarios
-    )
+    failed_indices = tuple(int(index) for index in batch_error.failed_scenarios)
     failed = frozenset(failed_indices)
 
-    error_messages = tuple(
-        str(message) for message in batch_error.error_messages
-    )
+    error_messages = tuple(str(message) for message in batch_error.error_messages)
 
     if len(failed_indices) != len(error_messages):
-        raise ValueError(
-            "Each failed scenario must have a corresponding error message."
-        )
+        raise ValueError("Each failed scenario must have a corresponding error message.")
 
     if len(failed_indices) != len(failed):
         raise ValueError("Duplicate failed scenario indices are not allowed.")
 
-    succeeded = frozenset(
-        int(index) for index in batch_error.succeeded_scenarios
-    )
+    succeeded = frozenset(int(index) for index in batch_error.succeeded_scenarios)
 
     if failed & succeeded:
-        raise ValueError(
-            "A scenario cannot be both successful and failed."
-        )
+        raise ValueError("A scenario cannot be both successful and failed.")
 
     if scenario_count is not None:
         valid_indices = set(range(scenario_count))
@@ -105,7 +91,5 @@ def scenario_status_from_batch_error(
         succeeded_scenarios=succeeded,
         failed_scenarios=failed,
         error_messages=error_messages,
-        failed_scenario_messages=tuple(
-            zip(failed_indices, error_messages, strict=True)
-        ),
+        failed_scenario_messages=tuple(zip(failed_indices, error_messages, strict=True)),
     )

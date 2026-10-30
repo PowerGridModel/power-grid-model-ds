@@ -22,6 +22,7 @@ from power_grid_model import ComponentType
 from power_grid_model.data_types import DenseBatchArray
 
 from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds._core.visualizer.scenario_status import ScenarioStatus
 
 
 @dataclass
@@ -31,6 +32,7 @@ class _AppState:
     grid: Grid | None = None
     update_data: dict[ComponentType, DenseBatchArray] | None = None
     output_data: dict[ComponentType, DenseBatchArray] | None = None
+    scenario_status: ScenarioStatus | None = None
 
 
 _state = _AppState()
@@ -40,11 +42,13 @@ def set_app_state(
     grid: Grid,
     update_data: dict[ComponentType, DenseBatchArray] | None = None,
     output_data: dict[ComponentType, DenseBatchArray] | None = None,
+    scenario_status: ScenarioStatus | None = None,
 ) -> None:
     """Set the application state in a thread-safe manner."""
     _state.grid = grid
     _state.update_data = update_data
     _state.output_data = output_data
+    _state.scenario_status = scenario_status
 
 
 def get_grid() -> Grid:
@@ -69,3 +73,8 @@ def get_update_data() -> dict[ComponentType, DenseBatchArray] | None:
 def get_output_data() -> dict[ComponentType, DenseBatchArray] | None:
     """Get the output data in a thread-safe manner."""
     return _state.output_data
+
+
+def get_scenario_status() -> ScenarioStatus | None:
+    """Return scenario status, or None if calculation status was not provided."""
+    return _state.scenario_status
