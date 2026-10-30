@@ -19,6 +19,7 @@ try:
     from power_grid_model_ds._core.visualizer.layout.layout_config import get_default_graph_layout, layout_with_config
     from power_grid_model_ds._core.visualizer.parsers import parse_element_data
     from power_grid_model_ds._core.visualizer.parsing_utils import filter_out_appliances
+    from power_grid_model_ds._core.visualizer.scenario_status import ScenarioStatus
 except ImportError as error:
     raise ImportError(
         "Missing dependencies for visualizer: install with 'pip install power-grid-model-ds[visualizer]'"
@@ -60,11 +61,24 @@ def save_html(
     Path(path).write_text(html_content, encoding="utf-8")
 
 
-def visualize(grid: Grid, update_data=None, output_data=None, debug: bool = False, port: int = 8050) -> None:
+def visualize(  # noqa: PLR0913
+    grid: Grid,
+    update_data=None,
+    output_data=None,
+    debug: bool = False,
+    port: int = 8050,
+    *,
+    scenario_status: ScenarioStatus | None = None,
+) -> None:
     """Visualize the Grid.
 
     grid: Grid
         The grid to visualize.
+
+    scenario_status: ScenarioStatus | None
+        Optional calculation status for batch state-estimation scenarios.
+        When omitted, calculation status is unknown. Status must come from
+        the calculation that produced output_data, not from inferred values.
 
     layout: str
         The layout to use.
@@ -92,7 +106,12 @@ def visualize(grid: Grid, update_data=None, output_data=None, debug: bool = Fals
     else:
         grid_obj = grid
 
-    server_state.set_app_state(grid_obj, update_data, output_data)
+    server_state.set_app_state(
+        grid_obj,
+        update_data,
+        output_data,
+        scenario_status=scenario_status,
+    )
 
     app = Dash(
         external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, MDBOOTSTRAP, FONT_AWESOME, GOOGLE_FONTS]
