@@ -4,9 +4,11 @@
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.model.graphs.container import GraphContainer
 from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds._core.model.grids.base_grid import BaseGrid
 from power_grid_model_ds._core.power_grid_model_interface import PowerGridModelInterface
 
 __all__ = [
+    "BaseGrid",
     "FancyArray",
     "GraphContainer",
     "Grid",
