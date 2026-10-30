@@ -3,8 +3,10 @@
 # SPDX-License-Identifier: MPL-2.0
 
 
+import warnings
+
 import pytest
-from power_grid_model import ComponentType, DatasetType, power_grid_meta_data
+from power_grid_model import AttributeType, ComponentType, DatasetType, power_grid_meta_data
 
 from power_grid_model_ds.arrays import (
     AsymCurrentSensorArray,
@@ -57,6 +59,70 @@ _COMPONENT_TYPE_TO_ARRAY_CLASS = {
 }
 
 
+_FEEDER_ATTRIBUTES = {"feeder_branch_id", "feeder_node_id", "is_feeder"}
+
+# Attributes that only exist in PGM-DS (not in PGM). Any other DS attribute must exist in PGM.
+_DS_ONLY_ATTRIBUTES: dict[ComponentType, set[str]] = {
+    ComponentType.node: {"node_type", "feeder_branch_id", "feeder_node_id"},
+    ComponentType.line: _FEEDER_ATTRIBUTES,
+    ComponentType.link: _FEEDER_ATTRIBUTES,
+    ComponentType.generic_branch: _FEEDER_ATTRIBUTES,
+    ComponentType.asym_line: _FEEDER_ATTRIBUTES,
+    ComponentType.transformer: _FEEDER_ATTRIBUTES,
+}
+
+# PGM input attributes that are (currently) intentionally not included in PGM-DS.
+# Attributes missing from both the DS array and this mapping only trigger a warning.
+_PGM_ATTRIBUTES_NOT_IN_DS: dict[ComponentType, set[AttributeType]] = {
+    ComponentType.shunt: {AttributeType.g0, AttributeType.b0},
+    ComponentType.line: {AttributeType.r0, AttributeType.x0, AttributeType.c0, AttributeType.tan0},
+    ComponentType.generic_branch: {AttributeType.k, AttributeType.theta, AttributeType.sn},
+    ComponentType.asym_line: {
+        AttributeType.r_na,
+        AttributeType.r_nb,
+        AttributeType.r_nc,
+        AttributeType.r_nn,
+        AttributeType.x_na,
+        AttributeType.x_nb,
+        AttributeType.x_nc,
+        AttributeType.x_nn,
+        AttributeType.c_aa,
+        AttributeType.c_ba,
+        AttributeType.c_bb,
+        AttributeType.c_ca,
+        AttributeType.c_cb,
+        AttributeType.c_cc,
+    },
+    ComponentType.transformer: {
+        AttributeType.i0_zero_sequence,
+        AttributeType.p0_zero_sequence,
+        AttributeType.uk_min,
+        AttributeType.uk_max,
+        AttributeType.pk_min,
+        AttributeType.pk_max,
+        AttributeType.r_grounding_from,
+        AttributeType.x_grounding_from,
+        AttributeType.r_grounding_to,
+        AttributeType.x_grounding_to,
+    },
+    ComponentType.voltage_regulator: {AttributeType.q_min, AttributeType.q_max},
+    ComponentType.three_winding_transformer: {
+        AttributeType.r_grounding_1,
+        AttributeType.x_grounding_1,
+        AttributeType.r_grounding_2,
+        AttributeType.x_grounding_2,
+        AttributeType.r_grounding_3,
+        AttributeType.x_grounding_3,
+    },
+    ComponentType.source: {
+        AttributeType.u_ref_angle,
+        AttributeType.sk,
+        AttributeType.rx_ratio,
+        AttributeType.z01_ratio,
+    },
+}
+
+
 @pytest.mark.parametrize("component_type", list(ComponentType))
 def test_pgm_dtypes(component_type: ComponentType):
     """Tests if dtypes of PGM-DS align with dtypes from PGM."""
@@ -69,8 +135,58 @@ def test_pgm_dtypes(component_type: ComponentType):
 
     for attr in array_dtype.fields:
         if attr not in pgm_dtype.fields:
-            continue  # skip attributes that are not in PGM dtype, e.g., "node_type" and "feeder_*"
+            continue  # checked in test_ds_attributes_exist_in_pgm
 
         assert array_dtype[attr] == pgm_dtype[attr], (
             f"{array_class.__name__} dtype field '{attr}' does not match PGM dtype field '{attr}'"
         )
+
+
+@pytest.mark.parametrize("component_type", list(ComponentType))
+def test_ds_attributes_exist_in_pgm(component_type: ComponentType):
+    """Tests that every PGM-DS attribute is a valid PGM attribute, unless explicitly listed as DS-only."""
+    array_class = _COMPONENT_TYPE_TO_ARRAY_CLASS[component_type]
+    pgm_attributes = set(power_grid_meta_data[DatasetType.input][component_type].dtype.names)
+
+    ds_only = _DS_ONLY_ATTRIBUTES.get(component_type, set())
+    valid_attribute_types = {attribute.value for attribute in AttributeType}
+
+    for attr in array_class.get_dtype().names:
+        if attr in ds_only:
+            continue
+        assert attr in valid_attribute_types, (
+            f"{array_class.__name__} attribute '{attr}' is not a PGM AttributeType. "
+            f"Add it to _DS_ONLY_ATTRIBUTES if it is intentionally PGM-DS specific."
+        )
+        assert attr in pgm_attributes, (
+            f"{array_class.__name__} attribute '{attr}' is not a PGM attribute of '{component_type.value}'"
+        )
+
+    for attr in ds_only:
+        assert attr in array_class.get_dtype().names, (
+            f"'{attr}' specified in _DS_ONLY_ATTRIBUTES is not in {array_class.__name__}"
+        )
+        assert attr not in pgm_attributes, (
+            f"'{attr}' specified in _DS_ONLY_ATTRIBUTES exists in PGM for '{component_type.value}'"
+        )
+
+
+@pytest.mark.parametrize("component_type", list(ComponentType))
+def test_pgm_attributes_covered_by_ds(component_type: ComponentType):
+    """Warns about PGM input attributes that are neither in the PGM-DS array nor explicitly skipped."""
+    array_class = _COMPONENT_TYPE_TO_ARRAY_CLASS[component_type]
+    ds_attributes = set(array_class.get_dtype().names)
+    skipped = _PGM_ATTRIBUTES_NOT_IN_DS.get(component_type, set())
+
+    for attr in power_grid_meta_data[DatasetType.input][component_type].dtype.names:
+        attribute_type = AttributeType(attr)
+        if attribute_type in skipped:
+            assert attr not in ds_attributes, (
+                f"'{attr}' specified in _PGM_ATTRIBUTES_NOT_IN_DS is now in {array_class.__name__}; remove it from the skip list"
+            )
+        elif attr not in ds_attributes:
+            warnings.warn(
+                f"PGM attribute '{attribute_type.value}' of '{component_type.value}' is missing in "
+                f"{array_class.__name__}. Either implement it or list it in _PGM_ATTRIBUTES_NOT_IN_DS.",
+                stacklevel=1,
+            )
