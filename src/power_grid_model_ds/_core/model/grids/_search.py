@@ -113,7 +113,7 @@ def _print_differences(differences: dict[str, dict[str, object]]) -> None:
         print(f"\n{title}")
         print("-" * len(title))
 
-        if attr in ["_ids", "graphs"]:
+        if attr in ["_id_tracker", "graphs"]:
             continue  # more info is not relevant for these attributes
 
         print(diff["grid1"])

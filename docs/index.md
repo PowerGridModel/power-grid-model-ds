@@ -14,6 +14,9 @@ SPDX-License-Identifier: MPL-2.0
 
 The Power Grid Model DS project extends the capabilities of the [power-grid-model](https://github.com/PowerGridModel/power-grid-model) calculation engine with a modelling and simulation interface. This is aimed at building data science software applications related to or using the power-grid-model project, such as network analyses and simulations. It defines a ``Grid`` dataclass which manages the consistency of the complete network and allows for extensions of the Power Grid Model datastructure.
 
+Power Grid Model is an LF Energy project; see the
+[LF Energy landing page](https://lfenergy.org/projects/power-grid-model/).
+
 ```{note}
 Do you wish to be updated on the latest news and releases? Subscribe to the Power Grid Model mailing list by sending an (empty) email to: powergridmodel+subscribe@lists.lfenergy.org
 ```

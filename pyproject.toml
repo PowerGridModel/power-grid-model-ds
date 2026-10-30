@@ -27,9 +27,9 @@ classifiers = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "power-grid-model>=1.12.11",
-    "rustworkx>= 0.15.1",
-    "numpy>=2.0",
+  "power-grid-model>=1.12.11",
+  "rustworkx>= 0.15.1",
+  "numpy>=2.0",
 ]
 dynamic = ["version"]
 
@@ -41,7 +41,7 @@ visualizer = [
   "dash>=3.0.0",
   "dash-bootstrap-components>=2.0.0",
   "dash-cytoscape>=1.0.2",
-  "dash-ag-grid",
+  "dash-ag-grid >= 35.0.0",
 ]
 pandas = ["pandas>=2.2.1"]
 
@@ -49,28 +49,28 @@ pandas = ["pandas>=2.2.1"]
 # Local dependencies for development.
 
 dev = [
-  "pylint",
-  "pytest",
-  "coverage",
-  "ruff",
-  "mypy",
-  "pre-commit",
-  "poethepoet",
+  "pylint>=4.0",
+  "pytest>=9.0",
+  "coverage>=7.0",
+  "ruff>=0.16.9",
+  "mypy>=2.0",
+  "pre-commit>=4.6.2",
+  "poethepoet>=0.48.0",
   # Visualization (make sure these stay equalivalent to the 'visualizer' group)
   "dash>=3.0.0",
   "dash-bootstrap-components>=2.0.0",
   "dash-cytoscape>=1.0.2",
-  "dash-ag-grid",
+  "dash-ag-grid>=35.3.0",
   "nb-clean>=4.0.1",
 ]
 
 doc = [
-  "sphinx",
-  "myst-nb",
-  "sphinx_rtd_theme",
-  "readthedocs-sphinx-search",
-  "sphinx-hoverxref",
-  "numpydoc",
+  "sphinx>=9.1.0",
+  "myst-nb>=1.4.0",
+  "sphinx_rtd_theme>=3.1.0",
+  "readthedocs-sphinx-search>=0.3.2",
+  "sphinx-hoverxref>=1.4.2",
+  "numpydoc>=1.11.0",
 ]
 
 [tool.uv]

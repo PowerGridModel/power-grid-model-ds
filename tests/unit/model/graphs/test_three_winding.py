@@ -144,7 +144,7 @@ class TestGetAllPaths:
             ),
         ],
     )
-    def test_get_all_paths(self, graph, active_only, source, dest, active_expected, complete_expected):  # noqa: PLR0913
+    def test_get_all_paths(self, graph, active_only, source, dest, active_expected, complete_expected):  # noqa: PLR0913, PLR0917
         expected = active_expected if active_only else complete_expected
         actual_paths = graph.get_all_paths(source, dest)
 
@@ -173,7 +173,7 @@ class TestGetAllPaths:
             ),
         ],
     )
-    def test_get_all_paths_removed_branch(self, graph, active_only, source, dest, active_expected, complete_expected):  # noqa: PLR0913
+    def test_get_all_paths_removed_branch(self, graph, active_only, source, dest, active_expected, complete_expected):  # noqa: PLR0913, PLR0917
         expected = active_expected if active_only else complete_expected
         with graph.tmp_remove_branches([(2, 3), (20, 30)]):
             actual_paths = graph.get_all_paths(source, dest)
