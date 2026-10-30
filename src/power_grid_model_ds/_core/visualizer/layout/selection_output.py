@@ -17,7 +17,33 @@ SELECTION_OUTPUT_HTML = html.Div(
     style=_SELECTION_OUTPUT_STYLE,
 )
 
+
 SELECTION_GRAPH_HTML = html.Div(
-    dcc.Graph(id="selection-graph", style={"display": "none"}),
+    [
+        dcc.Store(id="selected-selection-cell", storage_type="memory"),
+        html.Div(
+            [
+                html.Label(
+                    "Sigma multiplier",
+                    htmlFor="sigma-multiplier",
+                ),
+                dcc.Input(
+                    id="sigma-multiplier",
+                    type="number",
+                    min=0,
+                    step=0.5,
+                    value=2.0,
+                    debounce=True,
+                    style={"width": "100px", "marginLeft": "10px"},
+                ),
+            ],
+            id="sigma-multiplier-controls",
+            style={"display": "none", "marginBottom": "10px"},
+        ),
+        dcc.Graph(
+            id="selection-graph",
+            style={"display": "none"},
+        ),
+    ],
     style={"margin": "10px"},
 )
