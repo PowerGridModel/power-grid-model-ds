@@ -23,7 +23,17 @@ SELECTION_OUTPUT_HTML = html.Div(
 
 SELECTION_GRAPH_HTML = html.Div(
     [
-        dcc.Store(id="selected-selection-cell", storage_type="memory"),
+        # Temporary cell selection used by the existing callback.
+        dcc.Store(
+            id="selected-selection-cell",
+            storage_type="memory",
+        ),
+        # Explicitly retained graph selections for F14.
+        dcc.Store(
+            id="retained-graph-selections",
+            data=[],
+            storage_type="memory",
+        ),
         html.Div(
             [
                 html.Div(
@@ -178,13 +188,71 @@ SELECTION_GRAPH_HTML = html.Div(
             id="sigma-multiplier-controls",
             style={"display": "none", "marginBottom": "12px"},
         ),
-        dcc.Graph(id="selection-graph", style={"display": "none"}),
+        # Keep the legacy graph mounted for its existing callback,
+        # but display graphs through the retained collection instead.
+        html.Div(
+            dcc.Graph(
+                id="selection-graph",
+                style={"display": "none"},
+            ),
+            style={"display": "none"},
+        ),
         dcc.Interval(
             id="sigma-guidance-timer",
             interval=5000,
             n_intervals=0,
             max_intervals=1,
             disabled=True,
+        ),
+        html.Div(
+            [
+                html.Div(
+                    [
+                        html.H5(
+                            "Selected graphs",
+                            style={
+                                "margin": "0",
+                                "fontWeight": "600",
+                            },
+                        ),
+                        html.Button(
+                            [
+                                html.I(
+                                    className="fa-solid fa-trash-can",
+                                    style={"marginRight": "8px"},
+                                    **{"aria-hidden": "true"},
+                                ),
+                                "Clear all graphs",
+                            ],
+                            id="clear-retained-graphs",
+                            n_clicks=0,
+                            className="btn btn-danger",
+                            title="Remove all selected graphs",
+                            style={
+                                "fontWeight": "600",
+                                "borderRadius": "6px",
+                                "padding": "8px 14px",
+                                "minHeight": "44px",
+                                "flexShrink": 0,
+                            },
+                        ),
+                    ],
+                    style={
+                        "display": "flex",
+                        "justifyContent": "space-between",
+                        "alignItems": "center",
+                        "gap": "16px",
+                        "marginBottom": "16px",
+                        "flexWrap": "wrap",
+                    },
+                ),
+                html.Div(
+                    id="retained-graphs-container",
+                    children=[],
+                ),
+            ],
+            id="retained-graphs-section",
+            style={"marginTop": "15px"},
         ),
     ],
     style={"margin": "10px"},

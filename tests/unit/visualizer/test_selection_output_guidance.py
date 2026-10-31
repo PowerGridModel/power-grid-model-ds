@@ -43,7 +43,9 @@ ERROR_VISIBLE = {
 
 
 def test_guidance_layout_and_timer():
-    controls = SELECTION_GRAPH_HTML.children[1]
+    controls = next(
+        child for child in SELECTION_GRAPH_HTML.children if getattr(child, "id", None) == "sigma-multiplier-controls"
+    )
     assert controls.id == "sigma-multiplier-controls"
     assert controls.style["display"] == "none"
 
@@ -78,7 +80,9 @@ def test_guidance_layout_and_timer():
     assert sigma_input.id == "sigma-multiplier"
     assert len(input_row.children) == 1
 
-    timer = SELECTION_GRAPH_HTML.children[3]
+    timer = next(
+        child for child in SELECTION_GRAPH_HTML.children if getattr(child, "id", None) == "sigma-guidance-timer"
+    )
     assert timer.id == "sigma-guidance-timer"
     assert timer.interval == 5000
     assert timer.max_intervals == 1
