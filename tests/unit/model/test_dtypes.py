@@ -134,96 +134,75 @@ def test_pgm_dtypes(component_type: ComponentType):
     assert array_dtype.fields is not None, f"{array_class.__name__} dtype does not have fields"
     assert pgm_dtype.fields is not None, f"PGM dtype for component type '{component_type.value}' does not have fields"
 
+    # Compare dtypes only for shared attributes; attribute coverage is checked separately.
     for attr in array_dtype.fields:
         if attr not in pgm_dtype.fields:
-            continue  # checked in test_ds_attributes_exist_in_pgm
+            continue  # Checked in test_pgm_attributes_are_in_ds_or_skipped.
 
         assert array_dtype[attr] == pgm_dtype[attr], (
             f"{array_class.__name__} dtype field '{attr}' does not match PGM dtype field '{attr}'"
         )
 
 
-@pytest.mark.parametrize("component_type", list(_COMPONENT_TYPE_TO_ARRAY_CLASS.keys()))
-def test_ds_attributes_exist_in_pgm(component_type: ComponentType):
-    """
-    Tests that every PGM-DS attribute is a valid PGM attribute, unless explicitly listed as DS-only.
-
-    not missing_pgm_attributes: every DS attribute must be in the PGM dtype or explicitly listed as DS-only.
-    This enforces DS attributes ⊆ (PGM attributes U DS-only attributes).
-
-    not missing_ds_only_attributes: every entry in the DS-only list must still exist in the DS array.
-
-    not pgm_ds_only_attributes: a DS-only attribute must not also exist in PGM; if it does, the exception list is stale.
-    """
-    array_class = _COMPONENT_TYPE_TO_ARRAY_CLASS[component_type]
-    pgm_attribute_names = power_grid_meta_data[DatasetType.input][component_type].dtype.names
-    assert pgm_attribute_names is not None
-    pgm_attributes = set(pgm_attribute_names)
-    ds_attributes = set(array_class.get_dtype().names)
-    ds_only = _DS_ONLY_ATTRIBUTES.get(component_type, set())
-
-    missing_pgm_attributes = ds_attributes - ds_only - pgm_attributes
-    assert not missing_pgm_attributes, (
-        f"{array_class.__name__} attributes {sorted(missing_pgm_attributes)} are not PGM attributes "
-        f"of '{component_type.value}'. If they are DS-only, add to _DS_ONLY_ATTRIBUTES."
-    )
-
-    missing_ds_only_attributes = ds_only - ds_attributes
-    assert not missing_ds_only_attributes, (
-        f"Attributes {sorted(missing_ds_only_attributes)} specified in _DS_ONLY_ATTRIBUTES "
-        f"are not in {array_class.__name__}"
-    )
-
-    # Check DS-only attributes are not already defined in PGM
-    pgm_ds_only_attributes = ds_only & pgm_attributes
-    assert not pgm_ds_only_attributes, (
-        f"Attributes {sorted(pgm_ds_only_attributes)} specified in _DS_ONLY_ATTRIBUTES "
-        f"already exists in PGM for '{component_type.value}'"
-    )
-
-
 @pytest.mark.parametrize("component_type", list(ComponentType))
-def test_pgm_components_attributes_covered_by_ds(component_type: ComponentType):
+def test_pgm_components_are_in_ds_or_skipped(component_type: ComponentType):
     """
-    Warns about PGM input attributes that are neither in the PGM-DS array nor explicitly skipped.
+    Warn for PGM components not modelled in DS unless they are explicitly skipped.
 
-    not stale_skips: every skipped attribute must still exist in PGM.
-
-    not included_skips: skipped attributes must still be absent from DS;
-    remove them from the skip list once DS supports them.
-
-    Warning for unskipped PGM attributes missing from DS. These may need to be added or skipped.
+    A skipped component that becomes modelled in DS is stale and must be removed from the skip set.
     """
-    if component_type not in _COMPONENT_TYPE_TO_ARRAY_CLASS:
-        if component_type not in _PGM_ATTRIBUTES_NOT_IN_DS:
-            warnings.warn(
-                f"PGM component {component_type.value} not modelled in DS. Please implement it or add in _SKIPPED_PGM_COMPONENTS",
-                stacklevel=1,
-            )
-        return
-    array_class = _COMPONENT_TYPE_TO_ARRAY_CLASS[component_type]
-    ds_attributes = set(array_class.get_dtype().names)
-    pgm_attribute_names = power_grid_meta_data[DatasetType.input][component_type].dtype.names
-    assert pgm_attribute_names is not None
-    pgm_attributes = set(pgm_attribute_names)
-    skipped = {attribute.value for attribute in _PGM_ATTRIBUTES_NOT_IN_DS.get(component_type, set())}
-
-    stale_skips = skipped - pgm_attributes
-    assert not stale_skips, (
-        f"Attributes {sorted(stale_skips)} specified in _PGM_ATTRIBUTES_NOT_IN_DS "
-        f"are not PGM attributes of '{component_type.value}'"
-    )
-
-    included_skips = skipped & ds_attributes
-    assert not included_skips, (
-        f"Attributes {sorted(included_skips)} specified in _PGM_ATTRIBUTES_NOT_IN_DS "
-        f"are now in {array_class.__name__}; remove them from the skip list"
-    )
-
-    missing_attributes = pgm_attributes - ds_attributes - skipped
-    if missing_attributes:
+    if component_type not in _PGM_COMPONENTS_NOT_IN_DS:
         warnings.warn(
-            f"PGM attributes {sorted(missing_attributes)} of '{component_type.value}' are missing in "
-            f"{array_class.__name__}. Either implement them in PGM-DS or list them in _PGM_ATTRIBUTES_NOT_IN_DS.",
+            f"PGM component '{component_type.value}' is not modelled in DS. "
+            "Implement it or add it to _PGM_COMPONENTS_NOT_IN_DS if intentionally unsupported.",
             stacklevel=1,
         )
+        return
+    assert component_type in _COMPONENT_TYPE_TO_ARRAY_CLASS
+
+
+@pytest.mark.parametrize("component_type", list(_COMPONENT_TYPE_TO_ARRAY_CLASS.keys()))
+def test_pgm_attributes_are_in_ds_or_skipped(component_type: ComponentType):
+    """
+    Warn for PGM attributes not yet modelled in DS unless they are explicitly skipped.
+
+    Warn for PGM attributes - DS attributes - skipped attributes, because PGM fields may arrive
+    before PGM-DS supports them. A skipped attribute that is now in DS is stale and must be removed.
+    """
+    array_class = _COMPONENT_TYPE_TO_ARRAY_CLASS[component_type]
+    ds_attribute_names = array_class.get_dtype().names
+    pgm_attribute_names = power_grid_meta_data[DatasetType.input][component_type].dtype.names
+
+    assert ds_attribute_names is not None, f"{array_class.__name__} dtype does not have named fields"
+    assert pgm_attribute_names is not None, f"PGM dtype for '{component_type.value}' does not have named fields"
+
+    ds_attributes = set(ds_attribute_names)
+    pgm_attributes = set(pgm_attribute_names)
+    ds_only_attributes = _DS_ONLY_ATTRIBUTES.get(component_type, set())
+    skipped_attributes = {attribute.value for attribute in _PGM_ATTRIBUTES_NOT_IN_DS.get(component_type, set())}
+
+    skipped_attributes_in_ds = skipped_attributes & ds_attributes
+    assert not skipped_attributes_in_ds, (
+        f"Attributes {sorted(skipped_attributes_in_ds)} in _PGM_ATTRIBUTES_NOT_IN_DS "
+        f"are now in {array_class.__name__}; remove the stale entries"
+    )
+
+    attributes_yet_to_implement = pgm_attributes - ds_attributes - skipped_attributes
+    if attributes_yet_to_implement:
+        warnings.warn(
+            f"PGM attributes {sorted(attributes_yet_to_implement)} of '{component_type.value}' are missing in "
+            f"{array_class.__name__}. Implement them in PGM-DS or list them in _PGM_ATTRIBUTES_NOT_IN_DS.",
+            stacklevel=1,
+        )
+
+    unexpected_ds_attributes = ds_attributes - pgm_attributes - ds_only_attributes
+    assert not unexpected_ds_attributes, (
+        f"{array_class.__name__} attributes {sorted(unexpected_ds_attributes)} are not in PGM "
+        f"or _DS_ONLY_ATTRIBUTES for '{component_type.value}'"
+    )
+
+    stale_ds_only_attributes = ds_only_attributes - ds_attributes
+    assert not stale_ds_only_attributes, (
+        f"Attributes {sorted(stale_ds_only_attributes)} in _DS_ONLY_ATTRIBUTES "
+        f"are not in {array_class.__name__}; remove the stale entries"
+    )
