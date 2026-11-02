@@ -142,7 +142,7 @@ def test_pgm_dtypes(component_type: ComponentType):
         )
 
 
-@pytest.mark.parametrize("component_type", list(ComponentType))
+@pytest.mark.parametrize("component_type", list(_COMPONENT_TYPE_TO_ARRAY_CLASS.keys()))
 def test_ds_attributes_exist_in_pgm(component_type: ComponentType):
     """
     Tests that every PGM-DS attribute is a valid PGM attribute, unless explicitly listed as DS-only.
@@ -181,7 +181,7 @@ def test_ds_attributes_exist_in_pgm(component_type: ComponentType):
     )
 
 
-@pytest.mark.parametrize("component_type", list(ComponentType))
+@pytest.mark.parametrize("component_type", list(_COMPONENT_TYPE_TO_ARRAY_CLASS.keys()))
 def test_pgm_attributes_covered_by_ds(component_type: ComponentType):
     """
     Warns about PGM input attributes that are neither in the PGM-DS array nor explicitly skipped.
