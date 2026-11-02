@@ -73,6 +73,7 @@ _DS_ONLY_ATTRIBUTES: dict[ComponentType, set[str]] = {
 
 # PGM input attributes that are (currently) intentionally not included in PGM-DS.
 # Attributes missing from both the DS array and this mapping only trigger a warning.
+_PGM_COMPONENTS_NOT_IN_DS = set()
 _PGM_ATTRIBUTES_NOT_IN_DS: dict[ComponentType, set[AttributeType]] = {
     ComponentType.shunt: {AttributeType.g0, AttributeType.b0},
     ComponentType.line: {AttributeType.r0, AttributeType.x0, AttributeType.c0, AttributeType.tan0},
@@ -123,7 +124,7 @@ _PGM_ATTRIBUTES_NOT_IN_DS: dict[ComponentType, set[AttributeType]] = {
 }
 
 
-@pytest.mark.parametrize("component_type", list(ComponentType))
+@pytest.mark.parametrize("component_type", list(_COMPONENT_TYPE_TO_ARRAY_CLASS.keys()))
 def test_pgm_dtypes(component_type: ComponentType):
     """Tests if dtypes of PGM-DS align with dtypes from PGM."""
     array_class = _COMPONENT_TYPE_TO_ARRAY_CLASS[component_type]
@@ -181,8 +182,8 @@ def test_ds_attributes_exist_in_pgm(component_type: ComponentType):
     )
 
 
-@pytest.mark.parametrize("component_type", list(_COMPONENT_TYPE_TO_ARRAY_CLASS.keys()))
-def test_pgm_attributes_covered_by_ds(component_type: ComponentType):
+@pytest.mark.parametrize("component_type", list(ComponentType))
+def test_pgm_components_attributes_covered_by_ds(component_type: ComponentType):
     """
     Warns about PGM input attributes that are neither in the PGM-DS array nor explicitly skipped.
 
@@ -193,6 +194,13 @@ def test_pgm_attributes_covered_by_ds(component_type: ComponentType):
 
     Warning for unskipped PGM attributes missing from DS. These may need to be added or skipped.
     """
+    if component_type not in _COMPONENT_TYPE_TO_ARRAY_CLASS:
+        if component_type not in _PGM_ATTRIBUTES_NOT_IN_DS:
+            warnings.warn(
+                f"PGM component {component_type.value} not modelled in DS. Please implement it or add in _SKIPPED_PGM_COMPONENTS",
+                stacklevel=1,
+            )
+        return
     array_class = _COMPONENT_TYPE_TO_ARRAY_CLASS[component_type]
     ds_attributes = set(array_class.get_dtype().names)
     pgm_attribute_names = power_grid_meta_data[DatasetType.input][component_type].dtype.names
