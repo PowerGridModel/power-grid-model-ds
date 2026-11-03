@@ -34,10 +34,25 @@ _RIGHT_COLUMN_STYLE = {
     "width": "100%",
 }
 
+_HIDDEN_PANEL_STYLE = _RIGHT_COLUMN_STYLE | {"display": "none"}
 
-CONFIG_DIV = html.Div(CONFIG_ELEMENTS, style=_RIGHT_COLUMN_STYLE | {"justify-content": "flex-start"})
-SEARCH_DIV = html.Div(SEARCH_ELEMENTS, style=_RIGHT_COLUMN_STYLE | {"justify-content": "center"})
-LEGENDA_DIV = html.Div(LEGENDA_ELEMENTS, style=_RIGHT_COLUMN_STYLE | LEGENDA_STYLE)
+CONFIG_DIV = html.Div(
+    CONFIG_ELEMENTS,
+    id="header-config-panel",
+    style=_HIDDEN_PANEL_STYLE,
+)
+
+SEARCH_DIV = html.Div(
+    SEARCH_ELEMENTS,
+    id="header-search-panel",
+    style=_HIDDEN_PANEL_STYLE,
+)
+
+LEGENDA_DIV = html.Div(
+    LEGENDA_ELEMENTS,
+    id="header-legend-panel",
+    style=_RIGHT_COLUMN_STYLE | LEGENDA_STYLE,
+)
 
 _RIGHT_COLUMN_HTML = dbc.Col(
     [LEGENDA_DIV, SEARCH_DIV, CONFIG_DIV],
