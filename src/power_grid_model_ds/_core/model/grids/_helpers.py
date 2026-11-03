@@ -20,7 +20,7 @@ _logger = logging.getLogger(__name__)
 
 def create_grid_from_extended_grid[G: Grid](grid_class: type[G], extended: G) -> G:
     """See Grid.from_extended()"""
-    new_grid = grid_class.empty()
+    new_grid = grid_class.empty(graph_model=type(extended.graphs.active_graph))
 
     # Add nodes first, so that branches can reference them
     new_grid.append(new_grid.node.__class__.from_extended(extended.node))

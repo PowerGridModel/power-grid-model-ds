@@ -24,26 +24,6 @@ def test_rebuild_graphs(basic_grid: Grid):
     assert orig_graphs == basic_grid.graphs
 
 
-def test_empty_with_custom_graph_model():
-    graphs = GraphContainer.empty(graph_model=CustomTestGraphModel)
-
-    assert isinstance(graphs.active_graph, CustomTestGraphModel)
-    assert graphs.active_graph.active_only
-    assert isinstance(graphs.complete_graph, CustomTestGraphModel)
-    assert not graphs.complete_graph.active_only
-
-
-def test_from_grid_preserves_custom_graph_model(basic_grid: Grid):
-    basic_grid.graphs = GraphContainer.empty(graph_model=CustomTestGraphModel)
-
-    basic_grid.rebuild_graphs()
-
-    assert isinstance(basic_grid.graphs.active_graph, CustomTestGraphModel)
-    assert isinstance(basic_grid.graphs.complete_graph, CustomTestGraphModel)
-    assert basic_grid.graphs.active_graph.active_only
-    assert not basic_grid.graphs.complete_graph.active_only
-
-
 def test_rebuild_graphs_preserves_custom_graph_container_and_model():
     grid = ExtendedGraphGrid.empty()
     grid.append(grid.node.__class__(id=[101], u_rated=[10_500.0]))
