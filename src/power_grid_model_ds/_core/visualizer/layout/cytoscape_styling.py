@@ -206,6 +206,22 @@ _OPEN_GENERATING_EDGE_STYLE = {
     },
 }
 
+_ELECTRICAL_NODE_STYLE = {
+    "selector": "node[electrical_color]",
+    "style": {
+        "background-color": "data(electrical_color)",
+        "text-background-color": "data(electrical_color)",
+    },
+}
+_ELECTRICAL_EDGE_STYLE = {
+    "selector": "edge[electrical_color]",
+    "style": {
+        "line-color": "data(electrical_color)",
+        "target-arrow-color": "data(electrical_color)",
+        "source-arrow-color": "data(electrical_color)",
+    },
+}
+
 DEFAULT_STYLESHEET = [
     _NODE_STYLE,
     _NODE_LARGE_ID_STYLE,
@@ -225,6 +241,8 @@ DEFAULT_STYLESHEET = [
     _GENERATING_EDGE_STYLE,
     _LOADING_EDGE_STYLE,
     _SOURCE_EDGE_STYLE,
+    _ELECTRICAL_NODE_STYLE,
+    _ELECTRICAL_EDGE_STYLE,
     # Note: Keep the OPEN BRANCH styles last in list, otherwise they potentially get overridden.
     _OPEN_BRANCH_STYLE,
     _OPEN_FROM_SIDE_BRANCH_STYLE,

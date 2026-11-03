@@ -2,29 +2,39 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-import dash
-from dash import Input, Output, callback
+from dash import Input, Output, callback, ctx
 
-from power_grid_model_ds._core.visualizer.layout.header import CONFIG_DIV, LEGENDA_DIV, SEARCH_DIV
+from power_grid_model_ds._core.visualizer.layout.header import (
+    _HIDDEN_PANEL_STYLE,
+    _RIGHT_COLUMN_STYLE,
+)
+from power_grid_model_ds._core.visualizer.layout.header_legenda import LEGENDA_STYLE
+
+
+def get_header_panel_styles(active_button: str | None) -> tuple[dict, dict, dict]:
+    """Return visibility styles for the legend, search and config panels."""
+    legend_style = _HIDDEN_PANEL_STYLE.copy()
+    search_style = _HIDDEN_PANEL_STYLE.copy()
+    config_style = _HIDDEN_PANEL_STYLE.copy()
+
+    if active_button == "btn-search":
+        search_style = _RIGHT_COLUMN_STYLE.copy()
+    elif active_button == "btn-config":
+        config_style = _RIGHT_COLUMN_STYLE.copy()
+    else:
+        legend_style = _RIGHT_COLUMN_STYLE | LEGENDA_STYLE
+
+    return legend_style, search_style, config_style
 
 
 @callback(
-    Output("header-right-col", "children"),
-    [
-        Input("btn-legend", "n_clicks"),
-        Input("btn-search", "n_clicks"),
-        Input("btn-config", "n_clicks"),
-    ],
+    Output("header-legend-panel", "style"),
+    Output("header-search-panel", "style"),
+    Output("header-config-panel", "style"),
+    Input("btn-legend", "n_clicks"),
+    Input("btn-search", "n_clicks"),
+    Input("btn-config", "n_clicks"),
 )
 def update_right_col(_btn1, _btn2, _btn3):
-    """Update the right column content based on the button clicked."""
-    ctx = dash.callback_context
-    if not ctx.triggered:
-        return LEGENDA_DIV
-    button_id = ctx.triggered[0]["prop_id"].split(".")[0]
-    button_map = {
-        "btn-legend": LEGENDA_DIV,
-        "btn-search": SEARCH_DIV,
-        "btn-config": CONFIG_DIV,
-    }
-    return button_map.get(button_id, "Right Column")
+    """Show the selected header panel without unmounting its controls."""
+    return get_header_panel_styles(ctx.triggered_id)
