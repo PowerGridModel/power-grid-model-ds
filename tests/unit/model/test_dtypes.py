@@ -73,7 +73,7 @@ _DS_ONLY_ATTRIBUTES: dict[ComponentType, set[str]] = {
 
 # PGM input attributes that are (currently) intentionally not included in PGM-DS.
 # Attributes missing from both the DS array and this mapping only trigger a warning.
-_PGM_COMPONENTS_NOT_IN_DS = set()
+_PGM_COMPONENTS_NOT_IN_DS: set[ComponentType] = set()
 _PGM_ATTRIBUTES_NOT_IN_DS: dict[ComponentType, set[AttributeType]] = {
     ComponentType.shunt: {AttributeType.g0, AttributeType.b0},
     ComponentType.line: {AttributeType.r0, AttributeType.x0, AttributeType.c0, AttributeType.tan0},
