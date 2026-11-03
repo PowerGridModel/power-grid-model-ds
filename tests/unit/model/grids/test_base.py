@@ -13,7 +13,7 @@ from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.grids.base import Grid
 from tests.fixtures.graph_models import CustomTestGraphModel
-from tests.fixtures.grid_classes import ExtendedGrid
+from tests.fixtures.grid_classes import ExtendedGraphGrid, ExtendedGrid
 from tests.fixtures.grids import build_basic_grid
 
 # pylint: disable=missing-function-docstring,missing-class-docstring
@@ -62,9 +62,9 @@ def test_from_extended_grid():
 
 
 def test_from_extended_preserves_custom_graph_model():
-    extended_grid = build_basic_grid(ExtendedGrid.empty(graph_model=CustomTestGraphModel))
+    extended_grid = build_basic_grid(ExtendedGraphGrid.empty(graph_model=CustomTestGraphModel))
 
-    grid = Grid.from_extended(extended_grid)
+    grid = ExtendedGraphGrid.from_extended(extended_grid)
 
     assert isinstance(grid.graphs.active_graph, CustomTestGraphModel)
     assert isinstance(grid.graphs.complete_graph, CustomTestGraphModel)
