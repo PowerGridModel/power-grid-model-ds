@@ -320,3 +320,40 @@ def test_cell_selection_graph_three_phase_output_data(mock_cell_clicked_ctx):
     np.testing.assert_allclose(fig.data[0].x, np.array([0, 2]))
     np.testing.assert_allclose(fig.data[1].x, np.array([0, 2]))
     np.testing.assert_allclose(fig.data[2].x, np.array([0, 2]))
+
+
+def test_component_details_for_selected_line():
+    grid = Grid.from_txt("1 2 19")
+    server_state.set_app_state(grid)
+
+    edge_data = [{"associated_ids": {"line": [19]}}]
+
+    result = display_selected_elements([], edge_data)
+
+    assert result[0].children == "line"
+    assert isinstance(result[1], dag.AgGrid)
+    assert len(result[1].rowData) == 1
+    assert result[1].rowData[0]["id"] == 19
+    assert "from_node" in result[1].rowData[0]
+    assert "to_node" in result[1].rowData[0]
+
+
+def test_component_details_update_when_selection_changes():
+    grid = Grid.from_txt("1 2 19")
+    server_state.set_app_state(grid)
+
+    first_selection = [{"associated_ids": {"node": [1]}}]
+    second_selection = [{"associated_ids": {"node": [2]}}]
+
+    first_result = display_selected_elements(first_selection, [])
+    second_result = display_selected_elements(second_selection, [])
+
+    assert first_result[1].rowData[0]["id"] == 1
+    assert second_result[1].rowData[0]["id"] == 2
+    assert len(second_result[1].rowData) == 1
+
+
+def test_component_details_none_selection():
+    result = display_selected_elements(None, None)
+
+    assert result == SELECTION_OUTPUT_HTML.children
