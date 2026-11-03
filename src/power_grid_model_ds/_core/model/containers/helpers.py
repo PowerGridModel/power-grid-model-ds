@@ -5,6 +5,8 @@ import logging
 from dataclasses import Field, fields
 from typing import TYPE_CHECKING
 
+import numpy as np
+
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
 from power_grid_model_ds._core.utils.misc import array_equal_with_nan
 
@@ -12,6 +14,21 @@ if TYPE_CHECKING:
     from power_grid_model_ds._core.model.grids.base import FancyArrayContainer
 
 _logger = logging.getLogger("power_grid_model_ds.fancypy")  # public location of the container_equal function
+
+
+def recalculate_ids(container: "FancyArrayContainer") -> dict[int, int]:
+    """See FancyArrayContainer.recalculate_ids()"""
+    new_ids = np.arange(1, len(container.ids) + 1)
+    mapping = dict(zip(container.ids, new_ids, strict=True))
+    vectorized_map_get = np.vectorize(mapping.get)
+    for array in container.all_arrays():
+        for column in array.get_id_columns():
+            mask = array.is_empty(column)
+            if np.all(mask):
+                continue
+            array[column][~mask] = vectorized_map_get(array[column][~mask])
+    container.rebuild_ids()
+    return mapping
 
 
 def container_equal(

@@ -409,6 +409,12 @@ class Grid(FancyArrayContainer):
         """
         return merge_grids(self, other_grid, mode)
 
+    def recalculate_ids(self) -> dict[int, int]:
+        """See FancyArrayContainer.recalculate_ids()"""
+        mapping = super().recalculate_ids()
+        self.rebuild_graphs()
+        return mapping
+
     @overload
     def serialize(self, path: Path, mode: Literal["json"] = "json", **kwargs) -> Path: ...
 
