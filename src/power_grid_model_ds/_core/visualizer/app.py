@@ -16,6 +16,7 @@ from power_grid_model_ds._core.visualizer.layout.cytoscape_html import get_cytos
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
 from power_grid_model_ds._core.visualizer.layout.header import HEADER_HTML
 from power_grid_model_ds._core.visualizer.layout.layout_config import get_default_graph_layout
+from power_grid_model_ds._core.visualizer.layout.node_overlap import separate_coincident_nodes
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_GRAPH_HTML, SELECTION_OUTPUT_HTML
 from power_grid_model_ds._core.visualizer.parsers import parse_element_data
 from power_grid_model_ds._core.visualizer.parsing_utils import filter_out_appliances
@@ -25,6 +26,7 @@ MDBOOTSTRAP = "https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/8.2.0/mdb.min.c
 
 
 def _get_columns_store(grid: Grid) -> dcc.Store:
+    """Store the available columns for each grid component type."""
     return dcc.Store(
         id="columns-store",
         data={
@@ -41,24 +43,64 @@ def _get_columns_store(grid: Grid) -> dcc.Store:
 
 
 def get_app_layout(grid: Grid) -> html.Div:
-    """Get the app layout."""
+    """Create the visualiser layout for the supplied Grid."""
     columns_store = _get_columns_store(grid)
+
+    # Select the initial layout based on the available node coordinates.
     layout = get_default_graph_layout(grid.node)
+
+    # Preserve the original parsed elements and their coordinates.
+    # These elements are the source for subsequent display recalculations.
     viz_elements_dict = parse_element_data(grid)
 
-    initial_elements = filter_out_appliances(viz_elements_dict.values())
+    # Resolve coincident electrical nodes for the initial display.
+    # The default node scale is 1.0.
+    display_elements_dict = separate_coincident_nodes(
+        viz_elements_dict,
+        node_scale=1.0,
+    )
 
-    cytoscape_html = get_cytoscape_html(layout, initial_elements, grid.source.size != 0)
+    # Appliances are hidden initially.
+    initial_elements = filter_out_appliances(display_elements_dict.values())
+
+    cytoscape_html = get_cytoscape_html(
+        layout,
+        initial_elements,
+        grid.source.size != 0,
+    )
 
     return html.Div(
         [
             columns_store,
-            dcc.Store(id="parsed-elements-store", data=viz_elements_dict),
-            dcc.Store(id="stylesheet-store", data=DEFAULT_STYLESHEET),
-            dcc.Store(id="source-available-store", data=grid.source.size != 0),
-            dcc.Store(id="show-appliances-store", data=False, storage_type="session"),
+            # Keep original positions for scale-dependent recalculation.
+            dcc.Store(
+                id="parsed-elements-store",
+                data=viz_elements_dict,
+            ),
+            dcc.Store(
+                id="node-position-state-store",
+                data={
+                    "scale": 1.0,
+                    "manual_positions": {},
+                },
+            ),
+            dcc.Store(
+                id="stylesheet-store",
+                data=DEFAULT_STYLESHEET,
+            ),
+            dcc.Store(
+                id="source-available-store",
+                data=grid.source.size != 0,
+            ),
+            dcc.Store(
+                id="show-appliances-store",
+                data=False,
+                storage_type="session",
+            ),
             HEADER_HTML,
-            html.Hr(style={"border-color": "white", "margin": "0"}),
+            html.Hr(
+                style={"border-color": "white", "margin": "0"},
+            ),
             cytoscape_html,
             SELECTION_OUTPUT_HTML,
             SELECTION_GRAPH_HTML,

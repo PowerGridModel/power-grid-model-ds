@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
 import dash_ag_grid as dag
@@ -14,7 +15,12 @@ from power_grid_model import ComponentType
 from power_grid_model_ds._core.model.dtypes.typing import NDArray3
 from power_grid_model_ds._core.model.grids.base import Grid
 from power_grid_model_ds._core.visualizer import server_state
-from power_grid_model_ds._core.visualizer.callbacks.config import scale_elements, update_arrows, update_layout
+from power_grid_model_ds._core.visualizer.callbacks.config import (
+    scale_elements,
+    update_appliances,
+    update_arrows,
+    update_layout,
+)
 from power_grid_model_ds._core.visualizer.callbacks.element_selection import (
     cell_selection_graph,
     display_selected_elements,
@@ -198,3 +204,362 @@ def test_cell_selection_graph_three_phase_output_data(mock_cell_clicked_ctx):
     np.testing.assert_allclose(fig.data[0].x, np.array([0, 2]))
     np.testing.assert_allclose(fig.data[1].x, np.array([0, 2]))
     np.testing.assert_allclose(fig.data[2].x, np.array([0, 2]))
+
+
+
+def test_update_appliances_visibility_preserves_node_separation():
+    """Appliance visibility must preserve automatically separated nodes."""
+    parsed_elements = {
+        "2": {
+            "data": {"id": "2", "group": "node"},
+            "position": {"x": 250.0, "y": -250.0},
+            "classes": "node",
+        },
+        "3": {
+            "data": {"id": "3", "group": "node"},
+            "position": {"x": 250.0, "y": -250.0},
+            "classes": "node",
+        },
+        "10_ghost_node": {
+            "data": {
+                "id": "10_ghost_node",
+                "group": "sym_load_ghost_node",
+            },
+            "position": {"x": 250.0, "y": -250.0},
+            "classes": "appliance-ghost-node",
+            "selectable": False,
+        },
+        "10": {
+            "data": {
+                "id": "10",
+                "group": "sym_load",
+                "source": "2",
+                "target": "10_ghost_node",
+            },
+            "classes": "appliance",
+        },
+    }
+
+    position_state = {"scale": 1.0, "manual_positions": {}}
+
+    hidden, hidden_state, next_state = update_appliances(
+        show_appliances=False,
+        node_scale=2.0,
+        parsed_elements=parsed_elements,
+        current_elements=None,
+        position_state=position_state,
+        current_layout={"name": "preset"},
+    )
+
+    visible, visible_state, _ = update_appliances(
+        show_appliances=True,
+        node_scale=2.0,
+        parsed_elements=parsed_elements,
+        current_elements=hidden,
+        position_state=next_state,
+        current_layout={"name": "preset"},
+    )
+
+    hidden_ids = {element["data"]["id"] for element in hidden}
+    visible_ids = {element["data"]["id"] for element in visible}
+
+    assert hidden_state is False
+    assert visible_state is True
+    assert hidden_ids == {"2", "3"}
+    assert visible_ids == {"2", "3", "10", "10_ghost_node"}
+
+    def node_positions(elements):
+        return {
+            element["data"]["id"]: element["position"]
+            for element in elements
+            if element["data"]["group"] == "node"
+        }
+
+    hidden_positions = node_positions(hidden)
+    visible_positions = node_positions(visible)
+
+    assert hidden_positions == visible_positions
+    assert hidden_positions["2"] != hidden_positions["3"]
+    assert abs(
+        visible_positions["3"]["x"] - visible_positions["2"]["x"]
+    ) == 175.0
+
+
+def test_update_appliances_restores_positions_after_scaling():
+    """Scaling 1 to 2 to 1 must restore automatic node positions."""
+    parsed_elements = {
+        "2": {
+            "data": {"id": "2", "group": "node"},
+            "position": {"x": 250.0, "y": -250.0},
+            "classes": "node",
+        },
+        "3": {
+            "data": {"id": "3", "group": "node"},
+            "position": {"x": 250.0, "y": -250.0},
+            "classes": "node",
+        },
+    }
+
+    state = {"scale": 1.0, "manual_positions": {}}
+
+    initial, _, state = update_appliances(
+        show_appliances=False,
+        node_scale=1.0,
+        parsed_elements=parsed_elements,
+        current_elements=None,
+        position_state=state,
+        current_layout={"name": "preset"},
+    )
+
+    enlarged, _, state = update_appliances(
+        show_appliances=False,
+        node_scale=2.0,
+        parsed_elements=parsed_elements,
+        current_elements=initial,
+        position_state=state,
+        current_layout={"name": "preset"},
+    )
+
+    restored, _, state = update_appliances(
+        show_appliances=False,
+        node_scale=1.0,
+        parsed_elements=parsed_elements,
+        current_elements=enlarged,
+        position_state=state,
+        current_layout={"name": "preset"},
+    )
+
+    def positions(elements):
+        return {
+            element["data"]["id"]: element["position"]
+            for element in elements
+        }
+
+    assert positions(restored) == positions(initial)
+    assert positions(enlarged) != positions(initial)
+
+    assert state["manual_positions"] == {}
+    assert parsed_elements["2"]["position"] == {
+        "x": 250.0,
+        "y": -250.0,
+    }
+    assert parsed_elements["3"]["position"] == {
+        "x": 250.0,
+        "y": -250.0,
+    }
+
+
+def test_update_appliances_preserves_dragged_node_when_scaling():
+    """A manually dragged node must retain its position after scaling."""
+    parsed_elements = {
+        "2": {
+            "data": {"id": "2", "group": "node"},
+            "position": {"x": 250.0, "y": -250.0},
+        },
+        "3": {
+            "data": {"id": "3", "group": "node"},
+            "position": {"x": 250.0, "y": -250.0},
+        },
+    }
+
+    state = {"scale": 1.0, "manual_positions": {}}
+
+    initial, _, state = update_appliances(
+        show_appliances=False,
+        node_scale=1.0,
+        parsed_elements=parsed_elements,
+        current_elements=None,
+        position_state=state,
+        current_layout={"name": "preset"},
+    )
+
+    dragged = deepcopy(initial)
+    for element in dragged:
+        if element["data"]["id"] == "2":
+            element["position"] = {"x": 600.0, "y": -500.0}
+
+    enlarged, _, state = update_appliances(
+        show_appliances=False,
+        node_scale=2.0,
+        parsed_elements=parsed_elements,
+        current_elements=dragged,
+        position_state=state,
+        current_layout={"name": "preset"},
+    )
+
+    positions = {
+        element["data"]["id"]: element["position"]
+        for element in enlarged
+    }
+
+    assert positions["2"] == {"x": 600.0, "y": -500.0}
+    assert positions["3"] == {"x": 337.5, "y": -250.0}
+    assert state["manual_positions"]["2"] == {
+        "x": 600.0,
+        "y": -500.0,
+    }
+
+
+def test_update_appliances_preserves_dragged_node_when_toggling_appliances():
+    """Changing appliance visibility must preserve manually moved nodes."""
+    parsed_elements = {
+        "2": {
+            "data": {"id": "2", "group": "node"},
+            "position": {"x": 250.0, "y": -250.0},
+        },
+        "3": {
+            "data": {"id": "3", "group": "node"},
+            "position": {"x": 250.0, "y": -250.0},
+        },
+        "10_ghost_node": {
+            "data": {
+                "id": "10_ghost_node",
+                "group": "sym_load_ghost_node",
+            },
+            "position": {"x": 250.0, "y": -250.0},
+        },
+        "10": {
+            "data": {
+                "id": "10",
+                "group": "sym_load",
+                "source": "2",
+                "target": "10_ghost_node",
+            },
+        },
+    }
+
+    state = {"scale": 1.0, "manual_positions": {}}
+
+    initial, _, state = update_appliances(
+        show_appliances=False,
+        node_scale=1.0,
+        parsed_elements=parsed_elements,
+        current_elements=None,
+        position_state=state,
+        current_layout={"name": "preset"},
+    )
+
+    dragged = deepcopy(initial)
+    for element in dragged:
+        if element["data"]["id"] == "2":
+            element["position"] = {"x": 600.0, "y": -500.0}
+
+    visible, visible_state, state = update_appliances(
+        show_appliances=True,
+        node_scale=1.0,
+        parsed_elements=parsed_elements,
+        current_elements=dragged,
+        position_state=state,
+        current_layout={"name": "preset"},
+    )
+    positions = {
+        element["data"]["id"]: element["position"]
+        for element in visible
+        if element["data"]["group"] == "node"
+    }
+
+    assert visible_state is True
+    assert positions["2"] == {"x": 600.0, "y": -500.0}
+    assert state["manual_positions"]["2"] == {
+        "x": 600.0,
+        "y": -500.0,
+    }
+
+    visible_ids = {element["data"]["id"] for element in visible}
+    assert {"10", "10_ghost_node"}.issubset(visible_ids)
+
+
+def test_update_appliances_preserves_automatic_layout_positions():
+    """Scaling in breadthfirst must preserve Cytoscape's positions."""
+    parsed_elements = {
+        "2": {
+            "data": {"id": "2", "group": "node"},
+            "position": {"x": 250.0, "y": -250.0},
+        },
+        "3": {
+            "data": {"id": "3", "group": "node"},
+            "position": {"x": 250.0, "y": -250.0},
+        },
+    }
+
+    current_elements = [
+        {
+            "data": {"id": "2", "group": "node"},
+            "position": {"x": 100.0, "y": 300.0},
+        },
+        {
+            "data": {"id": "3", "group": "node"},
+            "position": {"x": 500.0, "y": 300.0},
+        },
+    ]
+
+    elements, show_state, position_state = update_appliances(
+        show_appliances=False,
+        node_scale=2.0,
+        parsed_elements=parsed_elements,
+        current_elements=current_elements,
+        position_state={
+            "scale": 1.0,
+            "manual_positions": {},
+        },
+        current_layout={"name": "breadthfirst"},
+    )
+
+    positions = {
+        element["data"]["id"]: element["position"]
+        for element in elements
+    }
+
+    assert positions["2"] == {"x": 100.0, "y": 300.0}
+    assert positions["3"] == {"x": 500.0, "y": 300.0}
+    assert show_state is False
+    assert position_state["manual_positions"] == {}
+    assert position_state["scale"] == 2.0
+
+
+def test_update_appliances_initial_breadthfirst_preserves_positions():
+    """Initial breadthfirst layout must not classify positions as manual moves."""
+    parsed_elements = {
+        "2": {
+            "data": {"id": "2", "group": "node"},
+            "position": {"x": 250.0, "y": -250.0},
+        },
+        "3": {
+            "data": {"id": "3", "group": "node"},
+            "position": {"x": 250.0, "y": -250.0},
+        },
+    }
+
+    current_elements = [
+        {
+            "data": {"id": "2", "group": "node"},
+            "position": {"x": 100.0, "y": 300.0},
+        },
+        {
+            "data": {"id": "3", "group": "node"},
+            "position": {"x": 500.0, "y": 300.0},
+        },
+    ]
+
+    elements, show_state, position_state = update_appliances(
+        show_appliances=False,
+        node_scale=2.0,
+        parsed_elements=parsed_elements,
+        current_elements=current_elements,
+        position_state={
+            "scale": 1.0,
+            "manual_positions": {},
+        },
+        current_layout={"name": "breadthfirst"},
+    )
+
+    positions = {
+        element["data"]["id"]: element["position"]
+        for element in elements
+    }
+
+    assert positions["2"] == {"x": 100.0, "y": 300.0}
+    assert positions["3"] == {"x": 500.0, "y": 300.0}
+    assert show_state is False
+    assert position_state["manual_positions"] == {}
+    assert position_state["scale"] == 2.0
