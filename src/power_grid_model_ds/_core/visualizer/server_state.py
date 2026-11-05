@@ -31,6 +31,7 @@ class _AppState:
     grid: Grid | None = None
     update_data: dict[ComponentType, DenseBatchArray] | None = None
     output_data: dict[ComponentType, DenseBatchArray] | None = None
+    timestamps: tuple[str, ...] | None = None
 
 
 _state = _AppState()
@@ -40,11 +41,14 @@ def set_app_state(
     grid: Grid,
     update_data: dict[ComponentType, DenseBatchArray] | None = None,
     output_data: dict[ComponentType, DenseBatchArray] | None = None,
+    *,
+    timestamps: tuple[str, ...] | None = None,
 ) -> None:
     """Set the application state in a thread-safe manner."""
     _state.grid = grid
     _state.update_data = update_data
     _state.output_data = output_data
+    _state.timestamps = timestamps
 
 
 def get_grid() -> Grid:
@@ -69,3 +73,8 @@ def get_update_data() -> dict[ComponentType, DenseBatchArray] | None:
 def get_output_data() -> dict[ComponentType, DenseBatchArray] | None:
     """Get the output data in a thread-safe manner."""
     return _state.output_data
+
+
+def get_timestamps() -> tuple[str, ...] | None:
+    """Return the validated timestamps, if supplied."""
+    return _state.timestamps
