@@ -74,7 +74,7 @@ def _apply_sensor_update(
         ("u_measured", measured),
         ("u_sigma", sigma),
     ):
-        if attribute not in sensor_updates.dtype.names:
+        if attribute not in (sensor_updates.dtype.names or ()):
             continue
 
         value = float(update[attribute])

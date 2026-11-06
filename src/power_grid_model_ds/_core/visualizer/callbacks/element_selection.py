@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
+﻿# SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
 #
 # SPDX-License-Identifier: MPL-2.0
 
@@ -11,6 +11,10 @@ from dash import ALL, Input, Output, State, callback, callback_context, dcc, htm
 from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds._core.visualizer.graph_action_styles import (
+    GRAPH_ACTION_BUTTON_STYLE,
+    GRAPH_ACTION_HEADER_STYLE,
+)
 from power_grid_model_ds._core.visualizer.graph_selections import (
     add_graph_selection,
     clear_graph_selections,
@@ -366,7 +370,6 @@ def cell_selection_graph(
 ):
     """Render the selected attribute with optional voltage sigma bands."""
     hidden = {"display": "none"}
-    visible = {"display": "block"}
 
     # Hide the temporary graph when Cytoscape has no selected node or edge.
     # Default arguments preserve existing direct unit-test calls.
@@ -388,45 +391,57 @@ def cell_selection_graph(
         return go.Figure(), hidden, hidden
 
     if comp_type == ComponentType.sym_voltage_sensor and column_id == "u_measured":
-        output_data = get_output_data()
-
-        if output_data is not None and ComponentType.node in output_data:
-            node_output = output_data[ComponentType.node]
-
-            # Only dense symmetric node output has one scalar
-            # voltage value per node and scenario.
-            is_symmetric_batch = (
-                isinstance(node_output, np.ndarray)
-                and node_output.ndim == len(("scenario", "component"))
-                and node_output.dtype.names is not None
-                and {"id", "u"}.issubset(node_output.dtype.names)
-                and node_output.dtype.fields["u"][0].subdtype is None
-            )
-
-            if is_symmetric_batch:
-                if (
-                    not isinstance(sigma_multiplier, (int, float))
-                    or not np.isfinite(sigma_multiplier)
-                    or sigma_multiplier < 0
-                ):
-                    return go.Figure(), hidden, visible
-
-                comparison = get_symmetric_voltage_comparison(
-                    grid=get_grid(),
-                    update_data=get_update_data(),
-                    output_data=output_data,
-                    sensor_id=pgm_id,
-                )
-
-                fig = _create_voltage_comparison_figure(
-                    comparison,
-                    sensor_id=pgm_id,
-                    sigma_multiplier=float(sigma_multiplier),
-                )
-
-                return fig, visible, visible
+        comparison_result = _try_voltage_comparison(pgm_id, sigma_multiplier)
+        if comparison_result is not None:
+            return comparison_result
 
     # Preserve existing behaviour for other component attributes.
+    return _create_attribute_graph(comp_type, pgm_id, column_id)
+
+
+def _try_voltage_comparison(pgm_id: int, sigma_multiplier):
+    """Build the voltage comparison when compatible batch output is available."""
+    output_data = get_output_data()
+    if output_data is None or ComponentType.node not in output_data:
+        return None
+
+    node_output = output_data[ComponentType.node]
+    expected_batch_ndim = 2
+    is_symmetric_batch = (
+        isinstance(node_output, np.ndarray)
+        and node_output.ndim == expected_batch_ndim
+        and node_output.dtype.names is not None
+        and {"id", "u"}.issubset(node_output.dtype.names)
+        and node_output.dtype.fields is not None
+        and node_output.dtype.fields["u"][0].subdtype is None
+    )
+    if not is_symmetric_batch:
+        return None
+
+    hidden = {"display": "none"}
+    visible = {"display": "block"}
+    if not isinstance(sigma_multiplier, (int, float)) or not np.isfinite(sigma_multiplier) or sigma_multiplier < 0:
+        return go.Figure(), hidden, visible
+
+    comparison = get_symmetric_voltage_comparison(
+        grid=get_grid(),
+        update_data=get_update_data(),
+        output_data=output_data,
+        sensor_id=pgm_id,
+    )
+    fig = _create_voltage_comparison_figure(
+        comparison,
+        sensor_id=pgm_id,
+        sigma_multiplier=float(sigma_multiplier),
+    )
+    return fig, visible, visible
+
+
+def _create_attribute_graph(comp_type: ComponentType, pgm_id: int, column_id: str):
+    """Render a selected component attribute with the legacy graph format."""
+    group = comp_type.value
+    hidden = {"display": "none"}
+    visible = {"display": "block"}
     x_array, y_array = _get_y_data_for_cell_selection(
         comp_type,
         pgm_id,
@@ -492,15 +507,12 @@ def render_retained_graphs(
         return []
 
     graph_cards = []
-
     for index, selection in enumerate(retained_selections):
         if not isinstance(selection, dict):
             continue
-
         group = selection.get("group")
         component_id = selection.get("id")
         column = selection.get("column")
-
         if (
             not isinstance(group, str)
             or not isinstance(component_id, int)
@@ -508,97 +520,87 @@ def render_retained_graphs(
             or not isinstance(column, str)
         ):
             continue
+        graph_cards.append(_render_retained_graph_card(index, selection, sigma_multiplier))
+    return graph_cards
 
-        # Retained graphs do not depend on the current
-        # Cytoscape network selection.
-        figure, graph_style, _ = cell_selection_graph(
-            selection,
-            sigma_multiplier,
+
+def _render_retained_graph_card(index, selection, sigma_multiplier):
+    """Render one retained graph and its controls."""
+    group = selection["group"]
+    component_id = selection["id"]
+    column = selection["column"]
+    # Retained graphs do not depend on the current
+    # Cytoscape network selection.
+    figure, graph_style, _ = cell_selection_graph(
+        selection,
+        sigma_multiplier,
+    )
+
+    title = f"{group} | ID {component_id} | {column}"
+
+    if graph_style.get("display") == "none":
+        graph_content = html.P("Graph data unavailable for this selection or the current sigma multiplier is invalid.")
+    else:
+        graph_content = dcc.Graph(
+            figure=figure,
+            config={"displaylogo": False},
         )
 
-        title = f"{group} | ID {component_id} | {column}"
+    scenario_range = "Scenario range unavailable"
 
-        if graph_style.get("display") == "none":
-            graph_content = html.P(
-                "Graph data unavailable for this selection or the current sigma multiplier is invalid."
-            )
-        else:
-            graph_content = dcc.Graph(
-                figure=figure,
-                config={"displaylogo": False},
-            )
+    if figure.data and figure.data[0].x is not None:
+        x_values = figure.data[0].x
 
-        scenario_range = "Scenario range unavailable"
+        if len(x_values) > 0:
+            scenario_range = f"Scenario indices: {x_values[0]} to {x_values[-1]}"
 
-        if figure.data and figure.data[0].x is not None:
-            x_values = figure.data[0].x
+    # The voltage-comparison figure explicitly identifies volts.
+    # Other attribute figures do not yet provide unit metadata.
+    is_voltage_comparison = (
+        group == ComponentType.sym_voltage_sensor.value
+        and column == "u_measured"
+        and graph_style.get("display") == "block"
+        and figure.layout.yaxis.title.text == "Voltage (V)"
+    )
 
-            if len(x_values) > 0:
-                scenario_range = f"Scenario indices: {x_values[0]} to {x_values[-1]}"
+    unit_label = "Unit: V" if is_voltage_comparison else "Unit: not specified"
 
-        # The voltage-comparison figure explicitly identifies volts.
-        # Other attribute figures do not yet provide unit metadata.
-        is_voltage_comparison = (
-            group == ComponentType.sym_voltage_sensor.value
-            and column == "u_measured"
-            and graph_style.get("display") == "block"
-            and figure.layout.yaxis.title.text == "Voltage (V)"
-        )
-
-        unit_label = "Unit: V" if is_voltage_comparison else "Unit: not specified"
-
-        graph_cards.append(
+    return html.Div(
+        [
             html.Div(
                 [
-                    html.Div(
+                    html.H5(title),
+                    html.Button(
                         [
-                            html.H5(title),
-                            html.Button(
-                                [
-                                    html.I(
-                                        className="fa-solid fa-xmark",
-                                        style={"marginRight": "8px"},
-                                        **{"aria-hidden": "true"},
-                                    ),
-                                    "Remove",
-                                ],
-                                id={
-                                    "type": "remove-retained-graph",
-                                    "index": index,
-                                },
-                                n_clicks=0,
-                                className="btn btn-outline-danger",
-                                title=f"Remove graph for {title}",
-                                style={
-                                    "fontWeight": "600",
-                                    "borderRadius": "6px",
-                                    "padding": "8px 14px",
-                                    "minHeight": "44px",
-                                    "minWidth": "110px",
-                                    "flexShrink": 0,
-                                },
+                            html.I(
+                                className="fa-solid fa-xmark",
+                                style={"marginRight": "8px"},
+                                **{"aria-hidden": "true"},
                             ),
+                            "Remove",
                         ],
-                        style={
-                            "display": "flex",
-                            "justifyContent": "space-between",
-                            "alignItems": "center",
-                            "gap": "12px",
+                        id={
+                            "type": "remove-retained-graph",
+                            "index": index,
                         },
+                        n_clicks=0,
+                        className="btn btn-outline-danger",
+                        title=f"Remove graph for {title}",
+                        style={**GRAPH_ACTION_BUTTON_STYLE, "minWidth": "110px"},
                     ),
-                    html.P(f"{unit_label} | {scenario_range}"),
-                    graph_content,
                 ],
-                style={
-                    "border": "1px solid #dddddd",
-                    "borderRadius": "6px",
-                    "padding": "12px",
-                    "marginBottom": "15px",
-                },
-            )
-        )
-
-    return graph_cards
+                style=GRAPH_ACTION_HEADER_STYLE,
+            ),
+            html.P(f"{unit_label} | {scenario_range}"),
+            graph_content,
+        ],
+        style={
+            "border": "1px solid #dddddd",
+            "borderRadius": "6px",
+            "padding": "12px",
+            "marginBottom": "15px",
+        },
+    )
 
 
 def _get_y_data_for_cell_selection(

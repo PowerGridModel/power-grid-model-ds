@@ -5,8 +5,16 @@
 """Selection tables, graphs, and measurement-comparison guidance."""
 
 import math
+from typing import TypedDict
 
 from dash import Input, Output, callback, dcc, html
+
+from power_grid_model_ds._core.visualizer.graph_action_styles import (
+    GRAPH_ACTION_BUTTON_STYLE,
+)
+
+_AriaHidden = TypedDict("_AriaHidden", {"aria-hidden": str})
+_ARIA_HIDDEN: _AriaHidden = {"aria-hidden": "true"}
 
 SELECTION_OUTPUT_HEADER_STYLE = {"margin": "20px 0 10px 0"}
 _SELECTION_OUTPUT_STYLE = {"overflowX": "scroll", "textAlign": "center", "margin": "10px"}
@@ -47,7 +55,7 @@ SELECTION_GRAPH_HTML = html.Div(
                             [
                                 html.Span(
                                     "i",
-                                    **{"aria-hidden": "true"},
+                                    **_ARIA_HIDDEN,
                                     style={
                                         "display": "inline-flex",
                                         "alignItems": "center",
@@ -123,7 +131,7 @@ SELECTION_GRAPH_HTML = html.Div(
                             [
                                 html.Span(
                                     "!",
-                                    **{"aria-hidden": "true"},
+                                    **_ARIA_HIDDEN,
                                     style={
                                         "display": "inline-flex",
                                         "alignItems": "center",
@@ -220,7 +228,7 @@ SELECTION_GRAPH_HTML = html.Div(
                                 html.I(
                                     className="fa-solid fa-trash-can",
                                     style={"marginRight": "8px"},
-                                    **{"aria-hidden": "true"},
+                                    **_ARIA_HIDDEN,
                                 ),
                                 "Clear all graphs",
                             ],
@@ -228,13 +236,7 @@ SELECTION_GRAPH_HTML = html.Div(
                             n_clicks=0,
                             className="btn btn-danger",
                             title="Remove all selected graphs",
-                            style={
-                                "fontWeight": "600",
-                                "borderRadius": "6px",
-                                "padding": "8px 14px",
-                                "minHeight": "44px",
-                                "flexShrink": 0,
-                            },
+                            style=GRAPH_ACTION_BUTTON_STYLE,
                         ),
                     ],
                     style={
