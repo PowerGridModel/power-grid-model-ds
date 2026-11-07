@@ -7,9 +7,8 @@
 from dash import html
 
 from power_grid_model_ds._core.visualizer.electrical_quantity_styling import (
-    HIGH_COLOR,
-    LOW_COLOR,
     MISSING_COLOR,
+    RAINBOW_STOPS,
 )
 
 QUANTITY_LABELS = {
@@ -23,18 +22,24 @@ def _rgb_to_hex(color: tuple[int, int, int]) -> str:
     return f"#{color[0]:02X}{color[1]:02X}{color[2]:02X}"
 
 
-def build_electrical_legend(
+def build_electrical_legend(  # noqa: PLR0913 - supports legacy fields and summary callers
     scenario_index: int,
-    minimum: float | None,
-    maximum: float | None,
-    missing_count: int,
+    minimum: float | None = None,
+    maximum: float | None = None,
+    missing_count: int = 0,
+    *,
+    summary: dict[str, float | int | None] | None = None,
     quantity: str = "u_pu",
+    component_group: str = "node",
 ) -> html.Div:
     """Create a labelled legend for the selected node quantity."""
-    if quantity not in QUANTITY_LABELS:
-        raise ValueError(f"Unsupported electrical quantity: {quantity}")
-
-    quantity_label, unit = QUANTITY_LABELS[quantity]
+    if summary is not None:
+        minimum = summary.get("minimum")
+        maximum = summary.get("maximum")
+        missing_count = int(summary.get("missing_count") or 0)
+    quantity_label, unit = QUANTITY_LABELS.get(quantity, (quantity, ""))
+    unit_suffix = f" ({unit})" if unit else ""
+    component_label = "nodes" if component_group == "node" else f"{component_group.replace('_', ' ')} elements"
 
     has_values = minimum is not None and maximum is not None
     has_range = has_values and minimum != maximum
@@ -70,7 +75,7 @@ def build_electrical_legend(
             html.Div(
                 [
                     html.Span(
-                        "Missing nodes",
+                        f"Missing {component_label}",
                         className="electrical-stat-label",
                     ),
                     html.Strong(
@@ -86,7 +91,7 @@ def build_electrical_legend(
 
     content = [
         html.H3(
-            f"{quantity_label} ({unit}) - Scenario {scenario_index + 1}",
+            f"{quantity_label}{unit_suffix} - Scenario {scenario_index + 1}",
             className="electrical-legend-title",
         ),
         statistics,
@@ -103,13 +108,18 @@ def build_electrical_legend(
                     className="electrical-scale-bar",
                     style={
                         "background": (
-                            f"linear-gradient(to right, {_rgb_to_hex(LOW_COLOR)}, {_rgb_to_hex(HIGH_COLOR)})"
+                            "linear-gradient(to right, "
+                            + ", ".join(
+                                f"{_rgb_to_hex(color)} {index * 100 / (len(RAINBOW_STOPS) - 1):.3f}%"
+                                for index, color in enumerate(RAINBOW_STOPS)
+                            )
+                            + ")"
                         ),
                     },
                     role="img",
                     **{
                         "aria-label": (
-                            f"Colour scale from {minimum:.4f} {unit} in blue to {maximum:.4f} {unit} in red."
+                            f"Colour scale from {minimum:.4f} {unit} in purple to {maximum:.4f} {unit} in red."
                         ),
                     },
                 ),
@@ -134,7 +144,7 @@ def build_electrical_legend(
     else:
         content.append(
             html.P(
-                f"No {quantity_label.lower()} values are available for the displayed nodes.",
+                f"No {quantity_label.lower()} values are available for the displayed {component_label}.",
                 className="electrical-legend-note",
             )
         )
@@ -152,7 +162,7 @@ def build_electrical_legend(
                             "aria-hidden": "true",
                         },
                     ),
-                    html.Span(f"Grey indicates missing values ({missing_count} nodes)."),
+                    html.Span(f"Grey indicates missing values ({missing_count} {component_label})."),
                 ],
                 className="electrical-missing-description",
             )

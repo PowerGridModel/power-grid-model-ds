@@ -138,7 +138,7 @@ def test_three_winding_transformer_edges_share_component_value():
 
 
 def test_colour_scale_uses_expected_endpoints_and_midpoint():
-    """Known values must map to the expected linear RGB colours."""
+    """Known values must map to the expected rainbow endpoints and midpoint."""
     elements = [_node(1), _node(2), _node(3)]
 
     updated, legend = apply_electrical_colors(
@@ -153,9 +153,9 @@ def test_colour_scale_uses_expected_endpoints_and_midpoint():
 
     colours = {int(element["data"]["id"]): element["data"]["electrical_color"] for element in updated}
 
-    assert colours[1] == "#3182BD"
-    assert colours[2] == "#885872"
-    assert colours[3] == "#DE2D26"
+    assert colours[1] == "#6A0DAD"
+    assert colours[2] == "#16C685"
+    assert colours[3] == "#DC2626"
 
     assert legend["minimum"] == pytest.approx(0.95)
     assert legend["maximum"] == pytest.approx(1.05)
@@ -173,8 +173,8 @@ def test_equal_values_use_single_midpoint_colour():
         },
     )
 
-    assert updated[0]["data"]["electrical_color"] == "#885872"
-    assert updated[1]["data"]["electrical_color"] == "#885872"
+    assert updated[0]["data"]["electrical_color"] == "#16C685"
+    assert updated[1]["data"]["electrical_color"] == "#16C685"
     assert legend["minimum"] == legend["maximum"]
 
 
@@ -189,9 +189,9 @@ def test_missing_value_does_not_change_colour_range():
         },
     )
 
-    assert updated[0]["data"]["electrical_color"] == "#3182BD"
+    assert updated[0]["data"]["electrical_color"] == "#6A0DAD"
     assert updated[1]["data"]["electrical_color"] == MISSING_COLOR
-    assert updated[2]["data"]["electrical_color"] == "#DE2D26"
+    assert updated[2]["data"]["electrical_color"] == "#DC2626"
 
     assert legend["minimum"] == pytest.approx(0.95)
     assert legend["maximum"] == pytest.approx(1.05)

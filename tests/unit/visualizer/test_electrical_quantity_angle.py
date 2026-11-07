@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: Contributors to the Power Grid Model project <powergridmodel@lfenergy.org>
+#
+# SPDX-License-Identifier: MPL-2.0
+
 from dash import html
 
 from power_grid_model_ds._core.visualizer.electrical_quantity_legend import (
@@ -11,9 +15,7 @@ from power_grid_model_ds._core.visualizer.electrical_quantity_styling import (
 def test_voltage_angle_legend_uses_radians():
     legend = build_electrical_legend(
         scenario_index=1,
-        minimum=-0.12,
-        maximum=0.08,
-        missing_count=0,
+        summary={"minimum": -0.12, "maximum": 0.08, "missing_count": 0},
         quantity="u_angle",
     )
 

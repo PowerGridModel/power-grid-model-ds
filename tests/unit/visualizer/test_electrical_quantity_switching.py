@@ -2,160 +2,94 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-"""Regression tests for F01 electrical quantity switching."""
+"""Regression tests for F01 scalar output switching."""
 
+from copy import deepcopy
 from unittest.mock import patch
 
 import numpy as np
 from power_grid_model import ComponentType
 
-from power_grid_model_ds._core.visualizer.callbacks.config import (
-    update_appliances,
-)
+from power_grid_model_ds._core.visualizer.callbacks.config import update_appliances, update_electrical_attributes
 
 
-def _make_output():
-    """Create controlled batch output with two distinct node quantities."""
-    node_output = np.zeros(
-        (2, 2),
-        dtype=[
-            ("id", "i4"),
-            ("u_pu", "f8"),
-            ("u_angle", "f8"),
-        ],
-    )
-
-    node_output["id"] = [[1, 2], [1, 2]]
-    node_output["u_pu"] = [
-        [0.98, 1.02],
-        [0.96, 1.04],
-    ]
-    node_output["u_angle"] = [
-        [-0.10, 0.15],
-        [-0.20, 0.25],
-    ]
-
-    return {ComponentType.node: node_output}
+def _data():
+    nodes = np.zeros((2, 2), dtype=[("id", "i4"), ("u_pu", "f8"), ("u_angle", "f8")])
+    nodes["id"] = [[1, 2], [1, 2]]
+    nodes["u_pu"] = [[0.98, 1.02], [0.96, 1.04]]
+    nodes["u_angle"] = [[-0.1, 0.15], [-0.2, 0.25]]
+    return {ComponentType.node: nodes}
 
 
-def _make_elements():
-    """Create a minimal parsed network with two nodes and one edge."""
-    return {
-        "node-1": {
-            "data": {
-                "id": "node-1",
-                "group": "node",
-                "associated_ids": {"node": [1]},
-            }
-        },
-        "node-2": {
-            "data": {
-                "id": "node-2",
-                "group": "node",
-                "associated_ids": {"node": [2]},
-            }
-        },
-        "edge-1": {
-            "data": {
-                "id": "edge-1",
-                "source": "node-1",
-                "target": "node-2",
-                "group": "line",
-            }
-        },
-    }
+def _elements():
+    return {str(i): {"data": {"id": str(i), "group": "node", "associated_ids": {"node": [i]}}} for i in (1, 2)}
 
 
-def _node_values(elements):
-    """Return displayed electrical values indexed by Cytoscape element ID."""
-    return {
-        element["data"]["id"]: element["data"]["electrical_value"]
-        for element in elements
-        if element["data"]["id"] in {"node-1", "node-2"}
-    }
+def test_component_change_resets_attribute():
+    options, value, disabled = update_electrical_attributes("node", {"node": ["u_pu", "u_angle"]})
+    assert [option["value"] for option in options] == ["u_pu", "u_angle"]
+    assert value is None
+    assert not disabled
 
 
-def _legend_title(legend):
-    """Return the text of the legend heading."""
-    return legend.children[0].children
-
-
-def test_switching_quantity_updates_values_and_legend():
-    output = _make_output()
-    parsed_elements = _make_elements()
-
+def test_quantity_switching_and_one_based_scenario():
+    parsed_elements = _elements()
+    original_elements = deepcopy(parsed_elements)
     with patch(
-        "power_grid_model_ds._core.visualizer.callbacks.config.server_state.get_output_data",
-        return_value=output,
+        "power_grid_model_ds._core.visualizer.callbacks.config.server_state.get_output_data", return_value=_data()
     ):
-        voltage_elements, voltage_legend = update_appliances(
+        voltage, legend = update_appliances(
             show_appliances=False,
+            component="node",
             quantity="u_pu",
-            scenario_index=1,
+            scenario_number=2,
             parsed_elements=parsed_elements,
         )
-
-        angle_elements, angle_legend = update_appliances(
+        angle, angle_legend = update_appliances(
             show_appliances=False,
+            component="node",
             quantity="u_angle",
-            scenario_index=1,
+            scenario_number=2,
             parsed_elements=parsed_elements,
         )
-
-    assert _node_values(voltage_elements) == {
-        "node-1": 0.96,
-        "node-2": 1.04,
-    }
-
-    assert _node_values(angle_elements) == {
-        "node-1": -0.20,
-        "node-2": 0.25,
-    }
-
-    assert _legend_title(voltage_legend) == ("Voltage magnitude (p.u.) - Scenario 2")
-
-    assert _legend_title(angle_legend) == ("Voltage angle (rad) - Scenario 2")
-
-    # Quantity switching must preserve the network topology.
-    assert {element["data"]["id"] for element in voltage_elements} == {
-        element["data"]["id"] for element in angle_elements
-    }
-
-    # The original parsed topology must not acquire electrical values.
+    assert [e["data"]["electrical_value"] for e in voltage] == [0.96, 1.04]
+    assert [e["data"]["electrical_value"] for e in angle] == [-0.2, 0.25]
+    assert legend.children[0].children == "Voltage magnitude (p.u.) - Scenario 2"
+    assert angle_legend.children[0].children == "Voltage angle (rad) - Scenario 2"
+    assert {element["data"]["id"] for element in voltage} == {element["data"]["id"] for element in angle}
+    assert parsed_elements == original_elements
     assert all("electrical_value" not in element["data"] for element in parsed_elements.values())
+    assert all("electrical_color" not in element["data"] for element in parsed_elements.values())
 
 
-def test_missing_node_value_is_not_displayed_as_valid():
-    """A node without a finite result must be marked as missing."""
-    output = _make_output()
-
-    # Make the second node's voltage angle unavailable in scenario 2.
-    output[ComponentType.node]["u_angle"][1, 1] = np.nan
-
-    parsed_elements = _make_elements()
-
+def test_invalid_scenario_clears_colouring():
     with patch(
-        "power_grid_model_ds._core.visualizer.callbacks.config.server_state.get_output_data",
-        return_value=output,
+        "power_grid_model_ds._core.visualizer.callbacks.config.server_state.get_output_data", return_value=_data()
+    ):
+        elements, message = update_appliances(
+            show_appliances=False,
+            component="node",
+            quantity="u_pu",
+            scenario_number=2.5,
+            parsed_elements=_elements(),
+        )
+    assert "Enter a scenario" in message
+    assert all("electrical_value" not in e["data"] for e in elements)
+
+
+def test_missing_value_is_grey():
+    output = _data()
+    output[ComponentType.node]["u_angle"][1, 1] = np.nan
+    with patch(
+        "power_grid_model_ds._core.visualizer.callbacks.config.server_state.get_output_data", return_value=output
     ):
         elements, legend = update_appliances(
             show_appliances=False,
+            component="node",
             quantity="u_angle",
-            scenario_index=1,
-            parsed_elements=parsed_elements,
+            scenario_number=2,
+            parsed_elements=_elements(),
         )
-
-    node_data = {
-        element["data"]["id"]: element["data"] for element in elements if element["data"]["id"] in {"node-1", "node-2"}
-    }
-
-    assert node_data["node-1"]["electrical_value"] == -0.20
-
-    # A missing result must not be assigned a numerical display value.
-    assert "electrical_value" not in node_data["node-2"]
-    assert node_data["node-2"]["electrical_color"] == "#9CA3AF"
-
-    # The legend must report the missing node.
-    statistics = legend.children[1]
-    missing_statistic = statistics.children[2]
-    assert missing_statistic.children[1].children == "1"
+    assert "electrical_value" not in elements[1]["data"]
+    assert elements[1]["data"]["electrical_color"] == "#9CA3AF"
+    assert legend.children[1].children[2].children[1].children == "1"

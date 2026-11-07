@@ -12,8 +12,25 @@ from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
 from power_grid_model_ds._core.visualizer.styling_classification import StyleClass
 
 MISSING_COLOR = "#9CA3AF"
-LOW_COLOR = (49, 130, 189)
-HIGH_COLOR = (222, 45, 38)
+# Continuous rainbow-style scale: purple -> blue -> cyan -> green -> yellow -> orange -> red.
+# The highest relative value is always red. Colours are interpolated between anchors.
+RAINBOW_STOPS = (
+    (106, 13, 173),
+    (59, 40, 204),
+    (24, 91, 219),
+    (0, 170, 232),
+    (0, 206, 181),
+    (45, 190, 85),
+    (162, 218, 35),
+    (255, 230, 0),
+    (255, 147, 0),
+    (220, 38, 38),
+)
+
+
+# Preserve public colour endpoints used by the legend and existing callers.
+LOW_COLOR = RAINBOW_STOPS[0]
+HIGH_COLOR = RAINBOW_STOPS[-1]
 
 
 def _interpolate_color(value: float, minimum: float, maximum: float) -> str:
@@ -21,7 +38,12 @@ def _interpolate_color(value: float, minimum: float, maximum: float) -> str:
     fraction = 0.5 if minimum == maximum else (value - minimum) / (maximum - minimum)
     fraction = max(0.0, min(1.0, fraction))
 
-    channels = [round(low + (high - low) * fraction) for low, high in zip(LOW_COLOR, HIGH_COLOR, strict=True)]
+    position = fraction * (len(RAINBOW_STOPS) - 1)
+    lower_index = min(int(position), len(RAINBOW_STOPS) - 2)
+    local_fraction = position - lower_index
+    low = RAINBOW_STOPS[lower_index]
+    high = RAINBOW_STOPS[lower_index + 1]
+    channels = [round(a + (b - a) * local_fraction) for a, b in zip(low, high, strict=True)]
     return f"#{channels[0]:02X}{channels[1]:02X}{channels[2]:02X}"
 
 
