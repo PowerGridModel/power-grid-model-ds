@@ -26,9 +26,6 @@ def get_scenario_count(
     scenario_counts = set()
 
     for component_array in output_data.values():
-        if component_array.ndim != BATCH_ARRAY_NDIM:
-            raise ValueError("Expected a two-dimensional dense batch output array.")
-
         scenario_counts.add(component_array.shape[0])
 
     if len(scenario_counts) != 1:
@@ -45,9 +42,6 @@ def get_available_node_quantities(
         return set()
 
     node_output = output_data[ComponentType.node]
-
-    if node_output.ndim != BATCH_ARRAY_NDIM:
-        raise ValueError("Expected a two-dimensional dense batch output array.")
 
     if node_output.shape[0] == 0:
         return set()

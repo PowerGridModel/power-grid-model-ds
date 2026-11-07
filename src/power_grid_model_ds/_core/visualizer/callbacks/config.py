@@ -193,12 +193,7 @@ def update_appliances(show_appliances, component, quantity, scenario_number, par
         return clear_electrical_colors(elements), "The selected attribute is unavailable."
 
     scenario_count = get_scenario_count(output_data)
-    if (
-        isinstance(scenario_number, bool)
-        or not isinstance(scenario_number, (int, float))
-        or not float(scenario_number).is_integer()
-        or not 1 <= scenario_number <= scenario_count
-    ):
+    if _scenario_validation_message(scenario_number, scenario_count) is not None:
         return clear_electrical_colors(elements), f"Enter a scenario between 1 and {scenario_count}."
 
     values = extract_scenario_values(output_data, ComponentType(component), quantity, int(scenario_number) - 1)
