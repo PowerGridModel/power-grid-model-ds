@@ -16,12 +16,16 @@ from power_grid_model_ds._core.visualizer.layout.selection_output import (
     SELECTION_OUTPUT_HTML,
 )
 from power_grid_model_ds._core.visualizer.measurement_comparison import (
+    DENSE_BATCH_NDIM,
     VoltageComparison,
     get_symmetric_voltage_comparison,
     get_voltage_sigma_bounds,
 )
 from power_grid_model_ds._core.visualizer.server_state import get_grid, get_output_data, get_update_data
 from power_grid_model_ds.arrays import IdArray
+
+_HIDDEN_GRAPH_STYLE = {"display": "none"}
+_VISIBLE_GRAPH_STYLE = {"display": "block"}
 
 
 @callback(
@@ -30,16 +34,15 @@ from power_grid_model_ds.arrays import IdArray
     Input("cytoscape-graph", "selectedEdgeData"),
 )
 def display_selected_elements(node_data: list[dict[str, Any]], edge_data: list[dict[str, Any]]):
-    """Display the selected elements and their associated components."""
+    """Display selected nodes, edges, and their associated components."""
     if not node_data and not edge_data:
         return SELECTION_OUTPUT_HTML.children
 
+    # Extract the associated pgm_ids for all selected nodes and edges, grouped by component type
     items_to_visualize: dict[str, list[int]] = {}
-
     for node_edge_data in [node_data, edge_data]:
         if node_edge_data is None:
             continue
-
         for elm in node_edge_data:
             for group, pgm_ids in elm["associated_ids"].items():
                 if group not in items_to_visualize:
@@ -47,51 +50,39 @@ def display_selected_elements(node_data: list[dict[str, Any]], edge_data: list[d
                 items_to_visualize[group].extend(pgm_ids)
 
     grid: Grid = get_grid()
-
     tables: list[html.H5 | dag.AgGrid] = []
-
     for comp_type, ids in items_to_visualize.items():
+        # Select unique as multiple selected elements can be connected to the same component
+        # (e.g. appliance and node selected together, branch3 edges selected together)
         unique_ids = list(set(ids))
         data = getattr(grid, comp_type).filter(id=unique_ids)
-
-        tables.append(
-            html.H5(
-                comp_type,
-                style={"marginTop": "15px", "textAlign": "left"},
-            )
-        )
+        tables.append(html.H5(comp_type, style={"marginTop": "15px", "textAlign": "left"}))
         tables.append(_to_data_table(array_data=data, group=comp_type))
 
     return tables
 
 
 def _to_data_table(array_data: IdArray, group):
-    """Convert component attributes into an AG Grid table."""
     data_table_headers: list[dict[str, str]] = [{"field": col, "headerName": col} for col in array_data.columns]
 
     list_array_data = []
-
     for entry in array_data:
         record_dict = {}
-
         for col in array_data.columns:
             if entry[col].ndim == 1:
                 record_dict[col] = entry[col].item()
             else:
                 record_dict[col] = entry[col].tolist().pop()
-
         list_array_data.append(record_dict)
 
+    # ignore[attr-defined] added for https://github.com/plotly/dash/issues/3226
     return dag.AgGrid(  # type: ignore[attr-defined]
         id={"type": "selection-table", "group": group},
         getRowId="params.data.id",
         rowData=list_array_data,
         columnDefs=data_table_headers,
         defaultColDef={"filter": True},
-        dashGridOptions={
-            "maintainColumnOrder": True,
-            "animateRows": False,
-        },
+        dashGridOptions={"maintainColumnOrder": True, "animateRows": False},
         columnSize="sizeToFit",
     )
 
@@ -216,6 +207,58 @@ def store_selected_cell(_, _node_data, _edge_data):
     }
 
 
+def _is_dense_batch_array(component_data: Any) -> bool:
+    """Whether component data uses the dense array representation supported by the selector."""
+    return isinstance(component_data, np.ndarray) and component_data.ndim == DENSE_BATCH_NDIM
+
+
+def _require_explicit_ids(component_data: np.ndarray) -> None:
+    """Reject dense batch arrays with unsupported implicit component IDs."""
+    if component_data.dtype.names is None or "id" not in component_data.dtype.names:
+        raise NotImplementedError("Batch data without explicit component IDs are not implemented.")
+
+
+def _voltage_comparison_graph(sensor_id: int, sigma_multiplier: float | None):
+    """Build a voltage comparison for compatible symmetric node output."""
+    hidden = {"display": "none"}
+    visible = {"display": "block"}
+    output_data = get_output_data()
+    if output_data is None or ComponentType.node not in output_data:
+        return None
+
+    node_output = output_data[ComponentType.node]
+    if not _is_dense_batch_array(node_output):
+        return None
+
+    node_fields = node_output.dtype.fields
+    if node_fields is None or "u" not in node_fields or node_fields["u"][0].subdtype is not None:
+        return None
+    _require_explicit_ids(node_output)
+
+    update_data = get_update_data()
+    if update_data is not None and ComponentType.sym_voltage_sensor in update_data:
+        sensor_updates = update_data[ComponentType.sym_voltage_sensor]
+        if not _is_dense_batch_array(sensor_updates):
+            return None
+        _require_explicit_ids(sensor_updates)
+
+    if not isinstance(sigma_multiplier, (int, float)) or not np.isfinite(sigma_multiplier) or sigma_multiplier < 0:
+        return go.Figure(), hidden, visible
+
+    comparison = get_symmetric_voltage_comparison(
+        grid=get_grid(),
+        update_data=update_data,
+        output_data=output_data,
+        sensor_id=sensor_id,
+    )
+    fig = _create_voltage_comparison_figure(
+        comparison,
+        sensor_id=sensor_id,
+        sigma_multiplier=float(sigma_multiplier),
+    )
+    return fig, visible, visible
+
+
 @callback(
     Output("selection-graph", "figure"),
     Output("selection-graph", "style"),
@@ -233,15 +276,13 @@ def cell_selection_graph(
     edge_data=None,
 ):
     """Render the selected attribute with optional voltage sigma bands."""
-    hidden = {"display": "none"}
-    visible = {"display": "block"}
 
     # Hide the graph when Cytoscape has no selected node or edge.
     # The default arguments preserve existing direct unit-test calls.
     if not isinstance(selected_cell, dict) or (
         (node_data is not None or edge_data is not None) and not node_data and not edge_data
     ):
-        return go.Figure(), hidden, hidden
+        return go.Figure(), _HIDDEN_GRAPH_STYLE, _HIDDEN_GRAPH_STYLE
 
     try:
         group = selected_cell["group"]
@@ -253,45 +294,12 @@ def cell_selection_graph(
             raise ValueError("Invalid selected column")
 
     except (KeyError, TypeError, ValueError):
-        return go.Figure(), hidden, hidden
+        return go.Figure(), _HIDDEN_GRAPH_STYLE, _HIDDEN_GRAPH_STYLE
 
     if comp_type == ComponentType.sym_voltage_sensor and column_id == "u_measured":
-        output_data = get_output_data()
-
-        if output_data is not None and ComponentType.node in output_data:
-            node_output = output_data[ComponentType.node]
-
-            # Only dense, symmetric node output has one scalar voltage per node.
-            is_symmetric_batch = (
-                isinstance(node_output, np.ndarray)
-                and node_output.ndim == len(("scenario", "component"))
-                and node_output.dtype.names is not None
-                and {"id", "u"}.issubset(node_output.dtype.names)
-                and node_output.dtype.fields["u"][0].subdtype is None
-            )
-
-            if is_symmetric_batch:
-                if (
-                    not isinstance(sigma_multiplier, (int, float))
-                    or not np.isfinite(sigma_multiplier)
-                    or sigma_multiplier < 0
-                ):
-                    return go.Figure(), hidden, visible
-
-                comparison = get_symmetric_voltage_comparison(
-                    grid=get_grid(),
-                    update_data=get_update_data(),
-                    output_data=output_data,
-                    sensor_id=pgm_id,
-                )
-
-                fig = _create_voltage_comparison_figure(
-                    comparison,
-                    sensor_id=pgm_id,
-                    sigma_multiplier=float(sigma_multiplier),
-                )
-
-                return fig, visible, visible
+        voltage_result = _voltage_comparison_graph(pgm_id, sigma_multiplier)
+        if voltage_result is not None:
+            return voltage_result
 
     # Preserve existing behaviour for other component attributes.
     x_array, y_array = _get_y_data_for_cell_selection(
@@ -301,7 +309,7 @@ def cell_selection_graph(
     )
 
     if x_array is None or y_array is None:
-        return go.Figure(), hidden, hidden
+        return go.Figure(), _HIDDEN_GRAPH_STYLE, _HIDDEN_GRAPH_STYLE
 
     fig = go.Figure()
 
@@ -315,11 +323,7 @@ def cell_selection_graph(
             )
         )
     else:
-        for i, color in zip(
-            range(y_array.shape[1]),
-            ["red", "green", "blue"],
-            strict=True,
-        ):
+        for i, color in zip(range(y_array.shape[1]), ["red", "green", "blue"], strict=True):
             fig.add_trace(
                 go.Scatter(
                     x=x_array,
@@ -339,41 +343,20 @@ def cell_selection_graph(
         showlegend=False,
     )
 
-    return fig, visible, hidden
+    return fig, _VISIBLE_GRAPH_STYLE, _HIDDEN_GRAPH_STYLE
 
 
 def _get_y_data_for_cell_selection(
-    comp_type: ComponentType,
-    pgm_id: int,
-    attr: str,
+    comp_type: ComponentType, pgm_id: int, attr: str
 ) -> tuple[np.ndarray | None, np.ndarray | None]:
-    """Extract the selected attribute from update or output data."""
-    update_data = get_update_data()
-
-    if update_data is not None and comp_type in update_data:
-        update_names = update_data[comp_type].dtype.names
-
-        if update_names is not None and attr in update_names:
-            x_data, y_data = get_attr_data_from_dataset(
-                update_data,
-                comp_type,
-                attr,
-                pgm_id,
-            )
-            return x_data, y_data
-
-    output_data = get_output_data()
-
-    if output_data is not None and comp_type in output_data:
-        output_names = output_data[comp_type].dtype.names
-
-        if output_names is not None and attr in output_names:
-            x_data, y_data = get_attr_data_from_dataset(
-                output_data,
-                comp_type,
-                attr,
-                pgm_id,
-            )
-            return x_data, y_data
-
+    """Extract the selected attribute from supported dense update or output data."""
+    for dataset in (get_update_data(), get_output_data()):
+        if dataset is None or comp_type not in dataset:
+            continue
+        component_data = dataset[comp_type]
+        if not _is_dense_batch_array(component_data):
+            continue
+        names = component_data.dtype.names
+        if names is not None and "id" in names and attr in names:
+            return get_attr_data_from_dataset(dataset, comp_type, attr, pgm_id)
     return None, None
