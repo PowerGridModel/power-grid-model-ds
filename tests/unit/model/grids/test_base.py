@@ -179,9 +179,9 @@ class TestGrid:
         grid.reindex_ids()
 
         assert grid.ids == {1, 2, 3, 4, 5}
-        assert grid.node.id.tolist() == [1, 2, 3]
-        assert grid.line.id.tolist() == [4, 5]
+        assert grid.node.id.tolist() == [1, 2, 5]
+        assert grid.line.id.tolist() == [3, 4]
 
-        path, num_edges = grid.graphs.complete_graph.get_shortest_path(1, 3)
-        assert path == [1, 2, 3]
+        path, num_edges = grid.graphs.complete_graph.get_shortest_path(1, 5)
+        assert path == [1, 2, 5]
         assert num_edges == 2
