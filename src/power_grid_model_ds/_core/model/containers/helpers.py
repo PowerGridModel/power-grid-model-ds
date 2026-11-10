@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 _logger = logging.getLogger("power_grid_model_ds.fancypy")  # public location of the container_equal function
 
 
-def recalculate_ids(container: "FancyArrayContainer") -> dict[int, int]:
+def reindex_ids(container: "FancyArrayContainer") -> dict[int, int]:
     """See FancyArrayContainer.recalculate_ids()"""
     new_ids = np.arange(1, len(container.ids) + 1)
     mapping = dict(zip(container.ids, new_ids, strict=True))

@@ -63,8 +63,8 @@ def minimal_node_line_container() -> _NodeLineContainer:
     return container
 
 
-class TestRecalculateIds:
-    def test_recalculate_ids(self, minimal_node_line_container: _NodeLineContainer):
+class TestReindexIds:
+    def test_reindex_ids(self, minimal_node_line_container: _NodeLineContainer):
         assert minimal_node_line_container.ids == {1, 2, 100, 200, 300, 9999}
         assert minimal_node_line_container.max_id == 9999
 
@@ -75,7 +75,7 @@ class TestRecalculateIds:
         assert minimal_node_line_container.line.from_node.tolist() == [1, 2, 9999]
         assert minimal_node_line_container.line.to_node.tolist() == [2, 9999, EMPTY_ID]
 
-        mapping = minimal_node_line_container.recalculate_ids()
+        mapping = minimal_node_line_container.reindex_ids()
         expected_mapping = {
             1: 1,
             2: 2,
