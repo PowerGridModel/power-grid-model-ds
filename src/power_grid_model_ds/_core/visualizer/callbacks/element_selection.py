@@ -19,6 +19,7 @@ from power_grid_model_ds._core.visualizer.layout.selection_output import (
 from power_grid_model_ds._core.visualizer.measurement_comparison import (
     DENSE_BATCH_NDIM,
     VoltageComparison,
+    get_symmetric_power_comparison,
     get_symmetric_voltage_comparison,
 )
 from power_grid_model_ds._core.visualizer.server_state import get_grid, get_output_data, get_update_data
@@ -203,6 +204,58 @@ def _voltage_comparison_graph(sensor_id: int, sigma_multiplier: float | None):
     return fig, visible, visible
 
 
+def _power_comparison_graph(  # noqa: PLR0911  # pylint: disable=too-many-return-statements
+    sensor_id: int, measurement_attribute: str, sigma_multiplier: float | None
+):
+    """Build a source-terminal power comparison when calculated output is available."""
+    output_data = get_output_data()
+    if output_data is None or ComponentType.source not in output_data:
+        return None
+    source_output = output_data[ComponentType.source]
+    if not _is_dense_batch_array(source_output):
+        return None
+    field = measurement_attribute[0]
+    if source_output.dtype.fields is None or field not in source_output.dtype.fields:
+        return None
+    if source_output.dtype.fields[field][0].subdtype is not None:
+        return None
+    _require_explicit_ids(source_output)
+
+    update_data = get_update_data()
+    if update_data is not None and ComponentType.sym_power_sensor in update_data:
+        updates = update_data[ComponentType.sym_power_sensor]
+        if not _is_dense_batch_array(updates):
+            return None
+        _require_explicit_ids(updates)
+
+    if not isinstance(sigma_multiplier, (int, float)) or not np.isfinite(sigma_multiplier) or sigma_multiplier < 0:
+        return go.Figure(), _HIDDEN_GRAPH_STYLE, _VISIBLE_GRAPH_STYLE
+
+    try:
+        comparison = get_symmetric_power_comparison(
+            grid=get_grid(),
+            update_data=update_data,
+            output_data=output_data,
+            sensor_id=sensor_id,
+            measurement_attribute=measurement_attribute,
+        )
+    except NotImplementedError:
+        # An unsupported terminal must not be displayed as source power.
+        return None
+
+    quantity = "active power" if measurement_attribute == "p_measured" else "reactive power"
+    unit = "W" if measurement_attribute == "p_measured" else "var"
+    figure = create_measurement_comparison_figure(
+        comparison,
+        title=f"sym_power_sensor - {quantity} comparison - id={sensor_id}",
+        quantity=quantity,
+        unit=unit,
+        sigma_multiplier=float(sigma_multiplier),
+    )
+    controls_style = _VISIBLE_GRAPH_STYLE if comparison.sigma is not None else _HIDDEN_GRAPH_STYLE
+    return figure, _VISIBLE_GRAPH_STYLE, controls_style
+
+
 @callback(
     Output("selection-graph", "figure"),
     Output("selection-graph", "style"),
@@ -219,7 +272,7 @@ def cell_selection_graph(
     node_data=None,
     edge_data=None,
 ):
-    """Render the selected attribute with optional voltage sigma bands."""
+    """Render the selected attribute with optional measurement sigma bands."""
 
     # Hide the graph when Cytoscape has no selected node or edge.
     # The default arguments preserve existing direct unit-test calls.
@@ -244,6 +297,11 @@ def cell_selection_graph(
         voltage_result = _voltage_comparison_graph(pgm_id, sigma_multiplier)
         if voltage_result is not None:
             return voltage_result
+
+    if comp_type == ComponentType.sym_power_sensor and column_id in ("p_measured", "q_measured"):
+        power_result = _power_comparison_graph(pgm_id, column_id, sigma_multiplier)
+        if power_result is not None:
+            return power_result
 
     # Preserve existing behaviour for other component attributes.
     x_array, y_array = _get_y_data_for_cell_selection(

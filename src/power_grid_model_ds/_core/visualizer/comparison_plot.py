@@ -12,7 +12,7 @@ from power_grid_model_ds._core.visualizer.measurement_comparison import (
 )
 
 
-def create_measurement_comparison_figure(  # noqa: PLR0913
+def create_measurement_comparison_figure(  # noqa: PLR0913  # pylint: disable=too-many-arguments
     comparison: MeasurementComparison,
     *,
     title: str,

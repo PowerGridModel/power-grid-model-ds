@@ -122,33 +122,12 @@ SELECTION_GRAPH_HTML = html.Div(
                         ),
                         html.Div(
                             [
-                                html.Div(
-                                    [
-                                        html.Span(
-                                            "i",
-                                            role="presentation",
-                                            style=_NOTE_ICON_STYLE,
-                                        ),
-                                        html.Span("Sigma bands do not establish result validity."),
-                                    ],
-                                    id="voltage-comparison-uncertainty-note",
-                                    style=_HIDDEN_STYLE,
-                                ),
-                                html.Div(
-                                    [
-                                        html.Span(
-                                            "!",
-                                            role="presentation",
-                                            style=_ERROR_ICON_STYLE,
-                                        ),
-                                        html.Span("Enter a finite number greater than or equal to zero."),
-                                    ],
-                                    id="sigma-multiplier-error",
-                                    role="alert",
-                                    style=_HIDDEN_STYLE,
-                                ),
+                                html.Span("!", role="presentation", style=_ERROR_ICON_STYLE),
+                                html.Span("Enter a finite number greater than or equal to zero."),
                             ],
-                            style=_CONTROLS_MESSAGE_STYLE,
+                            id="sigma-multiplier-error",
+                            role="alert",
+                            style=_HIDDEN_STYLE,
                         ),
                     ],
                     style=_CONTROLS_HEADER_STYLE,
@@ -157,18 +136,30 @@ SELECTION_GRAPH_HTML = html.Div(
             id="sigma-multiplier-controls",
             style=_CONTROLS_STYLE,
         ),
+        # This guidance must not be nested inside the optional sigma controls:
+        # a measured-versus-calculated comparison can exist without sigma bands.
+        html.Div(
+            [
+                html.Span("i", role="presentation", style=_NOTE_ICON_STYLE),
+                html.Span("Sigma bands do not establish result validity."),
+            ],
+            id="voltage-comparison-uncertainty-note",
+            style=_HIDDEN_STYLE,
+        ),
         dcc.Graph(id="selection-graph", style=_HIDDEN_STYLE),
     ],
     style={"margin": "10px"},
 )
 
 
-def _is_voltage_measurement(selected_cell):
-    """Return whether the selected cell is a symmetric voltage measurement."""
-    return (
-        isinstance(selected_cell, dict)
-        and selected_cell.get("group") == "sym_voltage_sensor"
-        and selected_cell.get("column") == "u_measured"
+def _is_measurement_comparison_selection(selected_cell):
+    """Recognize the measurement attributes supported by the comparison callback."""
+    if not isinstance(selected_cell, dict):
+        return False
+    group = selected_cell.get("group")
+    column = selected_cell.get("column")
+    return (group == "sym_voltage_sensor" and column == "u_measured") or (
+        group == "sym_power_sensor" and column in ("p_measured", "q_measured")
     )
 
 
@@ -177,27 +168,43 @@ def _is_valid_multiplier(multiplier):
     return isinstance(multiplier, (int, float)) and math.isfinite(multiplier) and multiplier >= 0
 
 
+def _is_visible(style):
+    """Return whether a component's display style is visible."""
+    return isinstance(style, dict) and style.get("display") != "none"
+
+
+def _has_comparison_traces(figure):
+    """Distinguish a comparison figure from the ordinary attribute fallback graph."""
+    if not isinstance(figure, dict):
+        return False
+    traces = figure.get("data")
+    if not isinstance(traces, (list, tuple)):
+        return False
+    names = [trace.get("name", "") for trace in traces if isinstance(trace, dict)]
+    return any(name.startswith("Measured ") for name in names) and any(
+        name.startswith(("Calculated ", "Estimated ")) for name in names
+    )
+
+
 @callback(
     Output("voltage-comparison-uncertainty-note", "style"),
     Input("selected-selection-cell", "data"),
     Input("selection-graph", "style"),
     Input("sigma-multiplier-controls", "style"),
     Input("sigma-multiplier", "value"),
+    Input("selection-graph", "figure"),
 )
-def update_voltage_comparison_guidance(selected_cell, graph_style, controls_style, multiplier=3.0):
-    """Show uncertainty guidance for visible, valid voltage comparisons."""
-    controls_visible = isinstance(controls_style, dict) and controls_style.get("display") != "none"
-    graph_visible = isinstance(graph_style, dict) and graph_style.get("display") != "none"
-
-    if (
-        _is_voltage_measurement(selected_cell)
-        and controls_visible
-        and graph_visible
-        and _is_valid_multiplier(multiplier)
-    ):
-        return _NOTE_VISIBLE_STYLE
-
-    return _HIDDEN_STYLE
+def update_voltage_comparison_guidance(selected_cell, graph_style, controls_style, multiplier=3.0, figure=None):
+    """Show the validity note for an actual, visible measurement comparison."""
+    if not _is_measurement_comparison_selection(selected_cell) or not _is_visible(graph_style):
+        return _HIDDEN_STYLE
+    if not _has_comparison_traces(figure):
+        return _HIDDEN_STYLE
+    # When bands are present, an invalid multiplier produces an empty graph;
+    # the error message, rather than the validity note, should be shown.
+    if _is_visible(controls_style) and not _is_valid_multiplier(multiplier):
+        return _HIDDEN_STYLE
+    return _NOTE_VISIBLE_STYLE
 
 
 @callback(
@@ -208,13 +215,9 @@ def update_voltage_comparison_guidance(selected_cell, graph_style, controls_styl
     Input("sigma-multiplier-controls", "style"),
 )
 def update_sigma_multiplier_validation(selected_cell, multiplier, controls_style):
-    """Highlight invalid multipliers when comparison controls are visible."""
-    controls_visible = isinstance(controls_style, dict) and controls_style.get("display") != "none"
-
-    if not _is_voltage_measurement(selected_cell) or not controls_visible:
+    """Highlight invalid multipliers for any supported measurement comparison."""
+    if not _is_measurement_comparison_selection(selected_cell) or not _is_visible(controls_style):
         return _HIDDEN_STYLE, _MULTIPLIER_INPUT_STYLE
-
     if _is_valid_multiplier(multiplier):
         return _HIDDEN_STYLE, _MULTIPLIER_INPUT_STYLE
-
     return _ERROR_VISIBLE_STYLE, _INVALID_MULTIPLIER_INPUT_STYLE
