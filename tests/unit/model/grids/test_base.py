@@ -167,13 +167,13 @@ class TestGrid:
         """Test that reindex_ids() updates the graphs correctly"""
         grid = Grid.empty()
         nodes = NodeArray.empty(3)
-        nodes.id = [1, 2, 1234]
+        nodes.id = [1, 2, 9999]
         grid.append(nodes, check_max_id=False)
 
         lines = LineArray.empty(2)
         lines.id = [100, 200]
         lines.from_node = [1, 2]
-        lines.to_node = [2, 1234]
+        lines.to_node = [2, 9999]
         grid.append(lines, check_max_id=False)
 
         grid.reindex_ids()
