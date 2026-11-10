@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-"""Tests for contextual F11 validation and timed NF07 guidance."""
+"""Tests for voltage-comparison uncertainty guidance and multiplier feedback."""
 
 import math
 
@@ -10,117 +10,117 @@ import pytest
 
 from power_grid_model_ds._core.visualizer.layout.selection_output import (
     SELECTION_GRAPH_HTML,
-    restart_sigma_guidance_timer,
-    update_sigma_guidance_expansion,
+    update_sigma_multiplier_validation,
     update_voltage_comparison_guidance,
 )
 
 VOLTAGE_CELL = {"group": "sym_voltage_sensor", "id": 101, "column": "u_measured"}
 VISIBLE = {"display": "block"}
 HIDDEN = {"display": "none"}
-
 NOTE_VISIBLE = {
     "display": "flex",
     "alignItems": "center",
     "justifyContent": "flex-end",
-    "columnGap": "16px",
-    "rowGap": "8px",
-    "flexWrap": "wrap",
+    "gap": "8px",
     "fontSize": "14px",
     "color": "#694100",
 }
 
-ERROR_VISIBLE = {
-    "display": "flex",
-    "alignItems": "center",
-    "justifyContent": "flex-end",
-    "columnGap": "16px",
-    "rowGap": "8px",
-    "flexWrap": "wrap",
-    "fontSize": "16px",
-    "color": "#912018",
-}
 
-
-def test_guidance_layout_and_timer():
+def test_guidance_layout_without_timer():
     controls = SELECTION_GRAPH_HTML.children[1]
     assert controls.id == "sigma-multiplier-controls"
     assert controls.style["display"] == "none"
 
-    header, input_row = controls.children
+    (header,) = controls.children
     assert header.style["display"] == "flex"
     assert header.style["justifyContent"] == "space-between"
-    assert header.children[0].children == "Sigma multiplier"
 
-    note = header.children[1]
+    multiplier_field, message_area = header.children
+    assert multiplier_field.style["flexDirection"] == "column"
+    assert multiplier_field.style["alignItems"] == "flex-start"
+    label, sigma_input = multiplier_field.children
+    assert label.children == "Sigma multiplier"
+    assert label.htmlFor == "sigma-multiplier"
+    assert sigma_input.id == "sigma-multiplier"
+    assert sigma_input.min == 0
+    assert sigma_input.value == 3.0
+
+    assert message_area.style["display"] == "flex"
+    assert message_area.style["justifyContent"] == "flex-end"
+    note, error = message_area.children
+
     assert note.id == "voltage-comparison-uncertainty-note"
-    assert note.style["columnGap"] == "16px"
+    assert note.style == HIDDEN
+    assert note.children[0].role == "presentation"
     assert "do not establish result validity" in note.children[1].children
+    assert len(note.children) == 2
 
-    details = note.children[2]
-    assert details.id == "sigma-guidance-details"
-    assert details.children[0].children == "Why?"
-
-    error = header.children[2]
     assert error.id == "sigma-multiplier-error"
     assert error.role == "alert"
-    assert error.children[1].children == ("Enter a finite number greater than or equal to zero.")
+    assert error.style == HIDDEN
+    assert error.children[0].children == "!"
+    assert error.children[0].role == "presentation"
+    assert error.children[0].style["backgroundColor"] == "#b42318"
+    assert "finite number" in error.children[1].children
+    assert len(error.children) == 2
 
-    error_icon = error.children[0]
-    assert error_icon.style["display"] == "inline-flex"
-    assert error_icon.style["alignItems"] == "center"
-    assert error_icon.style["justifyContent"] == "center"
-
-    error_text = error.children[1]
-    assert "style" not in error_text.to_plotly_json()["props"]
-
-    sigma_input = input_row.children[0]
-    assert sigma_input.id == "sigma-multiplier"
-    assert len(input_row.children) == 1
-
-    timer = SELECTION_GRAPH_HTML.children[3]
-    assert timer.id == "sigma-guidance-timer"
-    assert timer.interval == 5000
-    assert timer.max_intervals == 1
-    assert timer.disabled is True
+    assert len(SELECTION_GRAPH_HTML.children) == 3
+    assert SELECTION_GRAPH_HTML.children[2].id == "selection-graph"
 
 
-@pytest.mark.parametrize("multiplier", [0, 1, 2.0, 3.5])
+def test_visible_voltage_comparison_shows_note():
+    assert update_voltage_comparison_guidance(VOLTAGE_CELL, VISIBLE, VISIBLE) == NOTE_VISIBLE
+
+
+@pytest.mark.parametrize("multiplier", [0, 1, 2.0, 3.0, 3.5])
 def test_valid_multiplier_shows_note(multiplier):
-    assert update_voltage_comparison_guidance(VOLTAGE_CELL, multiplier, VISIBLE, VISIBLE) == (HIDDEN, NOTE_VISIBLE)
+    assert update_voltage_comparison_guidance(VOLTAGE_CELL, VISIBLE, VISIBLE, multiplier) == NOTE_VISIBLE
 
 
-@pytest.mark.parametrize(
-    "multiplier",
-    [None, -1, math.nan, math.inf, -math.inf, "invalid"],
-)
-def test_invalid_multiplier_shows_error(multiplier):
-    assert update_voltage_comparison_guidance(VOLTAGE_CELL, multiplier, HIDDEN, VISIBLE) == (ERROR_VISIBLE, HIDDEN)
+@pytest.mark.parametrize("multiplier", [None, -1, math.nan, math.inf, -math.inf, "invalid"])
+def test_invalid_multiplier_hides_note(multiplier):
+    assert update_voltage_comparison_guidance(VOLTAGE_CELL, VISIBLE, VISIBLE, multiplier) == HIDDEN
 
 
-@pytest.mark.parametrize(
-    "cell",
-    [None, {}, {"group": "node", "column": "u"}],
-)
+@pytest.mark.parametrize("cell", [None, {}, {"group": "node", "column": "u"}])
 def test_other_selection_hides_guidance(cell):
-    assert update_voltage_comparison_guidance(cell, -1, VISIBLE, VISIBLE) == (HIDDEN, HIDDEN)
-
-    assert restart_sigma_guidance_timer(cell) == (0, True)
-    assert update_sigma_guidance_expansion(cell, 0) is False
+    assert update_voltage_comparison_guidance(cell, VISIBLE, VISIBLE) == HIDDEN
 
 
 def test_hidden_controls_hide_guidance():
-    assert update_voltage_comparison_guidance(VOLTAGE_CELL, -1, HIDDEN, HIDDEN) == (HIDDEN, HIDDEN)
+    assert update_voltage_comparison_guidance(VOLTAGE_CELL, HIDDEN, HIDDEN) == HIDDEN
 
 
 def test_hidden_graph_hides_note():
-    assert update_voltage_comparison_guidance(VOLTAGE_CELL, 2, HIDDEN, VISIBLE) == (HIDDEN, HIDDEN)
+    assert update_voltage_comparison_guidance(VOLTAGE_CELL, HIDDEN, VISIBLE) == HIDDEN
 
 
-def test_new_voltage_selection_starts_five_second_timer():
-    assert restart_sigma_guidance_timer(VOLTAGE_CELL) == (0, False)
-    assert update_sigma_guidance_expansion(VOLTAGE_CELL, 0) is True
+@pytest.mark.parametrize("multiplier", [0, 1, 2.0, 3.0, 3.5])
+def test_valid_multiplier_has_normal_input_and_no_error(multiplier):
+    error_style, input_style = update_sigma_multiplier_validation(VOLTAGE_CELL, multiplier, VISIBLE)
+    assert error_style == HIDDEN
+    assert input_style == {"width": "100px", "padding": "6px 8px"}
 
 
-def test_timer_collapses_details():
-    assert update_sigma_guidance_expansion(VOLTAGE_CELL, 1) is False
+@pytest.mark.parametrize("multiplier", [None, -1, math.nan, math.inf, -math.inf, "invalid"])
+def test_invalid_multiplier_shows_error_and_red_input(multiplier):
+    error_style, input_style = update_sigma_multiplier_validation(VOLTAGE_CELL, multiplier, VISIBLE)
+    assert error_style["display"] == "flex"
+    assert error_style["justifyContent"] == "flex-end"
+    assert error_style["color"] == "#b42318"
+    assert input_style["border"] == "2px solid #b42318"
+    assert input_style["color"] == "#b42318"
+
+
+@pytest.mark.parametrize("cell", [None, {}, {"group": "node", "column": "u"}])
+def test_other_selection_hides_multiplier_error(cell):
+    error_style, input_style = update_sigma_multiplier_validation(cell, -1, VISIBLE)
+    assert error_style == HIDDEN
+    assert "border" not in input_style
+
+
+def test_hidden_controls_hide_multiplier_error():
+    error_style, input_style = update_sigma_multiplier_validation(VOLTAGE_CELL, -1, HIDDEN)
+    assert error_style == HIDDEN
+    assert "border" not in input_style

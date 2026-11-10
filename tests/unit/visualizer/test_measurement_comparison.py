@@ -11,6 +11,7 @@ import pytest
 from numpy.testing import assert_array_equal
 from power_grid_model import ComponentType, initialize_array
 
+import power_grid_model_ds._core.visualizer.callbacks.element_selection as selection
 from power_grid_model_ds._core.visualizer.callbacks.element_selection import (
     _create_voltage_comparison_figure,
 )
@@ -330,3 +331,90 @@ def test_voltage_comparison_figure_preserves_missing_values():
         figure.data[3].y,
         [229.0, np.nan, 228.0],
     )
+
+
+@pytest.mark.parametrize("unsupported", [{"indptr": np.array([0, 1])}, np.zeros(3)])
+def test_sparse_or_non_dense_sensor_updates_skip_comparison(monkeypatch, output_data, unsupported):
+    """Unsupported sensor updates must not enter the dense voltage comparison."""
+    monkeypatch.setattr(selection, "get_output_data", lambda: output_data)
+    monkeypatch.setattr(
+        selection,
+        "get_update_data",
+        lambda: {ComponentType.sym_voltage_sensor: unsupported},
+    )
+
+    assert selection._voltage_comparison_graph(101, 2.0) is None
+
+
+@pytest.mark.parametrize("unsupported", [{"indptr": np.array([0, 1])}, np.zeros(3)])
+def test_unsupported_sensor_updates_do_not_crash_cell_selection(monkeypatch, output_data, unsupported):
+    """An unsupported update representation must not crash the selection callback."""
+    monkeypatch.setattr(selection, "get_output_data", lambda: output_data)
+    monkeypatch.setattr(
+        selection,
+        "get_update_data",
+        lambda: {ComponentType.sym_voltage_sensor: unsupported},
+    )
+
+    figure, graph_style, controls_style = selection.cell_selection_graph(
+        {"group": ComponentType.sym_voltage_sensor.value, "id": 101, "column": "u_measured"},
+        2.0,
+    )
+
+    assert len(figure.data) == 0
+    assert graph_style == {"display": "none"}
+    assert controls_style == {"display": "none"}
+
+
+def test_dense_node_output_without_explicit_ids_is_not_implemented(monkeypatch):
+    """Dense node output with implicit IDs must report the unsupported feature."""
+    nodes = np.zeros((3, 1), dtype=[("u", "f8")])
+    monkeypatch.setattr(selection, "get_output_data", lambda: {ComponentType.node: nodes})
+    monkeypatch.setattr(selection, "get_update_data", lambda: None)
+
+    with pytest.raises(NotImplementedError, match="explicit component IDs"):
+        selection._voltage_comparison_graph(101, 2.0)
+
+
+def test_dense_sensor_updates_without_explicit_ids_are_not_implemented(monkeypatch, output_data):
+    """Dense sensor updates with implicit IDs must report the unsupported feature."""
+    updates = np.zeros((3, 1), dtype=[("u_measured", "f8")])
+    monkeypatch.setattr(selection, "get_output_data", lambda: output_data)
+    monkeypatch.setattr(
+        selection,
+        "get_update_data",
+        lambda: {ComponentType.sym_voltage_sensor: updates},
+    )
+
+    with pytest.raises(NotImplementedError, match="explicit component IDs"):
+        selection._voltage_comparison_graph(101, 2.0)
+
+
+def test_attribute_selector_falls_back_to_dense_output_after_unsupported_update(monkeypatch, output_data):
+    """Unsupported update data must not prevent selection from valid dense output."""
+    monkeypatch.setattr(
+        selection,
+        "get_update_data",
+        lambda: {ComponentType.node: {"indptr": np.array([0, 1])}},
+    )
+    monkeypatch.setattr(selection, "get_output_data", lambda: output_data)
+
+    scenarios, values = selection._get_y_data_for_cell_selection(ComponentType.node, 10, "u")
+
+    assert_array_equal(scenarios, [0, 1, 2])
+    assert_array_equal(values, [229.0, 231.0, 228.0])
+
+
+def test_supported_dense_voltage_comparison_still_renders(monkeypatch, grid, output_data):
+    """Compatibility checks must not block the supported dense comparison."""
+    monkeypatch.setattr(selection, "get_grid", lambda: grid)
+    monkeypatch.setattr(selection, "get_update_data", lambda: None)
+    monkeypatch.setattr(selection, "get_output_data", lambda: output_data)
+
+    result = selection._voltage_comparison_graph(101, 2.0)
+
+    assert result is not None
+    figure, graph_style, controls_style = result
+    assert len(figure.data) == 4
+    assert graph_style == {"display": "block"}
+    assert controls_style == {"display": "block"}

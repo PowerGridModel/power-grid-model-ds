@@ -12,6 +12,7 @@ from power_grid_model import ComponentType
 from power_grid_model.data_types import BatchDataset
 
 from power_grid_model_ds import Grid
+from power_grid_model_ds._core.visualizer.grid_utils import get_attr_data_from_dataset
 
 DENSE_BATCH_NDIM = 2
 
@@ -26,63 +27,38 @@ class VoltageComparison:
     sigma: NDArray[np.float64]
 
 
-def _get_estimated_voltages(node_output: NDArray, node_id: int) -> NDArray[np.float64]:
-    """Return the calculated node voltage for each scenario.
+def _require_dense_ids(dataset: BatchDataset, component: ComponentType) -> NDArray:
+    """Return a dense component array with explicit IDs."""
+    component_data = dataset[component]
 
-    Missing node results remain NaN to preserve scenario alignment.
-    """
-    if node_output.ndim != DENSE_BATCH_NDIM:
-        raise ValueError("Expected a dense batch node output array")
+    if not isinstance(component_data, np.ndarray) or component_data.ndim != DENSE_BATCH_NDIM:
+        raise NotImplementedError(
+            "Voltage comparison currently supports only dense batch arrays. "
+            "Sparse and columnar batch data are not implemented."
+        )
 
-    if node_output.dtype.names is None or not {"id", "u"}.issubset(node_output.dtype.names):
-        raise ValueError("Node output must contain 'id' and 'u' fields")
+    if component_data.dtype.names is None or "id" not in component_data.dtype.names:
+        raise NotImplementedError(
+            "Voltage comparison requires an explicit 'id' field. "
+            "Batch data without explicit component IDs are not implemented."
+        )
+
+    return component_data
+
+
+def _get_estimated_voltages(output_data: BatchDataset, node_id: int) -> NDArray[np.float64]:
+    """Return calculated node voltages, preserving missing scenarios as NaN."""
+    node_output = _require_dense_ids(output_data, ComponentType.node)
+    if node_output.dtype.names is None or "u" not in node_output.dtype.names:
+        raise ValueError("Node output must contain a 'u' field")
+
+    scenario_indices, voltages = get_attr_data_from_dataset(output_data, ComponentType.node, "u", node_id)
+    if len(np.unique(scenario_indices)) != len(scenario_indices):
+        raise ValueError(f"Duplicate node ID {node_id} in output")
 
     estimated = np.full(node_output.shape[0], np.nan, dtype=np.float64)
-
-    for scenario_index, scenario in enumerate(node_output):
-        matches = scenario[scenario["id"] == node_id]
-
-        if len(matches) > 1:
-            raise ValueError(f"Duplicate node ID {node_id} in output")
-
-        if len(matches) == 1:
-            estimated[scenario_index] = matches["u"][0]
-
+    estimated[scenario_indices] = voltages
     return estimated
-
-
-def _apply_sensor_update(
-    sensor_updates: NDArray,
-    scenario_index: int,
-    sensor_id: int,
-    measured: NDArray[np.float64],
-    sigma: NDArray[np.float64],
-) -> None:
-    """Apply explicitly specified measurement and sigma updates for one scenario."""
-    scenario_updates = sensor_updates[scenario_index]
-    matches = scenario_updates[scenario_updates["id"] == sensor_id]
-
-    if len(matches) > 1:
-        raise ValueError(f"Duplicate sensor ID {sensor_id} in updates")
-
-    if len(matches) == 0:
-        return
-
-    update = matches[0]
-
-    for attribute, target in (
-        ("u_measured", measured),
-        ("u_sigma", sigma),
-    ):
-        if attribute not in sensor_updates.dtype.names:
-            continue
-
-        value = float(update[attribute])
-
-        # Power Grid Model update arrays use NaN for unspecified
-        # floating-point attributes. Preserve the base value.
-        if not np.isnan(value):
-            target[scenario_index] = value
 
 
 def _apply_sensor_updates(
@@ -92,29 +68,30 @@ def _apply_sensor_updates(
     measured: NDArray[np.float64],
     sigma: NDArray[np.float64],
 ) -> None:
-    """Apply available symmetric voltage sensor updates across scenarios."""
+    """Apply specified sensor updates at their original scenario positions."""
     if update_data is None or ComponentType.sym_voltage_sensor not in update_data:
         return
 
-    sensor_updates = update_data[ComponentType.sym_voltage_sensor]
-
-    if sensor_updates.ndim != DENSE_BATCH_NDIM:
-        raise ValueError("Expected a dense batch sensor update array")
-
+    sensor_updates = _require_dense_ids(update_data, ComponentType.sym_voltage_sensor)
     if sensor_updates.shape[0] != scenario_count:
         raise ValueError("Sensor updates must match the output scenario count")
 
-    if sensor_updates.dtype.names is None or "id" not in sensor_updates.dtype.names:
-        raise ValueError("Sensor updates must contain an 'id' field")
+    sensor_fields = sensor_updates.dtype.names
+    if sensor_fields is None:
+        raise NotImplementedError("Sensor updates require named fields")
 
-    for scenario_index in range(scenario_count):
-        _apply_sensor_update(
-            sensor_updates,
-            scenario_index,
-            sensor_id,
-            measured,
-            sigma,
+    for attribute, target in (("u_measured", measured), ("u_sigma", sigma)):
+        if attribute not in sensor_fields:
+            continue
+
+        scenario_indices, values = get_attr_data_from_dataset(
+            update_data, ComponentType.sym_voltage_sensor, attribute, sensor_id
         )
+        if len(np.unique(scenario_indices)) != len(scenario_indices):
+            raise ValueError(f"Duplicate sensor ID {sensor_id} in updates")
+
+        specified = ~np.isnan(values)
+        target[scenario_indices[specified]] = values[specified]
 
 
 def get_symmetric_voltage_comparison(
@@ -123,30 +100,11 @@ def get_symmetric_voltage_comparison(
     output_data: BatchDataset,
     sensor_id: int,
 ) -> VoltageComparison:
-    """Prepare measured and calculated voltage values for one sensor.
+    """Compare base or updated sensor values with calculated node voltages.
 
-    The function supports dense batch datasets. Measurements and sigma
-    values start from the base grid and are overridden by explicitly
-    specified sensor updates.
-
-    Calculated voltages are retrieved from the corresponding node
-    output using the sensor's measured_object reference.
-
-    Scenario positions are preserved. Missing node results remain NaN.
-
-    Args:
-        grid: Base grid containing the symmetric voltage sensor.
-        update_data: Optional dense batch updates.
-        output_data: Dense batch calculation results.
-        sensor_id: ID of the symmetric voltage sensor.
-
-    Returns:
-        VoltageComparison containing aligned scenario indices,
-        measured voltages, calculated voltages, and sigma values.
-
-    Raises:
-        ValueError: If the sensor is missing or duplicated, or if
-            the supplied batch arrays have invalid structures.
+    Scenario positions are preserved, and unspecified floating-point sensor
+    updates retain the base-grid values. Only dense batch arrays with explicit
+    IDs are currently supported.
     """
     sensors = grid.sym_voltage_sensor
     sensor_matches = np.flatnonzero(sensors.id == sensor_id)
@@ -160,33 +118,13 @@ def get_symmetric_voltage_comparison(
     if ComponentType.node not in output_data:
         raise ValueError("Node output is required for voltage comparison")
 
-    node_output = output_data[ComponentType.node]
-
-    # Validate output and determine the number of scenarios.
-    estimated = _get_estimated_voltages(node_output, node_id)
+    estimated = _get_estimated_voltages(output_data, node_id)
     scenario_count = len(estimated)
     scenario_indices = np.arange(scenario_count, dtype=np.intp)
 
-    # Start with the base-grid sensor values for every scenario.
-    measured = np.full(
-        scenario_count,
-        float(sensors.u_measured[sensor_index]),
-        dtype=np.float64,
-    )
-    sigma = np.full(
-        scenario_count,
-        float(sensors.u_sigma[sensor_index]),
-        dtype=np.float64,
-    )
-
-    # Apply explicitly specified scenario-specific sensor updates.
-    _apply_sensor_updates(
-        update_data,
-        scenario_count,
-        sensor_id,
-        measured,
-        sigma,
-    )
+    measured = np.full(scenario_count, float(sensors.u_measured[sensor_index]), dtype=np.float64)
+    sigma = np.full(scenario_count, float(sensors.u_sigma[sensor_index]), dtype=np.float64)
+    _apply_sensor_updates(update_data, scenario_count, sensor_id, measured, sigma)
 
     return VoltageComparison(
         scenario_indices=scenario_indices,
@@ -209,5 +147,4 @@ def get_voltage_sigma_bounds(
 
     lower = comparison.measured - multiplier * comparison.sigma
     upper = comparison.measured + multiplier * comparison.sigma
-
     return lower, upper
