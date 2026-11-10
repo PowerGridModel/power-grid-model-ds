@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-"""Prepare symmetric voltage measurement comparisons."""
+"""Prepare aligned measurement comparisons and symmetric voltage sensor data."""
 
 from dataclasses import dataclass
 
@@ -18,13 +18,20 @@ DENSE_BATCH_NDIM = 2
 
 
 @dataclass(frozen=True)
-class VoltageComparison:
-    """Measured and calculated voltages aligned by scenario."""
+class MeasurementComparison:
+    """Measured and estimated values aligned by scenario.
+
+    Sigma is optional for comparisons without measurement uncertainty.
+    """
 
     scenario_indices: NDArray[np.intp]
     measured: NDArray[np.float64]
     estimated: NDArray[np.float64]
-    sigma: NDArray[np.float64]
+    sigma: NDArray[np.float64] | None = None
+
+
+# Preserve the existing public name for voltage-specific callers.
+VoltageComparison = MeasurementComparison
 
 
 def _require_dense_ids(dataset: BatchDataset, component: ComponentType) -> NDArray:
@@ -134,13 +141,16 @@ def get_symmetric_voltage_comparison(
     )
 
 
-def get_voltage_sigma_bounds(
-    comparison: VoltageComparison,
+def get_measurement_sigma_bounds(
+    comparison: MeasurementComparison,
     multiplier: float,
 ) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-    """Calculate measurement-centred voltage uncertainty bounds."""
+    """Calculate measurement-centred uncertainty bounds for aligned series."""
     if not np.isfinite(multiplier) or multiplier < 0:
         raise ValueError("Sigma multiplier must be finite and non-negative")
+
+    if comparison.sigma is None:
+        raise ValueError("Measurement sigma is required to calculate bounds")
 
     if np.any(np.isfinite(comparison.sigma) & (comparison.sigma < 0)):
         raise ValueError("Sigma values must be non-negative")
@@ -148,3 +158,11 @@ def get_voltage_sigma_bounds(
     lower = comparison.measured - multiplier * comparison.sigma
     upper = comparison.measured + multiplier * comparison.sigma
     return lower, upper
+
+
+def get_voltage_sigma_bounds(
+    comparison: VoltageComparison,
+    multiplier: float,
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+    """Compatibility wrapper for measurement-centred voltage bounds."""
+    return get_measurement_sigma_bounds(comparison, multiplier)

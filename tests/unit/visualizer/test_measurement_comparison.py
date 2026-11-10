@@ -15,8 +15,11 @@ import power_grid_model_ds._core.visualizer.callbacks.element_selection as selec
 from power_grid_model_ds._core.visualizer.callbacks.element_selection import (
     _create_voltage_comparison_figure,
 )
+from power_grid_model_ds._core.visualizer.comparison_plot import create_measurement_comparison_figure
 from power_grid_model_ds._core.visualizer.measurement_comparison import (
+    MeasurementComparison,
     VoltageComparison,
+    get_measurement_sigma_bounds,
     get_symmetric_voltage_comparison,
     get_voltage_sigma_bounds,
 )
@@ -418,3 +421,42 @@ def test_supported_dense_voltage_comparison_still_renders(monkeypatch, grid, out
     assert len(figure.data) == 4
     assert graph_style == {"display": "block"}
     assert controls_style == {"display": "block"}
+
+
+def test_generic_comparison_without_sigma_plots_two_series():
+    comparison = MeasurementComparison(
+        scenario_indices=np.array([0, 1]),
+        measured=np.array([10.0, 11.0]),
+        estimated=np.array([9.5, 10.5]),
+    )
+    figure = create_measurement_comparison_figure(comparison, title="Power comparison", quantity="power", unit="W")
+    assert len(figure.data) == 2
+    assert figure.data[0].name == "Measured power"
+    assert figure.data[1].name == "Calculated power"
+    assert figure.layout.yaxis.title.text == "Power (W)"
+
+
+def test_generic_comparison_sigma_bounds_and_labels():
+    comparison = MeasurementComparison(
+        scenario_indices=np.array([0, 1]),
+        measured=np.array([10.0, 11.0]),
+        estimated=np.array([9.5, 10.5]),
+        sigma=np.array([1.0, 2.0]),
+    )
+    lower, upper = get_measurement_sigma_bounds(comparison, 2.0)
+    assert_array_equal(lower, [8.0, 7.0])
+    assert_array_equal(upper, [12.0, 15.0])
+    figure = create_measurement_comparison_figure(comparison, title="Power comparison", quantity="power", unit="W")
+    assert len(figure.data) == 4
+    assert figure.data[2].name == "Measured power"
+    assert figure.data[3].name == "Calculated power"
+
+
+def test_generic_sigma_bounds_require_uncertainty():
+    comparison = MeasurementComparison(
+        scenario_indices=np.array([0]),
+        measured=np.array([10.0]),
+        estimated=np.array([9.5]),
+    )
+    with pytest.raises(ValueError, match="Measurement sigma is required"):
+        get_measurement_sigma_bounds(comparison, 2.0)
