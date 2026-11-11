@@ -10,15 +10,15 @@ from power_grid_model_ds._core.visualizer.callbacks import (  # noqa: F401  # py
     config,
     element_selection,
     header,
+    scenario_selection,
     search_form,
-    timestamp_selection,
 )
 from power_grid_model_ds._core.visualizer.layout.cytoscape_html import get_cytoscape_html
 from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import DEFAULT_STYLESHEET
 from power_grid_model_ds._core.visualizer.layout.header import HEADER_HTML
 from power_grid_model_ds._core.visualizer.layout.layout_config import get_default_graph_layout
+from power_grid_model_ds._core.visualizer.layout.scenario_selection import get_scenario_selection_html
 from power_grid_model_ds._core.visualizer.layout.selection_output import SELECTION_GRAPH_HTML, SELECTION_OUTPUT_HTML
-from power_grid_model_ds._core.visualizer.layout.timestamp_selection import get_timestamp_selection_html
 from power_grid_model_ds._core.visualizer.parsers import parse_element_data
 from power_grid_model_ds._core.visualizer.parsing_utils import filter_out_appliances
 
@@ -62,7 +62,7 @@ def get_app_layout(grid: Grid) -> html.Div:
             HEADER_HTML,
             html.Hr(style={"border-color": "white", "margin": "0"}),
             cytoscape_html,
-            get_timestamp_selection_html(),
+            get_scenario_selection_html(),
             SELECTION_OUTPUT_HTML,
             SELECTION_GRAPH_HTML,
         ],

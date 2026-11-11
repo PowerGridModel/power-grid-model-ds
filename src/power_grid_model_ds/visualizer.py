@@ -19,7 +19,7 @@ try:
     from power_grid_model_ds._core.visualizer.layout.layout_config import get_default_graph_layout, layout_with_config
     from power_grid_model_ds._core.visualizer.parsers import parse_element_data
     from power_grid_model_ds._core.visualizer.parsing_utils import filter_out_appliances
-    from power_grid_model_ds._core.visualizer.timestamp_selection import validate_timestamps
+    from power_grid_model_ds._core.visualizer.scenario_selection import validate_timestamps
 except ImportError as error:
     raise ImportError(
         "Missing dependencies for visualizer: install with 'pip install power-grid-model-ds[visualizer]'"
