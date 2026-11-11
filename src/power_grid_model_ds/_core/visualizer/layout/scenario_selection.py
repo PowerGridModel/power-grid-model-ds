@@ -141,6 +141,26 @@ def get_scenario_selection_html() -> html.Div:
                 ),
             ]
         )
+        if not has_timestamps:
+            controls.extend(
+                [
+                    html.Div(
+                        dcc.DatePickerSingle(
+                            id="timestamp-date",
+                            date=None,
+                        ),
+                        style={"display": "none"},
+                    ),
+                    html.Div(
+                        dcc.Dropdown(
+                            id="timestamp-time",
+                            options=[],
+                            value=None,
+                        ),
+                        style={"display": "none"},
+                    ),
+                ]
+            )
 
     children.append(
         html.Div(
