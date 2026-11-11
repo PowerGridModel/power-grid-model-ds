@@ -2,15 +2,22 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-"""Validate optional scenario selection and synchronize timestamp navigation."""
+"""Validate scenario selection and synchronise optional timestamp navigation."""
 
 from dash import Input, Output, callback, ctx, no_update, set_props
 
 from power_grid_model_ds._core.visualizer.scenario_selection import get_scenario_count
-from power_grid_model_ds._core.visualizer.server_state import get_output_data, get_timestamps, get_update_data
+from power_grid_model_ds._core.visualizer.server_state import (
+    get_output_data,
+    get_timestamps,
+    get_update_data,
+)
 
 
-def _time_options_for_date(timestamps: tuple[str, ...], selected_date: str) -> list[dict[str, str | int]]:
+def _time_options_for_date(
+    timestamps: tuple[str, ...],
+    selected_date: str,
+) -> list[dict[str, str | int]]:
     """Return available times using original scenario indices."""
     return [
         {"label": timestamp[11:], "value": index}
@@ -25,27 +32,37 @@ def _valid_scenario_index(index: object, count: int) -> bool:
 
 
 def _clear_timestamp_navigation() -> None:
-    """Reset optional timestamp controls without selecting a scenario."""
+    """Reset optional timestamp controls."""
     if get_timestamps():
         set_props("timestamp-date", {"date": None})
         set_props("timestamp-time", {"options": [], "value": None})
 
 
-def _navigate_from_scenario(timestamps: tuple[str, ...], scenario_index: int | None) -> None:
-    """Update timestamp controls only after a valid scenario is selected."""
+def _navigate_from_scenario(
+    timestamps: tuple[str, ...],
+    scenario_index: int | None,
+) -> None:
+    """Synchronise timestamp controls with a valid scenario index."""
     if not _valid_scenario_index(scenario_index, len(timestamps)):
         return
 
     selected_date = timestamps[scenario_index][:10]
+
     set_props("timestamp-date", {"date": selected_date})
     set_props(
         "timestamp-time",
-        {"options": _time_options_for_date(timestamps, selected_date), "value": scenario_index},
+        {
+            "options": _time_options_for_date(timestamps, selected_date),
+            "value": scenario_index,
+        },
     )
 
 
-def _navigate_from_date(timestamps: tuple[str, ...], selected_date: str | None) -> int | None:
-    """Choose the first scenario on a user-selected date."""
+def _navigate_from_date(
+    timestamps: tuple[str, ...],
+    selected_date: str | None,
+):
+    """Return available times without automatically selecting a scenario."""
     if selected_date is None:
         return no_update
 
@@ -53,40 +70,60 @@ def _navigate_from_date(timestamps: tuple[str, ...], selected_date: str | None) 
     if not options:
         return no_update
 
-    first_index = int(options[0]["value"])
-    set_props("timestamp-time", {"options": options, "value": first_index})
-    return first_index
+    set_props("timestamp-time", {"options": options, "value": None})
+    return no_update
 
 
-def _navigate_from_time(timestamps: tuple[str, ...], selected_time: int | None) -> int | None:
-    """Map a selected time to its scenario index."""
+def _navigate_from_time(
+    timestamps: tuple[str, ...],
+    selected_time: int | None,
+):
+    """Map a selected time to its original scenario index."""
+    if not _valid_scenario_index(selected_time, len(timestamps)):
+        return no_update
+
+    return selected_time
+
+
+@callback(
+    Output("scenario-selector", "value"),
+    Input("timestamp-time", "value", allow_optional=True),
+    prevent_initial_call=True,
+)
+def synchronize_scenario_navigation(
+    selected_time: int | None,
+) -> int | None:
+    """Select a scenario only when an available time is selected."""
+    timestamps = get_timestamps()
+
+    if not timestamps:
+        return no_update
+
+    if ctx.triggered_id != "timestamp-time":
+        return no_update
+
     if not _valid_scenario_index(selected_time, len(timestamps)):
         return no_update
     return selected_time
 
 
 @callback(
-    Output("scenario-selector", "value"),
+    Output("timestamp-time", "options"),
     Input("timestamp-date", "date", allow_optional=True),
-    Input("timestamp-time", "value", allow_optional=True),
     prevent_initial_call=True,
 )
-def synchronize_scenario_navigation(
+def update_available_times(
     selected_date: str | None,
-    selected_time: int | None,
-) -> int | None:
-    """Apply date/time navigation without automatically selecting a scenario."""
+):
+    """Update the available times without selecting a scenario."""
     timestamps = get_timestamps()
     if not timestamps:
         return no_update
 
-    triggered = ctx.triggered_id
-    if triggered == "timestamp-date":
-        return _navigate_from_date(timestamps, selected_date)
-    if triggered == "timestamp-time":
-        return _navigate_from_time(timestamps, selected_time)
+    if selected_date is None:
+        return []
 
-    return no_update
+    return _time_options_for_date(timestamps, selected_date)
 
 
 @callback(

@@ -107,14 +107,14 @@ def test_invalid_scenario_does_not_update_controls():
     mock_set_props.assert_not_called()
 
 
-def test_calendar_date_selects_first_available_scenario():
+def test_calendar_date_updates_times_without_selecting_scenario():
     with patch(f"{MODULE}.set_props") as mock_set_props:
         result = _navigate_from_date(TIMESTAMPS, "2026-11-05")
 
-    assert result == 1
+    assert result is no_update
     mock_set_props.assert_called_once_with(
         "timestamp-time",
-        {"options": NOVEMBER_OPTIONS, "value": 1},
+        {"options": NOVEMBER_OPTIONS, "value": None},
     )
 
 
@@ -134,21 +134,22 @@ def test_time_selection_preserves_original_scenario_index():
 
 
 @pytest.mark.parametrize(
-    ("triggered_id", "expected"),
+    ("triggered_id", "selected_time", "expected"),
     [
-        ("timestamp-date", 1),
-        ("timestamp-time", 3),
-        ("unknown", no_update),
+        ("timestamp-time", 3, 3),
+        ("timestamp-time", None, no_update),
+        ("timestamp-time", 4, no_update),
+        ("unknown", 3, no_update),
     ],
 )
-def test_navigation_dispatch(triggered_id, expected):
+def test_navigation_dispatch(triggered_id, selected_time, expected):
+    """Only a valid time selection may navigate to a scenario."""
     with (
         patch(f"{MODULE}.get_timestamps", return_value=TIMESTAMPS),
         patch(f"{MODULE}.ctx") as mock_ctx,
-        patch(f"{MODULE}.set_props"),
     ):
         mock_ctx.triggered_id = triggered_id
-        result = synchronize_scenario_navigation("2026-11-05", 3)
+        result = synchronize_scenario_navigation(selected_time)
 
     if expected is no_update:
         assert result is no_update
@@ -158,16 +159,15 @@ def test_navigation_dispatch(triggered_id, expected):
 
 @pytest.mark.parametrize("timestamps", [None, ()])
 def test_navigation_without_timestamps(timestamps):
+    """Timestamp navigation must remain optional."""
     with (
         patch(f"{MODULE}.get_timestamps", return_value=timestamps),
         patch(f"{MODULE}.ctx") as mock_ctx,
-        patch(f"{MODULE}.set_props") as mock_set_props,
     ):
         mock_ctx.triggered_id = "timestamp-time"
-        result = synchronize_scenario_navigation(None, 0)
+        result = synchronize_scenario_navigation(0)
 
     assert result is no_update
-    mock_set_props.assert_not_called()
 
 
 def test_clear_timestamp_navigation():
