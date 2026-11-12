@@ -2,12 +2,14 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+import math
 from typing import Any
 
 import dash_ag_grid as dag
 import numpy as np
 import plotly.graph_objects as go
-from dash import ALL, Input, Output, callback, callback_context, html, no_update
+from dash import ALL, Input, Output, Patch, State, callback, callback_context, html, no_update
+from dash.exceptions import PreventUpdate
 from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.grids.base import Grid
@@ -161,6 +163,12 @@ def _create_voltage_comparison_figure(
         template="plotly_white",
         hovermode="x unified",
         showlegend=True,
+        meta={
+            "comparison_type": "sym_voltage_sensor",
+            "sensor_id": sensor_id,
+            "sigma": comparison.sigma.tolist(),
+            "measured": comparison.measured.tolist(),
+        },
     )
 
     return fig
@@ -377,3 +385,116 @@ def _get_y_data_for_cell_selection(
             return x_data, y_data
 
     return None, None
+
+
+_SIGMA_CONTROL_HIDDEN = {"display": "none"}
+_SIGMA_CONTROL_VISIBLE = {"display": "block", "marginBottom": "12px"}
+
+
+@callback(
+    Output("sigma-multiplier-control", "style"),
+    Input("selection-graph", "figure"),
+    Input("selection-graph", "style"),
+)
+def update_sigma_multiplier_visibility(figure, graph_style):
+    """Show the multiplier only for a visible voltage comparison."""
+    if not isinstance(figure, dict) or not isinstance(graph_style, dict):
+        return _SIGMA_CONTROL_HIDDEN
+
+    if graph_style.get("display") == "none":
+        return _SIGMA_CONTROL_HIDDEN
+
+    layout = figure.get("layout")
+    if not isinstance(layout, dict):
+        return _SIGMA_CONTROL_HIDDEN
+
+    meta = layout.get("meta")
+    if not isinstance(meta, dict) or meta.get("comparison_type") != "sym_voltage_sensor":
+        return _SIGMA_CONTROL_HIDDEN
+
+    return _SIGMA_CONTROL_VISIBLE
+
+
+@callback(
+    Output("selection-graph", "figure", allow_duplicate=True),
+    Input("sigma-multiplier-input", "value"),
+    State("selection-graph", "figure"),
+    State("selected-selection-cell", "data"),
+    prevent_initial_call=True,
+)
+def update_voltage_sigma_bands(multiplier, figure, selected_cell):
+    """Update uncertainty bands without fetching data or rerunning state estimation."""
+    if isinstance(multiplier, bool) or not isinstance(multiplier, (int, float)):
+        raise PreventUpdate
+    if not math.isfinite(multiplier) or multiplier < 0:
+        raise PreventUpdate
+    if not isinstance(figure, dict) or not isinstance(selected_cell, dict):
+        raise PreventUpdate
+
+    layout = figure.get("layout")
+    if not isinstance(layout, dict):
+        raise PreventUpdate
+    meta = layout.get("meta")
+    if not isinstance(meta, dict) or meta.get("comparison_type") != "sym_voltage_sensor":
+        raise PreventUpdate
+
+    try:
+        selected_id = int(selected_cell["id"])
+        sensor_id = int(meta["sensor_id"])
+        selected_group = selected_cell["group"]
+        selected_column = selected_cell["column"]
+    except (KeyError, TypeError, ValueError) as exc:
+        raise PreventUpdate from exc
+
+    if (
+        selected_group != ComponentType.sym_voltage_sensor.value
+        or selected_column != "u_measured"
+        or selected_id != sensor_id
+    ):
+        raise PreventUpdate
+
+    traces = figure.get("data")
+    if not isinstance(traces, list) or len(traces) != len(("lower", "upper", "measured", "calculated")):
+        raise PreventUpdate
+    if not all(isinstance(trace, dict) for trace in traces):
+        raise PreventUpdate
+
+    try:
+        sigma = np.asarray(meta["sigma"], dtype=float)
+        measured = np.asarray(meta["measured"], dtype=float)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise PreventUpdate from exc
+
+    if sigma.ndim != 1 or measured.ndim != 1 or measured.shape != sigma.shape:
+        raise PreventUpdate
+    if np.any(np.isfinite(sigma) & (sigma < 0)):
+        raise PreventUpdate
+
+    lower = measured - multiplier * sigma
+    upper = measured + multiplier * sigma
+
+    patch = Patch()
+    patch["data"][0]["y"] = lower.tolist()
+    patch["data"][1]["y"] = upper.tolist()
+    patch["data"][1]["name"] = f"Measurement +/- {multiplier:g} sigma"
+    return patch
+
+
+@callback(
+    Output("sigma-multiplier-input", "invalid"),
+    Output("sigma-multiplier-error-text", "children"),
+    Output("sigma-multiplier-error", "style"),
+    Output("sigma-multiplier-guidance", "style"),
+    Input("sigma-multiplier-input", "value"),
+)
+def validate_sigma_multiplier(value):
+    """Provide accessible feedback while keeping the last valid bands."""
+    valid = not isinstance(value, bool) and isinstance(value, (int, float)) and math.isfinite(value) and value >= 0
+    if valid:
+        return False, "", {"display": "none"}, {"display": "flex"}
+    return (
+        True,
+        "Enter a finite number greater than or equal to zero.",
+        {"display": "flex", "alignItems": "center", "justifyContent": "flex-end", "gap": "12px", "color": "#912018"},
+        {"display": "none"},
+    )
