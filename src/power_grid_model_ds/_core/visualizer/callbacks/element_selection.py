@@ -13,6 +13,10 @@ from dash.exceptions import PreventUpdate
 from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds._core.visualizer.comparison_plot import (
+    ComparisonPlotOptions,
+    create_measurement_comparison_figure,
+)
 from power_grid_model_ds._core.visualizer.grid_utils import get_attr_data_from_dataset
 from power_grid_model_ds._core.visualizer.layout.selection_output import (
     SELECTION_OUTPUT_HTML,
@@ -20,7 +24,6 @@ from power_grid_model_ds._core.visualizer.layout.selection_output import (
 from power_grid_model_ds._core.visualizer.measurement_comparison import (
     VoltageComparison,
     get_symmetric_voltage_comparison,
-    get_voltage_sigma_bounds,
 )
 from power_grid_model_ds._core.visualizer.server_state import get_grid, get_output_data, get_update_data
 from power_grid_model_ds.arrays import IdArray
@@ -102,76 +105,18 @@ def _create_voltage_comparison_figure(
     sensor_id: int,
     sigma_multiplier: float = 3.0,
 ) -> go.Figure:
-    """Plot measured and calculated voltages with measurement-centred bands."""
-    lower, upper = get_voltage_sigma_bounds(
+    """Preserve voltage presentation through the shared plotter."""
+    return create_measurement_comparison_figure(
         comparison,
-        sigma_multiplier,
+        ComparisonPlotOptions(
+            title=f"sym_voltage_sensor - voltage comparison - id={sensor_id}",
+            quantity="voltage",
+            unit="V",
+            sensor_id=sensor_id,
+            comparison_type=ComponentType.sym_voltage_sensor.value,
+        ),
+        sigma_multiplier=sigma_multiplier,
     )
-
-    fig = go.Figure()
-
-    # Draw the uncertainty interval behind the voltage series.
-    fig.add_trace(
-        go.Scatter(
-            x=comparison.scenario_indices,
-            y=lower,
-            mode="lines",
-            line={"width": 0},
-            showlegend=False,
-            hoverinfo="skip",
-            name="Lower sigma bound",
-        )
-    )
-
-    fig.add_trace(
-        go.Scatter(
-            x=comparison.scenario_indices,
-            y=upper,
-            mode="lines",
-            line={"width": 0},
-            fill="tonexty",
-            fillcolor="rgba(100, 149, 237, 0.20)",
-            name=f"Measurement +/- {sigma_multiplier:g} sigma",
-            hoverinfo="skip",
-        )
-    )
-
-    fig.add_trace(
-        go.Scatter(
-            x=comparison.scenario_indices,
-            y=comparison.measured,
-            mode="lines",
-            name="Measured voltage",
-            line={"width": 2, "color": "royalblue"},
-        )
-    )
-
-    fig.add_trace(
-        go.Scatter(
-            x=comparison.scenario_indices,
-            y=comparison.estimated,
-            mode="lines",
-            name="Calculated voltage",
-            line={"width": 2, "color": "darkorange", "dash": "dash"},
-        )
-    )
-
-    fig.update_layout(
-        title=f"sym_voltage_sensor - voltage comparison - id={sensor_id}",
-        xaxis_title="Scenario Index",
-        yaxis_title="Voltage (V)",
-        template="plotly_white",
-        hovermode="x unified",
-        showlegend=True,
-        meta={
-            "comparison_type": "sym_voltage_sensor",
-            "sensor_id": sensor_id,
-            "sigma": comparison.sigma.tolist(),
-            "measured": comparison.measured.tolist(),
-        },
-    )
-
-    return fig
 
 
 @callback(
