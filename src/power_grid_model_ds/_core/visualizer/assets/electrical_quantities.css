@@ -1,0 +1,281 @@
+/*
+ * Main panel
+ * Match the navigation background without changing the navigation itself.
+ * Horizontal padding positions the controls and legend consistently.
+ */
+.electrical-quantity-panel {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 16px 36px;
+    background-color: #30363c;
+    color: #ffffff;
+}
+
+/* Three independent controls: labels above inputs prevent horizontal collisions. */
+.electrical-controls-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px 20px;
+    width: 100%;
+    align-items: start;
+}
+.electrical-control-field {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 7px;
+    min-width: 0;
+}
+.electrical-control-label {
+    display: block;
+    margin: 0;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+.electrical-dropdown-container { width: 100%; min-width: 0; }
+.electrical-dropdown-container > * { box-sizing: border-box; width: 100%; min-width: 0; }
+
+/* Dash dcc.Dropdown (React Select) */
+.electrical-quantity-panel .Select-control {
+    box-sizing: border-box;
+    min-height: 44px;
+    width: 100%;
+    border: 1px solid #8795a5;
+    border-radius: 5px;
+    background: #ffffff;
+}
+.electrical-quantity-panel .Select-value-label,
+.electrical-quantity-panel .Select-placeholder,
+.electrical-quantity-panel .Select-input input {
+    color: #202a35 !important;
+    -webkit-text-fill-color: #202a35 !important;
+}
+.electrical-quantity-panel .Select-menu-outer {
+    z-index: 1000;
+    color: #202a35;
+    background: #ffffff;
+}
+.electrical-quantity-panel .Select-option { color: #202a35; background: #ffffff; }
+.electrical-quantity-panel .Select-option.is-focused { background: #dbeafe; }
+.electrical-quantity-panel .Select-option.is-selected { color: #ffffff; background: #245c9b; }
+.electrical-quantity-panel .is-focused:not(.is-open) > .Select-control {
+    outline: 2px solid #80b8ff;
+    outline-offset: 1px;
+}
+
+/* Dash dcc.Input(type=number): explicitly style the actual input element. */
+.electrical-quantity-panel input#electrical-scenario-input {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    min-width: 0;
+    height: 44px;
+    padding: 8px 12px;
+    border: 1px solid #8795a5;
+    border-radius: 5px;
+    background: #ffffff;
+    color: #202a35 !important;
+    -webkit-text-fill-color: #202a35 !important;
+    font-size: 16px;
+    opacity: 1;
+}
+.electrical-quantity-panel input#electrical-scenario-input::placeholder {
+    color: #64748b;
+    opacity: 1;
+}
+.electrical-quantity-panel input#electrical-scenario-input:focus-visible {
+    outline: 2px solid #80b8ff;
+    outline-offset: 1px;
+}
+.electrical-quantity-panel input#electrical-scenario-input:disabled {
+    background: #e5e7eb;
+    color: #4b5563 !important;
+    -webkit-text-fill-color: #4b5563 !important;
+}
+
+/*
+ * Electrical quantity legend
+ * Align its left edge with the Quantity label.
+ */
+.electrical-quantity-legend {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #64707b;
+
+    color: #ffffff;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 28px;
+}
+
+
+/*
+ * F01 electrical legend
+ * Present quantity statistics and colour interpretation separately.
+ */
+
+.electrical-legend-content {
+    width: 100%;
+    color: #ffffff;
+}
+
+.electrical-legend-title {
+    margin: 0 0 14px;
+    color: #ffffff;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.electrical-legend-statistics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    margin-bottom: 18px;
+}
+
+.electrical-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    min-width: 0;
+}
+
+.electrical-stat-label {
+    color: #d1d5db;
+    font-size: 14px;
+}
+
+.electrical-stat-value {
+    color: #ffffff;
+    font-size: 20px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.electrical-scale-title {
+    margin-bottom: 10px;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.electrical-scale-bar {
+    width: 100%;
+    height: 18px;
+    border: 1px solid #d1d5db;
+    border-radius: 3px;
+}
+
+.electrical-scale-endpoints {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 8px;
+    color: #ffffff;
+    font-size: 14px;
+}
+
+.electrical-legend-note {
+    margin: 12px 0 0;
+    color: #e5e7eb;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.electrical-missing-description {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    color: #ffffff;
+    font-size: 14px;
+}
+
+.electrical-missing-swatch {
+    display: inline-block;
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    border: 1px solid #ffffff;
+    border-radius: 3px;
+}
+
+
+/* Responsive controls and legend. */
+@media (max-width: 1100px) {
+    .electrical-controls-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+    .electrical-quantity-panel { padding: 16px; }
+    .electrical-controls-grid { grid-template-columns: minmax(0, 1fr); }
+    .electrical-legend-statistics { gap: 12px; }
+    .electrical-stat-value { font-size: 17px; }
+    .electrical-scale-endpoints { flex-wrap: wrap; }
+}
+
+/* F01: Ensure selected dropdown values remain visible. */
+.electrical-quantity-panel .dash-dropdown-value,
+.electrical-quantity-panel .dash-dropdown-value span,
+.electrical-quantity-panel .Select-value-label,
+.electrical-quantity-panel .Select-single-value {
+    color: #202a35 !important;
+    -webkit-text-fill-color: #202a35 !important;
+    opacity: 1 !important;
+}
+
+
+/* Speech-bubble annotation: floats over the graph and never increases toolbar height. */
+.electrical-scenario-anchor { position: relative; overflow: visible; }
+.electrical-scenario-warning {
+    position: absolute;
+    z-index: 9999;
+    top: calc(100% + 13px);
+    right: 0;
+    width: min(350px, 90vw);
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border: 2px solid #e9a23b;
+    border-radius: 12px;
+    background-color: #fff8e7;
+    color: #54320c;
+    box-shadow: 0 9px 24px rgba(0,0,0,.38);
+    font-size: 14px;
+    line-height: 1.45;
+    pointer-events: none;
+}
+.electrical-scenario-callout-arrow {
+    position: absolute;
+    top: -9px;
+    right: 25px;
+    width: 16px;
+    height: 16px;
+    background: #fff8e7;
+    border-top: 2px solid #e9a23b;
+    border-left: 2px solid #e9a23b;
+    transform: rotate(45deg);
+}
+.electrical-scenario-warning-row { display: flex; align-items: flex-start; gap: 10px; }
+.electrical-scenario-warning-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 22px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #c2410c;
+    color: white;
+    font-size: 16px;
+    font-weight: 800;
+}
+.electrical-scenario-warning-body { flex: 1; min-width: 0; }
+.electrical-scenario-warning-title { display: block; margin-bottom: 4px; font-weight: 700; }
+
+/* Hide the unused legend container in the default electrical view. */
+.electrical-quantity-legend:empty {
+    display: none;
+}
