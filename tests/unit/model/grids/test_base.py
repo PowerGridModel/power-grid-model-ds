@@ -12,6 +12,7 @@ from numpy.testing import assert_equal
 from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.grids.base import Grid
+from power_grid_model_ds.arrays import LineArray, NodeArray
 from tests.fixtures.grid_classes import ExtendedGrid
 from tests.fixtures.grids import build_basic_grid
 
@@ -161,3 +162,26 @@ class TestGrid:
         grid2.node.u_rated[0] += 1000.0
 
         assert grid1 != grid2
+
+    def test_reindex_ids_updates_graphs(self):
+        """Test that reindex_ids() updates the graphs correctly"""
+        grid = Grid.empty()
+        nodes = NodeArray.empty(3)
+        nodes.id = [1, 2, 9999]
+        grid.append(nodes, check_max_id=False)
+
+        lines = LineArray.empty(2)
+        lines.id = [100, 200]
+        lines.from_node = [1, 2]
+        lines.to_node = [2, 9999]
+        grid.append(lines, check_max_id=False)
+
+        grid.reindex_ids()
+
+        assert grid.ids == {1, 2, 3, 4, 5}
+        assert grid.node.id.tolist() == [1, 2, 5]
+        assert grid.line.id.tolist() == [3, 4]
+
+        path, num_edges = grid.graphs.complete_graph.get_shortest_path(1, 5)
+        assert path == [1, 2, 5]
+        assert num_edges == 2
