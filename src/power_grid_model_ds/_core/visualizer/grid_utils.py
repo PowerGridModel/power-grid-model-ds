@@ -12,6 +12,7 @@ from power_grid_model.data_types import BatchDataset
 
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
+from power_grid_model_ds._core.model.constants import empty
 from power_grid_model_ds._core.model.dtypes.typing import NDArray3
 
 
@@ -80,12 +81,42 @@ def dynamic_grid_obj_from_grid(dynamic_grid_class: type[Grid], grid: Grid):
 
 
 def get_attr_data_from_dataset(
-    dataset: BatchDataset, comp_type: ComponentType, attr: str, pgm_id: int
+    dataset: BatchDataset,
+    comp_type: ComponentType,
+    attr: str,
+    pgm_id: int,
+    grid: Grid | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Find the data for the given component type, attribute, and pgm_id from a batch dataset across all scenarios.
-    Only returns if there is valid data (not all empty values) for the given pgm_id for all scenarios of dataset."""
-    array_mask = dataset[comp_type]["id"] == pgm_id
+    """Extract an attribute for one component across batch scenarios.
+
+    When a base grid is supplied, missing attribute values are replaced
+    with the corresponding base-grid value.
+
+    Scenarios without the requested component are excluded.
+    """
+    component_data = dataset[comp_type]
+    array_mask = component_data["id"] == pgm_id
 
     scenario_indices, _ = np.nonzero(array_mask)
-    match_data = dataset[comp_type][attr][array_mask]
+    match_data = component_data[attr][array_mask].copy()
+
+    if grid is None:
+        return scenario_indices, match_data
+
+    base_component = getattr(grid, comp_type.value)
+    base_matches = base_component.id == pgm_id
+
+    if not np.any(base_matches) or attr not in base_component.columns:
+        return scenario_indices, match_data
+
+    base_value = getattr(base_component, attr)[base_matches][0]
+    empty_value = empty(component_data.dtype.fields[attr][0])
+
+    if isinstance(empty_value, float) and np.isnan(empty_value):
+        missing_mask = np.isnan(match_data)
+    else:
+        missing_mask = match_data == empty_value
+
+    match_data = np.where(missing_mask, base_value, match_data)
+
     return scenario_indices, match_data
