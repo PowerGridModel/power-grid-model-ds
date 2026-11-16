@@ -124,36 +124,26 @@ def test_get_attr_data_from_dataset():
     assert np.array_equal(y_actual, np.array([22, 42]))
     assert np.array_equal(x_actual, np.array([0, 2]))
 
-
-def test_get_attr_data_from_dataset_uses_base_value_for_missing_scalar():
-    loads = initialize_array(DatasetType.update, ComponentType.sym_load, (3, 2))
-
-    loads[AttributeType.id] = [
-        [11, 12],
-        [11, 12],
-        [11, 12],
-    ]
+    # Floating-point fallback: an unspecified update uses the base-grid value.
+    loads[AttributeType.id] = [[11, 12, 13]] * 4
     loads[AttributeType.p_specified] = [
-        [10.0, 20.0],
-        [11.0, np.nan],
-        [12.0, 22.0],
+        [21.0, 22.0, 23.0],
+        [31.0, np.nan, 33.0],
+        [41.0, 42.0, 43.0],
+        [51.0, 52.0, 53.0],
     ]
+    base_grid = _create_grid_with_component(ComponentType.sym_load, "p_specified", 12, np.array([15.0]))
+    x_actual, y_actual = get_attr_data_from_dataset(batch_dataset, ComponentType.sym_load, "p_specified", 12, base_grid)
+    assert np.array_equal(x_actual, [0, 1, 2, 3])
+    assert np.array_equal(y_actual, [22.0, 15.0, 42.0, 52.0])
 
-    grid = _create_grid_with_component(
-        ComponentType.sym_load,
-        "p_specified",
-        12,
-        np.array([15.0]),
-    )
-
-    batch_dataset = {ComponentType.sym_load: loads}
-
-    x_actual, y_actual = get_attr_data_from_dataset(
-        batch_dataset, ComponentType.sym_load, "p_specified", pgm_id=12, grid=grid
-    )
-
-    assert np.array_equal(x_actual, np.array([0, 1, 2]))
-    assert np.array_equal(y_actual, np.array([20.0, 15.0, 22.0]))
+    # Integral fallback: the PGM empty sentinel uses the base-grid value.
+    empty_status = empty(loads.dtype.fields["status"][0])
+    loads["status"] = [[1, 1, 1], [1, empty_status, 1], [1, 0, 1], [1, 1, 1]]
+    status_grid = _create_grid_with_component(ComponentType.sym_load, "status", 12, np.array([1]))
+    x_actual, y_actual = get_attr_data_from_dataset(batch_dataset, ComponentType.sym_load, "status", 12, status_grid)
+    assert np.array_equal(x_actual, [0, 1, 2, 3])
+    assert np.array_equal(y_actual, [1, 1, 0, 1])
 
 
 def test_get_attr_data_from_dataset_3ph():
@@ -214,39 +204,6 @@ def test_get_attr_data_from_dataset_3ph_uses_base_value_for_missing_phases():
     assert np.array_equal(y_actual, expected)
 
 
-def test_get_attr_data_from_dataset_uses_base_value_for_missing_integer():
-    loads = initialize_array(DatasetType.update, ComponentType.sym_load, (3, 2))
-
-    loads[AttributeType.id] = [
-        [11, 12],
-        [11, 12],
-        [11, 12],
-    ]
-
-    empty_status = empty(loads.dtype.fields["status"][0])
-    loads["status"] = [
-        [1, 1],
-        [1, empty_status],
-        [1, 0],
-    ]
-
-    grid = _create_grid_with_component(
-        ComponentType.sym_load,
-        "status",
-        12,
-        np.array([1]),
-    )
-
-    batch_dataset = {ComponentType.sym_load: loads}
-
-    x_actual, y_actual = get_attr_data_from_dataset(
-        batch_dataset, ComponentType.sym_load, "status", pgm_id=12, grid=grid
-    )
-
-    assert np.array_equal(x_actual, np.array([0, 1, 2]))
-    assert np.array_equal(y_actual, np.array([1, 1, 0]))
-
-
 def test_get_attr_data_from_dataset_does_not_modify_original_batch_data():
     loads = initialize_array(DatasetType.update, ComponentType.sym_load, (3, 2))
 
@@ -272,9 +229,7 @@ def test_get_attr_data_from_dataset_does_not_modify_original_batch_data():
 
     batch_dataset = {ComponentType.sym_load: loads}
 
-    get_attr_data_from_dataset(
-        batch_dataset, ComponentType.sym_load, "p_specified", pgm_id=12, grid=grid
-    )
+    get_attr_data_from_dataset(batch_dataset, ComponentType.sym_load, "p_specified", pgm_id=12, grid=grid)
 
     assert np.array_equal(
         loads[AttributeType.p_specified],
