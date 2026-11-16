@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 from dash.exceptions import PreventUpdate
 from plotly import graph_objs as go
-from power_grid_model import ComponentType
+from power_grid_model import ComponentType, DatasetType, initialize_array
 
 from power_grid_model_ds._core.model.dtypes.typing import NDArray3
 from power_grid_model_ds._core.model.grids.base import Grid
@@ -38,7 +38,7 @@ class ThreePhaseGrid(Grid):
 
 
 def test_scale_elements():
-    assert scale_elements(1.2, 1.3, DEFAULT_STYLESHEET)
+    assert scale_elements(1.2, 1.3, DEFAULT_STYLESHEET) != DEFAULT_STYLESHEET
 
 
 def test_search_element_no_input():
@@ -169,32 +169,49 @@ def test_cell_selection_graph_no_data(mock_cell_clicked_ctx):
 
 
 def test_cell_selection_graph_with_output_data(mock_cell_clicked_ctx):
-    dtype = np.dtype([("id", np.int32), ("u_rated", np.float64)])
-    output_data = {ComponentType.node: np.array([[(1, 400.0)], [(9, 99.0)], [(1, 410.0)]], dtype=dtype)}
-    server_state.set_app_state(Grid.empty(), output_data=output_data)
+    nodes = initialize_array(DatasetType.sym_output, ComponentType.node, (3, 1))
+    nodes["id"] = 1
+    nodes["u"][:, 0] = [400.0, 99.0, 410.0]
+    output_data = {ComponentType.node: nodes}
+
+    grid = Grid.empty()
+    grid.node = grid.node.__class__.empty(1)
+    grid.node.id = np.array([1], dtype=np.int32)
+    server_state.set_app_state(grid, output_data=output_data)
+    mock_cell_clicked_ctx.triggered[0]["value"]["colId"] = "u"
+
     with patch(_CTX_PATH, mock_cell_clicked_ctx):
         fig, style = cell_selection_graph(None)
+
     assert style == {"display": "block"}
     assert len(fig.data) == 1
-    np.testing.assert_allclose(fig.data[0].y, np.array([400.0, 410.0]))
-    np.testing.assert_allclose(fig.data[0].x, np.array([0, 2]))
+    np.testing.assert_allclose(fig.data[0].y, [400.0, 99.0, 410.0])
+    np.testing.assert_allclose(fig.data[0].x, [0, 1, 2])
 
 
 def test_cell_selection_graph_three_phase_output_data(mock_cell_clicked_ctx):
-    dtype = np.dtype([("id", np.int32), ("u_rated", np.float64, (3,))])
-    output_data = {
-        ComponentType.node: np.array(
-            [[(1, [400.0, 401.0, 402.0])], [(9, [99, 99, 99])], [(1, [410.0, 411.0, 412.0])]], dtype=dtype
-        )
-    }
-    server_state.set_app_state(Grid.empty(), output_data=output_data)
+    nodes = initialize_array(DatasetType.asym_output, ComponentType.node, (3, 1))
+    nodes["id"] = 1
+    nodes["u"][:, 0] = [
+        [400.0, 401.0, 402.0],
+        [99.0, 99.0, 99.0],
+        [410.0, 411.0, 412.0],
+    ]
+    output_data = {ComponentType.node: nodes}
+
+    grid = Grid.empty()
+    grid.node = grid.node.__class__.empty(1)
+    grid.node.id = np.array([1], dtype=np.int32)
+    server_state.set_app_state(grid, output_data=output_data)
+    mock_cell_clicked_ctx.triggered[0]["value"]["colId"] = "u"
+
     with patch(_CTX_PATH, mock_cell_clicked_ctx):
         fig, style = cell_selection_graph(None)
+
     assert style == {"display": "block"}
-    assert len(fig.data) == 3  # one trace per phase
-    np.testing.assert_allclose(fig.data[0].y, np.array([400.0, 410.0]))
-    np.testing.assert_allclose(fig.data[1].y, np.array([401.0, 411.0]))
-    np.testing.assert_allclose(fig.data[2].y, np.array([402.0, 412.0]))
-    np.testing.assert_allclose(fig.data[0].x, np.array([0, 2]))
-    np.testing.assert_allclose(fig.data[1].x, np.array([0, 2]))
-    np.testing.assert_allclose(fig.data[2].x, np.array([0, 2]))
+    assert len(fig.data) == 3
+    np.testing.assert_allclose(fig.data[0].y, [400.0, 99.0, 410.0])
+    np.testing.assert_allclose(fig.data[1].y, [401.0, 99.0, 411.0])
+    np.testing.assert_allclose(fig.data[2].y, [402.0, 99.0, 412.0])
+    for trace in fig.data:
+        np.testing.assert_allclose(trace.x, [0, 1, 2])

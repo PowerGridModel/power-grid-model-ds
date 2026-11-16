@@ -48,7 +48,6 @@ def test_base_measurements_are_repeated_across_scenarios(grid, output_data):
         sensor_id=101,
     )
 
-    assert result is not None
     assert_array_equal(result.scenario_indices, [0, 1, 2])
     assert_array_equal(result.measured, [230.0, 230.0, 230.0])
     assert_array_equal(result.estimated, [229.0, 231.0, 228.0])
@@ -68,7 +67,6 @@ def test_measurement_update_affects_only_its_scenario(grid, output_data):
         101,
     )
 
-    assert result is not None
     assert_array_equal(result.measured, [230.0, 235.0, 230.0])
     assert_array_equal(result.estimated, [229.0, 231.0, 228.0])
     assert_array_equal(result.sigma, [2.0, 2.0, 2.0])
@@ -87,7 +85,6 @@ def test_sigma_update_affects_only_its_scenario(grid, output_data):
         101,
     )
 
-    assert result is not None
     assert_array_equal(result.measured, [230.0, 230.0, 230.0])
     assert_array_equal(result.sigma, [2.0, 2.0, 3.5])
 
@@ -104,7 +101,6 @@ def test_nan_updates_preserve_base_values(grid, output_data):
         101,
     )
 
-    assert result is not None
     assert_array_equal(result.measured, [230.0, 230.0, 230.0])
     assert_array_equal(result.sigma, [2.0, 2.0, 2.0])
 
@@ -121,7 +117,6 @@ def test_missing_node_result_preserves_scenario_position(grid, output_data):
         101,
     )
 
-    assert result is not None
     assert_array_equal(result.scenario_indices, [0, 1, 2])
     assert_array_equal(result.estimated, [229.0, np.nan, 228.0])
 
@@ -134,27 +129,23 @@ def test_unknown_sensor_raises_value_error(grid, output_data):
 
 @pytest.mark.parametrize("missing_output", [None, {}])
 def test_missing_node_output_returns_none(grid, missing_output):
-    """Missing node output means no comparison can be prepared."""
-    result = get_symmetric_voltage_comparison(
-        grid,
-        None,
-        missing_output,
-        101,
-    )
-
-    assert result is None
+    assert get_symmetric_voltage_comparison(grid, None, missing_output, 101) is None
 
 
 def test_output_without_node_component_returns_none(grid):
-    """Other output components do not provide the required node voltage."""
-    result = get_symmetric_voltage_comparison(
-        grid,
-        None,
-        {ComponentType.line: initialize_array("sym_output", "line", (3, 1))},
-        101,
-    )
+    other = initialize_array("sym_output", "line", (3, 1))
+    assert get_symmetric_voltage_comparison(grid, None, {ComponentType.line: other}, 101) is None
 
-    assert result is None
+
+def test_missing_sensor_update_row_preserves_base_and_alignment(grid, output_data):
+    updates = initialize_array("update", "sym_voltage_sensor", (3, 1))
+    updates["id"] = 101
+    updates["id"][1, 0] = 999
+    updates["u_measured"][2, 0] = 237.0
+    comparison = get_symmetric_voltage_comparison(grid, {ComponentType.sym_voltage_sensor: updates}, output_data, 101)
+    assert comparison is not None
+    assert_array_equal(comparison.scenario_indices, [0, 1, 2])
+    assert_array_equal(comparison.measured, [230.0, 230.0, 237.0])
 
 
 def test_comparison_does_not_modify_input_data(grid, output_data):
@@ -174,6 +165,8 @@ def test_comparison_does_not_modify_input_data(grid, output_data):
         101,
     )
 
+    # Compare structured arrays field by field so NaN values
+    # are treated as equal when they occur in the same positions.
     for field in updates.dtype.names:
         assert_array_equal(
             updates[field],
@@ -214,7 +207,6 @@ def test_voltage_sigma_bounds(
     )
 
     lower, upper = get_voltage_sigma_bounds(comparison, multiplier)
-
     np.testing.assert_allclose(lower, expected_lower)
     np.testing.assert_allclose(upper, expected_upper)
 
@@ -241,36 +233,18 @@ def test_voltage_sigma_bounds_preserve_missing_sigma():
     )
 
     lower, upper = get_voltage_sigma_bounds(comparison, 2.0)
-
     np.testing.assert_allclose(lower, [226.0, np.nan])
     np.testing.assert_allclose(upper, [234.0, np.nan])
 
 
 @pytest.mark.parametrize("sigma", [np.inf, -np.inf])
 def test_voltage_sigma_bounds_omit_infinite_sigma(sigma):
-    """Infinite sigma must not produce a drawable uncertainty band."""
     comparison = VoltageComparison(
         scenario_indices=np.array([0, 1]),
         measured=np.array([230.0, 235.0]),
         estimated=np.array([229.0, 234.0]),
         sigma=np.array([2.0, sigma]),
     )
-
     lower, upper = get_voltage_sigma_bounds(comparison, multiplier=2.0)
-
     np.testing.assert_allclose(lower, [226.0, np.nan])
     np.testing.assert_allclose(upper, [234.0, np.nan])
-
-
-def test_get_voltage_sigma_bounds_accepts_nan_sigma():
-    comparison = VoltageComparison(
-        scenario_indices=np.array([0]),
-        measured=np.array([1.0]),
-        estimated=np.array([1.0]),
-        sigma=np.array([np.nan]),
-    )
-
-    lower, upper = get_voltage_sigma_bounds(comparison, multiplier=2.0)
-
-    assert np.isnan(lower[0])
-    assert np.isnan(upper[0])
