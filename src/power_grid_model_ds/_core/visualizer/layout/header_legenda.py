@@ -2,11 +2,18 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
+from urllib.parse import quote
+
 import dash_bootstrap_components as dbc
 from dash import html
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
 from power_grid_model_ds._core.visualizer.styling_classification import StyleClass
+from power_grid_model_ds._core.visualizer.transformer_constants import (
+    TRANSFORMER_CIRCLE_OFFSET,
+    TRANSFORMER_CIRCLE_RADIUS,
+    TRANSFORMER_STROKE_WIDTH,
+)
 
 _BOOTSTRAP_ARROW_ICON_CLASS = "fas fa-arrow-right-long"
 _MARGIN = "0 10px"
@@ -19,7 +26,27 @@ NODE_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COL
 _SUBSTATION_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.SUBSTATION_NODE]}
 _LINE_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.BRANCH]}
 _LINK_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.LINK]}
-_TRANSFORMER_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.TRANSFORMER]}
+_TRANSFORMER_ICON_STYLE = {"width": "66px", "height": "44px", "margin": _MARGIN, "verticalAlign": "middle"}
+_TRANSFORMER_LEGEND_EXTENT = 67
+_TRANSFORMER_LEGEND_VIEWBOX = "-70 -48 140 96"
+
+
+def _transformer_legend_symbol() -> html.Img:
+    """Render the same winding dimensions as the Cytoscape transformer."""
+    offset, radius = TRANSFORMER_CIRCLE_OFFSET, TRANSFORMER_CIRCLE_RADIUS
+    extent = _TRANSFORMER_LEGEND_EXTENT
+    color = CYTO_COLORS[StyleClass.TRANSFORMER]
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="{_TRANSFORMER_LEGEND_VIEWBOX}" '
+        f'fill="none" stroke="{color}" stroke-width="{TRANSFORMER_STROKE_WIDTH}">'
+        f'<path d="M{-extent} 0 H{-offset - radius} M{offset + radius} 0 H{extent}"/>'
+        f'<circle cx="{-offset}" cy="0" r="{radius}"/>'
+        f'<circle cx="{offset}" cy="0" r="{radius}"/>'
+        "</svg>"
+    )
+    return html.Img(id="transformer-icon", src="data:image/svg+xml," + quote(svg), style=_TRANSFORMER_ICON_STYLE)
+
+
 _GENERIC_BRANCH_ICON_STYLE = {
     "font-size": _FONT_SIZE,
     "margin": _MARGIN,
@@ -34,7 +61,7 @@ LEGENDA_ELEMENTS = [
     dbc.Tooltip("Substation", target="substation-icon", placement="bottom"),
     html.I(className=_BOOTSTRAP_ARROW_ICON_CLASS, id="line-icon", style=_LINE_ICON_STYLE),
     dbc.Tooltip("Line", target="line-icon", placement="bottom"),
-    html.I(className=_BOOTSTRAP_ARROW_ICON_CLASS, id="transformer-icon", style=_TRANSFORMER_ICON_STYLE),
+    _transformer_legend_symbol(),
     dbc.Tooltip("Transformer", target="transformer-icon", placement="bottom"),
     html.I(className=_BOOTSTRAP_ARROW_ICON_CLASS, id="link-icon", style=_LINK_ICON_STYLE),
     dbc.Tooltip("Link", target="link-icon", placement="bottom"),

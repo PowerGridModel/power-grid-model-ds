@@ -273,3 +273,5 @@ control.expr = "check"
   [[tool.poe.tasks.clean_notebooks.switch]]
   cmd = 'nb-clean clean docs/'
 
+[tool.setuptools.package-data]
+power_grid_model_ds = ["assets/*.js"]
