@@ -184,7 +184,7 @@ def _parse_appliances(elements: VizToComponentElements, array: ApplianceArray, g
                 "group": f"{group.value}_ghost_node",
                 "associated_ids": {group.value: [appliance.id.item()]},
             },
-            "selectable": False,
+            "selectable": group == ComponentType.source,
             "classes": StyleClass.APPLIANCE_GHOST_NODE.value,
         }
 
@@ -203,8 +203,9 @@ def _parse_appliances(elements: VizToComponentElements, array: ApplianceArray, g
         }
 
         if with_coords:
+            source_offset = 120 if group == ComponentType.source else 0
             elements[appliance_ghost_id_str]["position"] = {
-                "x": elements[node_id_str]["position"]["x"],
+                "x": elements[node_id_str]["position"]["x"] + source_offset,
                 "y": elements[node_id_str]["position"]["y"],
             }  # invert y-axis for visualization
 

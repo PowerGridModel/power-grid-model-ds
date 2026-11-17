@@ -6,6 +6,7 @@ import dash_bootstrap_components as dbc
 from dash import html
 
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
+from power_grid_model_ds._core.visualizer.layout.cytoscape_styling import _SOURCE_SYMBOL_IMAGE
 from power_grid_model_ds._core.visualizer.styling_classification import StyleClass
 
 _BOOTSTRAP_ARROW_ICON_CLASS = "fas fa-arrow-right-long"
@@ -27,7 +28,10 @@ _GENERIC_BRANCH_ICON_STYLE = {
 }
 _ASYM_LINE_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.ASYM_LINE]}
 _OPEN_BRANCH_ICON_STYLE = {"font-size": _FONT_SIZE, "margin": _MARGIN, "color": CYTO_COLORS[StyleClass.OPEN_BRANCH]}
+_SOURCE_ICON_STYLE = {"width": "36px", "height": "36px", "margin": _MARGIN}
 LEGENDA_ELEMENTS = [
+    html.Img(src=_SOURCE_SYMBOL_IMAGE, id="source-icon", style=_SOURCE_ICON_STYLE),
+    dbc.Tooltip("Source", target="source-icon", placement="bottom"),
     html.I(className="fas fa-circle", id="node-icon", style=NODE_ICON_STYLE),
     dbc.Tooltip("Node", target="node-icon", placement="bottom"),
     html.I(className="fas fa-diamond", id="substation-icon", style=_SUBSTATION_ICON_STYLE),

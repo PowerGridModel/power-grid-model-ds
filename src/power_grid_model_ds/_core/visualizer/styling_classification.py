@@ -94,6 +94,8 @@ def get_appliance_edge_classification(
     }
 
     classes = [type_to_vizclass[component_type]]
+    if component_type == ComponentType.source:
+        classes.append(StyleClass.SOURCE)
     if appliance_arr.status == 0:
         if type_to_vizclass[component_type] == StyleClass.LOADING_APPLIANCE:
             classes.append(StyleClass.OPEN_LOADING_APPLIANCE)

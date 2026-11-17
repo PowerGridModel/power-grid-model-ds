@@ -4,6 +4,8 @@
 
 """Contains selectors for the Cytoscape stylesheet."""
 
+from urllib.parse import quote
+
 from power_grid_model_ds._core.visualizer.layout.colors import CYTO_COLORS
 from power_grid_model_ds._core.visualizer.styling_classification import StyleClass
 
@@ -64,6 +66,33 @@ _APPLIANCE_GHOST_NODE_STYLE = {
     },
 }
 
+_SOURCE_SYMBOL_SVG = (
+    '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">'
+    '<circle cx="50" cy="50" r="44" fill="none" stroke="#7b2bbd" stroke-width="5"/>'
+    '<path d="M20 50 C30 20 40 20 50 50 S70 80 80 50" '
+    'fill="none" stroke="#7b2bbd" stroke-width="5" stroke-linecap="round"/>'
+    "</svg>"
+)
+_SOURCE_SYMBOL_IMAGE = "data:image/svg+xml," + quote(_SOURCE_SYMBOL_SVG)
+
+_SOURCE_SYMBOL_STYLE = {
+    "selector": 'node[group = "source_ghost_node"]',
+    "style": {
+        "shape": "ellipse",
+        "background-opacity": 0,
+        "border-width": 0,
+        "background-image": _SOURCE_SYMBOL_IMAGE,
+        "background-fit": "contain",
+        "background-clip": "none",
+        "width": NODE_SIZE,
+        "height": NODE_SIZE,
+    },
+}
+_SOURCE_SYMBOL_SELECTED_STYLE = {
+    "selector": 'node[group = "source_ghost_node"]:selected',
+    "style": {"border-width": 2, "border-color": CYTO_COLORS["selected"]},
+}
+
 _GENERATING_EDGE_STYLE = {
     "selector": f".{StyleClass.GENERATING_APPLIANCE.value}",
     "style": {
@@ -80,6 +109,7 @@ _SOURCE_EDGE_STYLE = {
     "style": {
         "line-color": CYTO_COLORS["substation_node"],
         "source-arrow-color": CYTO_COLORS["substation_node"],
+        "source-arrow-shape": "none",
     },
 }
 _LOADING_EDGE_STYLE = {
@@ -222,6 +252,8 @@ DEFAULT_STYLESHEET = [
     _ASYM_LINE_STYLE,
     _SELECTED_ASYM_LINE_STYLE,
     _APPLIANCE_GHOST_NODE_STYLE,
+    _SOURCE_SYMBOL_STYLE,
+    _SOURCE_SYMBOL_SELECTED_STYLE,
     _GENERATING_EDGE_STYLE,
     _LOADING_EDGE_STYLE,
     _SOURCE_EDGE_STYLE,

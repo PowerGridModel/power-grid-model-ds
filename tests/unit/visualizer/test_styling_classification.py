@@ -191,7 +191,13 @@ class TestGetApplianceClassification:
             pytest.param(SymGenArray, ComponentType.sym_gen, 1, [StyleClass.GENERATING_APPLIANCE], id="sym_gen"),
             pytest.param(AsymLoadArray, ComponentType.asym_load, 1, [StyleClass.LOADING_APPLIANCE], id="asym_load"),
             pytest.param(AsymGenArray, ComponentType.asym_gen, 1, [StyleClass.GENERATING_APPLIANCE], id="asym_gen"),
-            pytest.param(SourceArray, ComponentType.source, 1, [StyleClass.GENERATING_APPLIANCE], id="source"),
+            pytest.param(
+                SourceArray,
+                ComponentType.source,
+                1,
+                [StyleClass.GENERATING_APPLIANCE, StyleClass.SOURCE],
+                id="source",
+            ),
             pytest.param(ShuntArray, ComponentType.shunt, 1, [StyleClass.LOADING_APPLIANCE], id="shunt"),
             pytest.param(
                 SymLoadArray,
@@ -225,7 +231,7 @@ class TestGetApplianceClassification:
                 SourceArray,
                 ComponentType.source,
                 0,
-                [StyleClass.GENERATING_APPLIANCE, StyleClass.OPEN_GENERATING_APPLIANCE],
+                [StyleClass.GENERATING_APPLIANCE, StyleClass.SOURCE, StyleClass.OPEN_GENERATING_APPLIANCE],
                 id="open_source",
             ),
             pytest.param(
