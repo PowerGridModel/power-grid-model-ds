@@ -12,8 +12,8 @@ from numpy.testing import assert_equal
 from power_grid_model import ComponentType
 
 from power_grid_model_ds._core.model.grids.base import Grid
-from tests.fixtures.graph_models import CustomTestGraphModel
 from power_grid_model_ds.arrays import LineArray, NodeArray
+from tests.fixtures.graph_models import CustomTestGraphModel
 from tests.fixtures.grid_classes import ExtendedGraphGrid, ExtendedGrid
 from tests.fixtures.grids import build_basic_grid
 
