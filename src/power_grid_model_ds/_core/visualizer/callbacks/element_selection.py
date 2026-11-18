@@ -197,6 +197,9 @@ def _get_voltage_comparison_figure(sensor_id: int) -> go.Figure | None:
         sensor_id=sensor_id,
     )
 
+    if comparison is None:
+        return None
+
     return _create_voltage_comparison_figure(
         comparison,
         sensor_id=sensor_id,
@@ -312,6 +315,7 @@ def _get_y_data_for_cell_selection(
                 comp_type,
                 attr,
                 pgm_id,
+                get_grid(),
             )
             return x_data, y_data
 

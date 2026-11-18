@@ -12,12 +12,12 @@ from power_grid_model.data_types import BatchDataset
 
 from power_grid_model_ds import Grid
 from power_grid_model_ds._core.model.arrays.base.array import FancyArray
+from power_grid_model_ds._core.model.constants import empty
 from power_grid_model_ds._core.model.dtypes.typing import NDArray3
 
 
 def extend_grid_dynamically(base_grid_class: type[Grid], extra_dataset: BatchDataset) -> type[Grid]:
-    """Add extra attributes to the grid's component arrays based on the provided dataset,
-    and return a new Grid class with the extended schema."""
+    """Add extra attributes to grid component arrays from a dataset."""
     grid_annotations = {}
     for field in fields(base_grid_class):
         grid_attr = field.name
@@ -34,12 +34,11 @@ def extend_grid_dynamically(base_grid_class: type[Grid], extra_dataset: BatchDat
             grid_annotations[grid_attr] = base_class
 
     DynamicGridClass = type("DynamicDynamicGrid", (base_grid_class,), {"__annotations__": grid_annotations})
-
     return dataclass(DynamicGridClass)
 
 
 def _get_class_dict(base_class: type[FancyArray], grid_attr: str, extra_dataset: BatchDataset) -> dict[str, Any]:
-    """Get the class dictionary for the dynamically created array class, including new annotations and defaults."""
+    """Get annotations and defaults for a dynamically created component array."""
     extra_array_dtype = extra_dataset[ComponentType(grid_attr)].dtype
     if not extra_array_dtype.fields:
         raise ValueError(f"Expected a structure numpy array got {extra_array_dtype}")
@@ -48,7 +47,6 @@ def _get_class_dict(base_class: type[FancyArray], grid_attr: str, extra_dataset:
     for attr in extra_array_dtype.fields:
         if attr in base_class.__annotations__:
             continue
-
         dtype = extra_array_dtype.fields[attr][0]
         if dtype.subdtype is not None and dtype.subdtype[1] == (3,):
             extra_array_types[attr] = NDArray3[dtype.subdtype[0]]  # type: ignore
@@ -62,30 +60,46 @@ def _get_class_dict(base_class: type[FancyArray], grid_attr: str, extra_dataset:
 
 
 def dynamic_grid_obj_from_grid(dynamic_grid_class: type[Grid], grid: Grid):
-    """Create new object of dynamic_grid_class type using data from grid object."""
+    """Create an object of dynamic_grid_class from a base grid."""
     dynamic_grid_obj = dynamic_grid_class.empty()
-
     for field in fields(grid.__class__):
         grid_attr = field.name
         array = getattr(grid, grid_attr)
         if not isinstance(array, FancyArray):
             continue
-
         dynamic_grid_array = getattr(dynamic_grid_obj, grid_attr).__class__.empty(array.shape)
         for array_attr in array.columns:
             setattr(dynamic_grid_array, array_attr, getattr(array, array_attr))
         setattr(dynamic_grid_obj, grid_attr, dynamic_grid_array)
-
     return dynamic_grid_obj
 
 
 def get_attr_data_from_dataset(
-    dataset: BatchDataset, comp_type: ComponentType, attr: str, pgm_id: int
+    dataset: BatchDataset, comp_type: ComponentType, attr: str, pgm_id: int, grid: Grid | None = None
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Find the data for the given component type, attribute, and pgm_id from a batch dataset across all scenarios.
-    Only returns if there is valid data (not all empty values) for the given pgm_id for all scenarios of dataset."""
-    array_mask = dataset[comp_type]["id"] == pgm_id
+    """Extract one component attribute across scenarios.
 
+    The returned scenario indices contain only scenarios with the requested
+    ID. When grid is provided, unspecified attribute values for those
+    scenarios fall back to the corresponding base-grid value. The caller
+    must align sparse indices with any other series being compared.
+    """
+    component_data = dataset[comp_type]
+    array_mask = component_data["id"] == pgm_id
     scenario_indices, _ = np.nonzero(array_mask)
-    match_data = dataset[comp_type][attr][array_mask]
-    return scenario_indices, match_data
+    match_data = component_data[attr][array_mask]
+
+    if grid is None:
+        return scenario_indices, match_data
+
+    base_component = getattr(grid, comp_type.value)
+    base_value = getattr(base_component, attr)[base_component.id == pgm_id][0]
+    empty_value = empty(component_data.dtype.fields[attr][0])
+
+    if isinstance(empty_value, float) and np.isnan(empty_value):
+        missing_mask = np.isnan(match_data)
+    else:
+        missing_mask = match_data == empty_value
+
+    filled_match_data = np.where(missing_mask, base_value, match_data)
+    return scenario_indices, filled_match_data

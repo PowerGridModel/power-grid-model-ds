@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 from dash.exceptions import PreventUpdate
 from plotly import graph_objs as go
-from power_grid_model import ComponentType, initialize_array
+from power_grid_model import ComponentType, DatasetType, initialize_array
 
 from power_grid_model_ds._core.model.dtypes.typing import NDArray3
 from power_grid_model_ds._core.model.grids.base import Grid
@@ -244,95 +244,48 @@ def test_cell_selection_graph_no_data():
 
 
 def test_cell_selection_graph_with_output_data():
-    dtype = np.dtype(
-        [
-            ("id", np.int32),
-            ("u_rated", np.float64),
-        ]
-    )
+    """Plot a symmetric node output using the valid PGM output schema."""
+    nodes = initialize_array(DatasetType.sym_output, ComponentType.node, (3, 1))
+    nodes["id"] = 1
+    nodes["u"][:, 0] = [400.0, 99.0, 410.0]
 
-    output_data = {
-        ComponentType.node: np.array(
-            [
-                [(1, 400.0)],
-                [(9, 99.0)],
-                [(1, 410.0)],
-            ],
-            dtype=dtype,
-        )
-    }
+    grid = Grid.empty()
+    grid.node = grid.node.__class__.empty(1)
+    grid.node.id = np.array([1], dtype=np.int32)
+    server_state.set_app_state(grid, output_data={ComponentType.node: nodes})
 
-    server_state.set_app_state(
-        Grid.empty(),
-        output_data=output_data,
-    )
-
-    fig, style = cell_selection_graph(
-        _NODE_SELECTION,
-    )
+    fig, style = cell_selection_graph({"group": "node", "id": 1, "column": "u"})
 
     assert style == {"display": "block"}
     assert len(fig.data) == 1
-
-    np.testing.assert_allclose(
-        fig.data[0].y,
-        [400.0, 410.0],
-    )
-    np.testing.assert_allclose(
-        fig.data[0].x,
-        [0, 2],
-    )
+    np.testing.assert_allclose(fig.data[0].y, [400.0, 99.0, 410.0])
+    np.testing.assert_allclose(fig.data[0].x, [0, 1, 2])
 
 
 def test_cell_selection_graph_three_phase_output_data():
-    dtype = np.dtype(
-        [
-            ("id", np.int32),
-            ("u_rated", np.float64, (3,)),
-        ]
-    )
+    """Plot all three phases using the valid asymmetric PGM output schema."""
+    nodes = initialize_array(DatasetType.asym_output, ComponentType.node, (3, 1))
+    nodes["id"] = 1
+    nodes["u"][:, 0] = [
+        [400.0, 401.0, 402.0],
+        [99.0, 99.0, 99.0],
+        [410.0, 411.0, 412.0],
+    ]
 
-    output_data = {
-        ComponentType.node: np.array(
-            [
-                [(1, [400.0, 401.0, 402.0])],
-                [(9, [99.0, 99.0, 99.0])],
-                [(1, [410.0, 411.0, 412.0])],
-            ],
-            dtype=dtype,
-        )
-    }
+    grid = Grid.empty()
+    grid.node = grid.node.__class__.empty(1)
+    grid.node.id = np.array([1], dtype=np.int32)
+    server_state.set_app_state(grid, output_data={ComponentType.node: nodes})
 
-    server_state.set_app_state(
-        Grid.empty(),
-        output_data=output_data,
-    )
-
-    fig, style = cell_selection_graph(
-        _NODE_SELECTION,
-    )
+    fig, style = cell_selection_graph({"group": "node", "id": 1, "column": "u"})
 
     assert style == {"display": "block"}
     assert len(fig.data) == 3
-
-    np.testing.assert_allclose(
-        fig.data[0].y,
-        [400.0, 410.0],
-    )
-    np.testing.assert_allclose(
-        fig.data[1].y,
-        [401.0, 411.0],
-    )
-    np.testing.assert_allclose(
-        fig.data[2].y,
-        [402.0, 412.0],
-    )
-
+    np.testing.assert_allclose(fig.data[0].y, [400.0, 99.0, 410.0])
+    np.testing.assert_allclose(fig.data[1].y, [401.0, 99.0, 411.0])
+    np.testing.assert_allclose(fig.data[2].y, [402.0, 99.0, 412.0])
     for trace in fig.data:
-        np.testing.assert_allclose(
-            trace.x,
-            [0, 2],
-        )
+        np.testing.assert_allclose(trace.x, [0, 1, 2])
 
 
 @pytest.fixture
@@ -467,7 +420,7 @@ def test_cell_selection_graph_voltage_without_data():
     assert fig == go.Figure()
 
 
-def test_cell_selection_graph_voltage_falls_back_to_updates():
+def test_cell_selection_graph_voltage_falls_back_to_updates(voltage_sensor_grid):
     """Preserve the update-series graph when node output is unavailable."""
     updates = initialize_array(
         "update",
@@ -486,6 +439,7 @@ def test_cell_selection_graph_voltage_falls_back_to_updates():
     }
 
     with (
+        patch(f"{_CALLBACK_PATH}.get_grid", return_value=voltage_sensor_grid),
         patch(
             f"{_CALLBACK_PATH}.get_output_data",
             return_value=None,
@@ -527,8 +481,8 @@ def test_store_selected_voltage_sensor_cell(mock_voltage_sensor_ctx):
     }
 
 
-def test_fixed_two_sigma_bounds(voltage_sensor_grid):
-    """The comparison always uses measurement-centred 2Ïƒ bounds."""
+def test_fixed_three_sigma_bounds(voltage_sensor_grid):
+    """The comparison always uses measurement-centred 3-sigma bounds."""
     nodes = initialize_array("sym_output", "node", (2, 1))
     nodes["id"] = 10
     nodes["u"][:, 0] = [231.0, 233.0]
@@ -592,7 +546,7 @@ def test_voltage_comparison_hides_when_network_selection_cleared():
     assert graph_style == {"display": "none"}
 
 
-def test_voltage_comparison_falls_back_for_asymmetric_node_output():
+def test_voltage_comparison_falls_back_for_asymmetric_node_output(voltage_sensor_grid):
     """Asymmetric node output must not enter the symmetric comparison."""
     nodes = initialize_array(
         "asym_output",
@@ -614,6 +568,7 @@ def test_voltage_comparison_falls_back_for_asymmetric_node_output():
     updates["u_measured"][:, 0] = [230.0, 232.0]
 
     with (
+        patch(f"{_CALLBACK_PATH}.get_grid", return_value=voltage_sensor_grid),
         patch(
             f"{_CALLBACK_PATH}.get_output_data",
             return_value={ComponentType.node: nodes},

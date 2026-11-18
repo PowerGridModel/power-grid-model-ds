@@ -15,6 +15,24 @@ from power_grid_model_ds._core.visualizer.grid_utils import (
 )
 
 
+def _create_grid_with_component(
+    component_type: ComponentType,
+    attribute: str,
+    component_id: int,
+    value: np.ndarray,
+) -> Grid:
+    """Create a base grid containing one component with the supplied value."""
+    grid = Grid.empty()
+    component = getattr(grid, component_type.value).__class__.empty(1)
+
+    component.id = np.array([component_id])
+    setattr(component, attribute, value)
+
+    setattr(grid, component_type.value, component)
+
+    return grid
+
+
 @pytest.mark.parametrize(
     "dataset_type",
     [DatasetType.input, DatasetType.update, DatasetType.sym_output, DatasetType.sc_output, DatasetType.asym_output],
@@ -106,6 +124,27 @@ def test_get_attr_data_from_dataset():
     assert np.array_equal(y_actual, np.array([22, 42]))
     assert np.array_equal(x_actual, np.array([0, 2]))
 
+    # Floating-point fallback: an unspecified update uses the base-grid value.
+    loads[AttributeType.id] = [[11, 12, 13]] * 4
+    loads[AttributeType.p_specified] = [
+        [21.0, 22.0, 23.0],
+        [31.0, np.nan, 33.0],
+        [41.0, 42.0, 43.0],
+        [51.0, 52.0, 53.0],
+    ]
+    base_grid = _create_grid_with_component(ComponentType.sym_load, "p_specified", 12, np.array([15.0]))
+    x_actual, y_actual = get_attr_data_from_dataset(batch_dataset, ComponentType.sym_load, "p_specified", 12, base_grid)
+    assert np.array_equal(x_actual, [0, 1, 2, 3])
+    assert np.array_equal(y_actual, [22.0, 15.0, 42.0, 52.0])
+
+    # Integral fallback: the PGM empty sentinel uses the base-grid value.
+    empty_status = empty(loads.dtype.fields["status"][0])
+    loads["status"] = [[1, 1, 1], [1, empty_status, 1], [1, 0, 1], [1, 1, 1]]
+    status_grid = _create_grid_with_component(ComponentType.sym_load, "status", 12, np.array([1]))
+    x_actual, y_actual = get_attr_data_from_dataset(batch_dataset, ComponentType.sym_load, "status", 12, status_grid)
+    assert np.array_equal(x_actual, [0, 1, 2, 3])
+    assert np.array_equal(y_actual, [1, 1, 0, 1])
+
 
 def test_get_attr_data_from_dataset_3ph():
     loads = initialize_array(DatasetType.update, ComponentType.asym_load, (4, 3))
@@ -124,3 +163,61 @@ def test_get_attr_data_from_dataset_3ph():
         y_actual, np.array([[22.1, 22.2, 22.3], [32.1, 32.2, 32.3], [42.1, 42.2, 42.3], [52.1, 52.2, 52.3]])
     )
     assert np.array_equal(x_actual, np.array([0, 1, 2, 3]))
+
+
+def test_get_attr_data_from_dataset_3ph_uses_base_value_for_missing_phases():
+    loads = initialize_array(DatasetType.update, ComponentType.asym_load, (3, 2))
+
+    loads[AttributeType.id] = [
+        [11, 12],
+        [11, 12],
+        [11, 12],
+    ]
+    loads[AttributeType.p_specified] = [
+        [[1.0, 10.0, 100.0], [2.0, np.nan, 200.0]],
+        [[3.0, 30.0, 300.0], [4.0, 40.0, 400.0]],
+        [[5.0, 50.0, 500.0], [6.0, np.nan, np.nan]],
+    ]
+
+    grid = _create_grid_with_component(ComponentType.asym_load, "p_specified", 12, np.array([[20.0, 200.0, 2000.0]]))
+    batch_dataset = {ComponentType.asym_load: loads}
+    x_actual, y_actual = get_attr_data_from_dataset(
+        batch_dataset, ComponentType.asym_load, "p_specified", pgm_id=12, grid=grid
+    )
+
+    expected = np.array(
+        [
+            [2.0, 200.0, 200.0],
+            [4.0, 40.0, 400.0],
+            [6.0, 200.0, 2000.0],
+        ]
+    )
+
+    assert np.array_equal(x_actual, np.array([0, 1, 2]))
+    assert np.array_equal(y_actual, expected)
+
+
+def test_get_attr_data_from_dataset_does_not_modify_original_batch_data():
+    loads = initialize_array(DatasetType.update, ComponentType.sym_load, (3, 2))
+
+    loads[AttributeType.id] = [
+        [11, 12],
+        [11, 12],
+        [11, 12],
+    ]
+    loads[AttributeType.p_specified] = [
+        [10.0, 20.0],
+        [11.0, np.nan],
+        [12.0, 22.0],
+    ]
+
+    original_values = loads[AttributeType.p_specified].copy()
+    grid = _create_grid_with_component(ComponentType.sym_load, "p_specified", 12, np.array([15.0]))
+    batch_dataset = {ComponentType.sym_load: loads}
+    scenario_indices, values = get_attr_data_from_dataset(
+        batch_dataset, ComponentType.sym_load, "p_specified", pgm_id=12, grid=grid
+    )
+
+    assert np.array_equal(scenario_indices, [0, 1, 2])
+    assert np.array_equal(values, [20.0, 15.0, 22.0])
+    assert np.array_equal(loads[AttributeType.p_specified], original_values, equal_nan=True)
