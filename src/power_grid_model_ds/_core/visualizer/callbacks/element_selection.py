@@ -23,10 +23,13 @@ from power_grid_model_ds._core.visualizer.layout.selection_output import (
 )
 from power_grid_model_ds._core.visualizer.measurement_comparison import (
     VoltageComparison,
+    get_symmetric_power_comparison,
     get_symmetric_voltage_comparison,
 )
 from power_grid_model_ds._core.visualizer.server_state import get_grid, get_output_data, get_update_data
 from power_grid_model_ds.arrays import IdArray
+
+_BATCH_ARRAY_NDIM = 2
 
 
 @callback(
@@ -171,22 +174,18 @@ def store_selected_cell(_, _node_data, _edge_data):
 def _get_voltage_comparison_figure(sensor_id: int) -> go.Figure | None:
     """Build a comparison graph when symmetric batch node output is available."""
     output_data = get_output_data()
-
     if output_data is None or ComponentType.node not in output_data:
         return None
 
     node_output = output_data[ComponentType.node]
-
-    if not isinstance(node_output, np.ndarray) or node_output.ndim != len(("scenario", "component")):
+    if not isinstance(node_output, np.ndarray) or node_output.ndim != _BATCH_ARRAY_NDIM:
         return None
 
     field_names = node_output.dtype.names
-
     if field_names is None or not {"id", "u"}.issubset(field_names):
         return None
 
     fields = node_output.dtype.fields
-
     if fields is None or fields["u"][0].subdtype is not None:
         return None
 
@@ -196,11 +195,57 @@ def _get_voltage_comparison_figure(sensor_id: int) -> go.Figure | None:
         output_data=output_data,
         sensor_id=sensor_id,
     )
+    return _create_voltage_comparison_figure(comparison, sensor_id=sensor_id, sigma_multiplier=3.0)
 
-    return _create_voltage_comparison_figure(
+
+def _get_power_comparison_figure(sensor_id: int, measurement_attribute: str) -> go.Figure | None:
+    """Build a source-terminal symmetric power comparison."""
+    if measurement_attribute not in ("p_measured", "q_measured"):
+        return None
+
+    output_data = get_output_data()
+    if output_data is None or ComponentType.source not in output_data:
+        return None
+
+    source_output = output_data[ComponentType.source]
+    quantity = measurement_attribute[0]
+    if not _has_scalar_batch_fields(source_output, {"id", quantity}, quantity):
+        return None
+
+    try:
+        comparison = get_symmetric_power_comparison(
+            grid=get_grid(),
+            update_data=get_update_data(),
+            output_data=output_data,
+            sensor_id=sensor_id,
+            measurement_attribute=measurement_attribute,
+        )
+    except NotImplementedError:
+        # Other terminal mappings are outside the scope of PR5.
+        return None
+
+    quantity_label = "active power" if quantity == "p" else "reactive power"
+    return create_measurement_comparison_figure(
         comparison,
-        sensor_id=sensor_id,
-        sigma_multiplier=3.0,
+        ComparisonPlotOptions(
+            title=f"sym_power_sensor - {quantity_label} comparison - id={sensor_id}",
+            quantity=quantity_label,
+            unit="W" if quantity == "p" else "var",
+            sensor_id=sensor_id,
+            comparison_type=ComponentType.sym_power_sensor.value,
+            measurement_attribute=measurement_attribute,
+        ),
+    )
+
+
+def _has_scalar_batch_fields(data: Any, required: set[str], quantity: str) -> bool:
+    """Check that batch output provides the required scalar attributes."""
+    if not isinstance(data, np.ndarray) or data.ndim != _BATCH_ARRAY_NDIM:
+        return False
+    names = data.dtype.names
+    fields = data.dtype.fields
+    return (
+        names is not None and required.issubset(names) and fields is not None and fields[quantity][0].subdtype is None
     )
 
 
@@ -217,7 +262,7 @@ def cell_selection_graph(
     node_data=None,
     edge_data=None,
 ):
-    """Render the selected attribute with optional voltage sigma bands."""
+    """Render the selected attribute with optional measurement comparison."""
     hidden = {"display": "none"}
     visible = {"display": "block"}
 
@@ -242,7 +287,11 @@ def cell_selection_graph(
 
     if comp_type == ComponentType.sym_voltage_sensor and column_id == "u_measured":
         comparison_figure = _get_voltage_comparison_figure(pgm_id)
+        if comparison_figure is not None:
+            return comparison_figure, visible
 
+    if comp_type == ComponentType.sym_power_sensor and column_id in ("p_measured", "q_measured"):
+        comparison_figure = _get_power_comparison_figure(pgm_id, column_id)
         if comparison_figure is not None:
             return comparison_figure, visible
 
@@ -342,22 +391,59 @@ _SIGMA_CONTROL_VISIBLE = {"display": "block", "marginBottom": "12px"}
     Input("selection-graph", "style"),
 )
 def update_sigma_multiplier_visibility(figure, graph_style):
-    """Show the multiplier only for a visible voltage comparison."""
-    if not isinstance(figure, dict) or not isinstance(graph_style, dict):
-        return _SIGMA_CONTROL_HIDDEN
+    """Show the multiplier only for visible comparisons with sigma bands."""
+    visible = (
+        isinstance(figure, dict)
+        and isinstance(graph_style, dict)
+        and graph_style.get("display") != "none"
+        and _has_sigma_comparison_metadata(figure)
+    )
+    return _SIGMA_CONTROL_VISIBLE if visible else _SIGMA_CONTROL_HIDDEN
 
-    if graph_style.get("display") == "none":
-        return _SIGMA_CONTROL_HIDDEN
 
+def _has_sigma_comparison_metadata(figure: dict) -> bool:
+    """Identify four-trace voltage or power comparisons with sigma metadata."""
     layout = figure.get("layout")
     if not isinstance(layout, dict):
-        return _SIGMA_CONTROL_HIDDEN
-
+        return False
     meta = layout.get("meta")
-    if not isinstance(meta, dict) or meta.get("comparison_type") != "sym_voltage_sensor":
-        return _SIGMA_CONTROL_HIDDEN
+    if not isinstance(meta, dict):
+        return False
+    traces = figure.get("data")
+    return (
+        meta.get("comparison_type")
+        in (
+            ComponentType.sym_voltage_sensor.value,
+            ComponentType.sym_power_sensor.value,
+        )
+        and isinstance(traces, list)
+        and len(traces) == len(("lower", "upper", "measured", "calculated"))
+        and "sigma" in meta
+        and "measured" in meta
+    )
 
-    return _SIGMA_CONTROL_VISIBLE
+
+def _matches_comparison_selection(meta: dict, selected_cell: dict) -> bool:
+    """Ensure the selected sensor and quantity match the displayed figure."""
+    comparison_type = meta.get("comparison_type")
+    if comparison_type not in (
+        ComponentType.sym_voltage_sensor.value,
+        ComponentType.sym_power_sensor.value,
+    ):
+        return False
+    expected_column = (
+        "u_measured" if comparison_type == ComponentType.sym_voltage_sensor.value else meta.get("measurement_attribute")
+    )
+    if expected_column not in ("u_measured", "p_measured", "q_measured"):
+        return False
+    try:
+        return (
+            selected_cell["group"] == comparison_type
+            and selected_cell["column"] == expected_column
+            and int(selected_cell["id"]) == int(meta["sensor_id"])
+        )
+    except (KeyError, TypeError, ValueError):
+        return False
 
 
 @callback(
@@ -380,22 +466,7 @@ def update_voltage_sigma_bands(multiplier, figure, selected_cell):
     if not isinstance(layout, dict):
         raise PreventUpdate
     meta = layout.get("meta")
-    if not isinstance(meta, dict) or meta.get("comparison_type") != "sym_voltage_sensor":
-        raise PreventUpdate
-
-    try:
-        selected_id = int(selected_cell["id"])
-        sensor_id = int(meta["sensor_id"])
-        selected_group = selected_cell["group"]
-        selected_column = selected_cell["column"]
-    except (KeyError, TypeError, ValueError) as exc:
-        raise PreventUpdate from exc
-
-    if (
-        selected_group != ComponentType.sym_voltage_sensor.value
-        or selected_column != "u_measured"
-        or selected_id != sensor_id
-    ):
+    if not isinstance(meta, dict) or not _matches_comparison_selection(meta, selected_cell):
         raise PreventUpdate
 
     traces = figure.get("data")

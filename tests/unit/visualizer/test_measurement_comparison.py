@@ -9,10 +9,11 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 from numpy.testing import assert_array_equal
-from power_grid_model import ComponentType, initialize_array
+from power_grid_model import ComponentType, MeasuredTerminalType, initialize_array
 
 from power_grid_model_ds._core.visualizer.measurement_comparison import (
     VoltageComparison,
+    get_symmetric_power_comparison,
     get_symmetric_voltage_comparison,
     get_voltage_sigma_bounds,
 )
@@ -260,3 +261,126 @@ def test_voltage_sigma_bounds_preserve_missing_sigma():
 
     np.testing.assert_allclose(lower, [226.0, np.nan])
     np.testing.assert_allclose(upper, [234.0, np.nan])
+
+
+@pytest.fixture
+def power_grid():
+    """One symmetric source-terminal power sensor."""
+    sensors = SimpleNamespace(
+        id=np.array([201], dtype=np.int32),
+        measured_object=np.array([20], dtype=np.int32),
+        measured_terminal_type=np.array([MeasuredTerminalType.source.value], dtype=np.int32),
+        p_measured=np.array([10.0]),
+        q_measured=np.array([5.0]),
+        p_sigma=np.array([2.0]),
+        q_sigma=np.array([1.0]),
+        power_sigma=np.array([999.0]),
+    )
+    return SimpleNamespace(sym_power_sensor=sensors)
+
+
+@pytest.fixture
+def power_output():
+    source = initialize_array("sym_output", "source", (3, 1))
+    source["id"] = 20
+    source["p"][:, 0] = [9.0, 11.0, 8.0]
+    source["q"][:, 0] = [4.0, 6.0, 3.0]
+    return {ComponentType.source: source}
+
+
+@pytest.mark.parametrize(
+    ("attribute", "estimated", "sigma"),
+    [
+        ("p_measured", [9.0, 11.0, 8.0], [2.0, 2.0, 2.0]),
+        ("q_measured", [4.0, 6.0, 3.0], [1.0, 1.0, 1.0]),
+    ],
+)
+def test_power_comparison_uses_individual_sigma(power_grid, power_output, attribute, estimated, sigma):
+    result = get_symmetric_power_comparison(power_grid, None, power_output, 201, attribute)
+
+    assert_array_equal(result.scenario_indices, [0, 1, 2])
+    assert_array_equal(result.estimated, estimated)
+    assert_array_equal(result.sigma, sigma)
+
+
+def test_power_updates_preserve_other_scenarios(power_grid, power_output):
+    updates = initialize_array("update", "sym_power_sensor", (3, 1))
+    updates["id"] = 201
+    updates["p_measured"][1, 0] = 15.0
+    updates["p_sigma"][2, 0] = 4.0
+
+    result = get_symmetric_power_comparison(
+        power_grid,
+        {ComponentType.sym_power_sensor: updates},
+        power_output,
+        201,
+        "p_measured",
+    )
+
+    assert_array_equal(result.measured, [10.0, 15.0, 10.0])
+    assert_array_equal(result.sigma, [2.0, 2.0, 4.0])
+
+
+def test_missing_power_result_preserves_scenario(power_grid, power_output):
+    source = power_output[ComponentType.source].copy()
+    source["id"][1, 0] = 999
+
+    result = get_symmetric_power_comparison(
+        power_grid,
+        None,
+        {ComponentType.source: source},
+        201,
+        "p_measured",
+    )
+
+    assert_array_equal(result.estimated, [9.0, np.nan, 8.0])
+
+
+def test_power_without_sigma(power_grid, power_output):
+    power_grid.sym_power_sensor.p_sigma[:] = np.nan
+
+    result = get_symmetric_power_comparison(power_grid, None, power_output, 201, "p_measured")
+
+    assert result.sigma is None
+    assert_array_equal(result.estimated, [9.0, 11.0, 8.0])
+
+
+def test_power_zero_sigma_is_preserved(power_grid, power_output):
+    power_grid.sym_power_sensor.p_sigma[:] = 0.0
+
+    result = get_symmetric_power_comparison(power_grid, None, power_output, 201, "p_measured")
+
+    assert_array_equal(result.sigma, [0.0, 0.0, 0.0])
+
+
+def test_unsupported_power_terminal(power_grid, power_output):
+    power_grid.sym_power_sensor.measured_terminal_type[:] = -1
+
+    with pytest.raises(NotImplementedError, match="terminal type"):
+        get_symmetric_power_comparison(power_grid, None, power_output, 201, "p_measured")
+
+
+def test_duplicate_power_output_is_rejected(power_grid):
+    source = initialize_array("sym_output", "source", (2, 2))
+    source["id"][:, 0] = 20
+    source["id"][:, 1] = 99
+    source["id"][1, 1] = 20
+
+    with pytest.raises(ValueError, match="Duplicate source ID"):
+        get_symmetric_power_comparison(
+            power_grid,
+            None,
+            {ComponentType.source: source},
+            201,
+            "p_measured",
+        )
+
+
+def test_unknown_power_sensor_is_rejected(power_grid, power_output):
+    with pytest.raises(ValueError, match="Expected exactly one power sensor"):
+        get_symmetric_power_comparison(power_grid, None, power_output, 999, "p_measured")
+
+
+def test_invalid_power_measurement_is_rejected(power_grid, power_output):
+    with pytest.raises(ValueError, match="Unsupported power measurement"):
+        get_symmetric_power_comparison(power_grid, None, power_output, 201, "power_sigma")

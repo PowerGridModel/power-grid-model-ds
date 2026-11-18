@@ -638,3 +638,103 @@ def test_voltage_comparison_falls_back_for_asymmetric_node_output():
         figure.data[0].y,
         [230.0, 232.0],
     )
+
+
+@pytest.mark.parametrize(
+    ("attribute", "quantity", "unit", "series"),
+    [
+        ("p_measured", "active power", "W", ([10.0, 12.0], [9.0, 11.0], [1.0, 2.0])),
+        ("q_measured", "reactive power", "var", ([5.0, 7.0], [4.0, 8.0], [0.5, 1.0])),
+    ],
+)
+def test_power_selection_comparison_with_sigma(attribute, quantity, unit, series):
+    """Selecting source-terminal power shows measured, calculated and sigma bands."""
+    measured, estimated, sigma = series
+    source = initialize_array("sym_output", "source", (2, 1))
+    source["id"] = 10
+    source[attribute[0]][:, 0] = estimated
+    comparison = SimpleNamespace(
+        scenario_indices=np.array([0, 1]),
+        measured=np.array(measured),
+        estimated=np.array(estimated),
+        sigma=np.array(sigma),
+    )
+    selected = {"group": "sym_power_sensor", "id": 201, "column": attribute}
+    with (
+        patch(f"{_CALLBACK_PATH}.get_output_data", return_value={ComponentType.source: source}),
+        patch(f"{_CALLBACK_PATH}.get_grid"),
+        patch(f"{_CALLBACK_PATH}.get_update_data"),
+        patch(f"{_CALLBACK_PATH}.get_symmetric_power_comparison", return_value=comparison) as get_comparison,
+    ):
+        figure, style = cell_selection_graph(selected)
+
+    assert style == {"display": "block"}
+    assert len(figure.data) == 4
+    np.testing.assert_allclose(figure.data[2].y, measured)
+    np.testing.assert_allclose(figure.data[3].y, estimated)
+    np.testing.assert_allclose(figure.data[0].y, np.array(measured) - 3 * np.array(sigma))
+    np.testing.assert_allclose(figure.data[1].y, np.array(measured) + 3 * np.array(sigma))
+    assert figure.layout.meta["comparison_type"] == "sym_power_sensor"
+    assert figure.layout.meta["measurement_attribute"] == attribute
+    assert quantity in figure.layout.title.text
+    assert unit in figure.layout.yaxis.title.text
+    assert get_comparison.call_args.kwargs["measurement_attribute"] == attribute
+
+
+@pytest.mark.parametrize("attribute", ["p_measured", "q_measured"])
+def test_power_selection_without_sigma_shows_two_traces(attribute):
+    """Missing sigma does not suppress measured and calculated power."""
+    source = initialize_array("sym_output", "source", (2, 1))
+    source["id"] = 10
+    comparison = SimpleNamespace(
+        scenario_indices=np.array([0, 1]),
+        measured=np.array([10.0, 12.0]),
+        estimated=np.array([9.0, 11.0]),
+        sigma=None,
+    )
+    with (
+        patch(f"{_CALLBACK_PATH}.get_output_data", return_value={ComponentType.source: source}),
+        patch(f"{_CALLBACK_PATH}.get_grid"),
+        patch(f"{_CALLBACK_PATH}.get_update_data"),
+        patch(f"{_CALLBACK_PATH}.get_symmetric_power_comparison", return_value=comparison),
+    ):
+        figure, style = cell_selection_graph({"group": "sym_power_sensor", "id": 201, "column": attribute})
+    assert style == {"display": "block"}
+    assert len(figure.data) == 2
+    np.testing.assert_allclose(figure.data[0].y, [10.0, 12.0])
+    np.testing.assert_allclose(figure.data[1].y, [9.0, 11.0])
+    assert "sigma" not in figure.layout.meta
+
+
+def test_power_selection_falls_back_when_source_output_missing():
+    """Preserve the existing measurement-series graph without source output."""
+    updates = initialize_array("update", "sym_power_sensor", (2, 1))
+    updates["id"] = 201
+    updates["p_measured"][:, 0] = [10.0, 12.0]
+    with (
+        patch(f"{_CALLBACK_PATH}.get_output_data", return_value=None),
+        patch(f"{_CALLBACK_PATH}.get_update_data", return_value={ComponentType.sym_power_sensor: updates}),
+    ):
+        figure, style = cell_selection_graph({"group": "sym_power_sensor", "id": 201, "column": "p_measured"})
+    assert style == {"display": "block"}
+    assert len(figure.data) == 1
+    np.testing.assert_allclose(figure.data[0].y, [10.0, 12.0])
+
+
+def test_power_selection_unsupported_terminal_falls_back():
+    """An unsupported terminal mapping leaves the ordinary attribute plot available."""
+    source = initialize_array("sym_output", "source", (2, 1))
+    source["id"] = 10
+    updates = initialize_array("update", "sym_power_sensor", (2, 1))
+    updates["id"] = 201
+    updates["p_measured"][:, 0] = [10.0, 12.0]
+    with (
+        patch(f"{_CALLBACK_PATH}.get_output_data", return_value={ComponentType.source: source}),
+        patch(f"{_CALLBACK_PATH}.get_update_data", return_value={ComponentType.sym_power_sensor: updates}),
+        patch(f"{_CALLBACK_PATH}.get_grid"),
+        patch(f"{_CALLBACK_PATH}.get_symmetric_power_comparison", side_effect=NotImplementedError),
+    ):
+        figure, style = cell_selection_graph({"group": "sym_power_sensor", "id": 201, "column": "p_measured"})
+    assert style == {"display": "block"}
+    assert len(figure.data) == 1
+    np.testing.assert_allclose(figure.data[0].y, [10.0, 12.0])

@@ -192,7 +192,8 @@ _SIGMA_GUIDANCE = html.Div(
             [
                 html.Strong("Understanding sigma bands"),
                 html.P(
-                    "The shaded region represents measured voltage +/- (sigma multiplier * measurement sigma).",
+                    "The shaded region represents the measured value +/- (sigma multiplier * measurement sigma). "
+                    "It is shown only when sigma data is available.",
                     style=_SIGMA_POPOVER_FIRST_PARAGRAPH_STYLE,
                 ),
                 html.P(
