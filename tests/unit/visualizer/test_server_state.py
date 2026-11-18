@@ -39,7 +39,6 @@ def test_server_state():
 
 
 def test_get_grid_uninitialized():
-    server_state.set_app_state(None)
     with pytest.raises(RuntimeError, match="Grid state not initialized"):
         server_state.get_grid()
 

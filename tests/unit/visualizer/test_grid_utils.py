@@ -179,15 +179,8 @@ def test_get_attr_data_from_dataset_3ph_uses_base_value_for_missing_phases():
         [[5.0, 50.0, 500.0], [6.0, np.nan, np.nan]],
     ]
 
-    grid = _create_grid_with_component(
-        ComponentType.asym_load,
-        "p_specified",
-        12,
-        np.array([[20.0, 200.0, 2000.0]]),
-    )
-
+    grid = _create_grid_with_component(ComponentType.asym_load, "p_specified", 12, np.array([[20.0, 200.0, 2000.0]]))
     batch_dataset = {ComponentType.asym_load: loads}
-
     x_actual, y_actual = get_attr_data_from_dataset(
         batch_dataset, ComponentType.asym_load, "p_specified", pgm_id=12, grid=grid
     )
@@ -219,20 +212,12 @@ def test_get_attr_data_from_dataset_does_not_modify_original_batch_data():
     ]
 
     original_values = loads[AttributeType.p_specified].copy()
-
-    grid = _create_grid_with_component(
-        ComponentType.sym_load,
-        "p_specified",
-        12,
-        np.array([15.0]),
-    )
-
+    grid = _create_grid_with_component(ComponentType.sym_load, "p_specified", 12, np.array([15.0]))
     batch_dataset = {ComponentType.sym_load: loads}
-
-    get_attr_data_from_dataset(batch_dataset, ComponentType.sym_load, "p_specified", pgm_id=12, grid=grid)
-
-    assert np.array_equal(
-        loads[AttributeType.p_specified],
-        original_values,
-        equal_nan=True,
+    scenario_indices, values = get_attr_data_from_dataset(
+        batch_dataset, ComponentType.sym_load, "p_specified", pgm_id=12, grid=grid
     )
+
+    assert np.array_equal(scenario_indices, [0, 1, 2])
+    assert np.array_equal(values, [20.0, 15.0, 22.0])
+    assert np.array_equal(loads[AttributeType.p_specified], original_values, equal_nan=True)
