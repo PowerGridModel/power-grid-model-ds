@@ -75,11 +75,7 @@ def dynamic_grid_obj_from_grid(dynamic_grid_class: type[Grid], grid: Grid):
 
 
 def get_attr_data_from_dataset(
-    dataset: BatchDataset,
-    comp_type: ComponentType,
-    attr: str,
-    pgm_id: int,
-    grid: Grid | None = None,
+    dataset: BatchDataset, comp_type: ComponentType, attr: str, pgm_id: int, grid: Grid | None = None
 ) -> tuple[np.ndarray, np.ndarray]:
     """Extract one component attribute across scenarios.
 
@@ -91,7 +87,7 @@ def get_attr_data_from_dataset(
     component_data = dataset[comp_type]
     array_mask = component_data["id"] == pgm_id
     scenario_indices, _ = np.nonzero(array_mask)
-    match_data = component_data[attr][array_mask].copy()
+    match_data = component_data[attr][array_mask]
 
     if grid is None:
         return scenario_indices, match_data
@@ -99,9 +95,11 @@ def get_attr_data_from_dataset(
     base_component = getattr(grid, comp_type.value)
     base_value = getattr(base_component, attr)[base_component.id == pgm_id][0]
     empty_value = empty(component_data.dtype.fields[attr][0])
+
     if isinstance(empty_value, float) and np.isnan(empty_value):
         missing_mask = np.isnan(match_data)
     else:
         missing_mask = match_data == empty_value
-    match_data = np.where(missing_mask, base_value, match_data)
-    return scenario_indices, match_data
+
+    filled_match_data = np.where(missing_mask, base_value, match_data)
+    return scenario_indices, filled_match_data

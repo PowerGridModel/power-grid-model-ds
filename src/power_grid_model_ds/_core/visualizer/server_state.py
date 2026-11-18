@@ -2,10 +2,14 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-"""Server-side application state for single-user visualizer sessions.
+"""Server-side application state for the visualizer.
 
-The stored objects are shared and mutable. This design is not suitable for
-multi-user sessions without additional isolation.
+The grid and batch datasets are initialized before the Dash server starts.
+The inspected visualizer callbacks read these objects without modifying
+them in place.
+
+State is stored at module scope and is not isolated between user sessions.
+The application is intended for single-user use.
 """
 
 from dataclasses import dataclass

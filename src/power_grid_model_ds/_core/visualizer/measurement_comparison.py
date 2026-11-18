@@ -65,9 +65,10 @@ def get_symmetric_voltage_comparison(
 ) -> VoltageComparison | None:
     """Prepare measured, calculated and sigma series aligned by scenario.
 
-    Datasets are assumed validated by set_app_state. A missing sensor update
-    leaves the base-grid value unchanged. Missing node results within a
-    scenario are NaN, not removed; this preserves the scenario x-axis.
+    Datasets are assumed validated by set_app_state. All returned series
+    share the scenario indices of the node output dataset. Sparse sensor
+    updates fall back to base-grid values. Missing node results are NaN,
+    preserving the scenario x-axis.
     """
     sensors = grid.sym_voltage_sensor
     sensor_matches = np.flatnonzero(sensors.id == sensor_id)
@@ -79,8 +80,7 @@ def get_symmetric_voltage_comparison(
 
     sensor_index = int(sensor_matches[0])
     node_id = int(sensors.measured_object[sensor_index])
-    node_output = output_data[ComponentType.node]
-    scenario_count = node_output.shape[0]
+    scenario_count = output_data[ComponentType.node].shape[0]
     scenario_indices = np.arange(scenario_count, dtype=np.intp)
 
     estimated = np.full(scenario_count, np.nan, dtype=np.float64)
