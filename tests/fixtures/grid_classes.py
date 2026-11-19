@@ -3,14 +3,17 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from dataclasses import dataclass
-from typing import ClassVar
+from typing import ClassVar, Self
 
 import numpy as np
 from numpy._typing import NDArray
 
 from power_grid_model_ds import FancyArray
+from power_grid_model_ds._core.model.graphs.container import GraphContainer
+from power_grid_model_ds._core.model.graphs.models.base import BaseGraphModel
 from power_grid_model_ds._core.model.grids.base import Grid
 from tests.fixtures.arrays import CustomLineArray, CustomNodeArray, DefaultedCustomLineArray, DefaultedCustomNodeArray
+from tests.fixtures.graph_models import CustomTestGraphModel
 
 
 class UserDefinedArray(FancyArray):
@@ -31,6 +34,24 @@ class ExtendedGrid(Grid):
     line: DefaultedCustomLineArray
     user_defined: UserDefinedArray
     extra_value: int = 123
+
+
+class ExtendedGraphContainer(GraphContainer):
+    """Graph container type used by ExtendedGraphGrid."""
+
+
+@dataclass(repr=False)
+class ExtendedGraphGrid(Grid):
+    """Grid using a custom graph container and graph model."""
+
+    graphs: ExtendedGraphContainer
+    extra_value: int = 123
+
+    @classmethod
+    def empty(cls: type[Self], graph_model: type[BaseGraphModel] = CustomTestGraphModel) -> Self:
+        empty_fields = cls._get_empty_fields()
+        empty_fields["graphs"] = ExtendedGraphContainer.empty(graph_model=graph_model)
+        return cls(**empty_fields)
 
 
 @dataclass(repr=False)
