@@ -94,8 +94,17 @@ def visualize(grid: Grid, update_data=None, output_data=None, debug: bool = Fals
 
     server_state.set_app_state(grid_obj, update_data, output_data)
 
+    assets_folder = Path(__file__).resolve().parent / "_core" / "visualizer" / "assets"
+
     app = Dash(
-        external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, MDBOOTSTRAP, FONT_AWESOME, GOOGLE_FONTS]
+        assets_folder=str(assets_folder),
+        external_stylesheets=[
+            dbc.themes.BOOTSTRAP,
+            dbc.icons.BOOTSTRAP,
+            MDBOOTSTRAP,
+            FONT_AWESOME,
+            GOOGLE_FONTS,
+        ],
     )
     app.layout = get_app_layout(grid)
     app.run(debug=debug, port=port, threaded=False)
