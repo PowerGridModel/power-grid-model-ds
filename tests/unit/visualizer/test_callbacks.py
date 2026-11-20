@@ -125,7 +125,15 @@ def test_element_selection_callback():
     )
     assert result[0].children == "node"
     assert result[1].rowData == expected.rowData
-    assert result[1].columnDefs == expected.columnDefs
+    assert [
+        {"field": column["field"], "headerName": column["headerName"]} for column in result[1].columnDefs
+    ] == expected.columnDefs
+
+    for column in result[1].columnDefs:
+        assert column["width"] >= 170
+        assert column["minWidth"] == 130
+        assert column["resizable"] is True
+        assert column["headerTooltip"] == column["headerName"]
 
 
 def test_display_selected_element_none():

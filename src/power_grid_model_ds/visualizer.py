@@ -19,6 +19,7 @@ try:
     from power_grid_model_ds._core.visualizer.layout.layout_config import get_default_graph_layout, layout_with_config
     from power_grid_model_ds._core.visualizer.parsers import parse_element_data
     from power_grid_model_ds._core.visualizer.parsing_utils import filter_out_appliances
+    from power_grid_model_ds._core.visualizer.scenario_selection import validate_timestamps
 except ImportError as error:
     raise ImportError(
         "Missing dependencies for visualizer: install with 'pip install power-grid-model-ds[visualizer]'"
@@ -60,7 +61,15 @@ def save_html(
     Path(path).write_text(html_content, encoding="utf-8")
 
 
-def visualize(grid: Grid, update_data=None, output_data=None, debug: bool = False, port: int = 8050) -> None:
+def visualize(  # noqa: PLR0913 - preserve existing API with optional timestamps
+    grid: Grid,
+    update_data=None,
+    output_data=None,
+    debug: bool = False,
+    port: int = 8050,
+    *,
+    timestamps: tuple[str, ...] | list[str] | None = None,
+) -> None:
     """Visualize the Grid.
 
     grid: Grid
@@ -92,7 +101,8 @@ def visualize(grid: Grid, update_data=None, output_data=None, debug: bool = Fals
     else:
         grid_obj = grid
 
-    server_state.set_app_state(grid_obj, update_data, output_data)
+    validated_timestamps = validate_timestamps(timestamps, update_data, output_data) if timestamps is not None else None
+    server_state.set_app_state(grid_obj, update_data, output_data, timestamps=validated_timestamps)
 
     app = Dash(
         external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP, MDBOOTSTRAP, FONT_AWESOME, GOOGLE_FONTS]
