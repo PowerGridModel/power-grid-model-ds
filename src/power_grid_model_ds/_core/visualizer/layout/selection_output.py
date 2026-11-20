@@ -17,7 +17,14 @@ SELECTION_OUTPUT_HTML = html.Div(
     style=_SELECTION_OUTPUT_STYLE,
 )
 
+
 SELECTION_GRAPH_HTML = html.Div(
-    dcc.Graph(id="selection-graph", style={"display": "none"}),
+    [
+        dcc.Store(id="selected-selection-cell", storage_type="memory"),
+        dcc.Graph(
+            id="selection-graph",
+            style={"display": "none"},
+        ),
+    ],
     style={"margin": "10px"},
 )
