@@ -36,12 +36,30 @@ class _AppState:
 _state = _AppState()
 
 
+def _scenario_count(dataset: dict[ComponentType, DenseBatchArray] | None) -> int | None:
+    """Return the shared scenario count of dense components, if available."""
+    if not dataset:
+        return None
+
+    counts = {component_data.shape[0] for component_data in dataset.values()}
+
+    if len(counts) != 1:
+        raise ValueError("Batch components must have the same scenario count")
+
+    return counts.pop()
+
+
 def set_app_state(
     grid: Grid,
     update_data: dict[ComponentType, DenseBatchArray] | None = None,
     output_data: dict[ComponentType, DenseBatchArray] | None = None,
 ) -> None:
-    """Set the application state in a thread-safe manner."""
+    """Set the application state after checking dense batch scenario counts."""
+    update_count = _scenario_count(update_data)
+    output_count = _scenario_count(output_data)
+    if update_count is not None and output_count is not None and update_count != output_count:
+        raise ValueError("Update and output datasets must have the same scenario count")
+
     _state.grid = grid
     _state.update_data = update_data
     _state.output_data = output_data
