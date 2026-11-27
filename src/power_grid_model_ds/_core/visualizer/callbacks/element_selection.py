@@ -150,7 +150,7 @@ def _get_y_data_for_cell_selection(
     if update_data is not None and comp_type in update_data:
         update_names = update_data[comp_type].dtype.names
         if update_names is not None and attr in update_names:
-            x_data, y_data = get_attr_data_from_dataset(update_data, comp_type, attr, pgm_id)
+            x_data, y_data = get_attr_data_from_dataset(update_data, comp_type, attr, pgm_id, get_grid())
             return x_data, y_data
     output_data = get_output_data()
     if output_data is not None and comp_type in output_data:
